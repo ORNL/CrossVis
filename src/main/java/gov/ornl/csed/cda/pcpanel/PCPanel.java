@@ -1,6 +1,8 @@
 package gov.ornl.csed.cda.pcpanel;
 
+import org.apache.commons.math3.random.EmpiricalDistribution;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
+import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import prefuse.data.Table;
@@ -25,6 +27,7 @@ public class PCPanel extends JComponent implements ComponentListener, MouseMotio
     private final static Logger log = LoggerFactory.getLogger(PCPanel.class);
 
     public final static DecimalFormat DECIMAL_FORMAT = new DecimalFormat("0.0");
+    public final static int RESIZE_TIMER_DELAY = 200;
 
     // Data objects
     private Table table;
@@ -39,9 +42,17 @@ public class PCPanel extends JComponent implements ComponentListener, MouseMotio
     private Font labelFont = new Font("Dialog", Font.PLAIN, 10);
     public Color axisLineColor = new Color(120, 120, 120);
     public Color polylineColor = new Color(20, 20, 60, 50);
-
+    private Timer waitingTimer;
 
     public PCPanel () {
+        waitingTimer = new Timer(RESIZE_TIMER_DELAY, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                waitingTimer.stop();
+                resizePanel();
+            }
+        });
+        waitingTimer.setRepeats(false);
         addComponentListener(this);
     }
 
@@ -50,6 +61,7 @@ public class PCPanel extends JComponent implements ComponentListener, MouseMotio
         this.table = table;
         this.table.addTableListener(this);
         layoutPanel();
+        calculateHistograms();
         calculatePolylines();
         repaint();
     }
@@ -209,6 +221,31 @@ public class PCPanel extends JComponent implements ComponentListener, MouseMotio
         }
     }
 
+    private void calculateHistograms() {
+        if (table != null) {
+            int binCount = (int) Math.floor(Math.sqrt(table.getTupleCount()));
+            if (binCount < 1) {
+                binCount = 1;
+            }
+
+            for (PCAxis axis : axisList) {
+                double data[] = new double[table.getTupleCount()];
+                for (int i = 0; i < table.getTupleCount(); i++) {
+                    data[i] = table.getDouble(i, axis.dataModelIndex);
+
+                }
+                axis.histogram = new EmpiricalDistribution(binCount);
+                axis.histogram.load(data);
+
+                log.debug("Histogram for " + table.getColumnName(axis.dataModelIndex));
+
+                for (SummaryStatistics binStats : axis.histogram.getBinStats()) {
+                    log.debug("bin - " + binStats.getN() + " [" + binStats.getMin() + ", " + binStats.getMax() + "]");
+                }
+            }
+        }
+    }
+
     private void calculatePolylines() {
         tuplePolylines = new ArrayList<Point2D.Double[]>();
         if (table != null && table.getTupleCount() > 0) {
@@ -218,6 +255,9 @@ public class PCPanel extends JComponent implements ComponentListener, MouseMotio
                 for (PCAxis axis : axisList) {
                     int x = axis.xPosition;
                     double value = tuple.getDouble(axis.dataModelIndex);
+                    if (Double.isNaN(value)) {
+                        log.debug("Found a NaN value");
+                    }
                     double normValue = (value - axis.statistics.getMin()) /
                             (axis.statistics.getMax() - axis.statistics.getMin());
                     double y = axis.bottomPosition - (normValue * axis.axisHeight);
@@ -230,9 +270,22 @@ public class PCPanel extends JComponent implements ComponentListener, MouseMotio
 
     @Override
     public void componentResized(ComponentEvent e) {
+        if (waitingTimer == null) {
+            waitingTimer.start();
+        } else {
+            waitingTimer.restart();
+        }
         layoutPanel();
         calculatePolylines();
         repaint();
+    }
+
+    public void resizePanel() {
+        if (axisList != null && !axisList.isEmpty()) {
+            layoutPanel();
+            calculatePolylines();
+            repaint();
+        }
     }
 
     @Override

@@ -1,5 +1,6 @@
 package gov.ornl.csed.cda.pcpanel;
 
+import org.apache.commons.math3.random.EmpiricalDistribution;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import prefuse.data.column.Column;
 
@@ -51,7 +52,9 @@ public class PCAxis {
 	public int scatterplot_x0;
 	public int scatterplot_y0;
 
+
 	public DescriptiveStatistics statistics;
+    public EmpiricalDistribution histogram;
 
 	public PCAxis(Column column, int dataModelIndex) {
 		this.column = column;

@@ -730,6 +730,7 @@ public class TimeSeriesPanel extends JComponent implements ComponentListener, Mo
 
     @Override
     public void componentResized(ComponentEvent e) {
+        log.debug("in componentResized()");
         layoutPanel();
     }
 

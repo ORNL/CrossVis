@@ -66,7 +66,6 @@ public class HyperVariatePanel extends JPanel implements DataModelListener, Comp
     public final static Color DEFAULT_QUERY_HISTOGRAM_FILL_COLOR = new Color(8, 81, 156);
     public final static Color DEFAULT_QUERY_TUPLE_LINE_COLOR = new Color(8, 81, 156, 70);
 
-
     private HashMap<Column, BufferedImage> columnImageMap = new HashMap<Column, BufferedImage>();
 
     private Timer waitingTimer;
