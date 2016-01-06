@@ -20,6 +20,9 @@ import java.util.ArrayList;
 public class Histogram {
     private final static Logger log = LoggerFactory.getLogger(Histogram.class);
 
+    public final static float DEFAULT_NAME_FONT_SIZE = 12f;
+    public final static float DEFAULT_VALUE_FONT_SIZE = 10f;
+
     public final static Color DEFAULT_AXIS_COLOR = new Color(120,120,120);
     public final static Color DEFAULT_DISPERSION_BOX_FILL_COLOR = new Color(220, 220, 220);
     public final static Color DEFAULT_QUERY_DISPERSION_BOX_FILL_COLOR = new Color(180, 180, 220, 150);
@@ -55,6 +58,8 @@ public class Histogram {
     private int medianPosition;
     private Rectangle standardDeviationRectangle;
     private Rectangle IQRRectangle;
+    private Rectangle minValueLabelRectangle;
+    private Rectangle maxValueLabelRectangle;
 
     private Rectangle histogramRectangle;
     private ArrayList<Rectangle2D.Double> histogramBinRectangles;
@@ -233,8 +238,8 @@ public class Histogram {
     }
 
     public void draw (Graphics2D g2) {
-//        g2.setColor(Color.red);
-//        g2.draw(fullPlotRectangle);
+        g2.setColor(Color.blue);
+        g2.draw(fullPlotRectangle);
 
 //        g2.setColor(Color.blue);
 //        g2.draw(nameRectangle);
@@ -273,6 +278,14 @@ public class Histogram {
             Rectangle2D binRect = histogramBinRectangles.get(i);
             g2.fill(binRect);
         }
+
+        // draw variable name
+        g2.setFont(g2.getFont().deriveFont(DEFAULT_NAME_FONT_SIZE));
+        g2.setColor(Color.black);
+        g2.drawString(table.getColumnName(table.getColumnNumber(column)), nameRectangle.x + 1,
+                (nameRectangle.y + nameRectangle.height) - g2.getFontMetrics().getDescent());
+
+
     }
 
     private int valueToY(double value, boolean clamp) {

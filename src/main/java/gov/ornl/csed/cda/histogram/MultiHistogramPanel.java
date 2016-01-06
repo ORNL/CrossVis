@@ -27,7 +27,8 @@ public class MultiHistogramPanel extends JComponent implements ComponentListener
     private Table table;
     private ArrayList<Histogram> histogramList;
     private int histogramPlotHeight = 60;
-    private Insets plotMargins = new Insets(2,2,2,2);
+    private int plotSpacing = 10;
+    private Rectangle panelPlotRectangle;
 
     public MultiHistogramPanel() {
         addComponentListener(this);
@@ -82,7 +83,7 @@ public class MultiHistogramPanel extends JComponent implements ComponentListener
             }
 
             int panelWidth = getWidth() - (getInsets().left + getInsets().right);
-            int panelHeight = (histogramList.size() * histogramPlotHeight) + (getInsets().top + getInsets().bottom);
+            int panelHeight = (histogramList.size() * (histogramPlotHeight + plotSpacing)) + (getInsets().top + getInsets().bottom);
 
             if (panelWidth <= 0 || panelHeight <= 0) {
                 return;
@@ -91,8 +92,8 @@ public class MultiHistogramPanel extends JComponent implements ComponentListener
             setPreferredSize(new Dimension(panelWidth, panelHeight));
             revalidate();
 
-            Rectangle panelPlotRectangle = new Rectangle(getInsets().left, getInsets().top, panelWidth,
-                    (histogramList.size() * histogramPlotHeight));
+            panelPlotRectangle = new Rectangle(getInsets().left, getInsets().top, panelWidth,
+                    (histogramList.size() * (histogramPlotHeight + plotSpacing)) - plotSpacing);
 
             for (int i = 0; i < histogramList.size(); i++) {
                 Histogram histogram = histogramList.get(i);
@@ -108,8 +109,9 @@ public class MultiHistogramPanel extends JComponent implements ComponentListener
 
         g2.setColor(getBackground());
         g2.fillRect(0, 0, getWidth(), getHeight());
-        g2.setColor(Color.red);
-        g2.drawRect(getInsets().left, getInsets().top, getWidth()-(getInsets().left + getInsets().right), getHeight() - (getInsets().top + getInsets().bottom));
+        g2.setColor(Color.green);
+//        g2.drawRect(getInsets().left, getInsets().top, getWidth()-(getInsets().left + getInsets().right), getHeight() - (getInsets().top + getInsets().bottom));
+        g2.draw(panelPlotRectangle);
 
         if ((getWidth() <= 0) || (getHeight() <= 0)) {
             return;
@@ -121,9 +123,10 @@ public class MultiHistogramPanel extends JComponent implements ComponentListener
         if (histogramList != null) {
             for (int i = 0; i < histogramList.size(); i++) {
                 Histogram histogram = histogramList.get(i);
-                int plotYOffset = getInsets().top + (i * histogramPlotHeight);
+                int plotYOffset = getInsets().top + (i * (histogramPlotHeight + plotSpacing));
                 g2.translate(getInsets().left, plotYOffset);
                 histogram.draw(g2);
+
                 g2.translate(-getInsets().left, -plotYOffset);
             }
         }
