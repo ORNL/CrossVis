@@ -10,6 +10,7 @@ import javafx.beans.value.ObservableValue;
 import javafx.embed.swing.SwingNode;
 import javafx.event.*;
 import javafx.geometry.*;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.Label;
@@ -43,6 +44,7 @@ import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.EtchedBorder;
 import java.awt.*;
+import java.awt.Insets;
 import java.awt.event.AdjustmentEvent;
 import java.awt.event.AdjustmentListener;
 import java.io.File;
@@ -65,12 +67,28 @@ public class FalconFX extends Application {
     // List of TimeSeries objects
     private HashMap<String, TimeSeries> timeSeriesMap;
 
+    // Earliest start and latest end instant of all time series
+
     // Overview + Detail TimeSeries Objects
     private TimeSeriesPanel overviewTimeSeriesPanel;
     private TimeSeriesPanel detailsTimeSeriesPanel;
 
+    // Overview + Detail TimeSeries Display Preference UIs
+    private ChoiceBox<ChronoUnit> ODTimeSeriesChronoUnitChoice;
+    private ColorPicker ODTimeSeriesDataColorPicker;
+    private Spinner ODTimeSeriesPlotHeightSpinner;
+    private Spinner ODTimeSeriesPlotChronoUnitWidthSpinner;
+
     // Multiple TimeSeries Objects
     private MultiTimeSeriesPanel multiTimeSeriesPanel;
+    private Instant multiTimeSeriesStartInstant;
+    private Instant multiTimeSeriesEndInstant;
+
+    // Multiple TimeSeries Panel Display Preference UIs
+    private ChoiceBox<ChronoUnit> multiTimeSeriesChronoUnitChoice;
+    private ColorPicker multipleTimeSeriesDataColorPicker;
+    private Spinner multipleTimeSeriesPlotHeightSpinner;
+    private Spinner multipleTimeSeriesPlotChronoUnitWidthSpinner;
 
     // UI components
     private TreeView<FalconDataTreeItem> dataTreeView;
@@ -87,10 +105,19 @@ public class FalconFX extends Application {
     private String timeColumnName;
 
 
+
     public static void main(String[] args) {
         launch(args);
     }
 
+
+    private java.awt.Color convertToAWTColor(Color color) {
+        int r = (int)(color.getRed() * 255.0);
+        int g = (int)(color.getGreen() * 255.0);
+        int b = (int)(color.getBlue() * 255.0);
+        int a = (int)(color.getOpacity() * 255.0);
+        return new java.awt.Color(r, g, b, a);
+    }
 
     @Override
     public void start(Stage primaryStage) {
@@ -117,11 +144,8 @@ public class FalconFX extends Application {
 
         Scene scene = new Scene(rootNode, 1200, 800);
 
-
-        SwingNode ODTimeSeriesNode = createOverviewDetailTimeSeriesPanel();
-        SwingNode multiTimeSeriesNode = createMultiTimeSeriesPanel();
-
-        VBox settingsBox = createSettingsVBox();
+        Node ODTimeSeriesNode = createOverviewDetailTimeSeriesPanel();
+        Node multiTimeSeriesNode = createMultiTimeSeriesPanel();
 
         createDataTreeView();
         createColumnTableView();
@@ -135,25 +159,24 @@ public class FalconFX extends Application {
         multiTimeTab.setContent(multiTimeSeriesNode);
         tabPane.getTabs().addAll(ODTimeTab, multiTimeTab);
 
+//        // Create left pane as a vertically split node
+//        StackPane topStackPane = new StackPane();
+//        topStackPane.getChildren().addAll(dataTreeView);
+//        StackPane bottomStackPane = new StackPane();
+//        bottomStackPane.getChildren().addAll(settingsBox);
 
-        // Create left pane as a vertically split node
-        StackPane topStackPane = new StackPane();
-        topStackPane.getChildren().addAll(dataTreeView);
-        StackPane bottomStackPane = new StackPane();
-        bottomStackPane.getChildren().addAll(settingsBox);
-
-        SplitPane leftSplitPane = new SplitPane();
-        leftSplitPane.getItems().addAll(topStackPane, bottomStackPane);
-        leftSplitPane.setDividerPositions(0.6);
-        leftSplitPane.setResizableWithParent(bottomStackPane, false);
-        leftSplitPane.setOrientation(Orientation.VERTICAL);
+//        SplitPane leftSplitPane = new SplitPane();
+//        leftSplitPane.getItems().addAll(dataTreeView, bottomStackPane);
+//        leftSplitPane.setDividerPositions(0.6);
+//        leftSplitPane.setResizableWithParent(bottomStackPane, false);
+//        leftSplitPane.setOrientation(Orientation.VERTICAL);
 
         // Create right pane as a vertically split node
         // (top - timeseries, middle - histogram, bottom - table views)
-        topStackPane = new StackPane();
+        StackPane topStackPane = new StackPane();
 //        topStackPane.getChildren().addAll(timeSeriesNode);
         topStackPane.getChildren().addAll(tabPane);
-        bottomStackPane = new StackPane();
+        StackPane bottomStackPane = new StackPane();
         bottomStackPane.getChildren().addAll(columnTableView);
         SplitPane rightSplitPane = new SplitPane();
         rightSplitPane.getItems().addAll(topStackPane, bottomStackPane);
@@ -161,13 +184,13 @@ public class FalconFX extends Application {
         rightSplitPane.setResizableWithParent(bottomStackPane, false);
         rightSplitPane.setOrientation(Orientation.VERTICAL);
 
-
-
         // create main split between left and right panes
         SplitPane mainSplitPane = new SplitPane();
-        mainSplitPane.getItems().addAll(leftSplitPane, rightSplitPane);
+        StackPane leftStackPane = new StackPane();
+        leftStackPane.getChildren().add(dataTreeView);
+        mainSplitPane.getItems().addAll(leftStackPane, rightSplitPane);
         mainSplitPane.setDividerPositions(0.25);
-        mainSplitPane.setResizableWithParent(leftSplitPane, false);
+        mainSplitPane.setResizableWithParent(leftStackPane, false);
 
         MenuBar menubar = createMenuBar(primaryStage);
 
@@ -345,63 +368,74 @@ public class FalconFX extends Application {
 
     private void loadColumnIntoMultiTimeSeries (String columnName) {
         TimeSeries timeSeries = timeSeriesMap.get(columnName);
+        if (multiTimeSeriesStartInstant == null) {
+            multiTimeSeriesStartInstant = timeSeries.getStartInstant();
+        } else if (multiTimeSeriesStartInstant.isBefore(timeSeries.getStartInstant())) {
+            multiTimeSeriesStartInstant = timeSeries.getStartInstant();
+        }
+
+        if (multiTimeSeriesEndInstant == null) {
+            multiTimeSeriesEndInstant = timeSeries.getEndInstant();
+        } else if (multiTimeSeriesEndInstant.isAfter(timeSeries.getEndInstant())) {
+            multiTimeSeriesEndInstant = timeSeries.getEndInstant();
+        }
+        multiTimeSeriesPanel.setDateTimeRange(multiTimeSeriesStartInstant, multiTimeSeriesEndInstant, chronoChoiceBox.getSelectionModel().getSelectedItem());
         multiTimeSeriesPanel.addTimeSeries(timeSeries);
     }
 
+    private Node createMultiTimeSeriesPanel() {
+        multiTimeSeriesPanel = new MultiTimeSeriesPanel();
+        multiTimeSeriesPanel.setBackground(java.awt.Color.white);
 
-    private VBox createSettingsVBox() {
-        VBox settingsVBox = new VBox();
-        settingsVBox.setPadding(new javafx.geometry.Insets(10));
-        settingsVBox.setSpacing(8);
+        HBox settingsHBox = new HBox();
+        settingsHBox.setAlignment(Pos.CENTER_LEFT);
+        settingsHBox.setPadding(new javafx.geometry.Insets(4));
+        settingsHBox.setSpacing(8.);
 
-        chronoChoiceBox = new ChoiceBox<>();
-        chronoChoiceBox.getItems().addAll(ChronoUnit.SECONDS, ChronoUnit.MINUTES, ChronoUnit.HOURS,
-                ChronoUnit.HALF_DAYS, ChronoUnit.DAYS);
-        chronoChoiceBox.getSelectionModel().selectFirst();
-        chronoChoiceBox.getSelectionModel().selectedItemProperty().addListener(
+        HBox hBox = new HBox();
+        hBox.setAlignment(Pos.CENTER_LEFT);
+        multiTimeSeriesChronoUnitChoice = new ChoiceBox<ChronoUnit>();
+        multiTimeSeriesChronoUnitChoice.getItems().addAll(ChronoUnit.SECONDS, ChronoUnit.MINUTES, ChronoUnit.HOURS, ChronoUnit.HALF_DAYS, ChronoUnit.DAYS);
+        multiTimeSeriesChronoUnitChoice.getSelectionModel().selectFirst();
+        multiTimeSeriesChronoUnitChoice.getSelectionModel().selectedItemProperty().addListener(
                 (ObservableValue<? extends ChronoUnit> ov,
                  ChronoUnit oldValue, ChronoUnit newValue) -> {
                     if (oldValue != newValue) {
-                        currentTimeSeriesChronoUnit = newValue;
-                        detailsTimeSeriesPanel.setPlotChronoUnit(currentTimeSeriesChronoUnit);
+                        multiTimeSeriesPanel.setChronoUnit(newValue);
                     }
-                    log.debug("New current chrono level is " + currentTimeSeriesChronoUnit);
                 }
         );
-        HBox hBox = new HBox();
-        hBox.setAlignment(Pos.BOTTOM_LEFT);
-        hBox.getChildren().addAll(new javafx.scene.control.Label("Current ChronoUnit: "), chronoChoiceBox);
-        settingsVBox.getChildren().addAll(hBox);
+        hBox.getChildren().addAll(new Label("Plot ChronoUnit: "), multiTimeSeriesChronoUnitChoice);
+        settingsHBox.getChildren().add(hBox);
 
-
-        ColorPicker dataColorPicker = new ColorPicker(dataColor);
-        dataColorPicker.setOnAction(new EventHandler() {
-            public void handle(javafx.event.Event event) {
-                dataColor = dataColorPicker.getValue();
-                // TODO: redisplay timeseries with new color
+        hBox = new HBox();
+        hBox.setAlignment(Pos.CENTER_LEFT);
+        multipleTimeSeriesDataColorPicker = new ColorPicker(dataColor);
+        multipleTimeSeriesDataColorPicker.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                Color dataColor = multipleTimeSeriesDataColorPicker.getValue();
+                multiTimeSeriesPanel.setDataColor(convertToAWTColor(dataColor));
             }
         });
+        hBox.getChildren().addAll(new Label("Data Color: "), multipleTimeSeriesDataColorPicker);
+        settingsHBox.getChildren().add(hBox);
+
         hBox = new HBox();
-        hBox.setAlignment(Pos.BOTTOM_LEFT);
-        hBox.getChildren().addAll(new javafx.scene.control.Label("Data Color: "), dataColorPicker);
-        settingsVBox.getChildren().addAll(hBox);
-//
-//        Spinner plotChronoUnitWidthSpinner = new Spinner(1, 10, timeSeriesPanel.getChronoUnitWidth());
-//        plotChronoUnitWidthSpinner.setEditable(true);
-//        plotChronoUnitWidthSpinner.valueProperty().addListener((obs, oldValue, newValue) ->
-//                timeSeriesPanel.setChronoUnitWidth((Integer) newValue));
-//
-//        hBox = new HBox();
-//        hBox.setAlignment(Pos.BOTTOM_LEFT);
-//        hBox.getChildren().addAll(new javafx.scene.control.Label("Plot Unit Width: "), plotChronoUnitWidthSpinner);
-//        settingsVBox.getChildren().addAll(hBox);
+        hBox.setAlignment(Pos.CENTER_LEFT);
+        multipleTimeSeriesPlotHeightSpinner = new Spinner(40, 400, multiTimeSeriesPanel.getPlotHeight());
+        multipleTimeSeriesPlotHeightSpinner.setEditable(true);
+        multipleTimeSeriesPlotHeightSpinner.valueProperty().addListener((obs, oldValue, newValue) -> multiTimeSeriesPanel.setPlotHeight((Integer)newValue));
+        hBox.getChildren().addAll(new Label("Plot Height: "), multipleTimeSeriesPlotHeightSpinner);
+        settingsHBox.getChildren().add(hBox);
 
-        return settingsVBox;
-    }
-
-    private SwingNode createMultiTimeSeriesPanel() {
-        multiTimeSeriesPanel = new MultiTimeSeriesPanel();
-        multiTimeSeriesPanel.setBackground(java.awt.Color.white);
+        hBox = new HBox();
+        hBox.setAlignment(Pos.CENTER_LEFT);
+        multipleTimeSeriesPlotChronoUnitWidthSpinner = new Spinner(1, 10, multiTimeSeriesPanel.getChronoUnitWidth());
+        multipleTimeSeriesPlotChronoUnitWidthSpinner.setEditable(true);
+        multipleTimeSeriesPlotChronoUnitWidthSpinner.valueProperty().addListener((obs, oldValue, newValue) -> multiTimeSeriesPanel.setChronoUnitWidth((Integer)newValue));
+        hBox.getChildren().addAll(new Label("Plot Unit Width: "), multipleTimeSeriesPlotChronoUnitWidthSpinner);
+        settingsHBox.getChildren().add(hBox);
 
         JScrollPane scroller = new JScrollPane(multiTimeSeriesPanel);
         scroller.getHorizontalScrollBar().setUnitIncrement(2);
@@ -423,10 +457,17 @@ public class FalconFX extends Application {
             event.consume();
         });
 
-        return tsSwingNode;
+        BorderPane borderPane = new BorderPane();
+        borderPane.setTop(settingsHBox);
+        borderPane.setCenter(tsSwingNode);
+        return borderPane;
     }
 
-    private SwingNode createOverviewDetailTimeSeriesPanel () {
+    private Node createMultiHistogramPanel() {
+
+    }
+
+    private Node createOverviewDetailTimeSeriesPanel () {
         detailsTimeSeriesPanel = new TimeSeriesPanel(2, ChronoUnit.SECONDS, TimeSeriesPanel.PlotDisplayOption.STEPPED_LINE);
         detailsTimeSeriesPanel.setBackground(java.awt.Color.white);
 
@@ -444,6 +485,7 @@ public class FalconFX extends Application {
         panel.setLayout(new BorderLayout());
         panel.add(scroller, BorderLayout.CENTER);
         panel.add(overviewTimeSeriesPanel, BorderLayout.SOUTH);
+        panel.setBackground(java.awt.Color.white);
 
         SwingNode tsSwingNode = new SwingNode();
         tsSwingNode.setContent(panel);
@@ -482,6 +524,54 @@ public class FalconFX extends Application {
             }
         });
 
-        return tsSwingNode;
+        // create display preferences UI components
+        HBox settingsHBox = new HBox();
+        settingsHBox.setAlignment(Pos.CENTER_LEFT);
+        settingsHBox.setPadding(new javafx.geometry.Insets(4));
+        settingsHBox.setSpacing(8.);
+
+        HBox hBox = new HBox();
+        hBox.setAlignment(Pos.CENTER_LEFT);
+        ODTimeSeriesChronoUnitChoice = new ChoiceBox<ChronoUnit>();
+        ODTimeSeriesChronoUnitChoice.getItems().addAll(ChronoUnit.SECONDS, ChronoUnit.MINUTES, ChronoUnit.HOURS, ChronoUnit.HALF_DAYS, ChronoUnit.DAYS);
+        ODTimeSeriesChronoUnitChoice.getSelectionModel().selectFirst();
+        ODTimeSeriesChronoUnitChoice.getSelectionModel().selectedItemProperty().addListener(
+                (ObservableValue<? extends ChronoUnit> ov,
+                 ChronoUnit oldValue, ChronoUnit newValue) -> {
+                    if (oldValue != newValue) {
+                        detailsTimeSeriesPanel.setPlotChronoUnit(newValue);
+                    }
+                }
+        );
+        hBox.getChildren().addAll(new Label("Plot ChronoUnit: "), ODTimeSeriesChronoUnitChoice);
+        settingsHBox.getChildren().add(hBox);
+
+        hBox = new HBox();
+        hBox.setAlignment(Pos.CENTER_LEFT);
+        ODTimeSeriesDataColorPicker = new ColorPicker(dataColor);
+        ODTimeSeriesDataColorPicker.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                Color dataColor = ODTimeSeriesDataColorPicker.getValue();
+                detailsTimeSeriesPanel.setDataColor(convertToAWTColor(dataColor));
+                overviewTimeSeriesPanel.setDataColor(convertToAWTColor(dataColor));
+            }
+        });
+        hBox.getChildren().addAll(new Label("Data Color: "), ODTimeSeriesDataColorPicker);
+        settingsHBox.getChildren().add(hBox);
+
+        hBox = new HBox();
+        hBox.setAlignment(Pos.CENTER_LEFT);
+        ODTimeSeriesPlotChronoUnitWidthSpinner = new Spinner(1, 10, detailsTimeSeriesPanel.getChronoUnitWidth());
+        ODTimeSeriesPlotChronoUnitWidthSpinner.setEditable(true);
+        ODTimeSeriesPlotChronoUnitWidthSpinner.valueProperty().addListener((obs, oldValue, newValue) -> detailsTimeSeriesPanel.setChronoUnitWidth((Integer)newValue));
+        hBox.getChildren().addAll(new Label("Plot Unit Width: "), ODTimeSeriesPlotChronoUnitWidthSpinner);
+        settingsHBox.getChildren().add(hBox);
+
+        BorderPane borderPane = new BorderPane();
+        borderPane.setTop(settingsHBox);
+        borderPane.setCenter(tsSwingNode);
+
+        return borderPane;
     }
 }

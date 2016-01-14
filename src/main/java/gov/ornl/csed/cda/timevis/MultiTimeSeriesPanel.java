@@ -115,8 +115,6 @@ public class MultiTimeSeriesPanel extends JComponent implements MouseMotionListe
                     Instant endInstant = Instant.from(startInstant).plus(numTimeSeriesRecords + 50, ChronoUnit.MINUTES);
                     timeSeriesPanel.setDateTimeRange(startInstant.minus(120, ChronoUnit.MINUTES), endInstant, ChronoUnit.MINUTES);
 
-//					Color dataColor = new Color(80, 80, 100, 130);
-
                     // add some bar graph time series
                     for (int i = 0; i < numTimeSeries; i++) {
                         double value = 0.;
@@ -207,6 +205,15 @@ public class MultiTimeSeriesPanel extends JComponent implements MouseMotionListe
                 }
             }
         });
+    }
+
+    public void setDataColor (Color dataColor) {
+        this.dataColor = dataColor;
+        repaint();
+    }
+
+    public Color getDataColor() {
+        return dataColor;
     }
 
     public int getPlotHeight() {

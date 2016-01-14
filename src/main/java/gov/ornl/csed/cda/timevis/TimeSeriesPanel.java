@@ -78,6 +78,23 @@ public class TimeSeriesPanel extends JComponent implements ComponentListener, Mo
     private Instant endHighlightInstant;
     private Rectangle highlightRectangle;
 
+    public void setDataColor(Color dataColor) {
+        this.dataColor = dataColor;
+        repaint();
+    }
+
+    public Color getDataColor() {
+        return dataColor;
+    }
+
+    public void setChronoUnitWidth(int width) {
+        this.plotUnitWidth = width;
+        layoutPanel();
+    }
+
+    public int getChronoUnitWidth() {
+        return plotUnitWidth;
+    }
 
     // not shrink to fit constructor
     public TimeSeriesPanel (int plotUnitWidth, ChronoUnit plotChronoUnit, PlotDisplayOption plotDisplayOption) {
