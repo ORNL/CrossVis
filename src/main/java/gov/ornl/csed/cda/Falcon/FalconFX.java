@@ -2,6 +2,7 @@ package gov.ornl.csed.cda.Falcon;/**
  * Created by csg on 12/30/15.
  */
 
+import gov.ornl.csed.cda.timevis.MultiTimeSeriesPanel;
 import gov.ornl.csed.cda.timevis.TimeSeries;
 import gov.ornl.csed.cda.timevis.TimeSeriesPanel;
 import javafx.application.Application;
@@ -42,8 +43,11 @@ import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.EtchedBorder;
 import java.awt.*;
+import java.awt.event.AdjustmentEvent;
+import java.awt.event.AdjustmentListener;
 import java.io.File;
 import java.io.InputStream;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -58,10 +62,15 @@ public class FalconFX extends Application {
     // Data table
     private Table dataTable;
 
-    // Timeseries Objects
+    // List of TimeSeries objects
+    private HashMap<String, TimeSeries> timeSeriesMap;
+
+    // Overview + Detail TimeSeries Objects
     private TimeSeriesPanel overviewTimeSeriesPanel;
     private TimeSeriesPanel detailsTimeSeriesPanel;
-    private HashMap<String, TimeSeries> timeSeriesMap;
+
+    // Multiple TimeSeries Objects
+    private MultiTimeSeriesPanel multiTimeSeriesPanel;
 
     // UI components
     private TreeView<FalconDataTreeItem> dataTreeView;
@@ -109,13 +118,23 @@ public class FalconFX extends Application {
         Scene scene = new Scene(rootNode, 1200, 800);
 
 
-        SwingNode timeSeriesNode = createTimeSeriesPanel();
+        SwingNode ODTimeSeriesNode = createOverviewDetailTimeSeriesPanel();
+        SwingNode multiTimeSeriesNode = createMultiTimeSeriesPanel();
 
         VBox settingsBox = createSettingsVBox();
 
         createDataTreeView();
         createColumnTableView();
         createDataTableView();
+
+        // TabPane setup for main visualization area
+        TabPane tabPane = new TabPane();
+        Tab ODTimeTab = new Tab("Overview + Detail Time Series");
+        ODTimeTab.setContent(ODTimeSeriesNode);
+        Tab multiTimeTab = new Tab("Multiple Time Series");
+        multiTimeTab.setContent(multiTimeSeriesNode);
+        tabPane.getTabs().addAll(ODTimeTab, multiTimeTab);
+
 
         // Create left pane as a vertically split node
         StackPane topStackPane = new StackPane();
@@ -132,7 +151,8 @@ public class FalconFX extends Application {
         // Create right pane as a vertically split node
         // (top - timeseries, middle - histogram, bottom - table views)
         topStackPane = new StackPane();
-        topStackPane.getChildren().addAll(timeSeriesNode);
+//        topStackPane.getChildren().addAll(timeSeriesNode);
+        topStackPane.getChildren().addAll(tabPane);
         bottomStackPane = new StackPane();
         bottomStackPane.getChildren().addAll(columnTableView);
         SplitPane rightSplitPane = new SplitPane();
@@ -140,6 +160,8 @@ public class FalconFX extends Application {
         rightSplitPane.setDividerPositions(0.5);
         rightSplitPane.setResizableWithParent(bottomStackPane, false);
         rightSplitPane.setOrientation(Orientation.VERTICAL);
+
+
 
         // create main split between left and right panes
         SplitPane mainSplitPane = new SplitPane();
@@ -315,30 +337,15 @@ public class FalconFX extends Application {
     }
 
 
-    private void loadColumnTimeSeries (String columnName) {
+    private void loadColumnIntoODTimeSeries (String columnName) {
         TimeSeries timeSeries = timeSeriesMap.get(columnName);
         overviewTimeSeriesPanel.setTimeSeries(timeSeries);
         detailsTimeSeriesPanel.setTimeSeries(timeSeries);
+    }
 
-//        timeSeries = new TimeSeries("TS", ChronoUnit.MINUTES);
-//
-//        detailsTimeSeriesPanel.removeTimeSeries();
-//        overviewTimeSeriesPanel.removeTimeSeries();
-//
-//        ChronoUnit chronoUnit = chronoChoiceBox.getSelectionModel().getSelectedItem();
-//        detailsTimeSeriesPanel.setPlotChronoUnit(chronoUnit);
-//
-//        int timeColumnIdx = dataTable.getColumnNumber(timeColumnName);
-//        int valueColumnIdx = dataTable.getColumnNumber(columnName);
-//
-//        for(int i = 0; i < dataTable.getTupleCount(); i++) {
-//            Instant instant = Instant.ofEpochMilli(dataTable.getLong(i, timeColumnIdx));
-//            double value = dataTable.getDouble(i, valueColumnIdx);
-//            timeSeries.addRecord(instant, value, Double.NaN, Double.NaN);
-//        }
-//
-//        overviewTimeSeriesPanel.setTimeSeries(timeSeries);
-//        detailsTimeSeriesPanel.setTimeSeries(timeSeries);
+    private void loadColumnIntoMultiTimeSeries (String columnName) {
+        TimeSeries timeSeries = timeSeriesMap.get(columnName);
+        multiTimeSeriesPanel.addTimeSeries(timeSeries);
     }
 
 
@@ -392,8 +399,34 @@ public class FalconFX extends Application {
         return settingsVBox;
     }
 
+    private SwingNode createMultiTimeSeriesPanel() {
+        multiTimeSeriesPanel = new MultiTimeSeriesPanel();
+        multiTimeSeriesPanel.setBackground(java.awt.Color.white);
 
-    private SwingNode createTimeSeriesPanel () {
+        JScrollPane scroller = new JScrollPane(multiTimeSeriesPanel);
+        scroller.getHorizontalScrollBar().setUnitIncrement(2);
+
+        SwingNode tsSwingNode = new SwingNode();
+        tsSwingNode.setContent(scroller);
+        tsSwingNode.setOnDragOver(event -> event.acceptTransferModes(TransferMode.COPY));
+        tsSwingNode.setOnDragDropped(event -> {
+            Dragboard db = event.getDragboard();
+            if (db.hasContent(objectDataFormat)) {
+                FalconDataTreeItem dataTreeItem = (FalconDataTreeItem)db.getContent(objectDataFormat);
+
+                if (dataTreeItem.columnName != null) {
+                    loadColumnIntoMultiTimeSeries(dataTreeItem.columnName);
+                }
+
+                event.setDropCompleted(true);
+            }
+            event.consume();
+        });
+
+        return tsSwingNode;
+    }
+
+    private SwingNode createOverviewDetailTimeSeriesPanel () {
         detailsTimeSeriesPanel = new TimeSeriesPanel(2, ChronoUnit.SECONDS, TimeSeriesPanel.PlotDisplayOption.STEPPED_LINE);
         detailsTimeSeriesPanel.setBackground(java.awt.Color.white);
 
@@ -404,8 +437,7 @@ public class FalconFX extends Application {
         overviewTimeSeriesPanel.setBorder(border);
 
         JScrollPane scroller = new JScrollPane(detailsTimeSeriesPanel);
-        scroller.getVerticalScrollBar().setUnitIncrement(10);
-        scroller.getHorizontalScrollBar().setUnitIncrement(10);
+        scroller.getHorizontalScrollBar().setUnitIncrement(2);
         scroller.setBorder(border);
 
         JPanel panel = new JPanel();
@@ -422,13 +454,32 @@ public class FalconFX extends Application {
                 FalconDataTreeItem dataTreeItem = (FalconDataTreeItem)db.getContent(objectDataFormat);
 
                 if (dataTreeItem.columnName != null) {
-                    loadColumnTimeSeries(dataTreeItem.columnName);
+                    loadColumnIntoODTimeSeries(dataTreeItem.columnName);
                 }
 
                 event.setDropCompleted(true);
             }
 
             event.consume();
+        });
+
+        scroller.getHorizontalScrollBar().addAdjustmentListener(new AdjustmentListener() {
+            @Override
+            public void adjustmentValueChanged(AdjustmentEvent e) {
+                JScrollBar scrollBar = (JScrollBar)e.getSource();
+                double scrollBarModelWidth = scrollBar.getModel().getMaximum() - scrollBar.getModel().getMinimum();
+                double norm = (double)scrollBar.getModel().getValue() / scrollBarModelWidth;
+                TimeSeries timeSeries = overviewTimeSeriesPanel.getTimeSeries();
+                if (timeSeries != null) {
+                    double deltaTime = norm * Duration.between(timeSeries.getStartInstant(), timeSeries.getEndInstant()).toMillis();
+                    Instant startHighlightInstant = timeSeries.getStartInstant().plusMillis((long) deltaTime);
+                    int scrollBarRight = scrollBar.getModel().getValue() + scrollBar.getModel().getExtent();
+                    norm = 1. - (double) scrollBarRight / (double) scrollBarModelWidth;
+                    deltaTime = norm * Duration.between(timeSeries.getStartInstant(), timeSeries.getEndInstant()).toMillis();
+                    Instant endHighlightInstant = timeSeries.getEndInstant().minusMillis((long) deltaTime);
+                    overviewTimeSeriesPanel.setHighlightRange(startHighlightInstant, endHighlightInstant);
+                }
+            }
         });
 
         return tsSwingNode;

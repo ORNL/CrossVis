@@ -21,7 +21,6 @@ public class TimeSeries {
 	private String name;
 	private double maxValue = Double.NaN;
 	private double minValue = Double.NaN;
-//	private ChronoUnit binChronoUnit;
     private Instant startInstant;
     private Instant endInstant;
 	
@@ -29,7 +28,6 @@ public class TimeSeries {
 	
 	public TimeSeries(String name) {
 		this.name = name;
-//		this.binChronoUnit = binChronoUnit;
 	}
 
 	public void clear() {
@@ -72,17 +70,12 @@ public class TimeSeries {
         return minValue;
     }
 	
-//	public ChronoUnit getBinChronoUnit() {
-//		return binChronoUnit;
-//	}
-	
 	public void addRecord(Instant instant, double value, double upperRange, double lowerRange) {
 		TimeSeriesRecord record = new TimeSeriesRecord();
 		record.instant = Instant.from(instant);
 		record.value = value;
 		record.upperRange = upperRange;
 		record.lowerRange = lowerRange;
-//		Instant keyInstant = record.instant.truncatedTo(binChronoUnit);
 
         if (binTreeMap.isEmpty()) {
             maxValue = value;
@@ -119,7 +112,6 @@ public class TimeSeries {
 			return null;
 		}
 		
-//		Instant keyInstant = instant.truncatedTo(binChronoUnit);
 		if (instant.isBefore(binTreeMap.firstKey()) || instant.isAfter(binTreeMap.lastKey())) {
 			return null;
 		}
@@ -135,9 +127,6 @@ public class TimeSeries {
 	public ArrayList<TimeSeriesRecord> getRecordsBetween(Instant start, Instant end) {
 		ArrayList<TimeSeriesRecord> records = null;
 
-//        Instant startKey = start.truncatedTo(binChronoUnit);
-//        Instant endKey = end.truncatedTo(binChronoUnit);
-//		NavigableMap<Instant, TimeSeriesBin> subRecordMap = binTreeMap.subMap(startKey, true, endKey, true);
 		NavigableMap<Instant, TimeSeriesBin> subRecordMap = binTreeMap.subMap(start, true, end, true);
 		if (!subRecordMap.isEmpty()) {
 			records = new ArrayList<>();
@@ -176,6 +165,10 @@ public class TimeSeries {
         return binTreeMap;
     }
 
+    public void draw(Graphics2D g2, Instant startInstant, Instant endInstant,
+                     int plotHeight, int plotWidth, int plotChronoUnitWidth) {
+
+    }
 //    public void drawOverview(Graphics2D g2, Instant startInstant, Instant endInstant,
 //                             int plotHeight, int plotWidth, int plotChronoUnitWidth) {
 //        // draws an overview plot by condensing all records into the provided width

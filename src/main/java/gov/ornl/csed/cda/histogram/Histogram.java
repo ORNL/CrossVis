@@ -12,6 +12,7 @@ import java.awt.*;
 import java.awt.geom.Rectangle2D;
 import java.awt.geom.RoundRectangle2D;
 import java.awt.image.BufferedImage;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 
 /**
@@ -19,6 +20,8 @@ import java.util.ArrayList;
  */
 public class Histogram {
     private final static Logger log = LoggerFactory.getLogger(Histogram.class);
+
+    public final static DecimalFormat DECIMAL_FORMAT = new DecimalFormat("##0.0#######");
 
     public final static float DEFAULT_NAME_FONT_SIZE = 12f;
     public final static float DEFAULT_VALUE_FONT_SIZE = 10f;
@@ -106,33 +109,6 @@ public class Histogram {
         image.setRGB(3, 9, darkColor.getRGB());
         image.setRGB(3, 12, darkColor.getRGB());
         image.setRGB(3, 15, darkColor.getRGB());
-
-        // code below draws a horizontal drag handle
-//        BufferedImage image = new BufferedImage(17, 6, BufferedImage.TYPE_INT_ARGB);
-//        image.setRGB(2, 1, lightColor.getRGB());
-//        image.setRGB(5, 1, lightColor.getRGB());
-//        image.setRGB(8, 1, lightColor.getRGB());
-//        image.setRGB(11, 1, lightColor.getRGB());
-//        image.setRGB(14, 1, lightColor.getRGB());
-//
-//        image.setRGB(1, 3, lightColor.getRGB());
-//        image.setRGB(4, 3, lightColor.getRGB());
-//        image.setRGB(7, 3, lightColor.getRGB());
-//        image.setRGB(10, 3, lightColor.getRGB());
-//        image.setRGB(13, 3, lightColor.getRGB());
-//
-//        image.setRGB(3, 2, darkColor.getRGB());
-//        image.setRGB(6, 2, darkColor.getRGB());
-//        image.setRGB(9, 2, darkColor.getRGB());
-//        image.setRGB(12, 2, darkColor.getRGB());
-//        image.setRGB(15, 2, darkColor.getRGB());
-//
-//        image.setRGB(2, 4, darkColor.getRGB());
-//        image.setRGB(5, 4, darkColor.getRGB());
-//        image.setRGB(8, 4, darkColor.getRGB());
-//        image.setRGB(11, 4, darkColor.getRGB());
-//        image.setRGB(14, 4, darkColor.getRGB());
-
         return image;
     }
 
@@ -285,7 +261,22 @@ public class Histogram {
         g2.drawString(table.getColumnName(table.getColumnNumber(column)), nameRectangle.x + 1,
                 (nameRectangle.y + nameRectangle.height) - g2.getFontMetrics().getDescent());
 
+        // calculate rectangle for min value string label
+        g2.setFont(g2.getFont().deriveFont(DEFAULT_VALUE_FONT_SIZE));
+        String minString = DECIMAL_FORMAT.format(descriptiveStats.getMin());
+        int stringWidth = g2.getFontMetrics().stringWidth(minString);
+        minValueLabelRectangle = new Rectangle(upperPlotLabelBarRectangle.x+2, upperPlotLabelBarRectangle.y, stringWidth, upperPlotLabelBarRectangle.height);
 
+        // calculate rectangle for max value string label
+        String maxString = DECIMAL_FORMAT.format(descriptiveStats.getMax());
+        stringWidth = g2.getFontMetrics().stringWidth(maxString);
+        maxValueLabelRectangle = new Rectangle((upperPlotLabelBarRectangle.x+ upperPlotLabelBarRectangle.width) - stringWidth - 2, upperPlotLabelBarRectangle.y, stringWidth, upperPlotLabelBarRectangle.height);
+
+        // draw min and max value string labels
+        g2.setFont(g2.getFont().deriveFont(Font.PLAIN, DEFAULT_VALUE_FONT_SIZE));
+        g2.setColor(Color.darkGray);
+        g2.drawString(minString, minValueLabelRectangle.x, minValueLabelRectangle.y + minValueLabelRectangle.height - 4);
+        g2.drawString(maxString, maxValueLabelRectangle.x, maxValueLabelRectangle.y + maxValueLabelRectangle.height - 4);
     }
 
     private int valueToY(double value, boolean clamp) {
