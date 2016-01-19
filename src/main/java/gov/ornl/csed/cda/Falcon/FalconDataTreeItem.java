@@ -8,24 +8,28 @@ import java.io.Serializable;
  */
 public class FalconDataTreeItem implements Serializable{
     public File file;
-    public String columnName;
+    public FileType fileType;
+    public String variableName;
+
+    public enum FileType {CSV, PLG}
 
     public FalconDataTreeItem() {}
 
-    public FalconDataTreeItem(File file) {
+    public FalconDataTreeItem(File file, FileType fileType) {
         this.file = file;
+        this.fileType = fileType;
     }
 
-    public FalconDataTreeItem(File file, String columnName) {
-        this(file);
-        this.columnName = columnName;
+    public FalconDataTreeItem(File file, FileType fileType, String columnName) {
+        this(file, fileType);
+        this.variableName = columnName;
     }
 
     public String toString() {
-        if (columnName != null) {
-            return columnName;
+        if (variableName != null) {
+            return variableName;
         } else if (file != null) {
-            return file.getName();
+            return file.getName() + " (" + fileType + ")";
         }
 
         return "";

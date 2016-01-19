@@ -8,9 +8,15 @@ import javax.swing.border.Border;
 import javax.swing.border.EtchedBorder;
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.geom.Ellipse2D;
+import java.awt.geom.Line2D;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.TreeMap;
 
 /**
  * Created by csg on 1/8/16.
@@ -36,15 +42,15 @@ public class MultiScaleTimeSeriesPanel extends JComponent implements ComponentLi
     private int plotUnitDurationMillis = 0;
 
     private Rectangle plotRectangle;
-    private Rectangle detailPlotRectangle;
-    private Rectangle leftOverviewPlotRectangle;
-    private Rectangle rightOverviewPlotRectangle;
+    private Rectangle2D.Double detailPlotRectangle;
+    private Rectangle2D.Double leftOverviewPlotRectangle;
+    private Rectangle2D.Double rightOverviewPlotRectangle;
 
     private Instant detailStartInstant;
     private Instant detailEndInstant;
     private Instant detailMiddleInstant;
     private Duration detailDuration;
-    private ChronoUnit detailChronoUnit = ChronoUnit.SECONDS;
+    private ChronoUnit detailChronoUnit = ChronoUnit.MINUTES;
 
     private Color gridLineColor = new Color(230, 230, 230);
     private Color hoverLineColor = new Color(50, 50, 50, 100);
@@ -52,6 +58,10 @@ public class MultiScaleTimeSeriesPanel extends JComponent implements ComponentLi
     Color dataColor = new Color(80, 80, 130, 180);
     Color rangeColor = new Color(140, 140, 160, 100);
     private Color selectedRegionFillColor = Color.white;
+
+    TreeMap<Instant, ArrayList<Point2D.Double>> plotPointMap;
+    ArrayList<TimeSeriesSummaryInfo> leftSummaryInfoList;
+    ArrayList<TimeSeriesSummaryInfo> rightSummaryInfoList;
 
     public MultiScaleTimeSeriesPanel(int plotUnitWidth) {
         this.plotUnitWidth = plotUnitWidth;
@@ -70,7 +80,7 @@ public class MultiScaleTimeSeriesPanel extends JComponent implements ComponentLi
         long halfDurationMS = (long)(totalDuration.toMillis() * .5);
         Instant middleInstant = startInstant.plusMillis(halfDurationMS);
 
-        long detailHalfDurationMS = (long)(totalDuration.toMillis() * .01);
+        long detailHalfDurationMS = Duration.of(15, ChronoUnit.MINUTES).toMillis();
         detailStartInstant = middleInstant.minusMillis(detailHalfDurationMS);
         detailEndInstant = middleInstant.plusMillis(detailHalfDurationMS);
         detailMiddleInstant = middleInstant;
@@ -89,9 +99,27 @@ public class MultiScaleTimeSeriesPanel extends JComponent implements ComponentLi
 
         g2.setColor(Color.blue);
         g2.draw(detailPlotRectangle);
+        Point2D.Double lastDrawnPoint = null;
+        for (ArrayList<Point2D.Double> instantPoints : plotPointMap.values()) {
+            for (Point2D.Double point : instantPoints) {
+                if (lastDrawnPoint != null) {
+                    Ellipse2D.Double ellipse = new Ellipse2D.Double(point.x - 1,
+                            point.y - 1, 2., 2.);
+                    Line2D.Double line = new Line2D.Double(lastDrawnPoint.x, lastDrawnPoint.y, point.x, point.y);
+                    g2.setColor(dataColor);
+                    g2.draw(line);
+                    g2.setColor(dataColor);
+                    g2.draw(ellipse);
+                }
+                lastDrawnPoint = point;
+            }
+        }
 
         g2.setColor(Color.orange);
         g2.draw(leftOverviewPlotRectangle);
+
+        g2.setColor(Color.yellow);
+        g2.draw(rightOverviewPlotRectangle);
     }
 
     public void layoutPanel() {
@@ -115,12 +143,9 @@ public class MultiScaleTimeSeriesPanel extends JComponent implements ComponentLi
             // get time duration between start and end detail instants using detail region's choronunit
             long detailDeltaTime = detailChronoUnit.between(detailStartInstant, detailEndInstant);
 
-            // compute start and end detail instants
-            detailStartInstant = detailMiddleInstant.minus(detailDeltaTime/2, detailChronoUnit);
-            detailEndInstant = detailMiddleInstant.plus(detailDeltaTime/2, detailChronoUnit);
-
             // find width of detail rectangle
             long detailRectangleWidth = detailDeltaTime * plotUnitWidth;
+            log.debug("detailRectangleWidth is " + detailRectangleWidth + " " + (double)detailRectangleWidth/plotWidth + "%");
 
             // compute location of detail start instant
             double detailStartXPosition = detailMiddleXPosition - detailRectangleWidth/2.;
@@ -129,11 +154,13 @@ public class MultiScaleTimeSeriesPanel extends JComponent implements ComponentLi
             double detailEndXPosition = detailMiddleXPosition + detailRectangleWidth/2.;
 
             // compute detail plot rectangle
-            detailPlotRectangle = new Rectangle((int)detailStartXPosition, plotRectangle.y, (int)detailRectangleWidth, plotRectangle.height);
+            detailPlotRectangle = new Rectangle2D.Double(detailStartXPosition, plotRectangle.y, detailRectangleWidth,
+                    plotRectangle.height);
 
             // compute left overview rectangle
             double leftOverviewWidth = detailStartXPosition - plotLeft;
-            leftOverviewPlotRectangle = new Rectangle(plotLeft, plotTop, (int)leftOverviewWidth, plotRectangle.height);
+            leftOverviewPlotRectangle = new Rectangle2D.Double(plotLeft, plotTop, leftOverviewWidth,
+                    plotRectangle.height);
             int leftNumPlotUnits = (int) (leftOverviewWidth / plotUnitWidth);
             Duration leftOverviewDuration = Duration.between(startInstant, detailStartInstant);
             double leftPlotUnitDurationReal = (double)leftOverviewDuration.toMillis() / leftNumPlotUnits;
@@ -143,16 +170,43 @@ public class MultiScaleTimeSeriesPanel extends JComponent implements ComponentLi
 
             // compute right overview rectangle
             double rightOverviewWidth = plotRectangle.getMaxX() - detailEndXPosition;
-            rightOverviewPlotRectangle = new Rectangle((int)detailEndXPosition, plotTop, (int)rightOverviewWidth, plotRectangle.height);
+            rightOverviewPlotRectangle = new Rectangle2D.Double(detailEndXPosition, plotTop, rightOverviewWidth, plotRectangle.height);
 
-//            int plotWidth = getWidth() - (getInsets().left + getInsets().right);
-//            numPlotUnits = plotWidth / plotUnitWidth;
-//            double plotUnitDurationReal = (double)totalDuration.toMillis() / numPlotUnits;
-//            plotUnitDurationMillis = (int)Math.ceil(plotUnitDurationReal);
-//            plotRectangle = new Rectangle(plotLeft, plotTop, plotWidth, plotBottom - plotTop);
-//            plotLeftInstant = startInstant;
-//            plotRightInstant = startInstant.plusMillis(plotUnitDurationMillis * numPlotUnits);
+            calculatePoints();
         }
+    }
+
+    private void calculatePoints() {
+        // calculate detail region points
+        plotPointMap = new TreeMap<>();
+
+        int numPointsCalculated = 0;
+        ArrayList<TimeSeriesRecord> records = timeSeries.getRecordsBetween(detailStartInstant, detailEndInstant);
+
+        if (records != null) {
+            for (TimeSeriesRecord record : records) {
+                long deltaTime = detailChronoUnit.between(detailStartInstant, record.instant);
+                double x = detailPlotRectangle.x + (deltaTime * plotUnitWidth);
+
+                double norm = (record.value - timeSeries.getMinValue()) / (timeSeries.getMaxValue() - timeSeries.getMinValue());
+                double yOffset = norm * (plotRectangle.height);
+                double y = plotRectangle.height - yOffset;
+
+                Point2D.Double point = new Point2D.Double(x, y);
+
+                ArrayList<Point2D.Double> instantPoints = plotPointMap.get(record.instant);
+                if (instantPoints == null) {
+                    instantPoints = new ArrayList<>();
+                    plotPointMap.put(record.instant, instantPoints);
+                }
+                instantPoints.add(point);
+                numPointsCalculated++;
+            }
+        }
+
+        // calculate left overview summaries
+        leftSummaryInfoList = new ArrayList<>();
+       
     }
 
     @Override
@@ -216,7 +270,7 @@ public class MultiScaleTimeSeriesPanel extends JComponent implements ComponentLi
             public void run() {
                 try {
 //                    int numTimeRecords = 50400;
-                    int numTimeRecords = 12000;
+                    int numTimeRecords = 60*10;
 //                    int numTimeRecords = 1200;
                     int plotUnitWidth = 4;
                     JFrame frame = new JFrame();
@@ -234,16 +288,16 @@ public class MultiScaleTimeSeriesPanel extends JComponent implements ComponentLi
 
                     TimeSeries timeSeries = new TimeSeries("Test");
 
-                    Instant startInstant = Instant.now().truncatedTo(ChronoUnit.SECONDS);
+                    Instant startInstant = Instant.now().truncatedTo(ChronoUnit.HOURS);
 //                    Instant startInstant = Instant.now();
-                    Instant endInstant = Instant.from(startInstant).plus(numTimeRecords, ChronoUnit.SECONDS);
+                    Instant endInstant = Instant.from(startInstant).plus(numTimeRecords, ChronoUnit.MINUTES);
 
                     log.debug("startInstant = " + startInstant + " endInstant = " + endInstant);
 
                     double value = 0.;
 
                     for (int i = 0; i < numTimeRecords; i++) {
-                        Instant instant = Instant.from(startInstant).plus(i, ChronoUnit.SECONDS);
+                        Instant instant = Instant.from(startInstant).plus(i, ChronoUnit.MINUTES);
                         value = Math.max(-20., Math.min(10., value + .8 * Math.random() - .4 + .2 * Math.cos(i + .2)));
                         double range = Math.abs(value) * .25;
                         double upperRange = value + range;

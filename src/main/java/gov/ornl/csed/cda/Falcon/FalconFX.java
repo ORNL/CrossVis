@@ -17,13 +17,10 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
-import javafx.scene.control.TextArea;
 import javafx.scene.input.*;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
-import javafx.scene.paint.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.*;
 import javafx.scene.text.Font;
@@ -31,8 +28,6 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 import javafx.util.Callback;
-import jdk.nashorn.internal.runtime.options.Option;
-import org.apache.commons.math3.geometry.spherical.oned.ArcsSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import prefuse.data.Table;
@@ -44,17 +39,15 @@ import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.EtchedBorder;
 import java.awt.*;
-import java.awt.Insets;
 import java.awt.event.AdjustmentEvent;
 import java.awt.event.AdjustmentListener;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Optional;
+import java.util.*;
 
 public class FalconFX extends Application {
     private final static Logger log = LoggerFactory.getLogger(FalconFX.class);
@@ -202,6 +195,29 @@ public class FalconFX extends Application {
         primaryStage.show();
     }
 
+    private void openPLGFile(File plgFile) throws IOException {
+        HashMap<String, PLGVariableSchema> variableSchemaMap = PLGFileReader.readVariableSchemas(plgFile);
+
+        // populate data tree view
+        Text itemIcon = new Text("\uf1c0");
+        itemIcon.setFont(fontAwesomeFont);
+        itemIcon.setFontSmoothingType(FontSmoothingType.LCD);
+        TreeItem<FalconDataTreeItem> fileTreeItem = new TreeItem<>(new FalconDataTreeItem(plgFile, FalconDataTreeItem.FileType.PLG), itemIcon);
+        for (PLGVariableSchema schema : variableSchemaMap.values()) {
+            if (schema.typeString.equals("Int16") ||
+                    schema.typeString.equals("Double") ||
+                    schema.typeString.equals("Single") ||
+                    schema.typeString.equals("Int32")) {
+                if (schema.numValues > 1) {
+                    TreeItem<FalconDataTreeItem> variableTreeItem = new TreeItem<>(new FalconDataTreeItem(plgFile,
+                            FalconDataTreeItem.FileType.PLG, schema.variableName));
+                    fileTreeItem.getChildren().add(variableTreeItem);
+                }
+            }
+        }
+
+        dataTreeRoot.getChildren().addAll(fileTreeItem);
+    }
 
     private void openCSVFile(File csvFile) throws DataIOException {
         dataTable = new CSVTableReader().readTable(csvFile);
@@ -252,11 +268,12 @@ public class FalconFX extends Application {
         Text itemIcon = new Text("\uf1c0");
         itemIcon.setFont(fontAwesomeFont);
         itemIcon.setFontSmoothingType(FontSmoothingType.LCD);
-        TreeItem<FalconDataTreeItem> fileTreeItem = new TreeItem<>(new FalconDataTreeItem(csvFile), itemIcon);
+        TreeItem<FalconDataTreeItem> fileTreeItem = new TreeItem<>(new FalconDataTreeItem(csvFile, FalconDataTreeItem.FileType.CSV), itemIcon);
         for (int i = 0; i < dataTable.getColumnCount(); i++) {
             String columnName = dataTable.getColumnName(i);
             if (!columnName.equals(timeColumnName)) {
-                TreeItem<FalconDataTreeItem> columnTreeItem = new TreeItem<>(new FalconDataTreeItem(csvFile, columnName));
+                TreeItem<FalconDataTreeItem> columnTreeItem = new TreeItem<>(new FalconDataTreeItem(csvFile,
+                        FalconDataTreeItem.FileType.CSV, columnName));
                 fileTreeItem.getChildren().addAll(columnTreeItem);
             }
         }
@@ -290,6 +307,23 @@ public class FalconFX extends Application {
             }
         });
 
+        MenuItem openPLGMI = new MenuItem("Open PLG...");
+        openPLGMI.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                FileChooser fileChooser = new FileChooser();
+                fileChooser.setTitle("Open PLG File");
+                File plgFile = fileChooser.showOpenDialog(primaryStage);
+                if (plgFile != null) {
+                    try {
+                        openPLGFile(plgFile);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
+
         MenuItem exitMI = new MenuItem("Exit");
         exitMI.setOnAction(new EventHandler<ActionEvent>() {
             public void handle(ActionEvent event) {
@@ -297,7 +331,7 @@ public class FalconFX extends Application {
             }
         });
 
-        fileMenu.getItems().addAll(openCSVMI, new SeparatorMenuItem(), exitMI);
+        fileMenu.getItems().addAll(openCSVMI, openPLGMI, new SeparatorMenuItem(), exitMI);
 
         Menu editMenu = new Menu("Edit");
         Menu viewMenu = new Menu("View");
@@ -360,27 +394,70 @@ public class FalconFX extends Application {
     }
 
 
-    private void loadColumnIntoODTimeSeries (String columnName) {
-        TimeSeries timeSeries = timeSeriesMap.get(columnName);
-        overviewTimeSeriesPanel.setTimeSeries(timeSeries);
-        detailsTimeSeriesPanel.setTimeSeries(timeSeries);
+    private void loadColumnIntoODTimeSeries (FalconDataTreeItem falconDataTreeItem) {
+        if (falconDataTreeItem.fileType == FalconDataTreeItem.FileType.CSV) {
+            TimeSeries timeSeries = timeSeriesMap.get(falconDataTreeItem.variableName);
+            overviewTimeSeriesPanel.setTimeSeries(timeSeries);
+            detailsTimeSeriesPanel.setTimeSeries(timeSeries);
+        } else if (falconDataTreeItem.fileType == FalconDataTreeItem.FileType.PLG) {
+            // load time series for variable
+            try {
+                ArrayList<String> variableList = new ArrayList<>();
+                variableList.add(falconDataTreeItem.variableName);
+                Map<String, TimeSeries> PLGTimeSeriesMap = PLGFileReader.readPLGFile(falconDataTreeItem.file, variableList);
+                for (TimeSeries timeSeries : PLGTimeSeriesMap.values()) {
+//                    timeSeriesMap.put(timeSeries.getName(), timeSeries);
+                    overviewTimeSeriesPanel.setTimeSeries(timeSeries);
+                    detailsTimeSeriesPanel.setTimeSeries(timeSeries);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
-    private void loadColumnIntoMultiTimeSeries (String columnName) {
-        TimeSeries timeSeries = timeSeriesMap.get(columnName);
-        if (multiTimeSeriesStartInstant == null) {
-            multiTimeSeriesStartInstant = timeSeries.getStartInstant();
-        } else if (multiTimeSeriesStartInstant.isBefore(timeSeries.getStartInstant())) {
-            multiTimeSeriesStartInstant = timeSeries.getStartInstant();
-        }
+    private void loadColumnIntoMultiTimeSeries (FalconDataTreeItem falconDataTreeItem) {
+        if (falconDataTreeItem.fileType == FalconDataTreeItem.FileType.CSV) {
+            TimeSeries timeSeries = timeSeriesMap.get(falconDataTreeItem.variableName);
+            if (multiTimeSeriesStartInstant == null) {
+                multiTimeSeriesStartInstant = timeSeries.getStartInstant();
+            } else if (multiTimeSeriesStartInstant.isBefore(timeSeries.getStartInstant())) {
+                multiTimeSeriesStartInstant = timeSeries.getStartInstant();
+            }
 
-        if (multiTimeSeriesEndInstant == null) {
-            multiTimeSeriesEndInstant = timeSeries.getEndInstant();
-        } else if (multiTimeSeriesEndInstant.isAfter(timeSeries.getEndInstant())) {
-            multiTimeSeriesEndInstant = timeSeries.getEndInstant();
+            if (multiTimeSeriesEndInstant == null) {
+                multiTimeSeriesEndInstant = timeSeries.getEndInstant();
+            } else if (multiTimeSeriesEndInstant.isAfter(timeSeries.getEndInstant())) {
+                multiTimeSeriesEndInstant = timeSeries.getEndInstant();
+            }
+            multiTimeSeriesPanel.setDateTimeRange(multiTimeSeriesStartInstant, multiTimeSeriesEndInstant, multiTimeSeriesChronoUnitChoice.getSelectionModel().getSelectedItem());
+            multiTimeSeriesPanel.addTimeSeries(timeSeries);
+        } else if (falconDataTreeItem.fileType == FalconDataTreeItem.FileType.PLG) {
+            try {
+                ArrayList<String> variableList = new ArrayList<>();
+                variableList.add(falconDataTreeItem.variableName);
+                Map<String, TimeSeries> PLGTimeSeriesMap = PLGFileReader.readPLGFile(falconDataTreeItem.file, variableList);
+                for (TimeSeries timeSeries : PLGTimeSeriesMap.values()) {
+//                    timeSeriesMap.put(timeSeries.getName(), timeSeries);
+
+                    if (multiTimeSeriesStartInstant == null) {
+                        multiTimeSeriesStartInstant = timeSeries.getStartInstant();
+                    } else if (multiTimeSeriesStartInstant.isBefore(timeSeries.getStartInstant())) {
+                        multiTimeSeriesStartInstant = timeSeries.getStartInstant();
+                    }
+
+                    if (multiTimeSeriesEndInstant == null) {
+                        multiTimeSeriesEndInstant = timeSeries.getEndInstant();
+                    } else if (multiTimeSeriesEndInstant.isAfter(timeSeries.getEndInstant())) {
+                        multiTimeSeriesEndInstant = timeSeries.getEndInstant();
+                    }
+                    multiTimeSeriesPanel.setDateTimeRange(multiTimeSeriesStartInstant, multiTimeSeriesEndInstant, multiTimeSeriesChronoUnitChoice.getSelectionModel().getSelectedItem());
+                    multiTimeSeriesPanel.addTimeSeries(timeSeries);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
-        multiTimeSeriesPanel.setDateTimeRange(multiTimeSeriesStartInstant, multiTimeSeriesEndInstant, chronoChoiceBox.getSelectionModel().getSelectedItem());
-        multiTimeSeriesPanel.addTimeSeries(timeSeries);
     }
 
     private Node createMultiTimeSeriesPanel() {
@@ -448,8 +525,8 @@ public class FalconFX extends Application {
             if (db.hasContent(objectDataFormat)) {
                 FalconDataTreeItem dataTreeItem = (FalconDataTreeItem)db.getContent(objectDataFormat);
 
-                if (dataTreeItem.columnName != null) {
-                    loadColumnIntoMultiTimeSeries(dataTreeItem.columnName);
+                if (dataTreeItem.variableName != null) {
+                    loadColumnIntoMultiTimeSeries(dataTreeItem);
                 }
 
                 event.setDropCompleted(true);
@@ -461,10 +538,6 @@ public class FalconFX extends Application {
         borderPane.setTop(settingsHBox);
         borderPane.setCenter(tsSwingNode);
         return borderPane;
-    }
-
-    private Node createMultiHistogramPanel() {
-
     }
 
     private Node createOverviewDetailTimeSeriesPanel () {
@@ -495,8 +568,8 @@ public class FalconFX extends Application {
             if (db.hasContent(objectDataFormat)) {
                 FalconDataTreeItem dataTreeItem = (FalconDataTreeItem)db.getContent(objectDataFormat);
 
-                if (dataTreeItem.columnName != null) {
-                    loadColumnIntoODTimeSeries(dataTreeItem.columnName);
+                if (dataTreeItem.variableName != null) {
+                    loadColumnIntoODTimeSeries(dataTreeItem);
                 }
 
                 event.setDropCompleted(true);
