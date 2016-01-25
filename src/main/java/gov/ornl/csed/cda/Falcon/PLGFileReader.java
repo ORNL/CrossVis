@@ -3,9 +3,6 @@ package gov.ornl.csed.cda.Falcon;
 import gov.ornl.csed.cda.timevis.TimeSeries;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import prefuse.data.Table;
-import prefuse.data.Tuple;
-import prefuse.data.tuple.TableTuple;
 
 import java.io.*;
 import java.time.Instant;
@@ -21,13 +18,51 @@ public class PLGFileReader {
     private static final Logger log = LoggerFactory.getLogger(PLGFileReader.class);
     private static DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
 
-    public static HashMap<String, TimeSeries> readPLGFile(File plgFile, Collection<String> variables) throws IOException {
+    public static double[] readPLGFileAsDoubleArray(File plgFile, String variableName) throws IOException {
+        BufferedReader plgFileReader = new BufferedReader(new FileReader(plgFile));
+
+        ArrayList<Double> dataList = new ArrayList<>();
+
+        String line = plgFileReader.readLine();
+        while (line != null) {
+            // skip the first set of variable metadata lines
+            if (line.startsWith("#")) {
+                line = plgFileReader.readLine();
+                continue;
+            }
+
+            String tokens[] = line.split("[|]");
+            if (tokens.length == 5) {
+                if (variableName.equals(tokens[1])) {
+                    try {
+                        double value = Double.parseDouble(tokens[4]);
+                        dataList.add(value);
+                    } catch (NumberFormatException ex) {
+                        log.debug("Exception caught while processing value for variable " + variableName + " (value string = " + tokens[4] + ")");
+                    }
+                }
+            }
+
+            line = plgFileReader.readLine();
+        }
+
+        plgFileReader.close();
+
+        log.debug("Read " + dataList.size() + " values for variable '" + variableName + "'");
+        double data[] = new double[dataList.size()];
+        for (int i = 0; i < dataList.size(); i++) {
+            data[i] = dataList.get(i);
+        }
+        return data;
+    }
+
+    public static HashMap<String, TimeSeries> readPLGFileAsTimeSeries(File plgFile, Collection<String> variables) throws IOException {
         HashMap<String, TimeSeries> variableTimeSeriesMap = new HashMap<>();
 
         BufferedReader plgFileReader = new BufferedReader(new FileReader(plgFile));
 
         String line = plgFileReader.readLine();
-        while ((line != null)) {
+        while (line != null) {
             // skip the first set of variable metadata lines
             if (line.startsWith("#")) {
                 line = plgFileReader.readLine();
@@ -60,13 +95,13 @@ public class PLGFileReader {
         }
         plgFileReader.close();
 
-        log.debug("Read time series for " + variableTimeSeriesMap.size() + " variables");
-        log.debug("Time Series: ");
-        for (TimeSeries timeSeries : variableTimeSeriesMap.values()) {
-            if (timeSeries.getRecordCount() > 1) {
-                log.debug(timeSeries.getName() + " - " + timeSeries.getRecordCount() + " records");
-            }
-        }
+//        log.debug("Read time series for " + variableTimeSeriesMap.size() + " variables");
+//        log.debug("Time Series: ");
+//        for (TimeSeries timeSeries : variableTimeSeriesMap.values()) {
+//            if (timeSeries.getRecordCount() > 1) {
+//                log.debug(timeSeries.getName() + " - " + timeSeries.getRecordCount() + " records");
+//            }
+//        }
 
         return variableTimeSeriesMap;
     }
@@ -134,7 +169,7 @@ public class PLGFileReader {
 
         log.debug("Will attempt to read times series for the following " + variablesToRead.size() + " variables: " + variablesToRead.toString());
 
-        HashMap<String, TimeSeries> variableTimeSeriesList = readPLGFile(plgFile, variablesToRead);
+        HashMap<String, TimeSeries> variableTimeSeriesList = readPLGFileAsTimeSeries(plgFile, variablesToRead);
 
 
     }

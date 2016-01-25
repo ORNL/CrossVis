@@ -24,66 +24,83 @@ public class MultiHistogramPanel extends JComponent implements ComponentListener
 
     public final static int DEFAULT_AXIS_LABEL_HEIGHT = 16;
 
-    private Table table;
-    private ArrayList<Histogram> histogramList;
+    private ArrayList<Histogram> histogramList = new ArrayList<>();
     private int histogramPlotHeight = 60;
     private int plotSpacing = 10;
     private Rectangle panelPlotRectangle;
+    private int panelHeight = 0;
+    private int panelWidth = 0;
+    private int binCount = 20;
 
     public MultiHistogramPanel() {
+        setMinimumSize(new Dimension(40, 40));
         addComponentListener(this);
     }
 
-    public void setTable(Table table) {
-        this.table = table;
+    public void setTable() {
         layoutPanel();
         repaint();
     }
 
-    public Table getTable() {
-        return table;
-    }
-
-    public void removeTable() {
-        table = null;
+    public void removeAllHistograms() {
+        histogramList.clear();
         repaint();
     }
 
-    public void setHistogramPlotHeight (int height) {
+    public void setPlotHeight (int height) {
         histogramPlotHeight = height;
         layoutPanel();
         repaint();
+    }
+
+    public int getPlotHeight() {
+        return histogramPlotHeight;
+    }
+
+    public void setBinCount (int binCount) {
+        this.binCount = binCount;
+        for (Histogram histogram : histogramList) {
+            histogram.setBinCount(binCount);
+        }
+        layoutPanel();
+        repaint();
+    }
+
+    public int getBinCount () {
+        return binCount;
     }
 
     public int getHistogramPlotHeight () {
         return histogramPlotHeight;
     }
 
-    private void calculateHistograms() {
-        histogramList = new ArrayList<>();
-
-        if (table != null) {
-            int binCount = (int) Math.floor(Math.sqrt(table.getTupleCount()));
-            if (binCount < 1) {
-                binCount = 1;
-            }
-
-            for (int icol = 0; icol < table.getColumnCount(); icol++) {
-                Column column = table.getColumn(icol);
-                Histogram histogram = new Histogram(table, column, binCount);
-                histogramList.add(histogram);
-            }
-        }
+    public void addHistogram(Histogram histogram) {
+        histogramList.add(histogram);
+        layoutPanel();
+        repaint();
     }
 
-    public void layoutPanel() {
-        if (table != null) {
-            if (histogramList == null) {
-                calculateHistograms();
-            }
+//    private void calculateHistograms() {
+//        histogramList = new ArrayList<>();
+//
+//        if (table != null) {
+//            int binCount = (int) Math.floor(Math.sqrt(table.getTupleCount()));
+//            if (binCount < 1) {
+//                binCount = 1;
+//            }
+//
+//            for (int icol = 0; icol < table.getColumnCount(); icol++) {
+//                Column column = table.getColumn(icol);
+//                Histogram histogram = new Histogram(table, column, binCount);
+//                histogramList.add(histogram);
+//            }
+//        }
+//    }
 
-            int panelWidth = getWidth() - (getInsets().left + getInsets().right);
-            int panelHeight = (histogramList.size() * (histogramPlotHeight + plotSpacing)) + (getInsets().top + getInsets().bottom);
+    public void layoutPanel() {
+        if (!histogramList.isEmpty()) {
+            panelWidth = getVisibleRect().width - (getInsets().left + getInsets().right) - 2;
+            panelHeight = (histogramList.size() * (histogramPlotHeight + plotSpacing)) + (getInsets().top + getInsets().bottom);
 
             if (panelWidth <= 0 || panelHeight <= 0) {
                 return;
@@ -107,20 +124,25 @@ public class MultiHistogramPanel extends JComponent implements ComponentListener
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 
+        if (getVisibleRect().width < getWidth()) {
+            log.debug("forcing panel layout because visible rectangle width is smaller than virtual panel width");
+            layoutPanel();
+        }
+
         g2.setColor(getBackground());
         g2.fillRect(0, 0, getWidth(), getHeight());
-        g2.setColor(Color.green);
+//        g2.setColor(Color.green);
 //        g2.drawRect(getInsets().left, getInsets().top, getWidth()-(getInsets().left + getInsets().right), getHeight() - (getInsets().top + getInsets().bottom));
-        g2.draw(panelPlotRectangle);
+//        g2.draw(panelPlotRectangle);
 
         if ((getWidth() <= 0) || (getHeight() <= 0)) {
             return;
         }
 
-        Font normalFont = g2.getFont().deriveFont(Font.PLAIN, 10.f);
-        g2.setFont(normalFont);
-
         if (histogramList != null) {
+            Font normalFont = g2.getFont().deriveFont(Font.PLAIN, 10.f);
+            g2.setFont(normalFont);
+
             for (int i = 0; i < histogramList.size(); i++) {
                 Histogram histogram = histogramList.get(i);
                 int plotYOffset = getInsets().top + (i * (histogramPlotHeight + plotSpacing));
@@ -157,14 +179,30 @@ public class MultiHistogramPanel extends JComponent implements ComponentListener
                 scroller.getHorizontalScrollBar().setUnitIncrement(2);
                 scroller.setBackground(frame.getBackground());
 
+                JTabbedPane tabbedPane = new JTabbedPane();
+                tabbedPane.addTab("Test", scroller);
+
                 JPanel mainPanel = (JPanel)frame.getContentPane();
                 mainPanel.setLayout(new BorderLayout());
-                mainPanel.add(scroller, BorderLayout.CENTER);
+                mainPanel.add(tabbedPane, BorderLayout.CENTER);
 
                 frame.setVisible(true);
 
-                multiHistogramPanel.setTable(table);
+                int binCount = (int) Math.floor(Math.sqrt(table.getTupleCount()));
+                if (binCount < 1) {
+                    binCount = 1;
+                }
 
+                for (int icol = 0; icol < table.getColumnCount(); icol++) {
+                    Column column = table.getColumn(icol);
+                    double values[] = new double[column.getRowCount()];
+                    for (int i = 0; i < column.getRowCount(); i++) {
+                        values[i] = column.getDouble(i);
+                    }
+
+                    Histogram histogram = new Histogram(table.getColumnName(icol), values, binCount);
+                    multiHistogramPanel.addHistogram(histogram);
+                }
             }
         });
     }

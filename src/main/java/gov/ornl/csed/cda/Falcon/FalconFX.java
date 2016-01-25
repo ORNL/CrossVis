@@ -2,6 +2,8 @@ package gov.ornl.csed.cda.Falcon;/**
  * Created by csg on 12/30/15.
  */
 
+import gov.ornl.csed.cda.histogram.Histogram;
+import gov.ornl.csed.cda.histogram.MultiHistogramPanel;
 import gov.ornl.csed.cda.timevis.MultiTimeSeriesPanel;
 import gov.ornl.csed.cda.timevis.TimeSeries;
 import gov.ornl.csed.cda.timevis.TimeSeriesPanel;
@@ -26,11 +28,11 @@ import javafx.scene.text.*;
 import javafx.scene.text.Font;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import javafx.stage.WindowEvent;
 import javafx.util.Callback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import prefuse.data.Table;
+import prefuse.data.column.Column;
 import prefuse.data.event.TableListener;
 import prefuse.data.io.CSVTableReader;
 import prefuse.data.io.DataIOException;
@@ -96,7 +98,9 @@ public class FalconFX extends Application {
 
     private ChronoUnit currentTimeSeriesChronoUnit;
     private String timeColumnName;
-
+    private MultiHistogramPanel multiHistogramPanel;
+    private Spinner multipleHistogramPlotHeightSpinner;
+    private Spinner multipleHistogramBinSizeSpinner;
 
 
     public static void main(String[] args) {
@@ -114,21 +118,21 @@ public class FalconFX extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        primaryStage.setOnShown(new EventHandler<WindowEvent>() {
-            @Override
-            public void handle(WindowEvent event) {
-                FileChooser fileChooser = new FileChooser();
-                fileChooser.setTitle("Open CSV File");
-                File csvFile = fileChooser.showOpenDialog(primaryStage);
-                if (csvFile != null) {
-                    try {
-                        openCSVFile(csvFile);
-                    } catch (DataIOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        });
+//        primaryStage.setOnShown(new EventHandler<WindowEvent>() {
+//            @Override
+//            public void handle(WindowEvent event) {
+//                FileChooser fileChooser = new FileChooser();
+//                fileChooser.setTitle("Open CSV File");
+//                File csvFile = fileChooser.showOpenDialog(primaryStage);
+//                if (csvFile != null) {
+//                    try {
+//                        openCSVFile(csvFile);
+//                    } catch (DataIOException e) {
+//                        e.printStackTrace();
+//                    }
+//                }
+//            }
+//        });
 
         InputStream is = FalconFX.class.getResourceAsStream("fontawesome-webfont.ttf");
         fontAwesomeFont = javafx.scene.text.Font.loadFont(is, 14);
@@ -139,6 +143,7 @@ public class FalconFX extends Application {
 
         Node ODTimeSeriesNode = createOverviewDetailTimeSeriesPanel();
         Node multiTimeSeriesNode = createMultiTimeSeriesPanel();
+        Node multiHistogramNode = createMultiHistogramPanel();
 
         createDataTreeView();
         createColumnTableView();
@@ -150,7 +155,9 @@ public class FalconFX extends Application {
         ODTimeTab.setContent(ODTimeSeriesNode);
         Tab multiTimeTab = new Tab("Multiple Time Series");
         multiTimeTab.setContent(multiTimeSeriesNode);
-        tabPane.getTabs().addAll(ODTimeTab, multiTimeTab);
+        Tab multiHistoTab = new Tab("Multiple Histograms");
+        multiHistoTab.setContent(multiHistogramNode);
+        tabPane.getTabs().addAll(ODTimeTab, multiTimeTab, multiHistoTab);
 
 //        // Create left pane as a vertically split node
 //        StackPane topStackPane = new StackPane();
@@ -404,12 +411,44 @@ public class FalconFX extends Application {
             try {
                 ArrayList<String> variableList = new ArrayList<>();
                 variableList.add(falconDataTreeItem.variableName);
-                Map<String, TimeSeries> PLGTimeSeriesMap = PLGFileReader.readPLGFile(falconDataTreeItem.file, variableList);
+                Map<String, TimeSeries> PLGTimeSeriesMap = PLGFileReader.readPLGFileAsTimeSeries(falconDataTreeItem.file, variableList);
                 for (TimeSeries timeSeries : PLGTimeSeriesMap.values()) {
 //                    timeSeriesMap.put(timeSeries.getName(), timeSeries);
                     overviewTimeSeriesPanel.setTimeSeries(timeSeries);
                     detailsTimeSeriesPanel.setTimeSeries(timeSeries);
                 }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void loadColumnIntoMultiHistogram (FalconDataTreeItem falconDataTreeItem) {
+        if (falconDataTreeItem.fileType == FalconDataTreeItem.FileType.CSV) {
+//            int binCount = (int) Math.floor(Math.sqrt(dataTable.getTupleCount()));
+//            if (binCount < 1) {
+//                binCount = 1;
+//            }
+            int binCount = multiHistogramPanel.getBinCount();
+
+            for (int icol = 0; icol < dataTable.getColumnCount(); icol++) {
+                if (dataTable.getColumnName(icol).equals(falconDataTreeItem.variableName)) {
+                    Column column = dataTable.getColumn(icol);
+                    double values[] = new double[column.getRowCount()];
+                    for (int i = 0; i < column.getRowCount(); i++) {
+                        values[i] = column.getDouble(i);
+                    }
+
+                    Histogram histogram = new Histogram(dataTable.getColumnName(icol), values, binCount);
+                    multiHistogramPanel.addHistogram(histogram);
+                    break;
+                }
+            }
+        } else if (falconDataTreeItem.fileType == FalconDataTreeItem.FileType.PLG) {
+            try {
+                double variableData []= PLGFileReader.readPLGFileAsDoubleArray(falconDataTreeItem.file, falconDataTreeItem.variableName);
+                Histogram histogram = new Histogram(falconDataTreeItem.variableName, variableData, multiHistogramPanel.getBinCount());
+                multiHistogramPanel.addHistogram(histogram);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -436,7 +475,7 @@ public class FalconFX extends Application {
             try {
                 ArrayList<String> variableList = new ArrayList<>();
                 variableList.add(falconDataTreeItem.variableName);
-                Map<String, TimeSeries> PLGTimeSeriesMap = PLGFileReader.readPLGFile(falconDataTreeItem.file, variableList);
+                Map<String, TimeSeries> PLGTimeSeriesMap = PLGFileReader.readPLGFileAsTimeSeries(falconDataTreeItem.file, variableList);
                 for (TimeSeries timeSeries : PLGTimeSeriesMap.values()) {
 //                    timeSeriesMap.put(timeSeries.getName(), timeSeries);
 
@@ -458,6 +497,78 @@ public class FalconFX extends Application {
                 e.printStackTrace();
             }
         }
+    }
+
+    private Node createMultiHistogramPanel() {
+        multiHistogramPanel = new MultiHistogramPanel();
+        multiHistogramPanel.setBackground(java.awt.Color.white);
+
+        HBox settingsHBox = new HBox();
+        settingsHBox.setAlignment(Pos.CENTER_LEFT);
+        settingsHBox.setPadding(new javafx.geometry.Insets(4));
+        settingsHBox.setSpacing(8.);
+
+        HBox hBox = new HBox();
+        hBox.setAlignment(Pos.CENTER_LEFT);
+        multipleHistogramPlotHeightSpinner = new Spinner(40, 400, multiHistogramPanel.getPlotHeight());
+        multipleHistogramPlotHeightSpinner.setEditable(true);
+        multipleHistogramPlotHeightSpinner.valueProperty().addListener((obs, oldValue, newValue) -> multiHistogramPanel.setPlotHeight((Integer)newValue));
+        hBox.getChildren().addAll(new Label("Plot Height: "), multipleHistogramPlotHeightSpinner);
+        settingsHBox.getChildren().add(hBox);
+
+        hBox = new HBox();
+        hBox.setAlignment(Pos.CENTER_LEFT);
+        multipleHistogramBinSizeSpinner = new Spinner(10, 100, multiHistogramPanel.getBinCount());
+        multipleHistogramBinSizeSpinner.setEditable(true);
+        multipleHistogramBinSizeSpinner.valueProperty().addListener((obs, oldValue, newValue) -> multiHistogramPanel.setBinCount((Integer)newValue));
+        hBox.getChildren().addAll(new Label("Bin Count: "), multipleHistogramBinSizeSpinner);
+        settingsHBox.getChildren().add(hBox);
+
+        Border border = BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(10,10,10,10), BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
+        JScrollPane scroller = new JScrollPane(multiHistogramPanel);
+        scroller.getVerticalScrollBar().setUnitIncrement(2);
+        scroller.setBorder(border);
+
+        SwingNode tsSwingNode = new SwingNode();
+        tsSwingNode.setContent(scroller);
+        tsSwingNode.setOnDragOver(event -> event.acceptTransferModes(TransferMode.COPY));
+        tsSwingNode.setOnDragDropped(event -> {
+            Dragboard db = event.getDragboard();
+            if (db.hasContent(objectDataFormat)) {
+                FalconDataTreeItem dataTreeItem = (FalconDataTreeItem)db.getContent(objectDataFormat);
+
+                if (dataTreeItem.variableName != null) {
+                    loadColumnIntoMultiHistogram(dataTreeItem);
+                }
+
+                event.setDropCompleted(true);
+            }
+            event.consume();
+        });
+
+//        ScrollPane scrollPane = new ScrollPane();
+//        scrollPane.setContent(tsSwingNode);
+//        scrollPane.setFitToWidth(true);
+
+//        scrollPane.setOnDragOver(event -> event.acceptTransferModes(TransferMode.COPY));
+//        scrollPane.setOnDragDropped(event -> {
+//            Dragboard db = event.getDragboard();
+//            if (db.hasContent(objectDataFormat)) {
+//                FalconDataTreeItem dataTreeItem = (FalconDataTreeItem)db.getContent(objectDataFormat);
+//
+//                if (dataTreeItem.variableName != null) {
+//                    loadColumnIntoMultiHistogram(dataTreeItem);
+//                }
+//
+//                event.setDropCompleted(true);
+//            }
+//            event.consume();
+//        });
+
+        BorderPane borderPane = new BorderPane();
+        borderPane.setTop(settingsHBox);
+        borderPane.setCenter(tsSwingNode);
+        return borderPane;
     }
 
     private Node createMultiTimeSeriesPanel() {

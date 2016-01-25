@@ -35,8 +35,8 @@ public class Histogram {
     public final static Color DEFAULT_HISTOGRAM_FILL_COLOR = new Color(140, 140, 150);
     public final static Color DEFAULT_QUERY_HISTOGRAM_FILL_COLOR = new Color(60, 60, 70);
 
-    private Table table;
-    private Column column;
+    private String name;
+    private double values[];
     private int binCount;
 
     public Rectangle fullPlotRectangle;
@@ -68,9 +68,9 @@ public class Histogram {
     private ArrayList<Rectangle2D.Double> histogramBinRectangles;
     private ArrayList<Color> histogramBinColors;
 
-    public Histogram(Table table, Column column, int binCount) {
-        this.table = table;
-        this.column = column;
+    public Histogram(String name, double values[], int binCount) {
+        this.name = name;
+        this.values = values;
         this.binCount = binCount;
         dragHandleImage = createDragHandleImage();
         calculateStatistics();
@@ -112,15 +112,19 @@ public class Histogram {
         return image;
     }
 
+    public String getName() {
+        return name;
+    }
+
     public void calculateStatistics() {
-        double data[] = new double[column.getRowCount()];
-        for (int i = 0; i < data.length; i++) {
-            data[i] = column.getDouble(i);
-        }
+//        double data[] = new double[column.getRowCount()];
+//        for (int i = 0; i < data.length; i++) {
+//            data[i] = column.getDouble(i);
+//        }
 
         distributionStats = new EmpiricalDistribution(binCount);
-        distributionStats.load(data);
-        descriptiveStats = new DescriptiveStatistics(data);
+        distributionStats.load(values);
+        descriptiveStats = new DescriptiveStatistics(values);
     }
 
     public void layoutAxis(int width, int height) {
@@ -175,8 +179,8 @@ public class Histogram {
 
 
         // calculate histogram bin rectangles
-        log.debug("Column " + table.getColumnName(table.getColumnNumber(column)));
-        log.debug("bin count = " + binCount + " max: " + distributionStats.getSampleStats().getN());
+//        log.debug("Column " + name);
+//        log.debug("bin count = " + binCount + " max: " + distributionStats.getSampleStats().getN());
 //        int counter = 0;
         histogramRectangle = new Rectangle(histogramPlotRegionRectangle.x, axisPlotTopPosition,
                 histogramPlotRegionRectangle.width, axisPlotDividerLinePosition - axisPlotTopPosition);
@@ -191,7 +195,7 @@ public class Histogram {
             }
         }
 
-        log.debug("maxN " + maxN);
+//        log.debug("maxN " + maxN);
         int binNumber = 0;
         for (SummaryStatistics summaryStatistics : distributionStats.getBinStats()) {
             double x = histogramRectangle.x + (binNumber * binRectangleWidth);
@@ -203,7 +207,7 @@ public class Histogram {
             histogramBinRectangles.add(binRectangle);
             histogramBinColors.add(binColor);
 
-            log.debug("bin " + binNumber + " count = " + summaryStatistics.getN() + " [" + summaryStatistics.getMin() + ", " + summaryStatistics.getMax() + "]");
+//            log.debug("bin " + binNumber + " count = " + summaryStatistics.getN() + " [" + summaryStatistics.getMin() + ", " + summaryStatistics.getMax() + "]");
             binNumber++;
 //            counter++;
         }
@@ -214,8 +218,12 @@ public class Histogram {
     }
 
     public void draw (Graphics2D g2) {
-        g2.setColor(Color.blue);
-        g2.draw(fullPlotRectangle);
+        if (fullPlotRectangle == null) {
+            return;
+        }
+
+//        g2.setColor(Color.blue);
+//        g2.draw(fullPlotRectangle);
 
 //        g2.setColor(Color.blue);
 //        g2.draw(nameRectangle);
@@ -258,7 +266,7 @@ public class Histogram {
         // draw variable name
         g2.setFont(g2.getFont().deriveFont(DEFAULT_NAME_FONT_SIZE));
         g2.setColor(Color.black);
-        g2.drawString(table.getColumnName(table.getColumnNumber(column)), nameRectangle.x + 1,
+        g2.drawString(name, nameRectangle.x + 1,
                 (nameRectangle.y + nameRectangle.height) - g2.getFontMetrics().getDescent());
 
         // calculate rectangle for min value string label
