@@ -9,6 +9,7 @@ import gov.ornl.csed.cda.timevis.TimeSeries;
 import gov.ornl.csed.cda.timevis.TimeSeriesPanel;
 import javafx.application.Application;
 import javafx.beans.value.ObservableValue;
+import javafx.collections.FXCollections;
 import javafx.embed.swing.SwingNode;
 import javafx.event.*;
 import javafx.geometry.*;
@@ -283,6 +284,31 @@ public class FalconFX extends Application {
             dataTable = null;
             return;
         }
+
+        ChoiceBox<ChronoUnit> timeChronoUnitChoiceBox = new ChoiceBox<>();
+        timeChronoUnitChoiceBox.getSelectionModel().select(0);
+
+        ChronoUnit timeChronoUnit = null;
+        ChoiceDialog<ChronoUnit> timeChronoUnitChoiceDialog = new ChoiceDialog<>(ChronoUnit.MILLIS, FXCollections.observableArrayList(ChronoUnit.MILLIS, ChronoUnit.SECONDS));
+        timeChronoUnitChoiceDialog.setTitle("Time Chronological Unit");
+        timeChronoUnitChoiceDialog.setHeaderText("Select the Chronological Unit of Time");
+        timeChronoUnitChoiceDialog.setContentText("Time Chronological Unit: ");
+        Optional<ChronoUnit> timeChronoUnitResult = timeChronoUnitChoiceDialog.showAndWait();
+        if (timeChronoUnitResult.isPresent()) {
+            log.debug("time chronological unit is " + timeChronoUnitResult.get());
+            timeChronoUnit = timeChronoUnitResult.get();
+        } else {
+            dataTable = null;
+            return;
+        }
+//        if (csvImportInfo.timeFieldChronoUnit == ChronoUnit.MILLIS) {
+//            long timeMillis = Long.parseLong(csvRecord.get(i));
+//            record.setInstant(timeMillis);
+//        } else {
+//            double time = Double.parseDouble(csvRecord.get(i));
+//            long timeMillis = (long)(time * 1000.);
+//            record.setInstant(timeMillis);
+//        }
 
         // build time series for all variables in table
         timeSeriesMap = new HashMap<>();
