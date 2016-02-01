@@ -7,11 +7,10 @@ import java.io.Serializable;
  * Created by csg on 1/25/16.
  */
 public class VariableClipboardData implements Serializable {
-    File file;
-    FalconDataTreeItem.FileType fileType;
+    FileMetadata fileMetadata;
     String variableName;
 
     public String toString() {
-        return "[file: " + file.getName() + " fileType: " + fileType + " variableName: " + variableName + "]";
+        return "[file: " + fileMetadata.file.getName() + " fileType: " + fileMetadata.fileType + " variableName: " + variableName + "]";
     }
 }

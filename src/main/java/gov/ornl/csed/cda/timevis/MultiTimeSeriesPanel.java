@@ -9,6 +9,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.geom.RoundRectangle2D;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -436,6 +437,7 @@ public class MultiTimeSeriesPanel extends JComponent implements MouseMotionListe
     private void drawTimeSeries(Graphics2D g2, TimeSeries timeSeries, double hoverValue, boolean highlightDragHandle,
                                 boolean highlightRemoveButton, Instant clipStartInstant, Instant clipEndInstant,
                                 TimeSeriesPlotInfo plotInfo) {
+
         Rectangle clipBounds = g2.getClipBounds();
 
         g2.translate(plotLeft, 0);
@@ -716,9 +718,38 @@ public class MultiTimeSeriesPanel extends JComponent implements MouseMotionListe
                 double deltaTime = (double)(hoverX-plotLeft) / plotChronoUnitWidth;
                 hoverInstant = startInstant.plus((long)deltaTime, chronoUnit);
 
+                Instant rangeStartInstant = hoverInstant.truncatedTo(chronoUnit).minus(1, chronoUnit);
+                Instant rangeEndInstant = hoverInstant.truncatedTo(chronoUnit).plus(1, chronoUnit);
+
                 hoverTimeSeriesValues.clear();
                 for (int i = 0; i < timeSeriesList.size(); i++) {
                     TimeSeries timeSeries = timeSeriesList.get(i);
+
+                    ArrayList<TimeSeriesRecord> records = timeSeries.getRecordsBetween(rangeStartInstant, rangeEndInstant);
+                    if (records != null && !records.isEmpty()) {
+                        TimeSeriesRecord nearestRecord = null;
+                        Duration nearestRecordDuration = null;
+                        // find nearest record to time instant
+                        for (TimeSeriesRecord record : records) {
+                            Duration duration = Duration.between(hoverInstant, record.instant);
+                            if (nearestRecord == null) {
+                                nearestRecord = record;
+                                nearestRecordDuration = duration;
+                            } else if (duration.abs().toMillis() < nearestRecordDuration.abs().toMillis()) {
+                                nearestRecord = record;
+                                nearestRecordDuration = duration;
+                            }
+                        }
+
+                        if (nearestRecord != null) {
+                            hoverTimeSeriesValues.add(nearestRecord.value);
+                        } else {
+                            hoverTimeSeriesValues.add(Double.NaN);
+                        }
+                    } else {
+                        hoverTimeSeriesValues.add(Double.NaN);
+                    }
+
 //                    TimeSeriesRecord record = timeSeries.recordAt(hoverInstant);
 //                    if (record != null) {
 //                        hoverTimeSeriesValues.add(record.value);
@@ -726,6 +757,8 @@ public class MultiTimeSeriesPanel extends JComponent implements MouseMotionListe
 //                        hoverTimeSeriesValues.add(Double.NaN);
 //                    }
                 }
+
+//                log.debug("hoverTimeSeriesValues.size() " + hoverTimeSeriesValues.size() + " timeSeriesList.size() " + timeSeriesList.size());
 
                 ArrayList<TimeSeriesSelection> timeSeriesSelections = timeSeriesSelectionMap.get(timeSeriesList.get(timeSeriesIndex));
                 if (timeSeriesSelections != null && !timeSeriesSelections.isEmpty()) {
@@ -831,7 +864,8 @@ public class MultiTimeSeriesPanel extends JComponent implements MouseMotionListe
                     continue;
                 }
 
-                g2.setColor(Color.blue);
+//                g2.setColor(Color.blue);
+                g2.setColor(gridLineColor);
                 g2.draw(timeSeriesPlotInfoList.get(i).plotRectangle);
 
                 TimeSeries timeSeries = timeSeriesList.get(i);
@@ -871,6 +905,9 @@ public class MultiTimeSeriesPanel extends JComponent implements MouseMotionListe
             if (draggingTimeSeries) {
                 TimeSeries timeSeries = timeSeriesList.get(hoverTimeSeriesIndex);
                 g2.translate(0, endDragPoint.y - draggingYOffset);
+                drawTimeSeries(g2, timeSeries, Double.NaN, false, false,
+                        clipStartInstant, clipEndInstant,
+                        timeSeriesPlotInfoList.get(hoverTimeSeriesIndex));
 //                drawTimeSeries(g2, timeSeries, Double.NaN, false, false, clipStartInstant, clipEndInstant);
                 g2.translate(0, -(endDragPoint.y - draggingYOffset));
             }

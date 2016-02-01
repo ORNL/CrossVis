@@ -119,19 +119,14 @@ public class PLGFileReader {
                 String tokens[] = line.substring("#IOItem: ".length()).split("[|]");
                 PLGVariableSchema schema = new PLGVariableSchema();
                 schema.variableName = tokens[0].substring(tokens[0].indexOf("=") + 1);
-//                log.debug("variableName: " + variableName);
                 schema.typeString = tokens[2].substring(tokens[2].indexOf("=") + 1);
                 schema.numValues = 0;
-//                typeSet.add(typeString);
-
-//                log.debug(variableName + " " + typeString + " " + axisString);
 
                 variableSchemaMap.put(schema.variableName, schema);
             } else {
                 // read variable name and increment num values counter
                 String tokens[] = line.split("[|]");
                 if (tokens.length >= 2) {
-                    String variableName = tokens[1];
                     PLGVariableSchema schema = variableSchemaMap.get(tokens[1]);
                     if (schema != null) {
                         schema.numValues = schema.numValues + 1;
@@ -144,9 +139,6 @@ public class PLGFileReader {
         plgFileReader.close();
 
         log.debug("PLG file " + plgFile.getName() + " has " + variableSchemaMap.size() + " variables");
-//        log.debug("Found " + typeSet.size() + " different data types");
-//        log.debug("Types: " + typeSet.toString());
-
         return variableSchemaMap;
     }
 

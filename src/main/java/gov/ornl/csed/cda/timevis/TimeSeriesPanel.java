@@ -83,18 +83,22 @@ public class TimeSeriesPanel extends JComponent implements ComponentListener, Mo
         repaint();
     }
 
+
     public Color getDataColor() {
         return dataColor;
     }
+
 
     public void setChronoUnitWidth(int width) {
         this.plotUnitWidth = width;
         layoutPanel();
     }
 
+
     public int getChronoUnitWidth() {
         return plotUnitWidth;
     }
+
 
     // not shrink to fit constructor
     public TimeSeriesPanel (int plotUnitWidth, ChronoUnit plotChronoUnit, PlotDisplayOption plotDisplayOption) {
@@ -108,6 +112,7 @@ public class TimeSeriesPanel extends JComponent implements ComponentListener, Mo
         addMouseMotionListener(this);
     }
 
+
     // shrink to fit constructor
     public TimeSeriesPanel (int plotUnitWidth, PlotDisplayOption plotDisplayOption) {
         this.plotUnitWidth = plotUnitWidth;
@@ -118,14 +123,17 @@ public class TimeSeriesPanel extends JComponent implements ComponentListener, Mo
         addMouseMotionListener(this);
     }
 
+
     public TimeSeries getTimeSeries() {
         return timeSeries;
     }
+
 
     public void setPlotChronoUnit(ChronoUnit chronoUnit) {
         this.plotChronoUnit = chronoUnit;
         layoutPanel();
     }
+
 
     public void removeTimeSeries() {
         timeSeries = null;
@@ -134,7 +142,6 @@ public class TimeSeriesPanel extends JComponent implements ComponentListener, Mo
         highlightRectangle = null;
         layoutPanel();
     }
-
 
 
     public static void main (String args[]) {
@@ -214,35 +221,42 @@ public class TimeSeriesPanel extends JComponent implements ComponentListener, Mo
         });
     }
 
+
     @Override
     public void mouseClicked(MouseEvent e) {
 
     }
+
 
     @Override
     public void mousePressed(MouseEvent e) {
 
     }
 
+
     @Override
     public void mouseReleased(MouseEvent e) {
 
     }
+
 
     @Override
     public void mouseEntered(MouseEvent e) {
 
     }
 
+
     @Override
     public void mouseExited(MouseEvent e) {
 
     }
 
+
     @Override
     public void mouseDragged(MouseEvent e) {
 
     }
+
 
     @Override
     public void mouseMoved(MouseEvent e) {

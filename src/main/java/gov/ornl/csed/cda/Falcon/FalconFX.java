@@ -7,6 +7,7 @@ import gov.ornl.csed.cda.histogram.MultiHistogramPanel;
 import gov.ornl.csed.cda.timevis.MultiTimeSeriesPanel;
 import gov.ornl.csed.cda.timevis.TimeSeries;
 import gov.ornl.csed.cda.timevis.TimeSeriesPanel;
+import gov.ornl.csed.cda.timevis.TimeSeriesRecord;
 import javafx.application.Application;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -61,7 +62,7 @@ public class FalconFX extends Application {
     private Table dataTable;
 
     // List of TimeSeries objects
-    private HashMap<String, TimeSeries> timeSeriesMap;
+//    private HashMap<String, TimeSeries> timeSeriesMap;
 
     // Earliest start and latest end instant of all time series
 
@@ -94,8 +95,9 @@ public class FalconFX extends Application {
     private TableView dataTableView;
     private Font fontAwesomeFont;
 
-    private HashMap<TreeItem<String>,File> fileTreeItemMap;
-    private HashMap<File, FalconDataTreeItem.FileType> fileTypeMap;
+//    private HashMap<TreeItem<String>,File> fileTreeItemMap;
+//    private HashMap<File, FileMetadata.FileType> fileTypeMap;
+    private HashMap<TreeItem<String>, FileMetadata> fileMetadataMap;
 
     // state variables
     private javafx.scene.paint.Color dataColor = Color.web("rgba(80, 80, 100, 0.4)");
@@ -105,6 +107,7 @@ public class FalconFX extends Application {
     private MultiHistogramPanel multiHistogramPanel;
     private Spinner multipleHistogramPlotHeightSpinner;
     private Spinner multipleHistogramBinSizeSpinner;
+    private JLabel overviewDetailTimeSeriesNameLabel;
 
 
     public static void main(String[] args) {
@@ -213,10 +216,13 @@ public class FalconFX extends Application {
         Text itemIcon = new Text("\uf1c0");
         itemIcon.setFont(fontAwesomeFont);
         itemIcon.setFontSmoothingType(FontSmoothingType.LCD);
-//        TreeItem<FalconDataTreeItem> fileTreeItem = new TreeItem<>(new FalconDataTreeItem(plgFile, FalconDataTreeItem.FileType.PLG), itemIcon);
         TreeItem<String> fileTreeItem = new TreeItem<>(plgFile.getName(), itemIcon);
-        fileTreeItemMap.put(fileTreeItem, plgFile);
-        fileTypeMap.put(plgFile, FalconDataTreeItem.FileType.PLG);
+        FileMetadata fileMetadata = new FileMetadata(plgFile);
+        fileMetadata.fileType = FileMetadata.FileType.PLG;
+        fileMetadataMap.put(fileTreeItem, fileMetadata);
+
+//        fileTreeItemMap.put(fileTreeItem, plgFile);
+//        fileTypeMap.put(plgFile, FalconDataTreeItem.FileType.PLG);
 
         for (PLGVariableSchema schema : variableSchemaMap.values()) {
             if (schema.typeString.equals("Int16") ||
@@ -224,9 +230,9 @@ public class FalconFX extends Application {
                     schema.typeString.equals("Single") ||
                     schema.typeString.equals("Int32")) {
                 if (schema.numValues > 1) {
-//                    if (schema.variableName.contains("Beam")) {
-//                        log.debug(schema.variableName);
-//                    }
+                    fileMetadata.variableList.add(schema.variableName);
+                    fileMetadata.variableValueCountList.add(schema.numValues);
+
                     String tokens[] = schema.variableName.split("[.]");
 
                     TreeItem<String> parentTreeItem = fileTreeItem;
@@ -246,9 +252,6 @@ public class FalconFX extends Application {
                         }
                         parentTreeItem = treeItem;
                     }
-//                    TreeItem<FalconDataTreeItem> variableTreeItem = new TreeItem<>(new FalconDataTreeItem(plgFile,
-//                            FalconDataTreeItem.FileType.PLG, schema.variableName));
-//                    fileTreeItem.getChildren().add(variableTreeItem);
                 }
             }
         }
@@ -301,30 +304,8 @@ public class FalconFX extends Application {
             dataTable = null;
             return;
         }
-//        if (csvImportInfo.timeFieldChronoUnit == ChronoUnit.MILLIS) {
-//            long timeMillis = Long.parseLong(csvRecord.get(i));
-//            record.setInstant(timeMillis);
-//        } else {
-//            double time = Double.parseDouble(csvRecord.get(i));
-//            long timeMillis = (long)(time * 1000.);
-//            record.setInstant(timeMillis);
-//        }
 
-        // build time series for all variables in table
-        timeSeriesMap = new HashMap<>();
-        int timeColumnIdx = dataTable.getColumnNumber(timeColumnName);
-        for (int icolumn = 0; icolumn < dataTable.getColumnCount(); icolumn++) {
-            if (!dataTable.getColumnName(icolumn).equals(timeColumnName)) {
-                TimeSeries timeSeries = new TimeSeries(dataTable.getColumnName(icolumn));
-                for (int ituple = 0; ituple < dataTable.getTupleCount(); ituple++) {
-                    Instant instant = Instant.ofEpochMilli(dataTable.getLong(ituple, timeColumnIdx));
-                    double value = dataTable.getDouble(ituple, icolumn);
-                    timeSeries.addRecord(instant, value, Double.NaN, Double.NaN);
-                }
 
-                timeSeriesMap.put(dataTable.getColumnName(icolumn), timeSeries);
-            }
-        }
 
         // populate data tree view
         Text itemIcon = new Text("\uf1c0");
@@ -332,11 +313,58 @@ public class FalconFX extends Application {
         itemIcon.setFontSmoothingType(FontSmoothingType.LCD);
 //        TreeItem<FalconDataTreeItem> fileTreeItem = new TreeItem<>(new FalconDataTreeItem(csvFile, FalconDataTreeItem.FileType.CSV), itemIcon);
         TreeItem<String>fileTreeItem = new TreeItem<>(csvFile.getName());
+        FileMetadata fileMetadata = new FileMetadata(csvFile);
+        fileMetadata.fileType = FileMetadata.FileType.PLG;
+        fileMetadataMap.put(fileTreeItem, fileMetadata);
+
+        // build time series for all variables in table
+        fileMetadata.timeSeriesMap = new HashMap<>();
+        int timeColumnIdx = dataTable.getColumnNumber(timeColumnName);
+        for (int icolumn = 0; icolumn < dataTable.getColumnCount(); icolumn++) {
+            if (!dataTable.getColumnName(icolumn).equals(timeColumnName)) {
+                TimeSeries timeSeries = new TimeSeries(dataTable.getColumnName(icolumn));
+                for (int ituple = 0; ituple < dataTable.getTupleCount(); ituple++) {
+                    Instant instant = Instant.ofEpochMilli(dataTable.getLong(ituple, timeColumnIdx));
+                    double value = dataTable.getDouble(ituple, icolumn);
+                    if (!Double.isNaN(value)) {
+                        timeSeries.addRecord(instant, value, Double.NaN, Double.NaN);
+                    }
+                }
+
+                fileMetadata.timeSeriesMap.put(dataTable.getColumnName(icolumn), timeSeries);
+                log.debug("added timeseries for " + timeSeries.getName() + " with " + timeSeries.getRecordCount() + " records");
+            }
+        }
+//        fileTreeItemMap.put(fileTreeItem, csvFile);
+//        fileTypeMap.put(csvFile, FalconDataTreeItem.FileType.CSV);
+
         for (int i = 0; i < dataTable.getColumnCount(); i++) {
             String columnName = dataTable.getColumnName(i);
             if (!columnName.equals(timeColumnName)) {
-                TreeItem<String> columnTreeItem = new TreeItem<>(columnName);
-                fileTreeItem.getChildren().addAll(columnTreeItem);
+                fileMetadata.variableList.add(columnName);
+                fileMetadata.variableValueCountList.add(dataTable.getTupleCount());
+
+                String tokens[] = columnName.split("[.]");
+
+                TreeItem<String> parentTreeItem = fileTreeItem;
+                for (int itoken = 0; itoken < tokens.length; itoken++) {
+                    TreeItem<String> treeItem = null;
+                    for (TreeItem<String> item : parentTreeItem.getChildren()) {
+                        if (item.getValue().equals(tokens[itoken])) {
+                            treeItem = item;
+                            break;
+                        }
+                    }
+
+                    if (treeItem == null) {
+                        treeItem = new TreeItem<>(tokens[itoken]);
+                        parentTreeItem.getChildren().add(treeItem);
+                    }
+                    parentTreeItem = treeItem;
+                }
+
+//                TreeItem<String> columnTreeItem = new TreeItem<>(columnName);
+//                fileTreeItem.getChildren().addAll(columnTreeItem);
             }
         }
         dataTreeRoot.getChildren().addAll(fileTreeItem);
@@ -404,8 +432,7 @@ public class FalconFX extends Application {
     }
 
     private void createDataTreeView() {
-        fileTreeItemMap = new HashMap<>();
-        fileTypeMap = new HashMap<>();
+        fileMetadataMap = new HashMap<>();
 
         dataTreeView = new TreeView<>();
         dataTreeView.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
@@ -444,9 +471,8 @@ public class FalconFX extends Application {
                                 treeItem = treeItem.getParent();
 
                                 // if parent tree item is a file node, get file details and stop
-                                if (fileTreeItemMap.containsKey(treeItem)) {
-                                    variableClipboardData.file = fileTreeItemMap.get(treeItem);
-                                    variableClipboardData.fileType = fileTypeMap.get(variableClipboardData.file);
+                                if (fileMetadataMap.containsKey(treeItem)) {
+                                    variableClipboardData.fileMetadata = fileMetadataMap.get(treeItem);
                                     break;
                                 }
                             }
@@ -494,20 +520,23 @@ public class FalconFX extends Application {
 
 
     private void loadColumnIntoODTimeSeries (VariableClipboardData variableClipboardData) {
-        if (variableClipboardData.fileType == FalconDataTreeItem.FileType.CSV) {
-            TimeSeries timeSeries = timeSeriesMap.get(variableClipboardData.variableName);
+        if (variableClipboardData.fileMetadata.fileType == FileMetadata.FileType.CSV) {
+            TimeSeries timeSeries = variableClipboardData.fileMetadata.timeSeriesMap.get(variableClipboardData.variableName);
+//            TimeSeries timeSeries = timeSeriesMap.get(variableClipboardData.variableName);
             overviewTimeSeriesPanel.setTimeSeries(timeSeries);
             detailsTimeSeriesPanel.setTimeSeries(timeSeries);
-        } else if (variableClipboardData.fileType == FalconDataTreeItem.FileType.PLG) {
+            overviewDetailTimeSeriesNameLabel.setText(timeSeries.getName());
+        } else if (variableClipboardData.fileMetadata.fileType == FileMetadata.FileType.PLG) {
             // load time series for variable
             try {
                 ArrayList<String> variableList = new ArrayList<>();
                 variableList.add(variableClipboardData.variableName);
-                Map<String, TimeSeries> PLGTimeSeriesMap = PLGFileReader.readPLGFileAsTimeSeries(variableClipboardData.file, variableList);
+                Map<String, TimeSeries> PLGTimeSeriesMap = PLGFileReader.readPLGFileAsTimeSeries(variableClipboardData.fileMetadata.file, variableList);
                 for (TimeSeries timeSeries : PLGTimeSeriesMap.values()) {
 //                    timeSeriesMap.put(timeSeries.getName(), timeSeries);
                     overviewTimeSeriesPanel.setTimeSeries(timeSeries);
                     detailsTimeSeriesPanel.setTimeSeries(timeSeries);
+                    overviewDetailTimeSeriesNameLabel.setText(timeSeries.getName());
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -516,29 +545,38 @@ public class FalconFX extends Application {
     }
 
     private void loadColumnIntoMultiHistogram (VariableClipboardData variableClipboardData) {
-        if (variableClipboardData.fileType == FalconDataTreeItem.FileType.CSV) {
+        if (variableClipboardData.fileMetadata.fileType == FileMetadata.FileType.CSV) {
 //            int binCount = (int) Math.floor(Math.sqrt(dataTable.getTupleCount()));
 //            if (binCount < 1) {
 //                binCount = 1;
 //            }
             int binCount = multiHistogramPanel.getBinCount();
 
-            for (int icol = 0; icol < dataTable.getColumnCount(); icol++) {
-                if (dataTable.getColumnName(icol).equals(variableClipboardData.variableName)) {
-                    Column column = dataTable.getColumn(icol);
-                    double values[] = new double[column.getRowCount()];
-                    for (int i = 0; i < column.getRowCount(); i++) {
-                        values[i] = column.getDouble(i);
-                    }
-
-                    Histogram histogram = new Histogram(dataTable.getColumnName(icol), values, binCount);
-                    multiHistogramPanel.addHistogram(histogram);
-                    break;
-                }
+            TimeSeries timeSeries = variableClipboardData.fileMetadata.timeSeriesMap.get(variableClipboardData.variableName);
+            ArrayList<TimeSeriesRecord> records = timeSeries.getAllRecords();
+            double values[] = new double[records.size()];
+            for (int i = 0; i < values.length; i++) {
+                values[i] = records.get(i).value;
             }
-        } else if (variableClipboardData.fileType == FalconDataTreeItem.FileType.PLG) {
+            Histogram histogram = new Histogram(timeSeries.getName(), values, binCount);
+            multiHistogramPanel.addHistogram(histogram);
+
+//            for (int icol = 0; icol < dataTable.getColumnCount(); icol++) {
+//                if (dataTable.getColumnName(icol).equals(variableClipboardData.variableName)) {
+//                    Column column = dataTable.getColumn(icol);
+//                    double values[] = new double[column.getRowCount()];
+//                    for (int i = 0; i < column.getRowCount(); i++) {
+//                        values[i] = column.getDouble(i);
+//                    }
+//
+//                    Histogram histogram = new Histogram(dataTable.getColumnName(icol), values, binCount);
+//                    multiHistogramPanel.addHistogram(histogram);
+//                    break;
+//                }
+//            }
+        } else if (variableClipboardData.fileMetadata.fileType == FileMetadata.FileType.PLG) {
             try {
-                double variableData []= PLGFileReader.readPLGFileAsDoubleArray(variableClipboardData.file, variableClipboardData.variableName);
+                double variableData []= PLGFileReader.readPLGFileAsDoubleArray(variableClipboardData.fileMetadata.file, variableClipboardData.variableName);
                 Histogram histogram = new Histogram(variableClipboardData.variableName, variableData, multiHistogramPanel.getBinCount());
                 multiHistogramPanel.addHistogram(histogram);
             } catch (IOException e) {
@@ -548,8 +586,8 @@ public class FalconFX extends Application {
     }
 
     private void loadColumnIntoMultiTimeSeries (VariableClipboardData variableClipboardData) {
-        if (variableClipboardData.fileType == FalconDataTreeItem.FileType.CSV) {
-            TimeSeries timeSeries = timeSeriesMap.get(variableClipboardData.variableName);
+        if (variableClipboardData.fileMetadata.fileType == FileMetadata.FileType.CSV) {
+            TimeSeries timeSeries = variableClipboardData.fileMetadata.timeSeriesMap.get(variableClipboardData.variableName);
             if (multiTimeSeriesStartInstant == null) {
                 multiTimeSeriesStartInstant = timeSeries.getStartInstant();
             } else if (multiTimeSeriesStartInstant.isBefore(timeSeries.getStartInstant())) {
@@ -563,11 +601,11 @@ public class FalconFX extends Application {
             }
             multiTimeSeriesPanel.setDateTimeRange(multiTimeSeriesStartInstant, multiTimeSeriesEndInstant, multiTimeSeriesChronoUnitChoice.getSelectionModel().getSelectedItem());
             multiTimeSeriesPanel.addTimeSeries(timeSeries);
-        } else if (variableClipboardData.fileType == FalconDataTreeItem.FileType.PLG) {
+        } else if (variableClipboardData.fileMetadata.fileType == FileMetadata.FileType.PLG) {
             try {
                 ArrayList<String> variableList = new ArrayList<>();
                 variableList.add(variableClipboardData.variableName);
-                Map<String, TimeSeries> PLGTimeSeriesMap = PLGFileReader.readPLGFileAsTimeSeries(variableClipboardData.file, variableList);
+                Map<String, TimeSeries> PLGTimeSeriesMap = PLGFileReader.readPLGFileAsTimeSeries(variableClipboardData.fileMetadata.file, variableList);
                 for (TimeSeries timeSeries : PLGTimeSeriesMap.values()) {
 //                    timeSeriesMap.put(timeSeries.getName(), timeSeries);
 
@@ -748,15 +786,20 @@ public class FalconFX extends Application {
         overviewTimeSeriesPanel = new TimeSeriesPanel(2, TimeSeriesPanel.PlotDisplayOption.STEPPED_LINE);
         overviewTimeSeriesPanel.setPreferredSize(new Dimension(1400, 100));
         overviewTimeSeriesPanel.setBackground(java.awt.Color.white);
-        Border border = BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(10,10,10,10), BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
-        overviewTimeSeriesPanel.setBorder(border);
+        Border border = BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(2, 4, 2, 4), BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
+        overviewTimeSeriesPanel.setBorder(BorderFactory.createTitledBorder(border, "Overview"));
 
         JScrollPane scroller = new JScrollPane(detailsTimeSeriesPanel);
         scroller.getHorizontalScrollBar().setUnitIncrement(2);
-        scroller.setBorder(border);
+        scroller.setBorder(BorderFactory.createTitledBorder(border, "Detail"));
+
+        overviewDetailTimeSeriesNameLabel = new JLabel(" ");
+        overviewDetailTimeSeriesNameLabel.setFont(overviewDetailTimeSeriesNameLabel.getFont().deriveFont(java.awt.Font.BOLD));
+        overviewDetailTimeSeriesNameLabel.setBorder(BorderFactory.createEmptyBorder(2, 4, 2, 4));
 
         JPanel panel = new JPanel();
         panel.setLayout(new BorderLayout());
+        panel.add(overviewDetailTimeSeriesNameLabel, BorderLayout.NORTH);
         panel.add(scroller, BorderLayout.CENTER);
         panel.add(overviewTimeSeriesPanel, BorderLayout.SOUTH);
         panel.setBackground(java.awt.Color.white);
