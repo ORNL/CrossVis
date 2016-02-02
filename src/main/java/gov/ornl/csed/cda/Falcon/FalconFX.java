@@ -34,7 +34,6 @@ import javafx.util.Callback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import prefuse.data.Table;
-import prefuse.data.column.Column;
 import prefuse.data.event.TableListener;
 import prefuse.data.io.CSVTableReader;
 import prefuse.data.io.DataIOException;
@@ -95,9 +94,10 @@ public class FalconFX extends Application {
     private TableView dataTableView;
     private Font fontAwesomeFont;
 
-//    private HashMap<TreeItem<String>,File> fileTreeItemMap;
-//    private HashMap<File, FileMetadata.FileType> fileTypeMap;
-    private HashMap<TreeItem<String>, FileMetadata> fileMetadataMap;
+    // For keeping track of file metadata and linking to tree items
+    private HashMap<File, FileMetadata> fileMetadataMap = new HashMap<>();
+    private HashMap<TreeItem<String>, FileMetadata> fileTreeItemMetadataMap = new HashMap<>();
+
 
     // state variables
     private javafx.scene.paint.Color dataColor = Color.web("rgba(80, 80, 100, 0.4)");
@@ -108,6 +108,7 @@ public class FalconFX extends Application {
     private Spinner multipleHistogramPlotHeightSpinner;
     private Spinner multipleHistogramBinSizeSpinner;
     private JLabel overviewDetailTimeSeriesNameLabel;
+    private TabPane visTabPane;
 
 
     public static void main(String[] args) {
@@ -157,14 +158,15 @@ public class FalconFX extends Application {
         createDataTableView();
 
         // TabPane setup for main visualization area
-        TabPane tabPane = new TabPane();
-        Tab ODTimeTab = new Tab("Overview + Detail Time Series");
+        visTabPane = new TabPane();
+        visTabPane.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
+        Tab ODTimeTab = new Tab(" Single Time Series ");
         ODTimeTab.setContent(ODTimeSeriesNode);
-        Tab multiTimeTab = new Tab("Multiple Time Series");
+        Tab multiTimeTab = new Tab(" Multiple Time Series ");
         multiTimeTab.setContent(multiTimeSeriesNode);
-        Tab multiHistoTab = new Tab("Multiple Histograms");
+        Tab multiHistoTab = new Tab(" Multiple Histograms ");
         multiHistoTab.setContent(multiHistogramNode);
-        tabPane.getTabs().addAll(ODTimeTab, multiTimeTab, multiHistoTab);
+        visTabPane.getTabs().addAll(ODTimeTab, multiTimeTab, multiHistoTab);
 
 //        // Create left pane as a vertically split node
 //        StackPane topStackPane = new StackPane();
@@ -182,7 +184,7 @@ public class FalconFX extends Application {
         // (top - timeseries, middle - histogram, bottom - table views)
         StackPane topStackPane = new StackPane();
 //        topStackPane.getChildren().addAll(timeSeriesNode);
-        topStackPane.getChildren().addAll(tabPane);
+        topStackPane.getChildren().addAll(visTabPane);
         StackPane bottomStackPane = new StackPane();
         bottomStackPane.getChildren().addAll(columnTableView);
         SplitPane rightSplitPane = new SplitPane();
@@ -219,8 +221,8 @@ public class FalconFX extends Application {
         TreeItem<String> fileTreeItem = new TreeItem<>(plgFile.getName(), itemIcon);
         FileMetadata fileMetadata = new FileMetadata(plgFile);
         fileMetadata.fileType = FileMetadata.FileType.PLG;
-        fileMetadataMap.put(fileTreeItem, fileMetadata);
-
+        fileTreeItemMetadataMap.put(fileTreeItem, fileMetadata);
+        fileMetadataMap.put(plgFile, fileMetadata);
 //        fileTreeItemMap.put(fileTreeItem, plgFile);
 //        fileTypeMap.put(plgFile, FalconDataTreeItem.FileType.PLG);
 
@@ -229,16 +231,18 @@ public class FalconFX extends Application {
                     schema.typeString.equals("Double") ||
                     schema.typeString.equals("Single") ||
                     schema.typeString.equals("Int32")) {
-                if (schema.numValues > 1) {
+                if (schema.numValues > 0) {
                     fileMetadata.variableList.add(schema.variableName);
                     fileMetadata.variableValueCountList.add(schema.numValues);
 
                     String tokens[] = schema.variableName.split("[.]");
 
                     TreeItem<String> parentTreeItem = fileTreeItem;
+                    String compoundItemName = "";
                     for (int i = 0; i < tokens.length; i++) {
-
                         TreeItem<String> treeItem = null;
+
+                        // if an item already exists for this token, use it
                         for (TreeItem<String> item : parentTreeItem.getChildren()) {
                             if (item.getValue().equals(tokens[i])) {
                                 treeItem = item;
@@ -246,10 +250,13 @@ public class FalconFX extends Application {
                             }
                         }
 
+                        // item doesn't exist for this token so create it
                         if (treeItem == null) {
                             treeItem = new TreeItem<>(tokens[i]);
                             parentTreeItem.getChildren().add(treeItem);
                         }
+
+                        // update parent item
                         parentTreeItem = treeItem;
                     }
                 }
@@ -314,8 +321,9 @@ public class FalconFX extends Application {
 //        TreeItem<FalconDataTreeItem> fileTreeItem = new TreeItem<>(new FalconDataTreeItem(csvFile, FalconDataTreeItem.FileType.CSV), itemIcon);
         TreeItem<String>fileTreeItem = new TreeItem<>(csvFile.getName());
         FileMetadata fileMetadata = new FileMetadata(csvFile);
-        fileMetadata.fileType = FileMetadata.FileType.PLG;
-        fileMetadataMap.put(fileTreeItem, fileMetadata);
+        fileMetadata.fileType = FileMetadata.FileType.CSV;
+        fileTreeItemMetadataMap.put(fileTreeItem, fileMetadata);
+        fileMetadataMap.put(csvFile, fileMetadata);
 
         // build time series for all variables in table
         fileMetadata.timeSeriesMap = new HashMap<>();
@@ -431,9 +439,73 @@ public class FalconFX extends Application {
         return menuBar;
     }
 
-    private void createDataTreeView() {
-        fileMetadataMap = new HashMap<>();
 
+    private Tooltip getTooltipForCell(TreeCell<String> treeCell) {
+        Tooltip tooltip = new Tooltip();
+
+        TreeItem<String> treeItem = treeCell.getTreeItem();
+
+        // build full variable name
+        String fullVarName = treeItem.getValue();
+        TreeItem<String> parent = treeItem.getParent();
+        FileMetadata fileMetadata = null;
+        while(parent != null) {
+            if (fileTreeItemMetadataMap.containsKey(parent)) {
+                fileMetadata = fileTreeItemMetadataMap.get(parent);
+                break;
+            }
+            fullVarName = parent.getValue() + "." + fullVarName;
+            parent = parent.getParent();
+        }
+
+        String tooltipText = fullVarName;
+        if (treeItem.isLeaf()) {
+            // the item represents a variable
+            // show full name and number of values in tooltip
+            int idx = fileMetadata.variableList.indexOf(fullVarName);
+            if (idx != -1) {
+                tooltipText += " (" + fileMetadata.variableValueCountList.get(idx) + " values)";
+            }
+        }
+
+        tooltip.setText(tooltipText);
+//        Tooltip.install(treeCell, tooltip);
+        return tooltip;
+    }
+
+    private String getFullTreeItemName(TreeItem<String> treeItem) {
+        String variableName = treeItem.getValue();
+
+        TreeItem<String> parentItem = treeItem.getParent();
+        while (parentItem != null && !fileTreeItemMetadataMap.containsKey(treeItem)) {
+            variableName = parentItem.getValue() + "." + variableName;
+            parentItem = parentItem.getParent();
+        }
+
+        return variableName;
+    }
+
+    private VariableClipboardData treeItemToVariableClipboardData(TreeItem<String> treeItem) {
+        String variableName = treeItem.getValue();
+
+        treeItem = treeItem.getParent();
+        while (treeItem.getParent() != null) {
+            variableName = treeItem.getValue() + "." + variableName;
+            treeItem = treeItem.getParent();
+
+            // if parent tree item is a file node, get file details and stop
+            if (fileTreeItemMetadataMap.containsKey(treeItem)) {
+                FileMetadata fileMetadata = fileTreeItemMetadataMap.get(treeItem);
+                VariableClipboardData variableClipboardData = new VariableClipboardData(fileMetadata.file,
+                        fileMetadata.fileType, variableName);
+                return variableClipboardData;
+            }
+        }
+
+        return null;
+    }
+
+    private void createDataTreeView() {
         dataTreeView = new TreeView<>();
         dataTreeView.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
         dataTreeView.setCellFactory(new Callback<TreeView<String>, TreeCell<String>>() {
@@ -448,9 +520,34 @@ public class FalconFX extends Application {
                         } else {
                             setText(item.toString());
                             setGraphic(getTreeItem().getGraphic());
+                            Tooltip tooltip = getTooltipForCell(this);
+                            setTooltip(tooltip);
                         }
                     }
                 };
+
+                treeCell.setOnMouseClicked(new EventHandler<MouseEvent>() {
+                    @Override
+                    public void handle(MouseEvent event) {
+                        if (event.getClickCount() == 2) {
+                            TreeItem<String> treeItem = treeCell.getTreeItem();
+                            if (treeItem.isLeaf()) {
+                                FileMetadata fileMetadata = fileTreeItemMetadataMap.get(treeItem);
+                                String variableName = getFullTreeItemName(treeItem);
+//                                VariableClipboardData variableClipboardData = new VariableClipboardData(fileMetadata.file, fileMetadata.fileType, variableName);
+//                                VariableClipboardData variableClipboardData = treeItemToVariableClipboardData(treeItem);
+//                                // based on the visible tab pane, show data in visualization
+                                if (visTabPane.getSelectionModel().getSelectedItem().getText().equals(" Single Time Series ")) {
+                                    loadColumnIntoODTimeSeries(fileMetadata, variableName);
+                                } else if (visTabPane.getSelectionModel().getSelectedItem().getText().equals(" Multiple Time Series ")) {
+                                    loadColumnIntoMultiTimeSeries(fileMetadata, variableName);
+                                } else if (visTabPane.getSelectionModel().getSelectedItem().getText().equals(" Multiple Histograms ")) {
+                                    loadColumnIntoMultiHistogram(fileMetadata, variableName);
+                                }
+                            }
+                        }
+                    }
+                });
 
                 treeCell.setOnDragDetected(new EventHandler<MouseEvent>() {
                     @Override
@@ -460,22 +557,24 @@ public class FalconFX extends Application {
                         // the leaves are the full variable names
                         // nonleaf nodes are file nodes or partial variable names
                         // TODO: when a nonleaf is dragged add all child variables
-                        if (treeItem.getChildren().isEmpty()) {
-                            VariableClipboardData variableClipboardData = new VariableClipboardData();
+                        if (treeItem.isLeaf()) {
+//                            VariableClipboardData variableClipboardData = new VariableClipboardData();
+//
+//                            // build the variable name
+//                            variableClipboardData.variableName = treeItem.getValue();
+//                            treeItem = treeItem.getParent();
+//                            while (treeItem.getParent() != null) {
+//                                variableClipboardData.variableName = treeItem.getValue() + "." + variableClipboardData.variableName;
+//                                treeItem = treeItem.getParent();
+//
+//                                // if parent tree item is a file node, get file details and stop
+//                                if (fileTreeItemMetadataMap.containsKey(treeItem)) {
+//                                    variableClipboardData.fileMetadata = fileTreeItemMetadataMap.get(treeItem);
+//                                    break;
+//                                }
+//                            }
 
-                            // build the variable name
-                            variableClipboardData.variableName = treeItem.getValue();
-                            treeItem = treeItem.getParent();
-                            while (treeItem.getParent() != null) {
-                                variableClipboardData.variableName = treeItem.getValue() + "." + variableClipboardData.variableName;
-                                treeItem = treeItem.getParent();
-
-                                // if parent tree item is a file node, get file details and stop
-                                if (fileMetadataMap.containsKey(treeItem)) {
-                                    variableClipboardData.fileMetadata = fileMetadataMap.get(treeItem);
-                                    break;
-                                }
-                            }
+                            VariableClipboardData variableClipboardData = treeItemToVariableClipboardData(treeItem);
 
                             log.debug("clipboard data is " + variableClipboardData.toString());
                             Dragboard db = treeCell.startDragAndDrop(TransferMode.COPY);
@@ -483,7 +582,7 @@ public class FalconFX extends Application {
                             content.put(objectDataFormat, variableClipboardData);
                             db.setContent(content);
                             event.consume();
-                            Label label = new Label(String.format("Visualize %s", variableClipboardData.variableName));
+                            Label label = new Label(String.format("Visualize %s", variableClipboardData.getVariableName()));
                             new Scene(label);
                             db.setDragView(label.snapshot(null, null));
                         }
@@ -519,19 +618,19 @@ public class FalconFX extends Application {
     }
 
 
-    private void loadColumnIntoODTimeSeries (VariableClipboardData variableClipboardData) {
-        if (variableClipboardData.fileMetadata.fileType == FileMetadata.FileType.CSV) {
-            TimeSeries timeSeries = variableClipboardData.fileMetadata.timeSeriesMap.get(variableClipboardData.variableName);
+    private void loadColumnIntoODTimeSeries (FileMetadata fileMetadata, String variableName) {
+        if (fileMetadata.fileType == FileMetadata.FileType.CSV) {
+            TimeSeries timeSeries = fileMetadata.timeSeriesMap.get(variableName);
 //            TimeSeries timeSeries = timeSeriesMap.get(variableClipboardData.variableName);
             overviewTimeSeriesPanel.setTimeSeries(timeSeries);
             detailsTimeSeriesPanel.setTimeSeries(timeSeries);
             overviewDetailTimeSeriesNameLabel.setText(timeSeries.getName());
-        } else if (variableClipboardData.fileMetadata.fileType == FileMetadata.FileType.PLG) {
+        } else if (fileMetadata.fileType == FileMetadata.FileType.PLG) {
             // load time series for variable
             try {
                 ArrayList<String> variableList = new ArrayList<>();
-                variableList.add(variableClipboardData.variableName);
-                Map<String, TimeSeries> PLGTimeSeriesMap = PLGFileReader.readPLGFileAsTimeSeries(variableClipboardData.fileMetadata.file, variableList);
+                variableList.add(variableName);
+                Map<String, TimeSeries> PLGTimeSeriesMap = PLGFileReader.readPLGFileAsTimeSeries(fileMetadata.file, variableList);
                 for (TimeSeries timeSeries : PLGTimeSeriesMap.values()) {
 //                    timeSeriesMap.put(timeSeries.getName(), timeSeries);
                     overviewTimeSeriesPanel.setTimeSeries(timeSeries);
@@ -544,15 +643,15 @@ public class FalconFX extends Application {
         }
     }
 
-    private void loadColumnIntoMultiHistogram (VariableClipboardData variableClipboardData) {
-        if (variableClipboardData.fileMetadata.fileType == FileMetadata.FileType.CSV) {
+    private void loadColumnIntoMultiHistogram (FileMetadata fileMetadata, String variableName) {
+        if (fileMetadata.fileType == FileMetadata.FileType.CSV) {
 //            int binCount = (int) Math.floor(Math.sqrt(dataTable.getTupleCount()));
 //            if (binCount < 1) {
 //                binCount = 1;
 //            }
             int binCount = multiHistogramPanel.getBinCount();
 
-            TimeSeries timeSeries = variableClipboardData.fileMetadata.timeSeriesMap.get(variableClipboardData.variableName);
+            TimeSeries timeSeries = fileMetadata.timeSeriesMap.get(variableName);
             ArrayList<TimeSeriesRecord> records = timeSeries.getAllRecords();
             double values[] = new double[records.size()];
             for (int i = 0; i < values.length; i++) {
@@ -574,10 +673,10 @@ public class FalconFX extends Application {
 //                    break;
 //                }
 //            }
-        } else if (variableClipboardData.fileMetadata.fileType == FileMetadata.FileType.PLG) {
+        } else if (fileMetadata.fileType == FileMetadata.FileType.PLG) {
             try {
-                double variableData []= PLGFileReader.readPLGFileAsDoubleArray(variableClipboardData.fileMetadata.file, variableClipboardData.variableName);
-                Histogram histogram = new Histogram(variableClipboardData.variableName, variableData, multiHistogramPanel.getBinCount());
+                double variableData []= PLGFileReader.readPLGFileAsDoubleArray(fileMetadata.file, variableName);
+                Histogram histogram = new Histogram(variableName, variableData, multiHistogramPanel.getBinCount());
                 multiHistogramPanel.addHistogram(histogram);
             } catch (IOException e) {
                 e.printStackTrace();
@@ -585,9 +684,9 @@ public class FalconFX extends Application {
         }
     }
 
-    private void loadColumnIntoMultiTimeSeries (VariableClipboardData variableClipboardData) {
-        if (variableClipboardData.fileMetadata.fileType == FileMetadata.FileType.CSV) {
-            TimeSeries timeSeries = variableClipboardData.fileMetadata.timeSeriesMap.get(variableClipboardData.variableName);
+    private void loadColumnIntoMultiTimeSeries (FileMetadata fileMetadata, String variableName) {
+        if (fileMetadata.fileType == FileMetadata.FileType.CSV) {
+            TimeSeries timeSeries = fileMetadata.timeSeriesMap.get(variableName);
             if (multiTimeSeriesStartInstant == null) {
                 multiTimeSeriesStartInstant = timeSeries.getStartInstant();
             } else if (multiTimeSeriesStartInstant.isBefore(timeSeries.getStartInstant())) {
@@ -601,11 +700,11 @@ public class FalconFX extends Application {
             }
             multiTimeSeriesPanel.setDateTimeRange(multiTimeSeriesStartInstant, multiTimeSeriesEndInstant, multiTimeSeriesChronoUnitChoice.getSelectionModel().getSelectedItem());
             multiTimeSeriesPanel.addTimeSeries(timeSeries);
-        } else if (variableClipboardData.fileMetadata.fileType == FileMetadata.FileType.PLG) {
+        } else if (fileMetadata.fileType == FileMetadata.FileType.PLG) {
             try {
                 ArrayList<String> variableList = new ArrayList<>();
-                variableList.add(variableClipboardData.variableName);
-                Map<String, TimeSeries> PLGTimeSeriesMap = PLGFileReader.readPLGFileAsTimeSeries(variableClipboardData.fileMetadata.file, variableList);
+                variableList.add(variableName);
+                Map<String, TimeSeries> PLGTimeSeriesMap = PLGFileReader.readPLGFileAsTimeSeries(fileMetadata.file, variableList);
                 for (TimeSeries timeSeries : PLGTimeSeriesMap.values()) {
 //                    timeSeriesMap.put(timeSeries.getName(), timeSeries);
 
@@ -668,8 +767,8 @@ public class FalconFX extends Application {
                 VariableClipboardData variableClipboardData = (VariableClipboardData)db.getContent(objectDataFormat);
 
 //                FalconDataTreeItem dataTreeItem = (FalconDataTreeItem)db.getContent(objectDataFormat);
-
-                loadColumnIntoMultiHistogram(variableClipboardData);
+                FileMetadata fileMetadata = fileMetadataMap.get(variableClipboardData.getFile());
+                loadColumnIntoMultiHistogram(fileMetadata, variableClipboardData.getVariableName());
 
                 event.setDropCompleted(true);
             }
@@ -766,7 +865,8 @@ public class FalconFX extends Application {
             if (db.hasContent(objectDataFormat)) {
 //                FalconDataTreeItem dataTreeItem = (FalconDataTreeItem)db.getContent(objectDataFormat);
                 VariableClipboardData variableClipboardData = (VariableClipboardData)db.getContent(objectDataFormat);
-                loadColumnIntoMultiTimeSeries(variableClipboardData);
+                FileMetadata fileMetadata = fileMetadataMap.get(variableClipboardData.getFile());
+                loadColumnIntoMultiTimeSeries(fileMetadata, variableClipboardData.getVariableName());
 
                 event.setDropCompleted(true);
             }
@@ -811,7 +911,8 @@ public class FalconFX extends Application {
             Dragboard db = event.getDragboard();
             if (db.hasContent(objectDataFormat)) {
                 VariableClipboardData variableClipboardData = (VariableClipboardData)db.getContent(objectDataFormat);
-                loadColumnIntoODTimeSeries(variableClipboardData);
+                FileMetadata fileMetadata = fileMetadataMap.get(variableClipboardData.getFile());
+                loadColumnIntoODTimeSeries(fileMetadata, variableClipboardData.getVariableName());
                 event.setDropCompleted(true);
             }
 

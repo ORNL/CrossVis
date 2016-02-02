@@ -1,5 +1,6 @@
 package gov.ornl.csed.cda.timevis;
 
+import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,6 +63,8 @@ public class MultiScaleTimeSeriesPanel extends JComponent implements ComponentLi
     TreeMap<Instant, ArrayList<Point2D.Double>> plotPointMap;
     ArrayList<TimeSeriesSummaryInfo> leftSummaryInfoList;
     ArrayList<TimeSeriesSummaryInfo> rightSummaryInfoList;
+    private int leftNumPlotUnits;
+    private int leftPlotUnitDurationMillis;
 
     public MultiScaleTimeSeriesPanel(int plotUnitWidth) {
         this.plotUnitWidth = plotUnitWidth;
@@ -99,6 +102,27 @@ public class MultiScaleTimeSeriesPanel extends JComponent implements ComponentLi
 
         g2.setColor(Color.blue);
         g2.draw(detailPlotRectangle);
+        g2.setColor(Color.orange);
+        g2.draw(leftOverviewPlotRectangle);
+        g2.setColor(Color.yellow);
+        g2.draw(rightOverviewPlotRectangle);
+
+
+        g2.setColor(Color.gray);
+        g2.translate(plotRectangle.x, plotRectangle.y);
+
+        for (int i = 0; i < leftSummaryInfoList.size(); i++) {
+            TimeSeriesSummaryInfo summaryInfo = leftSummaryInfoList.get(i);
+
+            if (i > 0) {
+                Ellipse2D.Double ellipse = new Ellipse2D.Double(summaryInfo.meanPoint.getX() - 1, summaryInfo.meanPoint.getY() - 1, 2., 2.);
+                TimeSeriesSummaryInfo lastSummary = leftSummaryInfoList.get(i - 1);
+                Line2D.Double line = new Line2D.Double(lastSummary.meanPoint.getX(), lastSummary.meanPoint.getY(), summaryInfo.meanPoint.getX(), summaryInfo.meanPoint.getY());
+                g2.draw(line);
+                g2.draw(ellipse);
+            }
+        }
+
         Point2D.Double lastDrawnPoint = null;
         for (ArrayList<Point2D.Double> instantPoints : plotPointMap.values()) {
             for (Point2D.Double point : instantPoints) {
@@ -115,11 +139,8 @@ public class MultiScaleTimeSeriesPanel extends JComponent implements ComponentLi
             }
         }
 
-        g2.setColor(Color.orange);
-        g2.draw(leftOverviewPlotRectangle);
+        g2.translate(-plotRectangle.x, -plotRectangle.y);
 
-        g2.setColor(Color.yellow);
-        g2.draw(rightOverviewPlotRectangle);
     }
 
     public void layoutPanel() {
@@ -161,10 +182,10 @@ public class MultiScaleTimeSeriesPanel extends JComponent implements ComponentLi
             double leftOverviewWidth = detailStartXPosition - plotLeft;
             leftOverviewPlotRectangle = new Rectangle2D.Double(plotLeft, plotTop, leftOverviewWidth,
                     plotRectangle.height);
-            int leftNumPlotUnits = (int) (leftOverviewWidth / plotUnitWidth);
+            leftNumPlotUnits = (int) (leftOverviewWidth / plotUnitWidth);
             Duration leftOverviewDuration = Duration.between(startInstant, detailStartInstant);
             double leftPlotUnitDurationReal = (double)leftOverviewDuration.toMillis() / leftNumPlotUnits;
-            long leftPlotUnitDurationMillis = (int)Math.ceil(leftPlotUnitDurationReal);
+            leftPlotUnitDurationMillis = (int)Math.ceil(leftPlotUnitDurationReal);
             Instant leftOverviewRightInstant = startInstant.plusMillis(leftPlotUnitDurationMillis * leftNumPlotUnits);
             log.debug("leftOverview right instant is " + leftOverviewRightInstant + " detailStartInstant is " + detailStartInstant);
 
@@ -183,6 +204,7 @@ public class MultiScaleTimeSeriesPanel extends JComponent implements ComponentLi
         int numPointsCalculated = 0;
         ArrayList<TimeSeriesRecord> records = timeSeries.getRecordsBetween(detailStartInstant, detailEndInstant);
 
+        // calculate detail region points
         if (records != null) {
             for (TimeSeriesRecord record : records) {
                 long deltaTime = detailChronoUnit.between(detailStartInstant, record.instant);
@@ -206,6 +228,38 @@ public class MultiScaleTimeSeriesPanel extends JComponent implements ComponentLi
 
         // calculate left overview summaries
         leftSummaryInfoList = new ArrayList<>();
+        for (int i = 0; i < leftNumPlotUnits; i++) {
+            // determine start and end time instants
+            Instant unitStartInstant = startInstant.plusMillis(i * leftPlotUnitDurationMillis);
+            Instant unitEndInstant = unitStartInstant.plusMillis(leftPlotUnitDurationMillis);
+
+            records = timeSeries.getRecordsBetween(unitStartInstant, unitEndInstant);
+            if (records != null && !records.isEmpty()) {
+                // calculate mean value for records in plot time unit
+                SummaryStatistics stats = new SummaryStatistics();
+
+                for (TimeSeriesRecord record : records) {
+                    stats.addValue(record.value);
+                }
+
+                int x = i * plotUnitWidth;
+                double norm = (stats.getMean() - timeSeries.getMinValue()) / (timeSeries.getMaxValue() - timeSeries.getMinValue());
+                double yOffset = norm * (plotRectangle.getHeight());
+                double y = (plotRectangle.getHeight() - yOffset);
+
+                Point2D.Double meanPoint = new Point2D.Double(x, y);
+                TimeSeriesSummaryInfo summaryInfo = new TimeSeriesSummaryInfo();
+                summaryInfo.instant = unitStartInstant;
+                summaryInfo.meanValue = stats.getMean();
+                summaryInfo.maxValue = stats.getMax();
+                summaryInfo.minValue = stats.getMin();
+                summaryInfo.meanPoint = meanPoint;
+                leftSummaryInfoList.add(summaryInfo);
+            }
+        }
+
+        // calculate right overview summaries
+        rightSummaryInfoList = new ArrayList<>();
        
     }
 
