@@ -1,4 +1,4 @@
-package gov.ornl.csed.cda.temporaldb.util;
+package gov.ornl.csed.cda.util;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
