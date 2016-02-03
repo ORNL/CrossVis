@@ -78,28 +78,6 @@ public class TimeSeriesPanel extends JComponent implements ComponentListener, Mo
     private Instant endHighlightInstant;
     private Rectangle highlightRectangle;
 
-    public void setDataColor(Color dataColor) {
-        this.dataColor = dataColor;
-        repaint();
-    }
-
-
-    public Color getDataColor() {
-        return dataColor;
-    }
-
-
-    public void setChronoUnitWidth(int width) {
-        this.plotUnitWidth = width;
-        layoutPanel();
-    }
-
-
-    public int getChronoUnitWidth() {
-        return plotUnitWidth;
-    }
-
-
     // not shrink to fit constructor
     public TimeSeriesPanel (int plotUnitWidth, ChronoUnit plotChronoUnit, PlotDisplayOption plotDisplayOption) {
         this.plotUnitWidth = plotUnitWidth;
@@ -122,27 +100,6 @@ public class TimeSeriesPanel extends JComponent implements ComponentListener, Mo
         addMouseListener(this);
         addMouseMotionListener(this);
     }
-
-
-    public TimeSeries getTimeSeries() {
-        return timeSeries;
-    }
-
-
-    public void setPlotChronoUnit(ChronoUnit chronoUnit) {
-        this.plotChronoUnit = chronoUnit;
-        layoutPanel();
-    }
-
-
-    public void removeTimeSeries() {
-        timeSeries = null;
-        startHighlightInstant = null;
-        endHighlightInstant = null;
-        highlightRectangle = null;
-        layoutPanel();
-    }
-
 
     public static void main (String args[]) {
         EventQueue.invokeLater(new Runnable() {
@@ -221,42 +178,79 @@ public class TimeSeriesPanel extends JComponent implements ComponentListener, Mo
         });
     }
 
+    public Color getDataColor() {
+        return dataColor;
+    }
+
+    public void setDataColor(Color dataColor) {
+        this.dataColor = dataColor;
+        repaint();
+    }
+
+    public int getChronoUnitWidth() {
+        return plotUnitWidth;
+    }
+
+    public void setChronoUnitWidth(int width) {
+        this.plotUnitWidth = width;
+        layoutPanel();
+    }
+
+    public TimeSeries getTimeSeries() {
+        return timeSeries;
+    }
+
+    public void setTimeSeries(TimeSeries timeSeries) {
+        this.timeSeries = timeSeries;
+        startInstant = timeSeries.getStartInstant();
+        endInstant = timeSeries.getEndInstant();
+
+        totalDuration = Duration.between(startInstant, endInstant);
+        layoutPanel();
+    }
+
+    public void setPlotChronoUnit(ChronoUnit chronoUnit) {
+        this.plotChronoUnit = chronoUnit;
+        layoutPanel();
+    }
+
+    public void removeTimeSeries() {
+        timeSeries = null;
+        startHighlightInstant = null;
+        endHighlightInstant = null;
+        highlightRectangle = null;
+        layoutPanel();
+    }
 
     @Override
     public void mouseClicked(MouseEvent e) {
 
     }
 
-
     @Override
     public void mousePressed(MouseEvent e) {
 
     }
-
 
     @Override
     public void mouseReleased(MouseEvent e) {
 
     }
 
-
     @Override
     public void mouseEntered(MouseEvent e) {
 
     }
-
 
     @Override
     public void mouseExited(MouseEvent e) {
 
     }
 
-
     @Override
     public void mouseDragged(MouseEvent e) {
 
     }
-
 
     @Override
     public void mouseMoved(MouseEvent e) {
@@ -324,22 +318,13 @@ public class TimeSeriesPanel extends JComponent implements ComponentListener, Mo
         layoutPanel();
     }
 
-    public void setTimeSeries(TimeSeries timeSeries) {
-        this.timeSeries = timeSeries;
-        startInstant = timeSeries.getStartInstant();
-        endInstant = timeSeries.getEndInstant();
-
-        totalDuration = Duration.between(startInstant, endInstant);
-        layoutPanel();
+    public PlotDisplayOption getPlotDisplayOption () {
+        return plotDisplayOption;
     }
 
     public void setPlotDisplayOption (PlotDisplayOption plotDisplayOption) {
         this.plotDisplayOption = plotDisplayOption;
         repaint();
-    }
-
-    public PlotDisplayOption getPlotDisplayOption () {
-        return plotDisplayOption;
     }
 
     public Duration getPlotUnitDuration() {
