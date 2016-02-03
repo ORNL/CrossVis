@@ -1,6 +1,5 @@
 package gov.ornl.csed.cda.histogram;
 
-import com.sun.xml.internal.ws.api.Component;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import prefuse.data.Table;
@@ -9,11 +8,9 @@ import prefuse.data.io.CSVTableReader;
 import prefuse.data.io.DataIOException;
 
 import javax.swing.*;
-import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
-import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 
 /**

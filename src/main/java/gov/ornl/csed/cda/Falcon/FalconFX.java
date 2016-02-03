@@ -477,12 +477,26 @@ public class FalconFX extends Application {
         String variableName = treeItem.getValue();
 
         TreeItem<String> parentItem = treeItem.getParent();
-        while (parentItem != null && !fileTreeItemMetadataMap.containsKey(treeItem)) {
+        while (parentItem != null && !fileTreeItemMetadataMap.containsKey(parentItem)) {
             variableName = parentItem.getValue() + "." + variableName;
             parentItem = parentItem.getParent();
         }
 
         return variableName;
+    }
+
+    private FileMetadata getFileMetadataForTreeItem(TreeItem<String> treeItem) {
+        TreeItem<String> parentItem = treeItem;
+        while (parentItem != null) {
+            FileMetadata fileMetadata = fileTreeItemMetadataMap.get(parentItem);
+            if (fileMetadata != null) {
+                return fileMetadata;
+            }
+
+            parentItem = parentItem.getParent();
+        }
+
+        return null;
     }
 
     private VariableClipboardData treeItemToVariableClipboardData(TreeItem<String> treeItem) {
@@ -532,7 +546,7 @@ public class FalconFX extends Application {
                         if (event.getClickCount() == 2) {
                             TreeItem<String> treeItem = treeCell.getTreeItem();
                             if (treeItem.isLeaf()) {
-                                FileMetadata fileMetadata = fileTreeItemMetadataMap.get(treeItem);
+                                FileMetadata fileMetadata = getFileMetadataForTreeItem(treeItem);
                                 String variableName = getFullTreeItemName(treeItem);
 //                                VariableClipboardData variableClipboardData = new VariableClipboardData(fileMetadata.file, fileMetadata.fileType, variableName);
 //                                VariableClipboardData variableClipboardData = treeItemToVariableClipboardData(treeItem);
