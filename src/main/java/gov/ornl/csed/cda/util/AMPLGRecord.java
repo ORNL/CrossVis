@@ -1,4 +1,4 @@
-package gov.ornl.csed.cda.temporaldb.util;
+package gov.ornl.csed.cda.util;
 
 import java.time.Instant;
 
