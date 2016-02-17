@@ -59,6 +59,52 @@ public class TimeSeriesRenderer {
         }
     }
 
+    public static void renderAsOverview(Graphics2D g2, TimeSeries timeSeries, int plotWidth, int plotHeight,
+                                        int plotUnitWidth, ChronoUnit plotChronoUnit, TimeSeriesPanel.PlotDisplayOption plotDisplayOption,
+                                        Color gridColor, Color lineColor, Color pointColor, Color rangeColor,
+                                        TimeSeriesSummaryInfo summaryInfoArray[]) {
+
+        if (summaryInfoArray != null) {
+            g2.setColor(gridColor);
+            TimeSeriesRenderer.drawZeroLine(g2, timeSeries, plotWidth, plotHeight);
+
+            g2.setColor(lineColor);
+            TimeSeriesSummaryInfo lastSummaryInfo = null;
+            for (int i = 0; i < summaryInfoArray.length; i++) {
+                TimeSeriesSummaryInfo summaryInfo = summaryInfoArray[i];
+
+                if (summaryInfo != null) {
+                    if (plotDisplayOption == TimeSeriesPanel.PlotDisplayOption.POINT) {
+                        Ellipse2D.Double ellipse = new Ellipse2D.Double(summaryInfo.meanPoint.getX() - plotUnitWidth / 2., summaryInfo.meanPoint.getY() - plotUnitWidth / 2., plotUnitWidth, plotUnitWidth);
+                        g2.draw(ellipse);
+                    } else if (plotDisplayOption == TimeSeriesPanel.PlotDisplayOption.LINE) {
+                        if (i > 0) {
+                            //                        TimeSeriesSummaryInfo lastSummary = summaryInfoArray[i - 1];
+                            Line2D.Double line = new Line2D.Double(lastSummaryInfo.meanPoint.getX(), lastSummaryInfo.meanPoint.getY(), summaryInfo.meanPoint.getX(), summaryInfo.meanPoint.getY());
+                            g2.draw(line);
+                        }
+                        Ellipse2D.Double ellipse = new Ellipse2D.Double(summaryInfo.meanPoint.getX() - 1, summaryInfo.meanPoint.getY() - 1, 2., 2.);
+                        g2.draw(ellipse);
+                    } else if (plotDisplayOption == TimeSeriesPanel.PlotDisplayOption.STEPPED_LINE) {
+                        if (i > 0) {
+                            //                        TimeSeriesSummaryInfo lastSummary = summaryInfoArray[i - 1];
+                            Line2D.Double line1 = new Line2D.Double(lastSummaryInfo.meanPoint.getX(), lastSummaryInfo.meanPoint.getY(), summaryInfo.meanPoint.getX(), lastSummaryInfo.meanPoint.getY());
+                            Line2D.Double line2 = new Line2D.Double(summaryInfo.meanPoint.getX(), lastSummaryInfo.meanPoint.getY(), summaryInfo.meanPoint.getX(), summaryInfo.meanPoint.getY());
+                            g2.draw(line1);
+                            g2.draw(line2);
+                        }
+                        Ellipse2D.Double ellipse = new Ellipse2D.Double(summaryInfo.meanPoint.getX() - 1, summaryInfo.meanPoint.getY() - 1, 2., 2.);
+                        g2.draw(ellipse);
+                    } else if (plotDisplayOption == TimeSeriesPanel.PlotDisplayOption.BAR) {
+
+                    }
+
+                    lastSummaryInfo = summaryInfo;
+                }
+            }
+        }
+    }
+
     public static void renderAsDetailed(Graphics2D g2, TimeSeries timeSeries, Instant clipStartInstant,
                                         Instant clipEndInstant,
                                         int plotWidth, int plotHeight, int plotUnitWidth,

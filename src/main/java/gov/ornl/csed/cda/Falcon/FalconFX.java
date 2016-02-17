@@ -80,6 +80,9 @@ public class FalconFX extends Application {
     private Instant multiTimeSeriesStartInstant;
     private Instant multiTimeSeriesEndInstant;
 
+    // Multi View Panel Objects
+    private MultiViewPanel multiViewPanel;
+
     // Multiple TimeSeries Panel Display Preference UIs
     private ChoiceBox<ChronoUnit> multiTimeSeriesChronoUnitChoice;
     private ColorPicker multipleTimeSeriesDataColorPicker;
@@ -109,6 +112,7 @@ public class FalconFX extends Application {
     private Spinner multipleHistogramBinSizeSpinner;
     private JLabel overviewDetailTimeSeriesNameLabel;
     private TabPane visTabPane;
+    private Spinner multiViewPlotHeightSpinner;
 
 
     public static void main(String[] args) {
@@ -152,6 +156,7 @@ public class FalconFX extends Application {
         Node ODTimeSeriesNode = createOverviewDetailTimeSeriesPanel();
         Node multiTimeSeriesNode = createMultiTimeSeriesPanel();
         Node multiHistogramNode = createMultiHistogramPanel();
+        Node multiViewNode = createMultiViewPanel();
 
         createDataTreeView();
         createColumnTableView();
@@ -160,13 +165,15 @@ public class FalconFX extends Application {
         // TabPane setup for main visualization area
         visTabPane = new TabPane();
         visTabPane.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
+        Tab multiViewTab = new Tab(" Multi View ");
+        multiViewTab.setContent(multiViewNode);
         Tab ODTimeTab = new Tab(" Single Time Series ");
         ODTimeTab.setContent(ODTimeSeriesNode);
         Tab multiTimeTab = new Tab(" Multiple Time Series ");
         multiTimeTab.setContent(multiTimeSeriesNode);
         Tab multiHistoTab = new Tab(" Multiple Histograms ");
         multiHistoTab.setContent(multiHistogramNode);
-        visTabPane.getTabs().addAll(ODTimeTab, multiTimeTab, multiHistoTab);
+        visTabPane.getTabs().addAll(multiViewTab, ODTimeTab, multiTimeTab, multiHistoTab);
 
 //        // Create left pane as a vertically split node
 //        StackPane topStackPane = new StackPane();
@@ -557,6 +564,8 @@ public class FalconFX extends Application {
                                     loadColumnIntoMultiTimeSeries(fileMetadata, variableName);
                                 } else if (visTabPane.getSelectionModel().getSelectedItem().getText().equals(" Multiple Histograms ")) {
                                     loadColumnIntoMultiHistogram(fileMetadata, variableName);
+                                } else if (visTabPane.getSelectionModel().getSelectedItem().getText().equals(" Multi View ")) {
+                                    loadColumnIntoMultiView(fileMetadata, variableName);
                                 }
                             }
                         }
@@ -657,6 +666,24 @@ public class FalconFX extends Application {
         }
     }
 
+    private void loadColumnIntoMultiView (FileMetadata fileMetadata, String variableName) {
+        if (fileMetadata.fileType == FileMetadata.FileType.CSV) {
+            TimeSeries timeSeries = fileMetadata.timeSeriesMap.get(variableName);
+            multiViewPanel.addTimeSeries(timeSeries);
+        } else if (fileMetadata.fileType == FileMetadata.FileType.PLG) {
+            try {
+                ArrayList<String> variableList = new ArrayList<>();
+                variableList.add(variableName);
+                Map<String, TimeSeries> PLGTimeSeriesMap = PLGFileReader.readPLGFileAsTimeSeries(fileMetadata.file, variableList);
+                for (TimeSeries timeSeries : PLGTimeSeriesMap.values()) {
+                    multiViewPanel.addTimeSeries(timeSeries);
+                }
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        }
+    }
+
     private void loadColumnIntoMultiHistogram (FileMetadata fileMetadata, String variableName) {
         if (fileMetadata.fileType == FileMetadata.FileType.CSV) {
 //            int binCount = (int) Math.floor(Math.sqrt(dataTable.getTupleCount()));
@@ -740,6 +767,51 @@ public class FalconFX extends Application {
                 e.printStackTrace();
             }
         }
+    }
+
+    private Node createMultiViewPanel() {
+        multiViewPanel = new MultiViewPanel(100);
+        multiViewPanel.setBackground(java.awt.Color.WHITE);
+
+        HBox settingsHBox = new HBox();
+        settingsHBox.setAlignment(Pos.CENTER_LEFT);
+        settingsHBox.setPadding(new javafx.geometry.Insets(4));
+        settingsHBox.setSpacing(8.);
+
+        HBox hBox = new HBox();
+        hBox.setAlignment(Pos.CENTER_LEFT);
+        multiViewPlotHeightSpinner = new Spinner(40, 400, multiViewPanel.getPlotHeight());
+        multiViewPlotHeightSpinner.setEditable(true);
+        multiViewPlotHeightSpinner.valueProperty().addListener((obs, oldValue, newValue) -> multiViewPanel.setPlotHeight((Integer)newValue));
+        hBox.getChildren().addAll(new Label("Plot Height: "), multiViewPlotHeightSpinner);
+        settingsHBox.getChildren().add(hBox);
+
+        Border border = BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(10,10,10,10), BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
+        JScrollPane scroller = new JScrollPane(multiViewPanel);
+        scroller.getVerticalScrollBar().setUnitIncrement(1);
+        scroller.setBorder(border);
+
+        SwingNode swingNode = new SwingNode();
+        swingNode.setContent(scroller);
+        swingNode.setOnDragOver(event -> event.acceptTransferModes(TransferMode.COPY));
+        swingNode.setOnDragDropped(event -> {
+            Dragboard db = event.getDragboard();
+            if (db.hasContent(objectDataFormat)) {
+                VariableClipboardData variableClipboardData = (VariableClipboardData)db.getContent(objectDataFormat);
+
+//                FalconDataTreeItem dataTreeItem = (FalconDataTreeItem)db.getContent(objectDataFormat);
+                FileMetadata fileMetadata = fileMetadataMap.get(variableClipboardData.getFile());
+                loadColumnIntoMultiView(fileMetadata, variableClipboardData.getVariableName());
+
+                event.setDropCompleted(true);
+            }
+            event.consume();
+        });
+
+        BorderPane borderPane = new BorderPane();
+        borderPane.setTop(settingsHBox);
+        borderPane.setCenter(swingNode);
+        return borderPane;
     }
 
     private Node createMultiHistogramPanel() {

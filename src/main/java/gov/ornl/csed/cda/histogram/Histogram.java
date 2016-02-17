@@ -76,6 +76,14 @@ public class Histogram {
         calculateStatistics();
     }
 
+    public EmpiricalDistribution getDistributionStats() {
+        return distributionStats;
+    }
+
+    public DescriptiveStatistics getDescriptiveStats() {
+        return descriptiveStats;
+    }
+
     public void setBinCount (int binCount) {
         this.binCount = binCount;
         calculateStatistics();

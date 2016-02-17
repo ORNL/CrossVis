@@ -64,7 +64,8 @@ public class TimeSeriesPanel extends JComponent implements ComponentListener, Mo
     private PlotDisplayOption plotDisplayOption = PlotDisplayOption.POINT;
 
     private TreeMap<Instant, ArrayList<Point2D.Double>> plotPointMap = new TreeMap<>();
-    private ArrayList<TimeSeriesSummaryInfo> summaryInfoList = new ArrayList<>();
+//    private ArrayList<TimeSeriesSummaryInfo> summaryInfoList = new ArrayList<>();
+    private TimeSeriesSummaryInfo summaryInfoArray[];
 
     private Color gridLineColor = new Color(230, 230, 230);
     private Color hoverLineColor = new Color(50, 50, 50, 100);
@@ -77,6 +78,8 @@ public class TimeSeriesPanel extends JComponent implements ComponentListener, Mo
     private Instant startHighlightInstant;
     private Instant endHighlightInstant;
     private Rectangle highlightRectangle;
+
+    private boolean showTimeRangeLabels = true;
 
     // not shrink to fit constructor
     public TimeSeriesPanel (int plotUnitWidth, ChronoUnit plotChronoUnit, PlotDisplayOption plotDisplayOption) {
@@ -267,8 +270,11 @@ public class TimeSeriesPanel extends JComponent implements ComponentListener, Mo
 
             if (shrinkToFit) {
                 int summaryInfoIndex = (int) (deltaTimeMillis / plotUnitDurationMillis);
-                TimeSeriesSummaryInfo summaryInfo = summaryInfoList.get(summaryInfoIndex);
-                hoverValue = summaryInfo.meanValue;
+//                TimeSeriesSummaryInfo summaryInfo = summaryInfoList.get(summaryInfoIndex);
+                TimeSeriesSummaryInfo summaryInfo = summaryInfoArray[summaryInfoIndex];
+                if (summaryInfo != null) {
+                    hoverValue = summaryInfo.meanValue;
+                }
             } else {
                 Instant rangeStartInstant = hoverInstant.truncatedTo(plotChronoUnit).minus(1, plotChronoUnit);
                 Instant rangeEndInstant = hoverInstant.truncatedTo(plotChronoUnit).plus(1, plotChronoUnit);
@@ -360,6 +366,13 @@ public class TimeSeriesPanel extends JComponent implements ComponentListener, Mo
         repaint();
     }
 
+    public void setShowTimeRangeLabels(boolean showTimeRangeLabels) {
+        if (this.showTimeRangeLabels != showTimeRangeLabels) {
+            this.showTimeRangeLabels = showTimeRangeLabels;
+            repaint();
+        }
+    }
+
     public void layoutPanel() {
         if (timeSeries != null) {
             int plotLeft = getInsets().left;
@@ -378,6 +391,7 @@ public class TimeSeriesPanel extends JComponent implements ComponentListener, Mo
                 plotRectangle = new Rectangle(plotLeft, plotTop, plotWidth, plotBottom - plotTop);
                 plotLeftInstant = startInstant;
                 plotRightInstant = startInstant.plusMillis(plotUnitDurationMillis * numPlotUnits);
+                log.debug("plotWidth = " + plotWidth + " plotUnitDurationMillis = " + plotUnitDurationMillis);
             } else {
                 int plotWidth = (int) (plotChronoUnit.between(startInstant, endInstant) * plotUnitWidth);
                 plotRectangle = new Rectangle(plotLeft, plotTop, plotWidth, plotBottom - plotTop);
@@ -394,39 +408,47 @@ public class TimeSeriesPanel extends JComponent implements ComponentListener, Mo
 
     private void calculatePlotPoints() {
         if (shrinkToFit) {
-//            summaryInfoList.clear();
-//            for (int i = 0; i < numPlotUnits; i++) {
-//                // determine the start and end time instants for the current time unit
-//                Instant unitStartInstant = startInstant.plusMillis(i * plotUnitDurationMillis);
-//                Instant unitEndInstant = unitStartInstant.plusMillis(plotUnitDurationMillis);
-//
-//                // get values between start (inclusive) and end time instants (exclusive)
-//                ArrayList<TimeSeriesRecord> records = timeSeries.getRecordsBetween(unitStartInstant, unitEndInstant);
-//                if (records != null && !records.isEmpty()) {
-//                    // calculate mean value for records in plot time unit
-//                    SummaryStatistics stats = new SummaryStatistics();
-//
-//                    for (TimeSeriesRecord record : records) {
-//                        stats.addValue(record.value);
-//                    }
-//
-//                    int x = i * plotUnitWidth;
-//                    double norm = (stats.getMean() - timeSeries.getMinValue()) / (timeSeries.getMaxValue() - timeSeries.getMinValue());
-//                    double yOffset = norm * (plotRectangle.getHeight());
-//                    double y = (plotRectangle.getHeight() - yOffset);
-//
-//                    Point2D.Double meanPoint = new Point2D.Double(x, y);
-//                    TimeSeriesSummaryInfo summaryInfo = new TimeSeriesSummaryInfo();
-//                    summaryInfo.instant = unitStartInstant;
-//                    summaryInfo.meanValue = stats.getMean();
-//                    summaryInfo.maxValue = stats.getMax();
-//                    summaryInfo.minValue = stats.getMin();
-//                    summaryInfo.meanPoint = meanPoint;
-//                    summaryInfoList.add(summaryInfo);
-//                }
-//            }
-            summaryInfoList = TimeSeriesRenderer.calculateOverviewPlotPoints(timeSeries, plotRectangle, numPlotUnits,
-                    plotUnitWidth, plotUnitDurationMillis, startInstant);
+            if (numPlotUnits > 0) {
+                summaryInfoArray = new TimeSeriesSummaryInfo[numPlotUnits];
+                //            summaryInfoList.clear();
+                //            summaryInfoList.ensureCapacity(numPlotUnits);
+
+                for (int i = 0; i < numPlotUnits; i++) {
+                    // determine the start and end time instants for the current time unit
+                    Instant unitStartInstant = startInstant.plusMillis(i * plotUnitDurationMillis);
+                    Instant unitEndInstant = unitStartInstant.plusMillis(plotUnitDurationMillis);
+
+                    // get values between start (inclusive) and end time instants (exclusive)
+                    ArrayList<TimeSeriesRecord> records = timeSeries.getRecordsBetween(unitStartInstant, unitEndInstant);
+                    if (records != null && !records.isEmpty()) {
+                        // calculate mean value for records in plot time unit
+                        SummaryStatistics stats = new SummaryStatistics();
+
+                        for (TimeSeriesRecord record : records) {
+                            stats.addValue(record.value);
+                        }
+
+                        int x = (int) ((i * plotUnitWidth) + (plotUnitWidth/2.));
+                        double norm = (stats.getMean() - timeSeries.getMinValue()) / (timeSeries.getMaxValue() - timeSeries.getMinValue());
+                        double yOffset = norm * (plotRectangle.getHeight());
+                        double y = (plotRectangle.getHeight() - yOffset);
+
+                        Point2D.Double meanPoint = new Point2D.Double(x, y);
+                        TimeSeriesSummaryInfo summaryInfo = new TimeSeriesSummaryInfo();
+                        summaryInfo.instant = unitStartInstant;
+                        summaryInfo.meanValue = stats.getMean();
+                        summaryInfo.maxValue = stats.getMax();
+                        summaryInfo.minValue = stats.getMin();
+                        summaryInfo.meanPoint = meanPoint;
+                        //                    summaryInfoList.set(i,summaryInfo);
+
+                        summaryInfoArray[i] = summaryInfo;
+                    }
+                }
+                log.debug("numPlotPoints = " + numPlotUnits + "summaryInfoArray.length = " + summaryInfoArray.length);
+                //            summaryInfoList = TimeSeriesRenderer.calculateOverviewPlotPoints(timeSeries, plotRectangle, numPlotUnits,
+                //                    plotUnitWidth, plotUnitDurationMillis, startInstant);
+            }
         } else {
             plotPointMap = TimeSeriesRenderer.calculateDetailedPlotPoints(timeSeries, plotChronoUnit, plotUnitWidth,
                     plotRectangle, startInstant);
@@ -466,7 +488,7 @@ public class TimeSeriesPanel extends JComponent implements ComponentListener, Mo
         if (shrinkToFit) {
             TimeSeriesRenderer.renderAsOverview(g2, timeSeries, plotRectangle.width, plotRectangle.height,
                     plotUnitWidth, plotChronoUnit, plotDisplayOption, gridLineColor, dataColor, dataColor,
-                    rangeColor, summaryInfoList);
+                    rangeColor, summaryInfoArray);
         } else {
             if (plotPointMap != null && !plotPointMap.isEmpty()) {
                 TimeSeriesRenderer.renderAsDetailed(g2, timeSeries, startClipInstant, endClipInstant,
@@ -589,22 +611,24 @@ public class TimeSeriesPanel extends JComponent implements ComponentListener, Mo
                 g2.drawString(instantString, hoverInstantStringLeft, strY);
             }
 
-            String instantString = dtFormatter.format(plotLeftInstant);
-            int strWidth = g2.getFontMetrics().stringWidth(instantString);
-            if (hoverInstant == null || (hoverInstantStringLeft > (plotRectangle.x+strWidth))) {
-                g2.drawString(instantString, plotRectangle.x, strY);
-            }
+            if (showTimeRangeLabels) {
+                String instantString = dtFormatter.format(plotLeftInstant);
+                int strWidth = g2.getFontMetrics().stringWidth(instantString);
+                if (hoverInstant == null || (hoverInstantStringLeft > (plotRectangle.x + strWidth))) {
+                    g2.drawString(instantString, plotRectangle.x, strY);
+                }
 
-            instantString = dtFormatter.format(plotRightInstant);
-            strWidth = g2.getFontMetrics().stringWidth(instantString);
-            if (hoverInstant == null || (hoverInstantStringRight < ((plotRectangle.x+plotRectangle.width) - strWidth))) {
-                g2.drawString(instantString, (plotRectangle.x+plotRectangle.width)-strWidth, strY);
+                instantString = dtFormatter.format(plotRightInstant);
+                strWidth = g2.getFontMetrics().stringWidth(instantString);
+                if (hoverInstant == null || (hoverInstantStringRight < ((plotRectangle.x + plotRectangle.width) - strWidth))) {
+                    g2.drawString(instantString, (plotRectangle.x + plotRectangle.width) - strWidth, strY);
+                }
             }
 
             if (!Double.isNaN(hoverValue)) {
                 g2.setColor(Color.black);
                 String strValue = String.valueOf(hoverValue);
-                strWidth = g2.getFontMetrics().stringWidth(strValue);
+                int strWidth = g2.getFontMetrics().stringWidth(strValue);
                 int strX = hoverX - strWidth/2;
                 if ((strX + strWidth) > (plotRectangle.x + plotRectangle.width)) {
                     strX -= (strX + strWidth) - (plotRectangle.x + plotRectangle.width);
@@ -664,24 +688,26 @@ public class TimeSeriesPanel extends JComponent implements ComponentListener, Mo
                 g2.drawString(instantString, hoverInstantStringLeft, strY);
             }
 
-            // draw left date time string
-            String instantString = dtFormatter.format(leftInstant);
-            int strWidth = g2.getFontMetrics().stringWidth(instantString);
-            if (hoverInstant == null || (hoverInstantStringLeft > (infoBarLeft+strWidth))) {
-                g2.drawString(instantString, infoBarLeft, strY);
-            }
+            if (showTimeRangeLabels) {
+                // draw left date time string
+                String instantString = dtFormatter.format(leftInstant);
+                int strWidth = g2.getFontMetrics().stringWidth(instantString);
+                if (hoverInstant == null || (hoverInstantStringLeft > (infoBarLeft + strWidth))) {
+                    g2.drawString(instantString, infoBarLeft, strY);
+                }
 
-            // draw right date time string
-            instantString = dtFormatter.format(rightInstant);
-            strWidth = g2.getFontMetrics().stringWidth(instantString);
-            if (hoverInstant == null || (hoverInstantStringRight < (infoBarRight - strWidth))) {
-                g2.drawString(instantString, infoBarRight-strWidth, strY);
+                // draw right date time string
+                instantString = dtFormatter.format(rightInstant);
+                strWidth = g2.getFontMetrics().stringWidth(instantString);
+                if (hoverInstant == null || (hoverInstantStringRight < (infoBarRight - strWidth))) {
+                    g2.drawString(instantString, infoBarRight - strWidth, strY);
+                }
             }
 
             if (!Double.isNaN(hoverValue)) {
                 g2.setColor(Color.black);
                 String strValue = String.valueOf(hoverValue);
-                strWidth = g2.getFontMetrics().stringWidth(strValue);
+                int strWidth = g2.getFontMetrics().stringWidth(strValue);
                 int strX = hoverX - strWidth/2;
                 if ((strX + strWidth) > (clipBounds.x + clipBounds.width)) {
                     strX -= (strX+strWidth) - (clipBounds.x + clipBounds.width);

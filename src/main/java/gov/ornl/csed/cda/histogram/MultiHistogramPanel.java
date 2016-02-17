@@ -77,23 +77,6 @@ public class MultiHistogramPanel extends JComponent implements ComponentListener
         repaint();
     }
 
-//    private void calculateHistograms() {
-//        histogramList = new ArrayList<>();
-//
-//        if (table != null) {
-//            int binCount = (int) Math.floor(Math.sqrt(table.getTupleCount()));
-//            if (binCount < 1) {
-//                binCount = 1;
-//            }
-//
-//            for (int icol = 0; icol < table.getColumnCount(); icol++) {
-//                Column column = table.getColumn(icol);
-//                Histogram histogram = new Histogram(table, column, binCount);
-//                histogramList.add(histogram);
-//            }
-//        }
-//    }
-
     public void layoutPanel() {
         if (!histogramList.isEmpty()) {
             panelWidth = getVisibleRect().width - (getInsets().left + getInsets().right) - 2;
@@ -128,9 +111,6 @@ public class MultiHistogramPanel extends JComponent implements ComponentListener
 
         g2.setColor(getBackground());
         g2.fillRect(0, 0, getWidth(), getHeight());
-//        g2.setColor(Color.green);
-//        g2.drawRect(getInsets().left, getInsets().top, getWidth()-(getInsets().left + getInsets().right), getHeight() - (getInsets().top + getInsets().bottom));
-//        g2.draw(panelPlotRectangle);
 
         if ((getWidth() <= 0) || (getHeight() <= 0)) {
             return;
