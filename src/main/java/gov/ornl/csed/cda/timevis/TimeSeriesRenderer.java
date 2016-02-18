@@ -78,7 +78,7 @@ public class TimeSeriesRenderer {
                         Ellipse2D.Double ellipse = new Ellipse2D.Double(summaryInfo.meanPoint.getX() - plotUnitWidth / 2., summaryInfo.meanPoint.getY() - plotUnitWidth / 2., plotUnitWidth, plotUnitWidth);
                         g2.draw(ellipse);
                     } else if (plotDisplayOption == TimeSeriesPanel.PlotDisplayOption.LINE) {
-                        if (i > 0) {
+                        if (lastSummaryInfo != null) {
                             //                        TimeSeriesSummaryInfo lastSummary = summaryInfoArray[i - 1];
                             Line2D.Double line = new Line2D.Double(lastSummaryInfo.meanPoint.getX(), lastSummaryInfo.meanPoint.getY(), summaryInfo.meanPoint.getX(), summaryInfo.meanPoint.getY());
                             g2.draw(line);
@@ -86,7 +86,7 @@ public class TimeSeriesRenderer {
                         Ellipse2D.Double ellipse = new Ellipse2D.Double(summaryInfo.meanPoint.getX() - 1, summaryInfo.meanPoint.getY() - 1, 2., 2.);
                         g2.draw(ellipse);
                     } else if (plotDisplayOption == TimeSeriesPanel.PlotDisplayOption.STEPPED_LINE) {
-                        if (i > 0) {
+                        if (lastSummaryInfo != null) {
                             //                        TimeSeriesSummaryInfo lastSummary = summaryInfoArray[i - 1];
                             Line2D.Double line1 = new Line2D.Double(lastSummaryInfo.meanPoint.getX(), lastSummaryInfo.meanPoint.getY(), summaryInfo.meanPoint.getX(), lastSummaryInfo.meanPoint.getY());
                             Line2D.Double line2 = new Line2D.Double(summaryInfo.meanPoint.getX(), lastSummaryInfo.meanPoint.getY(), summaryInfo.meanPoint.getX(), summaryInfo.meanPoint.getY());
@@ -139,25 +139,25 @@ public class TimeSeriesRenderer {
                         g2.draw(ellipse);
                     } else if (plotDisplayOption == TimeSeriesPanel.PlotDisplayOption.LINE) {
                         if (lastDrawnPoint != null) {
-                            Ellipse2D.Double ellipse = new Ellipse2D.Double(point.x - 1,
-                                    point.y - 1, 2., 2.);
                             Line2D.Double line = new Line2D.Double(lastDrawnPoint.x, lastDrawnPoint.y, point.x, point.y);
                             g2.setColor(lineColor);
                             g2.draw(line);
-                            g2.setColor(pointColor);
-                            g2.draw(ellipse);
                         }
+                        Ellipse2D.Double ellipse = new Ellipse2D.Double(point.x - 1,
+                                point.y - 1, 2., 2.);
+                        g2.setColor(pointColor);
+                        g2.draw(ellipse);
                     } else if (plotDisplayOption == TimeSeriesPanel.PlotDisplayOption.STEPPED_LINE) {
                         if (lastDrawnPoint != null) {
-                            Ellipse2D.Double ellipse = new Ellipse2D.Double(point.x - 1, point.y - 1, 2., 2.);
                             Line2D.Double line1 = new Line2D.Double(lastDrawnPoint.x, lastDrawnPoint.y, point.x, lastDrawnPoint.y);
                             Line2D.Double line2 = new Line2D.Double(point.x, lastDrawnPoint.y, point.x, point.y);
                             g2.setColor(lineColor);
                             g2.draw(line1);
                             g2.draw(line2);
-                            g2.setColor(pointColor);
-                            g2.draw(ellipse);
                         }
+                        Ellipse2D.Double ellipse = new Ellipse2D.Double(point.x - 1, point.y - 1, 2., 2.);
+                        g2.setColor(pointColor);
+                        g2.draw(ellipse);
                     }
                     lastDrawnPoint = point;
                     numPointsDrawn++;

@@ -76,8 +76,8 @@ public class PrefuseTimeTest {
                     timeSeries.addRecord(instant, beamCurrentValue, Double.NaN, Double.NaN);
                 }
 
-                overviewTimeSeriesPanel.setTimeSeries(timeSeries);
-                detailsTimeSeriesPanel.setTimeSeries(timeSeries);
+                overviewTimeSeriesPanel.setTimeSeries(timeSeries, timeSeries.getStartInstant(), timeSeries.getEndInstant());
+                detailsTimeSeriesPanel.setTimeSeries(timeSeries, timeSeries.getStartInstant(), timeSeries.getEndInstant());
 
                 scroller.getHorizontalScrollBar().addAdjustmentListener(new AdjustmentListener() {
                     @Override

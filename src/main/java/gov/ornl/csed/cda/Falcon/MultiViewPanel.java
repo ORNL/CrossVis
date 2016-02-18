@@ -5,11 +5,13 @@ import gov.ornl.csed.cda.histogram.HistogramPanel;
 import gov.ornl.csed.cda.timevis.TimeSeries;
 import gov.ornl.csed.cda.timevis.TimeSeriesPanel;
 import gov.ornl.csed.cda.timevis.TimeSeriesRecord;
+import javafx.scene.paint.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.AdjustmentEvent;
@@ -29,11 +31,18 @@ public class MultiViewPanel extends JPanel {
     private final static Logger log = LoggerFactory.getLogger(MultiViewPanel.class);
 
     private int plotHeight;
+    private int plotUnitWidth = 1;
     private Box panelBox;
     private Font fontAwesomeFont = null;
+    private boolean alignTimeSeries = false;
+    private boolean linkPanelScrollBars = false;
+    private Color dataColor = new Color(80, 80, 130, 180);
+    private ArrayList<ViewInfo> viewInfoList = new ArrayList<ViewInfo>();
 
-    ArrayList<JPanel> panelList = new ArrayList<JPanel>();
-    HashMap<TimeSeries, ArrayList<JPanel>> timeSeriesPanelMap = new HashMap<>();
+    private Instant startInstant;
+    private Instant endInstant;
+    private ChronoUnit detailChronoUnit = ChronoUnit.SECONDS;
+    private TimeSeriesPanel.PlotDisplayOption timeSeriesDisplayOption = TimeSeriesPanel.PlotDisplayOption.STEPPED_LINE;
 
     public MultiViewPanel (int plotHeight) {
         this.plotHeight = plotHeight;
@@ -51,62 +60,111 @@ public class MultiViewPanel extends JPanel {
         initialize();
     }
 
+    public boolean getAlignTimeSeriesEnabled () {
+        return alignTimeSeries;
+    }
+
+    public ChronoUnit getDetailChronoUnit() {
+        return detailChronoUnit;
+    }
+
+    public void setDetailChronoUnit(ChronoUnit chronoUnit) {
+        if (detailChronoUnit != chronoUnit) {
+            detailChronoUnit = chronoUnit;
+            for (ViewInfo viewInfo : viewInfoList) {
+                viewInfo.detailTimeSeriesPanel.setPlotChronoUnit(detailChronoUnit);
+            }
+        }
+    }
+
+    public void setDataColor(Color color) {
+        if (dataColor != color) {
+            dataColor = color;
+            for (ViewInfo viewInfo : viewInfoList) {
+                viewInfo.detailTimeSeriesPanel.setDataColor(dataColor);
+                viewInfo.overviewTimeSeriesPanel.setDataColor(dataColor);
+            }
+        }
+    }
+
+    public int getChronoUnitWidth() {
+        return plotUnitWidth;
+    }
+
+    public void setChronoUnitWidth (int plotUnitWidth) {
+        if (this.plotUnitWidth != plotUnitWidth) {
+            this.plotUnitWidth = plotUnitWidth;
+            for (ViewInfo viewInfo : viewInfoList) {
+                viewInfo.detailTimeSeriesPanel.setPlotUnitWidth(plotUnitWidth);
+            }
+        }
+    }
+
+    public Color getDataColor() {
+        return dataColor;
+    }
+
+
+    public void setAlignTimeSeriesEnabled (boolean enabled) {
+        if (alignTimeSeries != enabled) {
+            if (enabled) {
+                // enabling aligned timeseries
+                for (ViewInfo viewInfo : viewInfoList) {
+                    viewInfo.detailTimeSeriesPanel.setDisplayTimeRange(startInstant, endInstant);
+                    viewInfo.overviewTimeSeriesPanel.setDisplayTimeRange(startInstant, endInstant);
+                }
+            } else {
+                // disabling aligned timeseries
+                for (ViewInfo viewInfo : viewInfoList) {
+                    viewInfo.detailTimeSeriesPanel.setDisplayTimeRange(viewInfo.timeSeries.getStartInstant(), viewInfo.timeSeries.getEndInstant());
+                    viewInfo.overviewTimeSeriesPanel.setDisplayTimeRange(viewInfo.timeSeries.getStartInstant(), viewInfo.timeSeries.getEndInstant());
+                }
+            }
+
+            alignTimeSeries = enabled;
+        }
+    }
+
     public int getPlotHeight() {
         return plotHeight;
     }
 
     public void setPlotHeight(int plotHeight) {
         this.plotHeight = plotHeight;
+        for (ViewInfo viewInfo : viewInfoList) {
+            viewInfo.viewPanel.setPreferredSize(new Dimension(viewInfo.viewPanel.getPreferredSize().width, plotHeight));
+            viewInfo.viewPanel.setMinimumSize(new Dimension(100, plotHeight));
+            viewInfo.viewPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, plotHeight));
+        }
+        revalidate();
     }
 
     private void initialize() {
         setLayout(new BorderLayout());
-        setBorder(null);
         setBackground(Color.white);
 
         panelBox = new Box(BoxLayout.PAGE_AXIS);
         JScrollPane scroller = new JScrollPane(panelBox);
         add(scroller, BorderLayout.CENTER);
-//        detailsPanel = new JPanel();
-//        detailsPanel.setLayout(new BoxLayout(detailsPanel, BoxLayout.PAGE_AXIS));
-//        JScrollPane detailsScroller = new JScrollPane(detailsPanel);
-////        add(detailsScroller, BorderLayout.CENTER);
-//
-//        overviewPanel = new JPanel();
-//        overviewPanel.setLayout(new BoxLayout(overviewPanel, BoxLayout.PAGE_AXIS));
-//        JScrollPane overviewScroller = new JScrollPane(overviewPanel);
-////        add(overviewScroller, BorderLayout.EAST);
-//
-//        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, detailsScroller, overviewScroller);
-//        splitPane.setDividerLocation(700);
-//        splitPane.setOneTouchExpandable(true);
-//        add(splitPane, BorderLayout.CENTER);
-
-
-//        overviewBox = new Box(BoxLayout.PAGE_AXIS);
-//        ScrollPane overviewScroller = new ScrollPane(overviewBox);
-
-//        detailsBox = new Box(BoxLayout.PAGE_AXIS);
-//        add(overviewBox, BorderLayout.NORTH);
     }
 
     private void rebuildBoxPanel() {
         panelBox.removeAll();
-        for (JPanel panel : panelList) {
-            panelBox.add(panel);
+        for (ViewInfo viewInfo : viewInfoList) {
+            panelBox.add(viewInfo.viewPanel);
         }
         revalidate();
     }
 
-    private JPanel createButtonPanel (JPanel viewPanel) {
+    private JPanel createButtonPanel (ViewInfo viewInfo) {
         JButton moveUpButton = new JButton();
         moveUpButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                int index = panelList.indexOf(viewPanel);
+                int index = viewInfoList.indexOf(viewInfo);
                 if (index != 0) {
-                    panelList.set(index, panelList.get(index - 1));
-                    panelList.set(index - 1, viewPanel);
+                    viewInfoList.set(index, viewInfoList.get(index - 1));
+                    viewInfoList.set(index - 1, viewInfo);
                     rebuildBoxPanel();
                 }
             }
@@ -116,10 +174,10 @@ public class MultiViewPanel extends JPanel {
         moveDownButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                int index = panelList.indexOf(viewPanel);
-                if (index != (panelList.size() - 1)) {
-                    panelList.set(index, panelList.get(index + 1));
-                    panelList.set(index+1, viewPanel);
+                int index = viewInfoList.indexOf(viewInfo);
+                if (index != (viewInfoList.size() - 1)) {
+                    viewInfoList.set(index, viewInfoList.get(index + 1));
+                    viewInfoList.set(index+1, viewInfo);
                     rebuildBoxPanel();
                 }
             }
@@ -129,7 +187,7 @@ public class MultiViewPanel extends JPanel {
         removeButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (panelList.remove(viewPanel)) {
+                if (viewInfoList.remove(viewInfo)) {
                     rebuildBoxPanel();
                 }
             }
@@ -167,28 +225,66 @@ public class MultiViewPanel extends JPanel {
     }
 
     public void addTimeSeries(TimeSeries timeSeries) {
-        JPanel viewPanel = new JPanel();
-        viewPanel.setBackground(Color.white);
-        viewPanel.setLayout(new BorderLayout());
+        if (viewInfoList.isEmpty()) {
+            startInstant = Instant.from(timeSeries.getStartInstant());
+            endInstant = Instant.from(timeSeries.getEndInstant());
+        } else {
+            boolean resetAllTimeSeriesRanges = false;
+            if (timeSeries.getStartInstant().isBefore(startInstant)) {
+                startInstant = Instant.from(timeSeries.getStartInstant());
+                resetAllTimeSeriesRanges = true;
+            }
+            if (timeSeries.getEndInstant().isAfter(endInstant)) {
+                endInstant = Instant.from(timeSeries.getEndInstant());
+                resetAllTimeSeriesRanges = true;
+            }
 
-        JPanel buttonPanel = createButtonPanel(viewPanel);
+            if (resetAllTimeSeriesRanges && alignTimeSeries) {
+                for (ViewInfo viewInfo : viewInfoList) {
+                    viewInfo.detailTimeSeriesPanel.setDisplayTimeRange(startInstant, endInstant);
+                    viewInfo.overviewTimeSeriesPanel.setDisplayTimeRange(startInstant, endInstant);
+                }
+            }
+        }
 
-        TimeSeriesPanel detailTimeSeriesPanel = new TimeSeriesPanel(1, ChronoUnit.SECONDS, TimeSeriesPanel.PlotDisplayOption.STEPPED_LINE);
-        detailTimeSeriesPanel.setTimeSeries(timeSeries);
+        ViewInfo viewInfo = new ViewInfo();
+        viewInfo.timeSeries = timeSeries;
+        viewInfoList.add(viewInfo);
+
+        viewInfo.viewPanel = new JPanel();
+        viewInfo.viewPanel.setPreferredSize(new Dimension(100, plotHeight));
+        viewInfo.viewPanel.setMinimumSize(new Dimension(100, plotHeight));
+        viewInfo.viewPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, plotHeight));
+        viewInfo.viewPanel.setBackground(Color.white);
+        viewInfo.viewPanel.setLayout(new BorderLayout());
+
+        JPanel buttonPanel = createButtonPanel(viewInfo);
+
+        viewInfo.detailTimeSeriesPanel = new TimeSeriesPanel(1, detailChronoUnit, timeSeriesDisplayOption);
+        if (alignTimeSeries) {
+            viewInfo.detailTimeSeriesPanel.setTimeSeries(timeSeries, startInstant, endInstant);
+        } else {
+            viewInfo.detailTimeSeriesPanel.setTimeSeries(timeSeries, timeSeries.getStartInstant(), timeSeries.getEndInstant());
+        }
+
 //        timeSeriesPanel.setPreferredSize(new Dimension(100, 80));
-        JScrollPane detailsTimeSeriesScroller = new JScrollPane(detailTimeSeriesPanel);
+        JScrollPane detailsTimeSeriesScroller = new JScrollPane(viewInfo.detailTimeSeriesPanel);
         detailsTimeSeriesScroller.setPreferredSize(new Dimension(100, 100));
         detailsTimeSeriesScroller.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
 
-        TimeSeriesPanel overviewTimeSeriesPanel = new TimeSeriesPanel(1, TimeSeriesPanel.PlotDisplayOption.LINE);
-        overviewTimeSeriesPanel.setTimeSeries(timeSeries);
-        overviewTimeSeriesPanel.setShowTimeRangeLabels(false);
-        overviewTimeSeriesPanel.setBackground(Color.white);
+        viewInfo.overviewTimeSeriesPanel = new TimeSeriesPanel(1, timeSeriesDisplayOption);
+        viewInfo.overviewTimeSeriesPanel.setShowTimeRangeLabels(false);
+        viewInfo.overviewTimeSeriesPanel.setBackground(Color.white);
+        if (alignTimeSeries) {
+            viewInfo.overviewTimeSeriesPanel.setTimeSeries(timeSeries, startInstant, endInstant);
+        } else {
+            viewInfo.overviewTimeSeriesPanel.setTimeSeries(timeSeries, timeSeries.getStartInstant(), timeSeries.getEndInstant());
+        }
+
 //        overviewTimeSeriesPanel.setPreferredSize(new Dimension(200, 100));
 //        overviewTimeSeriesPanel.setBorder(BorderFactory.createTitledBorder("Overview"));
 //        overviewTimeSeriesPanel.setPreferredSize(new Dimension(100, 50));
 //        overviewTimeSeriesPanel.setBorder(BorderFactory.createBevelBorder(BevelBorder.LOWERED));
-
 
         detailsTimeSeriesScroller.getHorizontalScrollBar().addAdjustmentListener(new AdjustmentListener() {
             @Override
@@ -202,12 +298,12 @@ public class MultiViewPanel extends JPanel {
                 norm = 1. - (double) scrollBarRight / (double) scrollBarModelWidth;
                 deltaTime = norm * Duration.between(timeSeries.getStartInstant(), timeSeries.getEndInstant()).toMillis();
                 Instant endHighlightInstant = timeSeries.getEndInstant().minusMillis((long) deltaTime);
-                overviewTimeSeriesPanel.setHighlightRange(startHighlightInstant, endHighlightInstant);
+                viewInfo.overviewTimeSeriesPanel.setHighlightRange(startHighlightInstant, endHighlightInstant);
             }
         });
 
 
-        HistogramPanel histogramPanel = new HistogramPanel();
+        viewInfo.histogramPanel = new HistogramPanel();
 
         ArrayList<TimeSeriesRecord> records = timeSeries.getAllRecords();
         double values[] = new double[records.size()];
@@ -217,32 +313,26 @@ public class MultiViewPanel extends JPanel {
                 values[i] = value;
             }
         }
-        Histogram histogram = new Histogram(timeSeries.getName(), values, histogramPanel.getBinCount());
-        histogramPanel.setBackground(Color.white);
-        histogramPanel.setHistogram(histogram);
-
-
+        Histogram histogram = new Histogram(timeSeries.getName(), values, viewInfo.histogramPanel.getBinCount());
+        viewInfo.histogramPanel.setBackground(Color.white);
+        viewInfo.histogramPanel.setHistogram(histogram);
 
         JPanel sidePanel = new JPanel();
         sidePanel.setBackground(Color.WHITE);
         sidePanel.setLayout(new GridLayout(2, 1));
 //        sidePanel.setLayout(new BoxLayout(sidePanel, BoxLayout.PAGE_AXIS));
-        sidePanel.add(histogramPanel);
-        sidePanel.add(overviewTimeSeriesPanel);
+        sidePanel.add(viewInfo.histogramPanel);
+        sidePanel.add(viewInfo.overviewTimeSeriesPanel);
 //        sidePanel.add(placeHolderPanel);
-        sidePanel.setPreferredSize(new Dimension(200, 100));
+        sidePanel.setPreferredSize(new Dimension(200, plotHeight));
         sidePanel.setBorder(BorderFactory.createTitledBorder("Overview"));
 
+        viewInfo.viewPanel.add(detailsTimeSeriesScroller, BorderLayout.CENTER);
+        viewInfo.viewPanel.add(sidePanel, BorderLayout.EAST);
+        viewInfo.viewPanel.add(buttonPanel, BorderLayout.WEST);
+        viewInfo.viewPanel.setBorder(BorderFactory.createTitledBorder(timeSeries.getName()));
 
-//        viewPanel
-        viewPanel.add(detailsTimeSeriesScroller, BorderLayout.CENTER);
-        viewPanel.add(sidePanel, BorderLayout.EAST);
-        viewPanel.add(buttonPanel, BorderLayout.WEST);
-        viewPanel.setBorder(BorderFactory.createTitledBorder(timeSeries.getName()));
-
-        panelList.add(viewPanel);
-
-        panelBox.add(viewPanel);
+        panelBox.add(viewInfo.viewPanel);
         revalidate();
 //        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, scrollPane, sidePanel);
 //        splitPane.setDividerLocation(700);
@@ -306,21 +396,32 @@ public class MultiViewPanel extends JPanel {
                 timeSeries.addRecord(instant, value, Double.NaN, Double.NaN);
             }
             timeSeriesList.add(timeSeries);
+
+            startInstant = startInstant.plus(60, ChronoUnit.MINUTES);
         }
 
 //        TimeSeriesPanel overviewPanel = new TimeSeriesPanel(1, TimeSeriesPanel.PlotDisplayOption.LINE);
 //        overviewPanel.setTimeSeries(timeSeriesList.get(0));
-        MultiViewPanel multiViewPanel = new MultiViewPanel(100);
+        MultiViewPanel multiViewPanel = new MultiViewPanel(150);
+        multiViewPanel.setAlignTimeSeriesEnabled(true);
         JScrollPane scroller = new JScrollPane(multiViewPanel);
 
 
 //        ((JPanel)frame.getContentPane()).add(scroller, BorderLayout.CENTER);
-        ((JPanel)frame.getContentPane()).add(multiViewPanel, BorderLayout.CENTER);
+        ((JPanel)frame.getContentPane()).add(scroller, BorderLayout.CENTER);
         frame.setSize(1000, 300);
         frame.setVisible(true);
 
         for (TimeSeries timeSeries : timeSeriesList) {
             multiViewPanel.addTimeSeries(timeSeries);
         }
+    }
+
+    private class ViewInfo {
+        public TimeSeries timeSeries;
+        public JPanel viewPanel;
+        public TimeSeriesPanel detailTimeSeriesPanel;
+        public TimeSeriesPanel overviewTimeSeriesPanel;
+        public HistogramPanel histogramPanel;
     }
 }

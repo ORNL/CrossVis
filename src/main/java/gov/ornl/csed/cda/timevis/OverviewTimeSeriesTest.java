@@ -36,7 +36,7 @@ public class OverviewTimeSeriesTest {
                 Border border = BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(10,10,10,10), BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
                 overviewTimeSeriesPanel.setBorder(border);
 
-                overviewTimeSeriesPanel.setTimeSeries(timeSeries);
+                overviewTimeSeriesPanel.setTimeSeries(timeSeries, timeSeries.getStartInstant(), timeSeries.getEndInstant());
 
                 JFrame frame = new JFrame();
                 frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

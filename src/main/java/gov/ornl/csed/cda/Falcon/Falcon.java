@@ -217,8 +217,8 @@ public class Falcon {
             timeSeries.addRecord(instant, value, Double.NaN, Double.NaN);
         }
 
-        overviewTimeSeriesPanel.setTimeSeries(timeSeries);
-        detailsTimeSeriesPanel.setTimeSeries(timeSeries);
+        overviewTimeSeriesPanel.setTimeSeries(timeSeries, timeSeries.getStartInstant(), timeSeries.getEndInstant());
+        detailsTimeSeriesPanel.setTimeSeries(timeSeries, timeSeries.getStartInstant(), timeSeries.getEndInstant());
     }
 
     private JTabbedPane createTablePanel() {

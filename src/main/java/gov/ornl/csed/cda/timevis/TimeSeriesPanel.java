@@ -69,7 +69,7 @@ public class TimeSeriesPanel extends JComponent implements ComponentListener, Mo
 
     private Color gridLineColor = new Color(230, 230, 230);
     private Color hoverLineColor = new Color(50, 50, 50, 100);
-    private Color unselectedRegionFillColor = new Color(240, 240, 240);
+    private Color unselectedRegionFillColor = new Color(220, 220, 220);
     private Color dataColor = new Color(80, 80, 130, 180);
     private Color rangeColor = new Color(140, 140, 160, 100);
 
@@ -93,7 +93,6 @@ public class TimeSeriesPanel extends JComponent implements ComponentListener, Mo
         addMouseMotionListener(this);
     }
 
-
     // shrink to fit constructor
     public TimeSeriesPanel (int plotUnitWidth, PlotDisplayOption plotDisplayOption) {
         this.plotUnitWidth = plotUnitWidth;
@@ -109,7 +108,7 @@ public class TimeSeriesPanel extends JComponent implements ComponentListener, Mo
             public void run() {
                 try {
 //                    int numTimeRecords = 50400;
-                    int numTimeRecords = 12000;
+                    int numTimeRecords = 86400;
 //                    int numTimeRecords = 1200;
                     int plotUnitWidth = 4;
                     JFrame frame = new JFrame();
@@ -140,13 +139,15 @@ public class TimeSeriesPanel extends JComponent implements ComponentListener, Mo
 
                     TimeSeries timeSeries = new TimeSeries("Test");
 
-                    Instant startInstant = Instant.now().truncatedTo(ChronoUnit.SECONDS);
+                    Instant startInstant = Instant.now().truncatedTo(ChronoUnit.HOURS);
 //                    Instant startInstant = Instant.now();
-                    Instant endInstant = Instant.from(startInstant).plus(numTimeRecords, ChronoUnit.SECONDS);
+                    Instant endInstant = Instant.from(startInstant).plus(numTimeRecords+3600, ChronoUnit.SECONDS);
+
+                    log.debug("startInstant = " + startInstant.toString() + "  endInstant = " + endInstant.toString());
 
                     double value = 0.;
 
-                    for (int i = 0; i < numTimeRecords; i++) {
+                    for (int i = 3600; i < numTimeRecords; i++) {
                         Instant instant = Instant.from(startInstant).plus(i, ChronoUnit.SECONDS);
                         value = Math.max(-20., Math.min(10., value + .8 * Math.random() - .4 + .2 * Math.cos(i + .2)));
                         double range = Math.abs(value) * .25;
@@ -155,8 +156,8 @@ public class TimeSeriesPanel extends JComponent implements ComponentListener, Mo
                         timeSeries.addRecord(instant, value, upperRange, lowerRange);
                     }
 
-                    overviewTimeSeriesPanel.setTimeSeries(timeSeries);
-                    detailsTimeSeriesPanel.setTimeSeries(timeSeries);
+                    overviewTimeSeriesPanel.setTimeSeries(timeSeries, startInstant, endInstant);
+                    detailsTimeSeriesPanel.setTimeSeries(timeSeries, startInstant, endInstant);
 
                     scroller.getHorizontalScrollBar().addAdjustmentListener(new AdjustmentListener() {
                         @Override
@@ -164,12 +165,13 @@ public class TimeSeriesPanel extends JComponent implements ComponentListener, Mo
                             JScrollBar scrollBar = (JScrollBar)e.getSource();
                             double scrollBarModelWidth = scrollBar.getModel().getMaximum() - scrollBar.getModel().getMinimum();
                             double norm = (double)scrollBar.getModel().getValue() / scrollBarModelWidth;
-                            double deltaTime = norm * Duration.between(timeSeries.getStartInstant(), timeSeries.getEndInstant()).toMillis();
-                            Instant startHighlightInstant = timeSeries.getStartInstant().plusMillis((long)deltaTime);
+
+                            double deltaTime = norm * Duration.between(overviewTimeSeriesPanel.getStartInstant(), overviewTimeSeriesPanel.getEndInstant()).toMillis();
+                            Instant startHighlightInstant = overviewTimeSeriesPanel.getStartInstant().plusMillis((long)deltaTime);
                             int scrollBarRight = scrollBar.getModel().getValue() + scrollBar.getModel().getExtent();
                             norm = 1. - (double) scrollBarRight / (double) scrollBarModelWidth;
-                            deltaTime = norm * Duration.between(timeSeries.getStartInstant(), timeSeries.getEndInstant()).toMillis();
-                            Instant endHighlightInstant = timeSeries.getEndInstant().minusMillis((long) deltaTime);
+                            deltaTime = norm * Duration.between(overviewTimeSeriesPanel.getStartInstant(), overviewTimeSeriesPanel.getEndInstant()).toMillis();
+                            Instant endHighlightInstant = overviewTimeSeriesPanel.getEndInstant().minusMillis((long) deltaTime);
                             overviewTimeSeriesPanel.setHighlightRange(startHighlightInstant, endHighlightInstant);
                         }
                     });
@@ -203,12 +205,21 @@ public class TimeSeriesPanel extends JComponent implements ComponentListener, Mo
         return timeSeries;
     }
 
-    public void setTimeSeries(TimeSeries timeSeries) {
+    public void setTimeSeries(TimeSeries timeSeries, Instant startInstant, Instant endInstant) {
         this.timeSeries = timeSeries;
-        startInstant = timeSeries.getStartInstant();
-        endInstant = timeSeries.getEndInstant();
+        this.startInstant = startInstant;
+        this.endInstant = endInstant;
+//        startInstant = timeSeries.getStartInstant();
+//        endInstant = timeSeries.getEndInstant();
 
         totalDuration = Duration.between(startInstant, endInstant);
+        layoutPanel();
+    }
+
+    public void setDisplayTimeRange (Instant startInstant, Instant endInstant) {
+        this.startInstant = Instant.from(startInstant);
+        this.endInstant = Instant.from(endInstant);
+        totalDuration = Duration.between(this.startInstant, this.endInstant);
         layoutPanel();
     }
 
@@ -358,6 +369,12 @@ public class TimeSeriesPanel extends JComponent implements ComponentListener, Mo
             deltaTimeMillis = Duration.between(startInstant, end).toMillis();
             summaryUnitIndex = (int) (deltaTimeMillis / plotUnitDurationMillis);
             int highlightRight = plotRectangle.x + (summaryUnitIndex * plotUnitWidth);
+            if (highlightLeft > plotRectangle.x) {
+                highlightLeft = highlightLeft--;
+            }
+            if (highlightRight < (plotRectangle.x + plotRectangle.width)) {
+                highlightRight++;
+            }
             highlightRectangle = new Rectangle(highlightLeft, plotRectangle.y, highlightRight-highlightLeft, plotRectangle.height);
         } else {
 
@@ -404,6 +421,14 @@ public class TimeSeriesPanel extends JComponent implements ComponentListener, Mo
 
             repaint();
         }
+    }
+
+    public Instant getStartInstant () {
+        return startInstant;
+    }
+
+    public Instant getEndInstant() {
+        return endInstant;
     }
 
     private void calculatePlotPoints() {

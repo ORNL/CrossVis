@@ -112,7 +112,12 @@ public class FalconFX extends Application {
     private Spinner multipleHistogramBinSizeSpinner;
     private JLabel overviewDetailTimeSeriesNameLabel;
     private TabPane visTabPane;
+
     private Spinner multiViewPlotHeightSpinner;
+    private CheckBox multiViewAlignTimeSeriesCheckBox;
+    private ChoiceBox<ChronoUnit> multiViewChronoUnitChoice;
+    private ColorPicker multipleViewDataColorPicker;
+    private Spinner multipleViewPlotChronoUnitWidthSpinner;
 
 
     public static void main(String[] args) {
@@ -645,8 +650,8 @@ public class FalconFX extends Application {
         if (fileMetadata.fileType == FileMetadata.FileType.CSV) {
             TimeSeries timeSeries = fileMetadata.timeSeriesMap.get(variableName);
 //            TimeSeries timeSeries = timeSeriesMap.get(variableClipboardData.variableName);
-            overviewTimeSeriesPanel.setTimeSeries(timeSeries);
-            detailsTimeSeriesPanel.setTimeSeries(timeSeries);
+            overviewTimeSeriesPanel.setTimeSeries(timeSeries, timeSeries.getStartInstant(), timeSeries.getEndInstant());
+            detailsTimeSeriesPanel.setTimeSeries(timeSeries, timeSeries.getStartInstant(), timeSeries.getEndInstant());
             overviewDetailTimeSeriesNameLabel.setText(timeSeries.getName());
         } else if (fileMetadata.fileType == FileMetadata.FileType.PLG) {
             // load time series for variable
@@ -656,8 +661,8 @@ public class FalconFX extends Application {
                 Map<String, TimeSeries> PLGTimeSeriesMap = PLGFileReader.readPLGFileAsTimeSeries(fileMetadata.file, variableList);
                 for (TimeSeries timeSeries : PLGTimeSeriesMap.values()) {
 //                    timeSeriesMap.put(timeSeries.getName(), timeSeries);
-                    overviewTimeSeriesPanel.setTimeSeries(timeSeries);
-                    detailsTimeSeriesPanel.setTimeSeries(timeSeries);
+                    overviewTimeSeriesPanel.setTimeSeries(timeSeries, timeSeries.getStartInstant(), timeSeries.getEndInstant());
+                    detailsTimeSeriesPanel.setTimeSeries(timeSeries, timeSeries.getStartInstant(), timeSeries.getEndInstant());
                     overviewDetailTimeSeriesNameLabel.setText(timeSeries.getName());
                 }
             } catch (IOException e) {
@@ -770,7 +775,7 @@ public class FalconFX extends Application {
     }
 
     private Node createMultiViewPanel() {
-        multiViewPanel = new MultiViewPanel(100);
+        multiViewPanel = new MultiViewPanel(160);
         multiViewPanel.setBackground(java.awt.Color.WHITE);
 
         HBox settingsHBox = new HBox();
@@ -786,10 +791,57 @@ public class FalconFX extends Application {
         hBox.getChildren().addAll(new Label("Plot Height: "), multiViewPlotHeightSpinner);
         settingsHBox.getChildren().add(hBox);
 
+        hBox = new HBox();
+        hBox.setAlignment(Pos.CENTER_LEFT);
+        multiViewAlignTimeSeriesCheckBox = new CheckBox("Align Time Series");
+        multiViewAlignTimeSeriesCheckBox.setIndeterminate(false);
+        multiViewAlignTimeSeriesCheckBox.setSelected(multiViewPanel.getAlignTimeSeriesEnabled());
+        multiViewAlignTimeSeriesCheckBox.selectedProperty().addListener((obs, oldValue, newValue) -> multiViewPanel.setAlignTimeSeriesEnabled((Boolean)newValue));
+        hBox.getChildren().add(multiViewAlignTimeSeriesCheckBox);
+        settingsHBox.getChildren().add(hBox);
+
+        hBox = new HBox();
+        hBox.setAlignment(Pos.CENTER_LEFT);
+        multiViewChronoUnitChoice = new ChoiceBox<ChronoUnit>();
+        multiViewChronoUnitChoice.getItems().addAll(ChronoUnit.SECONDS, ChronoUnit.MINUTES, ChronoUnit.HOURS, ChronoUnit.HALF_DAYS, ChronoUnit.DAYS);
+        multiViewChronoUnitChoice.getSelectionModel().select(multiViewPanel.getDetailChronoUnit());
+        multiViewChronoUnitChoice.getSelectionModel().selectedItemProperty().addListener(
+                (ObservableValue<? extends ChronoUnit> ov,
+                 ChronoUnit oldValue, ChronoUnit newValue) -> {
+                    if (oldValue != newValue) {
+                        multiViewPanel.setDetailChronoUnit(newValue);
+                    }
+                }
+        );
+        hBox.getChildren().addAll(new Label("Plot Chrono Unit: "), multiViewChronoUnitChoice);
+        settingsHBox.getChildren().add(hBox);
+
+        hBox = new HBox();
+        hBox.setAlignment(Pos.CENTER_LEFT);
+        multipleViewDataColorPicker = new ColorPicker(dataColor);
+        multipleViewDataColorPicker.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                Color dataColor = multipleViewDataColorPicker.getValue();
+                multiViewPanel.setDataColor(convertToAWTColor(dataColor));
+            }
+        });
+        hBox.getChildren().addAll(new Label("Data Color: "), multipleViewDataColorPicker);
+        settingsHBox.getChildren().add(hBox);
+
+        hBox = new HBox();
+        hBox.setAlignment(Pos.CENTER_LEFT);
+        multipleViewPlotChronoUnitWidthSpinner = new Spinner(1, 10, multiViewPanel.getChronoUnitWidth());
+        multipleViewPlotChronoUnitWidthSpinner.setEditable(true);
+        multipleViewPlotChronoUnitWidthSpinner.valueProperty().addListener((obs, oldValue, newValue) -> multiViewPanel.setChronoUnitWidth((Integer)newValue));
+        hBox.getChildren().addAll(new Label("Plot Unit Width: "), multipleViewPlotChronoUnitWidthSpinner);
+        settingsHBox.getChildren().add(hBox);
+
+
         Border border = BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(10,10,10,10), BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
         JScrollPane scroller = new JScrollPane(multiViewPanel);
         scroller.getVerticalScrollBar().setUnitIncrement(1);
-        scroller.setBorder(border);
+//        scroller.setBorder(border);
 
         SwingNode swingNode = new SwingNode();
         swingNode.setContent(scroller);
