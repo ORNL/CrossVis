@@ -5,7 +5,7 @@
 	<groupId>gov.ornl.csed.cda.coalesce</groupId>
 	<artifactId>coalesce</artifactId>
 	<packaging>jar</packaging>
-	<version>0.1.1</version>
+	<version>0.1.2</version>
 
 	<name>coalesce</name>
 
@@ -236,7 +236,7 @@
                                 <argument>-outdir</argument>
                                 <argument>./target</argument>
                                 <argument>-srcfiles</argument>
-                                <argument>./target/coalesce-0.1.1-jar-with-dependencies.jar</argument>
+                                <argument>./target/coalesce-0.1.2-jar-with-dependencies.jar</argument>
                                 <argument>-appclass</argument>
                                 <argument>gov.ornl.csed.cda.Falcon.FalconFX</argument>
                                 <!--<argument>-srcfiles</argument>-->

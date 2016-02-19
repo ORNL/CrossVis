@@ -681,6 +681,7 @@ public class FalconFX extends Application {
                 variableList.add(variableName);
                 Map<String, TimeSeries> PLGTimeSeriesMap = PLGFileReader.readPLGFileAsTimeSeries(fileMetadata.file, variableList);
                 for (TimeSeries timeSeries : PLGTimeSeriesMap.values()) {
+                    timeSeries.setName(fileMetadata.file.getName() + ":" + timeSeries.getName());
                     multiViewPanel.addTimeSeries(timeSeries);
                 }
             } catch (IOException ex) {
