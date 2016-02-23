@@ -223,7 +223,6 @@ public class TimeSeriesRenderer {
         TreeMap<Instant, ArrayList<Point2D.Double>> plotPointMap = new TreeMap<>();
 
         plotPointMap.clear();
-        int numPointsCalculated = 0;
         ArrayList<TimeSeriesRecord> records = timeSeries.getAllRecords();
         if (records != null) {
             for (TimeSeriesRecord record : records) {
@@ -242,7 +241,6 @@ public class TimeSeriesRenderer {
                     plotPointMap.put(record.instant, instantPoints);
                 }
                 instantPoints.add(point);
-                numPointsCalculated++;
             }
         }
 

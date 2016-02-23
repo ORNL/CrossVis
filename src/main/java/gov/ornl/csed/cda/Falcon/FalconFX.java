@@ -118,6 +118,7 @@ public class FalconFX extends Application {
     private ChoiceBox<ChronoUnit> multiViewChronoUnitChoice;
     private ColorPicker multipleViewDataColorPicker;
     private Spinner multipleViewPlotChronoUnitWidthSpinner;
+    private CheckBox multiViewShowOverviewCheckBox;
 
 
     public static void main(String[] args) {
@@ -799,6 +800,15 @@ public class FalconFX extends Application {
         multiViewAlignTimeSeriesCheckBox.setSelected(multiViewPanel.getAlignTimeSeriesEnabled());
         multiViewAlignTimeSeriesCheckBox.selectedProperty().addListener((obs, oldValue, newValue) -> multiViewPanel.setAlignTimeSeriesEnabled((Boolean)newValue));
         hBox.getChildren().add(multiViewAlignTimeSeriesCheckBox);
+        settingsHBox.getChildren().add(hBox);
+
+        hBox = new HBox();
+        hBox.setAlignment(Pos.CENTER_LEFT);
+        multiViewShowOverviewCheckBox = new CheckBox("Show Overview");
+        multiViewShowOverviewCheckBox.setIndeterminate(false);
+        multiViewShowOverviewCheckBox.setSelected(multiViewPanel.getShowOverviewEnabled());
+        multiViewShowOverviewCheckBox.selectedProperty().addListener((obs, oldValue, newValue) -> multiViewPanel.setShowOverviewEnabled((Boolean)newValue));
+        hBox.getChildren().add(multiViewShowOverviewCheckBox);
         settingsHBox.getChildren().add(hBox);
 
         hBox = new HBox();

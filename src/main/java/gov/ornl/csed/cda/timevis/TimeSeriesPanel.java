@@ -19,10 +19,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.NavigableMap;
-import java.util.TreeMap;
+import java.util.*;
 
 /**
  * Created by csg on 12/2/15.
@@ -107,10 +104,12 @@ public class TimeSeriesPanel extends JComponent implements ComponentListener, Mo
         EventQueue.invokeLater(new Runnable() {
             public void run() {
                 try {
+                    Random random = new Random(System.currentTimeMillis());
+
 //                    int numTimeRecords = 50400;
                     int numTimeRecords = 86400;
 //                    int numTimeRecords = 1200;
-                    int plotUnitWidth = 4;
+                    int plotUnitWidth = 10;
                     JFrame frame = new JFrame();
                     frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
@@ -143,12 +142,11 @@ public class TimeSeriesPanel extends JComponent implements ComponentListener, Mo
 //                    Instant startInstant = Instant.now();
                     Instant endInstant = Instant.from(startInstant).plus(numTimeRecords+3600, ChronoUnit.SECONDS);
 
-                    log.debug("startInstant = " + startInstant.toString() + "  endInstant = " + endInstant.toString());
-
                     double value = 0.;
 
                     for (int i = 3600; i < numTimeRecords; i++) {
                         Instant instant = Instant.from(startInstant).plus(i, ChronoUnit.SECONDS);
+                        instant = instant.plusMillis(random.nextInt(1000));
                         value = Math.max(-20., Math.min(10., value + .8 * Math.random() - .4 + .2 * Math.cos(i + .2)));
                         double range = Math.abs(value) * .25;
                         double upperRange = value + range;
@@ -209,9 +207,6 @@ public class TimeSeriesPanel extends JComponent implements ComponentListener, Mo
         this.timeSeries = timeSeries;
         this.startInstant = startInstant;
         this.endInstant = endInstant;
-//        startInstant = timeSeries.getStartInstant();
-//        endInstant = timeSeries.getEndInstant();
-
         totalDuration = Duration.between(startInstant, endInstant);
         layoutPanel();
     }
@@ -470,13 +465,39 @@ public class TimeSeriesPanel extends JComponent implements ComponentListener, Mo
                         summaryInfoArray[i] = summaryInfo;
                     }
                 }
-                log.debug("numPlotPoints = " + numPlotUnits + "summaryInfoArray.length = " + summaryInfoArray.length);
+//                log.debug("numPlotPoints = " + numPlotUnits + "summaryInfoArray.length = " + summaryInfoArray.length);
                 //            summaryInfoList = TimeSeriesRenderer.calculateOverviewPlotPoints(timeSeries, plotRectangle, numPlotUnits,
                 //                    plotUnitWidth, plotUnitDurationMillis, startInstant);
             }
         } else {
-            plotPointMap = TimeSeriesRenderer.calculateDetailedPlotPoints(timeSeries, plotChronoUnit, plotUnitWidth,
-                    plotRectangle, startInstant);
+            plotPointMap.clear();
+            ArrayList<TimeSeriesRecord> records = timeSeries.getAllRecords();
+            if (records != null) {
+                long totalPlotDeltaTime = ChronoUnit.MILLIS.between(startInstant, endInstant);
+                for (TimeSeriesRecord record : records) {
+//                    long deltaTime = plotChronoUnit.between(startInstant, record.instant);
+//                    int x = (int)deltaTime * plotUnitWidth;
+
+                    long deltaTime = ChronoUnit.MILLIS.between(startInstant, record.instant);
+                    double normTime = (double)deltaTime / totalPlotDeltaTime;
+                    double x = plotRectangle.x + ((double)plotRectangle.width * normTime);
+
+                    double norm = (record.value - timeSeries.getMinValue()) / (timeSeries.getMaxValue() - timeSeries.getMinValue());
+                    double yOffset = norm * (plotRectangle.height);
+                    double y = plotRectangle.height - yOffset;
+
+                    Point2D.Double point = new Point2D.Double(x, y);
+
+                    ArrayList<Point2D.Double> instantPoints = plotPointMap.get(record.instant);
+                    if (instantPoints == null) {
+                        instantPoints = new ArrayList<>();
+                        plotPointMap.put(record.instant, instantPoints);
+                    }
+                    instantPoints.add(point);
+                }
+            }
+//            plotPointMap = TimeSeriesRenderer.calculateDetailedPlotPoints(timeSeries, plotChronoUnit, plotUnitWidth,
+//                    plotRectangle, startInstant);
 //            plotPointMap.clear();
 //            int numPointsCalculated = 0;
 //            ArrayList<TimeSeriesRecord> records = timeSeries.getAllRecords();
