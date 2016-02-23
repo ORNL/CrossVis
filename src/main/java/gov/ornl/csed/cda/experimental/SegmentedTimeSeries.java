@@ -11,9 +11,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.geom.AffineTransform;
-import java.awt.geom.Ellipse2D;
-import java.awt.geom.Path2D;
+import java.awt.geom.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -35,7 +33,7 @@ public class SegmentedTimeSeries extends JComponent {
     private int plotTimeUnitWidth = 2;
     private ChronoUnit chronoUnit;
     private int plotHeight = 60;
-    private int plotSpacing = plotHeight / 4;
+    private int plotSpacing = plotHeight + 10;
     private Insets margins = new Insets(4, 4, 4, 4);
     private int timeSeriesLabelWidth = 80;
     private DecimalFormat df = new DecimalFormat("#,##0.00");
@@ -159,34 +157,60 @@ public class SegmentedTimeSeries extends JComponent {
         int plotWidth = ((int)totalTimeUnits + 1) * plotTimeUnitWidth;
         Rectangle plotRectangle = new Rectangle(0, 0, plotWidth, plotHeight);
 
-        Path2D.Double valuePath = new Path2D.Double();
-        ArrayList<Point.Double> points = new ArrayList<>();
-
+        Point2D.Double lastPoint = null;
         for (TimeSeriesRecord record : timeSeries.getAllRecords()) {
-            long deltaStartInstant = chronoUnit.between(timeSeries.getStartInstant(), record.instant);
-            int x = (int) deltaStartInstant * plotTimeUnitWidth;
+            long deltaTime = chronoUnit.between(timeSeries.getStartInstant(), record.instant);
+            double x = (double)(deltaTime * plotTimeUnitWidth) + (plotTimeUnitWidth / 2.);
 
-            double normValue = (record.value - minTimeSeriesValue) / (maxTimeSeriesValue - minTimeSeriesValue);
-            double yOffset = normValue * plotRectangle.height;
-            double valueY = plotRectangle.height - yOffset;
+            double norm = (record.value - minTimeSeriesValue) / (maxTimeSeriesValue - minTimeSeriesValue);
+            double yOffset = norm * plotRectangle.height;
+            double y = plotRectangle.height - yOffset;
 
-            if (valuePath.getCurrentPoint() == null) {
-                valuePath.moveTo(x, valueY);
-            } else {
-                valuePath.lineTo(x, valueY);
+            Point2D.Double point = new Point2D.Double(x, y);
+
+            if (lastPoint != null) {
+                Line2D.Double line = new Line2D.Double(lastPoint.x, lastPoint.y, point.x, lastPoint.y);
+                g2.draw(line);
+                line = new Line2D.Double(point.x, lastPoint.y, point.x, point.y);
+                g2.draw(line);
+//                Line2D.Double line = new Line2D.Double(lastPoint, point);
+//                g2.draw(line);
             }
 
-            points.add(new Point.Double(x, valueY));
+            Ellipse2D.Double circle = new Ellipse2D.Double(point.x - 1., point.y - 1., 2., 2.);
+            g2.draw(circle);
+
+            lastPoint = point;
         }
 
-        g2.draw(valuePath);
-
-        for (int i = 0; i < points.size(); i++) {
-            Point.Double point = points.get(i);
-            Ellipse2D.Double ellipse = new Ellipse2D.Double(point.x-1, point.y-1, 2, 2);
-//            g2.fill(ellipse);
-            g2.draw(ellipse);
-        }
+//        Path2D.Double valuePath = new Path2D.Double();
+//        ArrayList<Point.Double> points = new ArrayList<>();
+//
+//        for (TimeSeriesRecord record : timeSeries.getAllRecords()) {
+//            long deltaStartInstant = chronoUnit.between(timeSeries.getStartInstant(), record.instant);
+//            int x = (int) deltaStartInstant * plotTimeUnitWidth;
+//
+//            double normValue = (record.value - minTimeSeriesValue) / (maxTimeSeriesValue - minTimeSeriesValue);
+//            double yOffset = normValue * plotRectangle.height;
+//            double valueY = plotRectangle.height - yOffset;
+//
+//            if (valuePath.getCurrentPoint() == null) {
+//                valuePath.moveTo(x, valueY);
+//            } else {
+//                valuePath.lineTo(x, valueY);
+//            }
+//
+//            points.add(new Point.Double(x, valueY));
+//        }
+//
+//        g2.draw(valuePath);
+//
+//        for (int i = 0; i < points.size(); i++) {
+//            Point.Double point = points.get(i);
+//            Ellipse2D.Double ellipse = new Ellipse2D.Double(point.x-1, point.y-1, 2, 2);
+////            g2.fill(ellipse);
+//            g2.draw(ellipse);
+//        }
     }
 
     public static void main (String[] args) throws Exception {

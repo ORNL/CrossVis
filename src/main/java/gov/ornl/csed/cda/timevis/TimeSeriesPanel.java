@@ -110,7 +110,7 @@ public class TimeSeriesPanel extends JComponent implements ComponentListener, Mo
 //                    int numTimeRecords = 50400;
                     int numTimeRecords = 86400;
 //                    int numTimeRecords = 1200;
-                    int plotUnitWidth = 4;
+                    int plotUnitWidth = 10;
                     JFrame frame = new JFrame();
                     frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 

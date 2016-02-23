@@ -101,7 +101,6 @@ public class FalconFX extends Application {
     private HashMap<File, FileMetadata> fileMetadataMap = new HashMap<>();
     private HashMap<TreeItem<String>, FileMetadata> fileTreeItemMetadataMap = new HashMap<>();
 
-
     // state variables
     private javafx.scene.paint.Color dataColor = Color.web("rgba(80, 80, 100, 0.4)");
 
@@ -118,7 +117,6 @@ public class FalconFX extends Application {
     private ChoiceBox<ChronoUnit> multiViewChronoUnitChoice;
     private ColorPicker multipleViewDataColorPicker;
     private Spinner multipleViewPlotChronoUnitWidthSpinner;
-
 
     public static void main(String[] args) {
         launch(args);
