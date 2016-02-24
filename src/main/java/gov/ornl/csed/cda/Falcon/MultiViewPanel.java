@@ -39,6 +39,7 @@ public class MultiViewPanel extends JPanel {
     private Color dataColor = new Color(80, 80, 130, 180);
     private ArrayList<ViewInfo> viewInfoList = new ArrayList<ViewInfo>();
 
+    private boolean showOverview = true;
     private Instant startInstant;
     private Instant endInstant;
     private ChronoUnit detailChronoUnit = ChronoUnit.SECONDS;
@@ -58,6 +59,10 @@ public class MultiViewPanel extends JPanel {
         }
 
         initialize();
+    }
+
+    public boolean getShowOverviewEnabled() {
+        return showOverview;
     }
 
     public boolean getAlignTimeSeriesEnabled () {
@@ -224,6 +229,15 @@ public class MultiViewPanel extends JPanel {
         return buttonPanel;
     }
 
+    public void setShowOverviewEnabled(boolean enabled) {
+        if (enabled != showOverview) {
+            showOverview = enabled;
+            for (ViewInfo viewInfo : viewInfoList) {
+                viewInfo.sidePanel.setVisible(showOverview);
+            }
+        }
+    }
+
     public void addTimeSeries(TimeSeries timeSeries) {
         if (viewInfoList.isEmpty()) {
             startInstant = Instant.from(timeSeries.getStartInstant());
@@ -317,59 +331,22 @@ public class MultiViewPanel extends JPanel {
         viewInfo.histogramPanel.setBackground(Color.white);
         viewInfo.histogramPanel.setHistogram(histogram);
 
-        JPanel sidePanel = new JPanel();
-        sidePanel.setBackground(Color.WHITE);
-        sidePanel.setLayout(new GridLayout(2, 1));
-//        sidePanel.setLayout(new BoxLayout(sidePanel, BoxLayout.PAGE_AXIS));
-        sidePanel.add(viewInfo.histogramPanel);
-        sidePanel.add(viewInfo.overviewTimeSeriesPanel);
-//        sidePanel.add(placeHolderPanel);
-        sidePanel.setPreferredSize(new Dimension(200, plotHeight));
-        sidePanel.setBorder(BorderFactory.createTitledBorder("Overview"));
+        viewInfo.sidePanel = new JPanel();
+        viewInfo.sidePanel.setBackground(Color.WHITE);
+        viewInfo.sidePanel.setLayout(new GridLayout(2, 1));
+        viewInfo.sidePanel.add(viewInfo.histogramPanel);
+        viewInfo.sidePanel.add(viewInfo.overviewTimeSeriesPanel);
+        viewInfo.sidePanel.setPreferredSize(new Dimension(200, plotHeight));
+        viewInfo.sidePanel.setBorder(BorderFactory.createTitledBorder("Overview"));
+        viewInfo.sidePanel.setVisible(showOverview);
 
         viewInfo.viewPanel.add(detailsTimeSeriesScroller, BorderLayout.CENTER);
-        viewInfo.viewPanel.add(sidePanel, BorderLayout.EAST);
+        viewInfo.viewPanel.add(viewInfo.sidePanel, BorderLayout.EAST);
         viewInfo.viewPanel.add(buttonPanel, BorderLayout.WEST);
         viewInfo.viewPanel.setBorder(BorderFactory.createTitledBorder(timeSeries.getName()));
 
         panelBox.add(viewInfo.viewPanel);
         revalidate();
-//        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, scrollPane, sidePanel);
-//        splitPane.setDividerLocation(700);
-
-//        detailsTimeSeriesScroller.setBorder(BorderFactory.createMatteBorder(2,2,2,2, Color.BLUE));
-//        sidePanel.setBorder(BorderFactory.createMatteBorder(2,2,2,2, Color.BLUE));
-//        detailsPanel.add(detailsTimeSeriesScroller);
-//        overviewPanel.add(sidePanel);
-
-//        JPanel panel = new JPanel();
-//        panel.setLayout(new GridBagLayout());
-//        GridBagConstraints gbc = new GridBagConstraints();
-//
-//        gbc.gridx = 0;
-//        gbc.gridy = 0;
-//        gbc.gridheight = 2;
-//        gbc.gridwidth = 2;
-//        gbc.weightx = 1.0;
-//        gbc.weighty = 1.;
-//        gbc.fill = GridBagConstraints.BOTH;
-//        panel.add(scrollPane, gbc);
-//
-//        gbc.gridx = 2;
-//        gbc.gridheight = 1;
-//        gbc.gridwidth = 1;
-//        gbc.weightx = 0.5;
-//        panel.add(overviewTimeSeriesPanel, gbc);
-//
-//        gbc.gridy = 1;
-//        panel.add(placeHolderPanel, gbc);
-
-//        box.add(panel);
-//        box.add(overviewTimeSeriesPanel);
-//        box.add(splitPane);
-//        revalidate();
-
-//        log.debug("Num children panels: " + panelBox.getAccessibleContext().getAccessibleChildrenCount());
     }
 
     public static void main (String args[]) {
@@ -415,11 +392,15 @@ public class MultiViewPanel extends JPanel {
         for (TimeSeries timeSeries : timeSeriesList) {
             multiViewPanel.addTimeSeries(timeSeries);
         }
+
+        multiViewPanel.setShowOverviewEnabled(false);
+        multiViewPanel.setShowOverviewEnabled(true);
     }
 
     private class ViewInfo {
         public TimeSeries timeSeries;
         public JPanel viewPanel;
+        public JPanel sidePanel;
         public TimeSeriesPanel detailTimeSeriesPanel;
         public TimeSeriesPanel overviewTimeSeriesPanel;
         public HistogramPanel histogramPanel;
