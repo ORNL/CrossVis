@@ -5,7 +5,7 @@
 	<groupId>gov.ornl.csed.cda.coalesce</groupId>
 	<artifactId>coalesce</artifactId>
 	<packaging>jar</packaging>
-	<version>0.1.2</version>
+	<version>0.1.3</version>
 
 	<name>coalesce</name>
 
@@ -228,15 +228,15 @@
                                 <argument>-native</argument>
                                 <argument>installer</argument>
                                 <argument>-name</argument>
-                                <argument>FalconFX</argument>
+                                <argument>Falcon</argument>
                                 <argument>-title</argument>
-                                <argument>FalconFX</argument>
+                                <argument>Falcon</argument>
                                 <argument>-vendor</argument>
                                 <argument>ORNL</argument>
                                 <argument>-outdir</argument>
                                 <argument>./target</argument>
                                 <argument>-srcfiles</argument>
-                                <argument>./target/coalesce-0.1.2-jar-with-dependencies.jar</argument>
+                                <argument>./target/coalesce-${version}-jar-with-dependencies.jar</argument>
                                 <argument>-appclass</argument>
                                 <argument>gov.ornl.csed.cda.Falcon.FalconFX</argument>
                                 <!--<argument>-srcfiles</argument>-->
@@ -246,10 +246,11 @@
                                 <argument>-outdir</argument>
                                 <argument>./target</argument>
                                 <argument>-outfile</argument>
-                                <argument>FalconFX</argument>
+                                <argument>Falcon-v${version}</argument>
                                 <argument>-BjvmOptions=-Xmx4g</argument>
                                 <argument>-BjvmOptions=-Xms4g</argument>
                                 <argument>-v</argument>
+								<argument>-BappVersion=${version}</argument>
                             </arguments>
                         </configuration>
                     </execution>
