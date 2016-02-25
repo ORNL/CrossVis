@@ -47,7 +47,6 @@ public class SegmentedTimeSeries extends JComponent {
         if ((timeSeriesMap != null) && (!timeSeriesMap.isEmpty())) {
             for (Map.Entry<Double, TimeSeries> timeSeriesEntry : timeSeriesMap.entrySet()) {
                 TimeSeries timeSeries = timeSeriesEntry.getValue();
-
                 if (Double.isNaN(maxTimeSeriesValue)) {
                     maxTimeSeriesValue = timeSeries.getMaxValue();
                     minTimeSeriesValue = timeSeries.getMinValue();
@@ -113,6 +112,7 @@ public class SegmentedTimeSeries extends JComponent {
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 
+        // clear slate
         g2.setColor(getBackground());
         g2.fillRect(0, 0, getWidth(), getHeight());
 
@@ -282,7 +282,10 @@ public class SegmentedTimeSeries extends JComponent {
                 JScrollPane scroller = new JScrollPane(segmentedTimeSeries);
                 scroller.getVerticalScrollBar().setUnitIncrement(10);
                 scroller.getHorizontalScrollBar().setUnitIncrement(10);
-                ((JPanel)frame.getContentPane()).add(scroller, BorderLayout.CENTER);
+
+                JPanel mainPanel = (JPanel)frame.getContentPane();
+                mainPanel.add(scroller, BorderLayout.CENTER);
+
                 frame.setSize(1000, 300);
                 frame.setVisible(true);
             }
