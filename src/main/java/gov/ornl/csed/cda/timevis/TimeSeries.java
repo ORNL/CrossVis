@@ -23,7 +23,6 @@ public class TimeSeries {
 	private double minValue = Double.NaN;
     private Instant startInstant;
     private Instant endInstant;
-	
 	private TreeMap<Instant, TimeSeriesBin> binTreeMap = new TreeMap<>();
 	
 	public TimeSeries(String name) {

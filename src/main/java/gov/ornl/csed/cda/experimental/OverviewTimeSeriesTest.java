@@ -1,4 +1,7 @@
-package gov.ornl.csed.cda.timevis;
+package gov.ornl.csed.cda.experimental;
+
+import gov.ornl.csed.cda.timevis.TimeSeries;
+import gov.ornl.csed.cda.timevis.TimeSeriesPanel;
 
 import javax.swing.*;
 import javax.swing.border.Border;

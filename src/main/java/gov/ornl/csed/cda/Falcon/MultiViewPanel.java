@@ -9,6 +9,7 @@ import javafx.scene.paint.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.Color;
@@ -16,6 +17,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.AdjustmentEvent;
 import java.awt.event.AdjustmentListener;
+import java.awt.geom.AffineTransform;
+import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Duration;
@@ -349,8 +353,30 @@ public class MultiViewPanel extends JPanel {
         revalidate();
     }
 
-    public static void main (String args[]) {
-        int numTimeSeries = 3;
+    public void drawToImage(File imageFile) throws IOException {
+        int imageWidth = getWidth() * 4;
+        int imageHeight = getHeight() * 4;
+
+        BufferedImage image = new BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2 = image.createGraphics();
+
+        g2.setRenderingHint(RenderingHints.KEY_ALPHA_INTERPOLATION, RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY);
+        g2.setRenderingHint(RenderingHints.KEY_COLOR_RENDERING, RenderingHints.VALUE_COLOR_RENDER_QUALITY);
+        g2.setRenderingHint(RenderingHints.KEY_DITHERING, RenderingHints.VALUE_DITHER_ENABLE);
+        g2.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON);
+        g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+        g2.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
+        g2.setTransform(AffineTransform.getScaleInstance(4., 4.));
+
+        paint(g2);
+        g2.dispose();
+
+        ImageIO.write(image, "png", imageFile);
+    }
+
+    public static void main (String args[]) throws IOException {
+        int numTimeSeries = 6;
         int numTimeSeriesRecords = 60*48;
         double minValue = -10.;
         double maxValue = 10.;
@@ -393,8 +419,18 @@ public class MultiViewPanel extends JPanel {
             multiViewPanel.addTimeSeries(timeSeries);
         }
 
-        multiViewPanel.setShowOverviewEnabled(false);
-        multiViewPanel.setShowOverviewEnabled(true);
+//        multiViewPanel.setShowOverviewEnabled(false);
+//        multiViewPanel.setShowOverviewEnabled(true);
+
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        log.debug("Saving screen capture");
+        File imageFile = new File("test.png");
+        multiViewPanel.drawToImage(imageFile);
     }
 
     private class ViewInfo {

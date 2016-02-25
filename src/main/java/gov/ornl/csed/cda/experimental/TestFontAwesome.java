@@ -1,4 +1,4 @@
-package gov.ornl.csed.cda.timevis;
+package gov.ornl.csed.cda.experimental;
 
 import javax.swing.*;
 import java.awt.*;

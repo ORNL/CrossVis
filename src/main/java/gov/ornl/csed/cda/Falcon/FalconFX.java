@@ -38,12 +38,15 @@ import prefuse.data.event.TableListener;
 import prefuse.data.io.CSVTableReader;
 import prefuse.data.io.DataIOException;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.EtchedBorder;
 import java.awt.*;
 import java.awt.event.AdjustmentEvent;
 import java.awt.event.AdjustmentListener;
+import java.awt.geom.AffineTransform;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -119,12 +122,12 @@ public class FalconFX extends Application {
     private ColorPicker multipleViewDataColorPicker;
     private Spinner multipleViewPlotChronoUnitWidthSpinner;
     private CheckBox multiViewShowOverviewCheckBox;
+    private JPanel overviewDetailPanel;
 
 
     public static void main(String[] args) {
         launch(args);
     }
-
 
     private java.awt.Color convertToAWTColor(Color color) {
         int r = (int)(color.getRed() * 255.0);
@@ -160,7 +163,7 @@ public class FalconFX extends Application {
         Scene scene = new Scene(rootNode, 1200, 800);
 
         Node ODTimeSeriesNode = createOverviewDetailTimeSeriesPanel();
-        Node multiTimeSeriesNode = createMultiTimeSeriesPanel();
+//        Node multiTimeSeriesNode = createMultiTimeSeriesPanel();
         Node multiHistogramNode = createMultiHistogramPanel();
         Node multiViewNode = createMultiViewPanel();
 
@@ -175,11 +178,11 @@ public class FalconFX extends Application {
         multiViewTab.setContent(multiViewNode);
         Tab ODTimeTab = new Tab(" Single Time Series ");
         ODTimeTab.setContent(ODTimeSeriesNode);
-        Tab multiTimeTab = new Tab(" Multiple Time Series ");
-        multiTimeTab.setContent(multiTimeSeriesNode);
+//        Tab multiTimeTab = new Tab(" Multiple Time Series ");
+//        multiTimeTab.setContent(multiTimeSeriesNode);
         Tab multiHistoTab = new Tab(" Multiple Histograms ");
         multiHistoTab.setContent(multiHistogramNode);
-        visTabPane.getTabs().addAll(multiViewTab, ODTimeTab, multiTimeTab, multiHistoTab);
+        visTabPane.getTabs().addAll(multiViewTab, ODTimeTab, multiHistoTab);
 
 //        // Create left pane as a vertically split node
 //        StackPane topStackPane = new StackPane();
@@ -277,6 +280,44 @@ public class FalconFX extends Application {
         }
 
         dataTreeRoot.getChildren().addAll(fileTreeItem);
+    }
+
+    private void captureVisualizationImage(File imageFile) throws IOException {
+        JPanel activePanel = null;
+
+        // get active visualization tab
+        if (visTabPane.getSelectionModel().getSelectedItem().getText().equals(" Single Time Series ")) {
+            activePanel = overviewDetailPanel;
+        } else if (visTabPane.getSelectionModel().getSelectedItem().getText().equals(" Multiple Time Series ")) {
+
+        } else if (visTabPane.getSelectionModel().getSelectedItem().getText().equals(" Multiple Histograms ")) {
+
+        } else if (visTabPane.getSelectionModel().getSelectedItem().getText().equals(" Multi View ")) {
+            activePanel = multiViewPanel;
+        } else {
+            return;
+        }
+
+        int imageWidth = activePanel.getWidth() * 4;
+        int imageHeight = activePanel.getHeight() * 4;
+
+
+        BufferedImage image = new BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2 = image.createGraphics();
+
+        g2.setRenderingHint(RenderingHints.KEY_ALPHA_INTERPOLATION, RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY);
+        g2.setRenderingHint(RenderingHints.KEY_COLOR_RENDERING, RenderingHints.VALUE_COLOR_RENDER_QUALITY);
+        g2.setRenderingHint(RenderingHints.KEY_DITHERING, RenderingHints.VALUE_DITHER_ENABLE);
+        g2.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON);
+        g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+        g2.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
+        g2.setTransform(AffineTransform.getScaleInstance(4., 4.));
+
+        activePanel.paint(g2);
+        g2.dispose();
+
+        ImageIO.write(image, "png", imageFile);
     }
 
     private void openCSVFile(File csvFile) throws DataIOException {
@@ -435,6 +476,23 @@ public class FalconFX extends Application {
             }
         });
 
+        MenuItem captureScreenMI = new MenuItem("Screen Capture...");
+        captureScreenMI.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                FileChooser fileChooser = new FileChooser();
+                fileChooser.setTitle("Select File for Screen Capture");
+                File imageFile = fileChooser.showSaveDialog(primaryStage);
+                if (imageFile != null) {
+                    try{
+                        captureVisualizationImage(imageFile);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
+
         MenuItem exitMI = new MenuItem("Exit");
         exitMI.setOnAction(new EventHandler<ActionEvent>() {
             public void handle(ActionEvent event) {
@@ -442,7 +500,7 @@ public class FalconFX extends Application {
             }
         });
 
-        fileMenu.getItems().addAll(openCSVMI, openPLGMI, new SeparatorMenuItem(), exitMI);
+        fileMenu.getItems().addAll(openCSVMI, openPLGMI, new SeparatorMenuItem(), captureScreenMI, new SeparatorMenuItem(), exitMI);
 
         Menu editMenu = new Menu("Edit");
         Menu viewMenu = new Menu("View");
@@ -1046,15 +1104,15 @@ public class FalconFX extends Application {
         overviewDetailTimeSeriesNameLabel.setFont(overviewDetailTimeSeriesNameLabel.getFont().deriveFont(java.awt.Font.BOLD));
         overviewDetailTimeSeriesNameLabel.setBorder(BorderFactory.createEmptyBorder(2, 4, 2, 4));
 
-        JPanel panel = new JPanel();
-        panel.setLayout(new BorderLayout());
-        panel.add(overviewDetailTimeSeriesNameLabel, BorderLayout.NORTH);
-        panel.add(scroller, BorderLayout.CENTER);
-        panel.add(overviewTimeSeriesPanel, BorderLayout.SOUTH);
-        panel.setBackground(java.awt.Color.white);
+        overviewDetailPanel = new JPanel();
+        overviewDetailPanel.setLayout(new BorderLayout());
+        overviewDetailPanel.add(overviewDetailTimeSeriesNameLabel, BorderLayout.NORTH);
+        overviewDetailPanel.add(scroller, BorderLayout.CENTER);
+        overviewDetailPanel.add(overviewTimeSeriesPanel, BorderLayout.SOUTH);
+        overviewDetailPanel.setBackground(java.awt.Color.white);
 
         SwingNode tsSwingNode = new SwingNode();
-        tsSwingNode.setContent(panel);
+        tsSwingNode.setContent(overviewDetailPanel);
         tsSwingNode.setOnDragOver(event -> event.acceptTransferModes(TransferMode.COPY));
         tsSwingNode.setOnDragDropped(event -> {
             Dragboard db = event.getDragboard();
