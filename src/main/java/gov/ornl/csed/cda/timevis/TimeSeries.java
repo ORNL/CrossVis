@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import java.awt.*;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Path2D;
+import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -35,6 +36,8 @@ public class TimeSeries {
         endInstant = null;
         maxValue = Double.NaN;
         minValue = Double.NaN;
+        Point2D point = new Point2D.Double();
+
     }
 	
 	public Instant getStartInstant() {

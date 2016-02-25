@@ -321,7 +321,7 @@ public class MultiViewPanel extends JPanel {
         });
 
 
-        viewInfo.histogramPanel = new HistogramPanel();
+        viewInfo.histogramPanel = new HistogramPanel(HistogramPanel.ORIENTATION.HORIZONTAL);
 
         ArrayList<TimeSeriesRecord> records = timeSeries.getAllRecords();
         double values[] = new double[records.size()];

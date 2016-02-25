@@ -241,6 +241,10 @@ public class FalconFX extends Application {
 //        fileTypeMap.put(plgFile, FalconDataTreeItem.FileType.PLG);
 
         for (PLGVariableSchema schema : variableSchemaMap.values()) {
+            if (schema.variableName.contains("ArcTrip")) {
+                log.debug(schema.variableName + " " + schema.typeString + " " + schema.numValues);
+            }
+
             if (schema.typeString.equals("Int16") ||
                     schema.typeString.equals("Double") ||
                     schema.typeString.equals("Single") ||

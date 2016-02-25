@@ -1,7 +1,10 @@
 package gov.ornl.csed.cda.histogram;
 
 import org.apache.commons.math3.random.EmpiricalDistribution;
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import prefuse.data.Table;
 import prefuse.data.column.Column;
 import prefuse.data.io.CSVTableReader;
@@ -11,6 +14,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
+import java.awt.geom.Ellipse2D;
+import java.awt.geom.Line2D;
+import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 
@@ -18,7 +24,10 @@ import java.util.ArrayList;
  * Created by csg on 2/15/16.
  */
 public class HistogramPanel extends JComponent implements ComponentListener {
-    public static final int SUMMARY_STATS_DEFAULT_HEIGHT = 14;
+    private final static Logger log = LoggerFactory.getLogger(HistogramPanel.class);
+
+    public static final int SUMMARY_STATS_DEFAULT_SIZE = 14;
+
     private int binCount = 20;
     private Histogram histogram;
     private Rectangle fullPlotRectangle;
@@ -29,8 +38,16 @@ public class HistogramPanel extends JComponent implements ComponentListener {
     private ArrayList<Color> histogramBinColors;
     private int typicalValuePosition;
     private int dispersionRectangle;
+    private ORIENTATION orientation;
+    private Shape meanShape;
+    private Shape medianShape;
+    private Shape stdevRangeShape;
+    private Shape IQRShape;
 
-    public HistogramPanel () {
+    public enum ORIENTATION {VERTICAL, HORIZONTAL}
+
+    public HistogramPanel (ORIENTATION orientation) {
+        this.orientation = orientation;
         setMinimumSize(new Dimension(40,40));
         addComponentListener(this);
     }
@@ -51,24 +68,22 @@ public class HistogramPanel extends JComponent implements ComponentListener {
         layoutPanel();
     }
 
+    private double mapValue(double value, double currentMin, double currentMax, double newMin, double newMax) {
+        double norm = (value - currentMin) / (currentMax - currentMin);
+        double newValue = (norm * (newMax - newMin)) + newMin;
+        return newValue;
+    }
+
     private void layoutPanel() {
         if (histogram != null) {
+
             int plotLeft = getInsets().left;
             int plotTop = getInsets().top;
-            int plotBottom = getHeight() - (getInsets().bottom);
+            int plotHeight = getHeight() - (getInsets().bottom + getInsets().top);
             int plotWidth = getWidth() - (getInsets().left + getInsets().right);
-            fullPlotRectangle = new Rectangle(plotLeft, plotTop, plotWidth, plotBottom - plotTop);
-
-//            histogram.layoutAxis(plotRectangle.width, plotRectangle.height);
-
-            int histogramPlotHeight = (int) (fullPlotRectangle.height - SUMMARY_STATS_DEFAULT_HEIGHT);
-            histogramPlotRectangle = new Rectangle(plotLeft, plotTop, plotWidth, histogramPlotHeight);
-            double binRectangleWidth = (double) histogramPlotRectangle.width / (double) binCount;
-
-            summaryStatsRectangle = new Rectangle(plotLeft, (int) histogramPlotRectangle.getMaxY(), plotWidth, SUMMARY_STATS_DEFAULT_HEIGHT);
+            fullPlotRectangle = new Rectangle(plotLeft, plotTop, plotWidth, plotHeight);
 
             EmpiricalDistribution empiricalDistribution = histogram.getDistributionStats();
-
             double maxN = 0.;
             for (SummaryStatistics summaryStatistics : empiricalDistribution.getBinStats()) {
                 if (summaryStatistics.getN() > maxN) {
@@ -76,26 +91,125 @@ public class HistogramPanel extends JComponent implements ComponentListener {
                 }
             }
 
+            DescriptiveStatistics descriptiveStatistics = histogram.getDescriptiveStats();
+
             histogramBinRectangles = new ArrayList<>();
             histogramBinColors = new ArrayList<>();
-            int binNumber = 0;
-            for (SummaryStatistics summaryStatistics : empiricalDistribution.getBinStats()) {
-                double x = histogramPlotRectangle.x + (binNumber * binRectangleWidth);
-                double normCount = summaryStatistics.getN() / maxN;
-                double binHeight = normCount * histogramPlotRectangle.height;
-                double y = (histogramPlotRectangle.y + histogramPlotRectangle.height) - binHeight;
-                Rectangle2D.Double binRect = new Rectangle2D.Double(x, y, binRectangleWidth, binHeight);
-                Color binColor = Color.gray;
-                histogramBinRectangles.add(binRect);
-                histogramBinColors.add(binColor);
 
-                binNumber++;
+            if (orientation == ORIENTATION.HORIZONTAL) {
+                // horizontal histogram
+                int histogramPlotHeight = (int) (fullPlotRectangle.height - SUMMARY_STATS_DEFAULT_SIZE);
+                histogramPlotRectangle = new Rectangle(plotLeft, plotTop, plotWidth, histogramPlotHeight);
+                double binRectangleWidth = (double) histogramPlotRectangle.width / (double) binCount;
+
+                summaryStatsRectangle = new Rectangle(plotLeft, (int) histogramPlotRectangle.getMaxY(), plotWidth, SUMMARY_STATS_DEFAULT_SIZE);
+
+                // calculate bin rectangles
+                int binNumber = 0;
+                for (SummaryStatistics summaryStatistics : empiricalDistribution.getBinStats()) {
+                    double x = histogramPlotRectangle.x + (binNumber * binRectangleWidth);
+                    double binHeight = mapValue(summaryStatistics.getN(), 0., maxN, 0., histogramPlotRectangle.height);
+//                    double normCount = summaryStatistics.getN() / maxN;
+//                    double binHeight = normCount * histogramPlotRectangle.height;
+                    double y = (histogramPlotRectangle.y + histogramPlotRectangle.height) - binHeight;
+                    Rectangle2D.Double binRect = new Rectangle2D.Double(x, y, binRectangleWidth, binHeight);
+                    Color binColor = Color.gray;
+                    histogramBinRectangles.add(binRect);
+                    histogramBinColors.add(binColor);
+
+                    binNumber++;
+                }
+
+                double centerY = summaryStatsRectangle.getCenterY();
+
+                log.debug("min = " + descriptiveStatistics.getMin() + "  max = " + descriptiveStatistics.getMax());
+                // calculate mean position
+                log.debug("mean = " + descriptiveStatistics.getMean());
+                double meanX = mapValue(descriptiveStatistics.getMean(), descriptiveStatistics.getMin(), descriptiveStatistics.getMax(),
+                        histogramPlotRectangle.getMinX(), histogramPlotRectangle.getMaxX());
+                meanShape = new Ellipse2D.Double(meanX-2., centerY-2., 4., 4.);
+//                meanShape = new Line2D.Double(meanX, centerY-2., meanX, centerY+2.);
+
+                // calculate median position
+                log.debug("median = " + descriptiveStatistics.getPercentile(50.0));
+                double medianX = mapValue(descriptiveStatistics.getPercentile(50.0), descriptiveStatistics.getMin(), descriptiveStatistics.getMax(),
+                        histogramPlotRectangle.getMinX(), histogramPlotRectangle.getMaxX());
+                medianShape = new Ellipse2D.Double(medianX-2., centerY-2., 4., 4.);
+
+                // calculate standard deviation range
+                double stdevRangeLeft = mapValue(descriptiveStatistics.getMean() - descriptiveStatistics.getStandardDeviation(),
+                        descriptiveStatistics.getMin(), descriptiveStatistics.getMax(), histogramPlotRectangle.getMinX(), histogramPlotRectangle.width);
+                double stdevRangeRight = mapValue(descriptiveStatistics.getMean() + descriptiveStatistics.getStandardDeviation(),
+                        descriptiveStatistics.getMin(), descriptiveStatistics.getMax(), histogramPlotRectangle.getMinX(), histogramPlotRectangle.width);
+                stdevRangeShape = new Line2D.Double(stdevRangeLeft, centerY, stdevRangeRight, centerY);
+
+                // calculate IQR
+                double IQRLeft = mapValue(descriptiveStatistics.getPercentile(25.0),
+                        descriptiveStatistics.getMin(), descriptiveStatistics.getMax(), histogramPlotRectangle.getMinX(), histogramPlotRectangle.width);
+                double IQRRight = mapValue(descriptiveStatistics.getPercentile(75.0),
+                        descriptiveStatistics.getMin(), descriptiveStatistics.getMax(), histogramPlotRectangle.getMinX(), histogramPlotRectangle.width);
+                IQRShape = new Line2D.Double(IQRLeft, centerY, IQRRight, centerY);
+
+            } else {
+                // vertical histogram
+                int histogramPlotWidth = (int)(fullPlotRectangle.width - SUMMARY_STATS_DEFAULT_SIZE);
+
+                summaryStatsRectangle = new Rectangle(plotLeft, plotTop, SUMMARY_STATS_DEFAULT_SIZE, fullPlotRectangle.height);
+                histogramPlotRectangle = new Rectangle((summaryStatsRectangle.x + summaryStatsRectangle.width),
+                        plotTop, histogramPlotWidth, fullPlotRectangle.height);
+
+                double binRectangleHeight = (double) histogramPlotRectangle.height / (double) binCount;
+
+                // calculate bin rectangles
+                int binNumber = 0;
+                for (SummaryStatistics summaryStatistics : empiricalDistribution.getBinStats()) {
+                    double y = (histogramPlotRectangle.y + histogramPlotRectangle.height) - ((binNumber + 1) * binRectangleHeight);
+//                    double normCount = summaryStatistics.getN() / maxN;
+//                    double binWidth = normCount * histogramPlotRectangle.width;
+                    double binWidth = mapValue(summaryStatistics.getN(), 0., maxN, 0., histogramPlotRectangle.width);
+                    double x = histogramPlotRectangle.x;
+                    Rectangle2D.Double binRect = new Rectangle2D.Double(x, y, binWidth, binRectangleHeight);
+                    Color binColor = Color.gray;
+                    histogramBinRectangles.add(binRect);
+                    histogramBinColors.add(binColor);
+
+                    binNumber++;
+                }
+
+                double centerX = summaryStatsRectangle.getCenterX();
+
+                // calculate mean position
+                double meanY = mapValue(descriptiveStatistics.getMean(), descriptiveStatistics.getMin(), descriptiveStatistics.getMax(),
+                        histogramPlotRectangle.getMaxY(), histogramPlotRectangle.getMinY());
+                meanShape = new Ellipse2D.Double(centerX-2., meanY-2., 4., 4.);
+
+                // calculate median position
+                double medianY = mapValue(descriptiveStatistics.getPercentile(50.0), descriptiveStatistics.getMin(), descriptiveStatistics.getMax(),
+                        histogramPlotRectangle.getMaxY(), histogramPlotRectangle.getMinY());
+                medianShape = new Ellipse2D.Double(centerX-2., medianY-2., 4., 4.);
+
+                // calculate standard deviation range
+                double stdevRangeLower = mapValue(descriptiveStatistics.getMean() - descriptiveStatistics.getStandardDeviation(),
+                        descriptiveStatistics.getMin(), descriptiveStatistics.getMax(), histogramPlotRectangle.getMaxY(),
+                        histogramPlotRectangle.getMinY());
+                double stdevRangeUpper = mapValue(descriptiveStatistics.getMean() + descriptiveStatistics.getStandardDeviation(),
+                        descriptiveStatistics.getMin(), descriptiveStatistics.getMax(), histogramPlotRectangle.getMaxY(),
+                        histogramPlotRectangle.getMinY());
+                stdevRangeShape = new Line2D.Double(centerX, stdevRangeLower, centerX, stdevRangeUpper);
+
+                // calculate IQR
+                double IQRLower = mapValue(descriptiveStatistics.getPercentile(25.0), descriptiveStatistics.getMin(),
+                        descriptiveStatistics.getMax(), histogramPlotRectangle.getMaxY(),
+                        histogramPlotRectangle.getMinY());
+                double IQRUpper = mapValue(descriptiveStatistics.getPercentile(75.0), descriptiveStatistics.getMin(),
+                        descriptiveStatistics.getMax(), histogramPlotRectangle.getMaxY(),
+                        histogramPlotRectangle.getMinY());
+                IQRShape = new Line2D.Double(centerX, IQRLower, centerX, IQRUpper);
+
             }
         }
         repaint();
     }
-
-
 
     public void paintComponent(Graphics g) {
         Graphics2D g2 = (Graphics2D)g;
@@ -109,11 +223,11 @@ public class HistogramPanel extends JComponent implements ComponentListener {
 //            g2.setColor(Color.blue);
 //            g2.draw(fullPlotRectangle);
 //
-//            g2.setColor(Color.yellow);
-//            g2.draw(histogramPlotRectangle);
+            g2.setColor(Color.orange);
+            g2.draw(histogramPlotRectangle);
 //
-//            g2.setColor(Color.cyan);
-//            g2.draw(summaryStatsRectangle);
+            g2.setColor(Color.cyan);
+            g2.draw(summaryStatsRectangle);
 //            g2.translate(plotRectangle.x, plotRectangle.y);
 //            histogram.draw(g2);
 //            g2.translate(-plotRectangle.x, -plotRectangle.y);
@@ -121,7 +235,29 @@ public class HistogramPanel extends JComponent implements ComponentListener {
             for (int i = 0; i < histogramBinRectangles.size(); i++) {
                 g2.setColor(histogramBinColors.get(i));
                 g2.fill(histogramBinRectangles.get(i));
+                g2.setColor(Color.black);
+                g2.draw(histogramBinRectangles.get(i));
             }
+
+            g2.setColor(Color.darkGray);
+            if (meanShape != null) {
+                g2.fill(meanShape);
+                g2.draw(meanShape);
+            }
+
+            if (stdevRangeShape != null) {
+                g2.draw(stdevRangeShape);
+            }
+
+//            g2.setColor(Color.blue);
+//            if (medianShape != null) {
+//                g2.fill(medianShape);
+//                g2.draw(medianShape);
+//            }
+//
+//            if (IQRShape != null) {
+//                g2.draw(IQRShape);
+//            }
         }
     }
 
@@ -131,19 +267,13 @@ public class HistogramPanel extends JComponent implements ComponentListener {
     }
 
     @Override
-    public void componentMoved(ComponentEvent e) {
-
-    }
+    public void componentMoved(ComponentEvent e) {}
 
     @Override
-    public void componentShown(ComponentEvent e) {
-
-    }
+    public void componentShown(ComponentEvent e) {}
 
     @Override
-    public void componentHidden(ComponentEvent e) {
-
-    }
+    public void componentHidden(ComponentEvent e) {}
 
     public static void main (String args[]) {
         EventQueue.invokeLater(new Runnable() {
@@ -158,16 +288,21 @@ public class HistogramPanel extends JComponent implements ComponentListener {
                 }
 
                 JFrame frame = new JFrame();
-                frame.setSize(500, 200);
+                frame.setSize(800, 200);
                 frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-                HistogramPanel histogramPanel = new HistogramPanel();
-                histogramPanel.setBackground(Color.white);
-                histogramPanel.setBorder(BorderFactory.createTitledBorder("Histogram Panel"));
+                HistogramPanel horizontalHistogramPanel = new HistogramPanel(ORIENTATION.HORIZONTAL);
+                horizontalHistogramPanel.setBackground(Color.white);
+                horizontalHistogramPanel.setBorder(BorderFactory.createTitledBorder("Horizontal Histogram"));
+
+                HistogramPanel verticalHistogramPanel = new HistogramPanel((ORIENTATION.VERTICAL));
+                verticalHistogramPanel.setBackground(Color.white);
+                verticalHistogramPanel.setBorder(BorderFactory.createTitledBorder("Vertical Histogram"));
 
                 JPanel mainPanel = (JPanel)frame.getContentPane();
-                mainPanel.setLayout(new BorderLayout());
-                mainPanel.add(histogramPanel, BorderLayout.CENTER);
+                mainPanel.setLayout(new GridLayout(1, 2));
+                mainPanel.add(horizontalHistogramPanel);
+                mainPanel.add(verticalHistogramPanel);
 
                 frame.setVisible(true);
 
@@ -176,7 +311,7 @@ public class HistogramPanel extends JComponent implements ComponentListener {
                     binCount = 1;
                 }
 
-                Column column = table.getColumn(0);
+                Column column = table.getColumn(4);
                 double values[] = new double[column.getRowCount()];
                 for (int i = 0; i < column.getRowCount(); i++) {
                     double value = column.getDouble(i);
@@ -185,7 +320,9 @@ public class HistogramPanel extends JComponent implements ComponentListener {
                     }
                 }
                 Histogram histogram = new Histogram(table.getColumnName(0), values, binCount);
-                histogramPanel.setHistogram(histogram);
+
+                horizontalHistogramPanel.setHistogram(histogram);
+                verticalHistogramPanel.setHistogram(histogram);
             }
         });
     }
