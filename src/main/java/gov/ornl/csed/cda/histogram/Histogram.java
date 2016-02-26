@@ -14,6 +14,7 @@ import java.awt.geom.RoundRectangle2D;
 import java.awt.image.BufferedImage;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Collection;
 
 /**
  * Created by csg on 1/5/16.
@@ -71,6 +72,19 @@ public class Histogram {
     public Histogram(String name, double values[], int binCount) {
         this.name = name;
         this.values = values;
+        this.binCount = binCount;
+        dragHandleImage = createDragHandleImage();
+        calculateStatistics();
+    }
+
+    public Histogram(String name, Collection<Double> valueCollection, int binCount) {
+        values = new double[valueCollection.size()];
+        int i = 0;
+        for (double value : valueCollection) {
+            values[i++] = value;
+        }
+
+        this.name = name;
         this.binCount = binCount;
         dragHandleImage = createDragHandleImage();
         calculateStatistics();
