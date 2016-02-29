@@ -5,7 +5,6 @@ import gov.ornl.csed.cda.histogram.HistogramPanel;
 import gov.ornl.csed.cda.timevis.TimeSeries;
 import gov.ornl.csed.cda.timevis.TimeSeriesPanel;
 import gov.ornl.csed.cda.timevis.TimeSeriesRecord;
-import javafx.scene.paint.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,6 +17,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.AdjustmentEvent;
 import java.awt.event.AdjustmentListener;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Arc2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -26,7 +26,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.HashMap;
 
 /**
  * Created by csg on 2/3/16.
@@ -290,6 +289,10 @@ public class MultiViewPanel extends JPanel {
         detailsTimeSeriesScroller.setPreferredSize(new Dimension(100, 100));
         detailsTimeSeriesScroller.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
 
+        viewInfo.detailHistogramPanel = new HistogramPanel(HistogramPanel.ORIENTATION.VERTICAL, HistogramPanel.STATISTICS_MODE.MEAN_BASED);
+        viewInfo.detailHistogramPanel.setBackground(Color.white);
+        viewInfo.detailHistogramPanel.setPreferredSize(new Dimension(50, 80));
+
         viewInfo.overviewTimeSeriesPanel = new TimeSeriesPanel(1, timeSeriesDisplayOption);
         viewInfo.overviewTimeSeriesPanel.setShowTimeRangeLabels(false);
         viewInfo.overviewTimeSeriesPanel.setBackground(Color.white);
@@ -317,11 +320,25 @@ public class MultiViewPanel extends JPanel {
                 deltaTime = norm * Duration.between(timeSeries.getStartInstant(), timeSeries.getEndInstant()).toMillis();
                 Instant endHighlightInstant = timeSeries.getEndInstant().minusMillis((long) deltaTime);
                 viewInfo.overviewTimeSeriesPanel.setHighlightRange(startHighlightInstant, endHighlightInstant);
+
+                ArrayList<TimeSeriesRecord> recordList = timeSeries.getRecordsBetween(startHighlightInstant, endHighlightInstant);
+                if (recordList != null && !recordList.isEmpty()) {
+                    double values[] = new double[recordList.size()];
+                    for (int i = 0; i < recordList.size(); i++) {
+                        double value = recordList.get(i).value;
+                        if (!Double.isNaN(value)) {
+                            values[i] = value;
+                        }
+                    }
+                    Histogram detailHistogram = new Histogram(timeSeries.getName(), values, viewInfo.overviewHistogramPanel.getBinCount());
+                    viewInfo.detailHistogramPanel.setHistogram(detailHistogram);
+                    viewInfo.overviewHistogramPanel.setHighlightValues(values);
+                }
             }
         });
 
 
-        viewInfo.histogramPanel = new HistogramPanel(HistogramPanel.ORIENTATION.HORIZONTAL, HistogramPanel.STATISTICS_MODE.MEAN_BASED);
+        viewInfo.overviewHistogramPanel = new HistogramPanel(HistogramPanel.ORIENTATION.HORIZONTAL, HistogramPanel.STATISTICS_MODE.MEAN_BASED);
 
         ArrayList<TimeSeriesRecord> records = timeSeries.getAllRecords();
         double values[] = new double[records.size()];
@@ -331,20 +348,26 @@ public class MultiViewPanel extends JPanel {
                 values[i] = value;
             }
         }
-        Histogram histogram = new Histogram(timeSeries.getName(), values, viewInfo.histogramPanel.getBinCount());
-        viewInfo.histogramPanel.setBackground(Color.white);
-        viewInfo.histogramPanel.setHistogram(histogram);
+
+        Histogram histogram = new Histogram(timeSeries.getName(), values, viewInfo.overviewHistogramPanel.getBinCount());
+        viewInfo.overviewHistogramPanel.setBackground(Color.white);
+        viewInfo.overviewHistogramPanel.setHistogram(histogram);
 
         viewInfo.sidePanel = new JPanel();
         viewInfo.sidePanel.setBackground(Color.WHITE);
         viewInfo.sidePanel.setLayout(new GridLayout(2, 1));
-        viewInfo.sidePanel.add(viewInfo.histogramPanel);
+        viewInfo.sidePanel.add(viewInfo.overviewHistogramPanel);
         viewInfo.sidePanel.add(viewInfo.overviewTimeSeriesPanel);
         viewInfo.sidePanel.setPreferredSize(new Dimension(200, plotHeight));
         viewInfo.sidePanel.setBorder(BorderFactory.createTitledBorder("Overview"));
         viewInfo.sidePanel.setVisible(showOverview);
 
-        viewInfo.viewPanel.add(detailsTimeSeriesScroller, BorderLayout.CENTER);
+        JPanel detailsPanel = new JPanel();
+        detailsPanel.setLayout(new BorderLayout());
+        detailsPanel.add(detailsTimeSeriesScroller, BorderLayout.CENTER);
+        detailsPanel.add(viewInfo.detailHistogramPanel, BorderLayout.EAST);
+
+        viewInfo.viewPanel.add(detailsPanel, BorderLayout.CENTER);
         viewInfo.viewPanel.add(viewInfo.sidePanel, BorderLayout.EAST);
         viewInfo.viewPanel.add(buttonPanel, BorderLayout.WEST);
         viewInfo.viewPanel.setBorder(BorderFactory.createTitledBorder(timeSeries.getName()));
@@ -428,9 +451,9 @@ public class MultiViewPanel extends JPanel {
             e.printStackTrace();
         }
 
-        log.debug("Saving screen capture");
-        File imageFile = new File("test.png");
-        multiViewPanel.drawToImage(imageFile);
+//        log.debug("Saving screen capture");
+//        File imageFile = new File("test.png");
+//        multiViewPanel.drawToImage(imageFile);
     }
 
     private class ViewInfo {
@@ -439,6 +462,7 @@ public class MultiViewPanel extends JPanel {
         public JPanel sidePanel;
         public TimeSeriesPanel detailTimeSeriesPanel;
         public TimeSeriesPanel overviewTimeSeriesPanel;
-        public HistogramPanel histogramPanel;
+        public HistogramPanel overviewHistogramPanel;
+        public HistogramPanel detailHistogramPanel;
     }
 }

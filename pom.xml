@@ -239,10 +239,6 @@
                                 <argument>./target/coalesce-${version}-jar-with-dependencies.jar</argument>
                                 <argument>-appclass</argument>
                                 <argument>gov.ornl.csed.cda.Falcon.FalconFX</argument>
-                                <!--<argument>-srcfiles</argument>-->
-                                <!--<argument>-->
-                                    <!--${project.build.directory}/${artifactId}-app.jar-->
-                                <!--</argument>-->
                                 <argument>-outdir</argument>
                                 <argument>./target</argument>
                                 <argument>-outfile</argument>
