@@ -35,7 +35,7 @@ public class MultiViewPLGTest {
         frame.setVisible(true);
 
         for (TimeSeries timeSeries : varTimeSeriesMap.values()) {
-            multiViewPanel.addTimeSeries(timeSeries);
+            multiViewPanel.addTimeSeries(timeSeries, plgFile.getName());
         }
     }
 }

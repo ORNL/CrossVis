@@ -11,12 +11,14 @@ import gov.ornl.csed.cda.timevis.TimeSeriesRecord;
 import javafx.application.Application;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.embed.swing.SwingNode;
 import javafx.event.*;
 import javafx.geometry.*;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
@@ -29,6 +31,8 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.*;
 import javafx.scene.text.Font;
 import javafx.stage.FileChooser;
+import javafx.stage.PopupWindow;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.util.Callback;
 import org.slf4j.Logger;
@@ -45,7 +49,8 @@ import javax.swing.border.EtchedBorder;
 import java.awt.*;
 import java.awt.event.AdjustmentEvent;
 import java.awt.event.AdjustmentListener;
-import java.awt.geom.AffineTransform;
+import java.awt.geom.*;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -115,12 +120,14 @@ public class FalconFX extends Application {
     private JLabel overviewDetailTimeSeriesNameLabel;
     private TabPane visTabPane;
 
+    // multi view panel preferences
     private Spinner multiViewPlotHeightSpinner;
-    private CheckBox multiViewAlignTimeSeriesCheckBox;
+    private CheckBox multiViewSyncScrollbarsCheckBox;
     private ChoiceBox<ChronoUnit> multiViewChronoUnitChoice;
     private ColorPicker multipleViewDataColorPicker;
     private Spinner multipleViewPlotChronoUnitWidthSpinner;
     private CheckBox multiViewShowOverviewCheckBox;
+
     private JPanel overviewDetailPanel;
 
     public static void main(String[] args) {
@@ -158,7 +165,8 @@ public class FalconFX extends Application {
 
         BorderPane rootNode = new BorderPane();
 
-        Scene scene = new Scene(rootNode, 1200, 800);
+        javafx.geometry.Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
+        Scene scene = new Scene(rootNode, screenBounds.getWidth()-20, 800);
 
         Node ODTimeSeriesNode = createOverviewDetailTimeSeriesPanel();
 //        Node multiTimeSeriesNode = createMultiTimeSeriesPanel();
@@ -196,22 +204,38 @@ public class FalconFX extends Application {
 
         // Create right pane as a vertically split node
         // (top - timeseries, middle - histogram, bottom - table views)
-        StackPane topStackPane = new StackPane();
-//        topStackPane.getChildren().addAll(timeSeriesNode);
-        topStackPane.getChildren().addAll(visTabPane);
-        StackPane bottomStackPane = new StackPane();
-        bottomStackPane.getChildren().addAll(columnTableView);
-        SplitPane rightSplitPane = new SplitPane();
-        rightSplitPane.getItems().addAll(topStackPane, bottomStackPane);
-        rightSplitPane.setDividerPositions(0.5);
-        rightSplitPane.setResizableWithParent(bottomStackPane, false);
-        rightSplitPane.setOrientation(Orientation.VERTICAL);
+//        StackPane topStackPane = new StackPane();
+////        topStackPane.getChildren().addAll(timeSeriesNode);
+//        topStackPane.getChildren().addAll(visTabPane);
+//        StackPane bottomStackPane = new StackPane();
+//        bottomStackPane.getChildren().addAll(columnTableView);
+//        SplitPane rightSplitPane = new SplitPane();
+//        rightSplitPane.getItems().addAll(topStackPane, bottomStackPane);
+//        rightSplitPane.setDividerPositions(0.5);
+//        rightSplitPane.setResizableWithParent(bottomStackPane, false);
+//        rightSplitPane.setOrientation(Orientation.VERTICAL);
+
+        // create left pane as a vertically split node (top data tree view and bottom is preferences)
+//        StackPane leftStackPane = new StackPane();
+//        leftStackPane.getChildren().add(dataTreeView);
+//        StackPane topStackPane = new StackPane();
+//        topStackPane.getChildren().add(dataTreeView);
+//        StackPane bottomStackPane = new StackPane();
+//        bottomStackPane.getChildren().add(settingsPane);
+//        SplitPane leftSplitPane = new SplitPane();
+//        leftSplitPane.getItems().addAll(topStackPane, bottomStackPane);
+//        leftSplitPane.setDividerPositions(0.3);
+//        leftSplitPane.setResizableWithParent(bottomStackPane, false);
+//        leftSplitPane.setOrientation(Orientation.VERTICAL);
+//
+
+        // left panel
+        StackPane leftStackPane = new StackPane();
+        leftStackPane.getChildren().add(dataTreeView);
 
         // create main split between left and right panes
         SplitPane mainSplitPane = new SplitPane();
-        StackPane leftStackPane = new StackPane();
-        leftStackPane.getChildren().add(dataTreeView);
-        mainSplitPane.getItems().addAll(leftStackPane, rightSplitPane);
+        mainSplitPane.getItems().addAll(leftStackPane, visTabPane);
         mainSplitPane.setDividerPositions(0.25);
         mainSplitPane.setResizableWithParent(leftStackPane, false);
 
@@ -735,7 +759,7 @@ public class FalconFX extends Application {
     private void loadColumnIntoMultiView (FileMetadata fileMetadata, String variableName) {
         if (fileMetadata.fileType == FileMetadata.FileType.CSV) {
             TimeSeries timeSeries = fileMetadata.timeSeriesMap.get(variableName);
-            multiViewPanel.addTimeSeries(timeSeries);
+            multiViewPanel.addTimeSeries(timeSeries, fileMetadata.file.getName());
         } else if (fileMetadata.fileType == FileMetadata.FileType.PLG) {
             try {
                 ArrayList<String> variableList = new ArrayList<>();
@@ -743,7 +767,7 @@ public class FalconFX extends Application {
                 Map<String, TimeSeries> PLGTimeSeriesMap = PLGFileReader.readPLGFileAsTimeSeries(fileMetadata.file, variableList);
                 for (TimeSeries timeSeries : PLGTimeSeriesMap.values()) {
                     timeSeries.setName(fileMetadata.file.getName() + ":" + timeSeries.getName());
-                    multiViewPanel.addTimeSeries(timeSeries);
+                    multiViewPanel.addTimeSeries(timeSeries, fileMetadata.file.getName());
                 }
             } catch (IOException ex) {
                 ex.printStackTrace();
@@ -850,25 +874,30 @@ public class FalconFX extends Application {
         multiViewPlotHeightSpinner = new Spinner(40, 400, multiViewPanel.getPlotHeight());
         multiViewPlotHeightSpinner.setEditable(true);
         multiViewPlotHeightSpinner.valueProperty().addListener((obs, oldValue, newValue) -> multiViewPanel.setPlotHeight((Integer)newValue));
+        multiViewPlotHeightSpinner.setPrefWidth(80.);
         hBox.getChildren().addAll(new Label("Plot Height: "), multiViewPlotHeightSpinner);
         settingsHBox.getChildren().add(hBox);
 
         hBox = new HBox();
         hBox.setAlignment(Pos.CENTER_LEFT);
-        multiViewAlignTimeSeriesCheckBox = new CheckBox("Align Time Series");
-        multiViewAlignTimeSeriesCheckBox.setIndeterminate(false);
-        multiViewAlignTimeSeriesCheckBox.setSelected(multiViewPanel.getAlignTimeSeriesEnabled());
-        multiViewAlignTimeSeriesCheckBox.selectedProperty().addListener((obs, oldValue, newValue) -> multiViewPanel.setAlignTimeSeriesEnabled((Boolean)newValue));
-        hBox.getChildren().add(multiViewAlignTimeSeriesCheckBox);
+        multipleViewPlotChronoUnitWidthSpinner = new Spinner(1, 40, multiViewPanel.getChronoUnitWidth());
+        multipleViewPlotChronoUnitWidthSpinner.setEditable(true);
+        multipleViewPlotChronoUnitWidthSpinner.valueProperty().addListener((obs, oldValue, newValue) -> multiViewPanel.setChronoUnitWidth((Integer)newValue));
+        multipleViewPlotChronoUnitWidthSpinner.setPrefWidth(80.);
+        hBox.getChildren().addAll(new Label("Plot Unit Width: "), multipleViewPlotChronoUnitWidthSpinner);
         settingsHBox.getChildren().add(hBox);
 
         hBox = new HBox();
         hBox.setAlignment(Pos.CENTER_LEFT);
-        multiViewShowOverviewCheckBox = new CheckBox("Show Overview");
-        multiViewShowOverviewCheckBox.setIndeterminate(false);
-        multiViewShowOverviewCheckBox.setSelected(multiViewPanel.getShowOverviewEnabled());
-        multiViewShowOverviewCheckBox.selectedProperty().addListener((obs, oldValue, newValue) -> multiViewPanel.setShowOverviewEnabled((Boolean)newValue));
-        hBox.getChildren().add(multiViewShowOverviewCheckBox);
+        multipleViewDataColorPicker = new ColorPicker(dataColor);
+        multipleViewDataColorPicker.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                Color dataColor = multipleViewDataColorPicker.getValue();
+                multiViewPanel.setDataColor(convertToAWTColor(dataColor));
+            }
+        });
+        hBox.getChildren().addAll(new Label("Data Color: "), multipleViewDataColorPicker);
         settingsHBox.getChildren().add(hBox);
 
         hBox = new HBox();
@@ -889,25 +918,21 @@ public class FalconFX extends Application {
 
         hBox = new HBox();
         hBox.setAlignment(Pos.CENTER_LEFT);
-        multipleViewDataColorPicker = new ColorPicker(dataColor);
-        multipleViewDataColorPicker.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                Color dataColor = multipleViewDataColorPicker.getValue();
-                multiViewPanel.setDataColor(convertToAWTColor(dataColor));
-            }
-        });
-        hBox.getChildren().addAll(new Label("Data Color: "), multipleViewDataColorPicker);
+        multiViewSyncScrollbarsCheckBox = new CheckBox("Sync Scrollbars");
+        multiViewSyncScrollbarsCheckBox.setIndeterminate(false);
+        multiViewSyncScrollbarsCheckBox.setSelected(multiViewPanel.getSyncGroupScrollbarsEnabled());
+        multiViewSyncScrollbarsCheckBox.selectedProperty().addListener((obs, oldValue, newValue) -> multiViewPanel.setSyncGroupScollbarsEnabled((Boolean)newValue));
+        hBox.getChildren().add(multiViewSyncScrollbarsCheckBox);
         settingsHBox.getChildren().add(hBox);
 
         hBox = new HBox();
         hBox.setAlignment(Pos.CENTER_LEFT);
-        multipleViewPlotChronoUnitWidthSpinner = new Spinner(1, 10, multiViewPanel.getChronoUnitWidth());
-        multipleViewPlotChronoUnitWidthSpinner.setEditable(true);
-        multipleViewPlotChronoUnitWidthSpinner.valueProperty().addListener((obs, oldValue, newValue) -> multiViewPanel.setChronoUnitWidth((Integer)newValue));
-        hBox.getChildren().addAll(new Label("Plot Unit Width: "), multipleViewPlotChronoUnitWidthSpinner);
+        multiViewShowOverviewCheckBox = new CheckBox("Show Overview");
+        multiViewShowOverviewCheckBox.setIndeterminate(false);
+        multiViewShowOverviewCheckBox.setSelected(multiViewPanel.getShowOverviewEnabled());
+        multiViewShowOverviewCheckBox.selectedProperty().addListener((obs, oldValue, newValue) -> multiViewPanel.setShowOverviewEnabled((Boolean)newValue));
+        hBox.getChildren().add(multiViewShowOverviewCheckBox);
         settingsHBox.getChildren().add(hBox);
-
 
         Border border = BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(10,10,10,10), BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
         JScrollPane scroller = new JScrollPane(multiViewPanel);
@@ -930,6 +955,20 @@ public class FalconFX extends Application {
             }
             event.consume();
         });
+
+        final ContextMenu cm = new ContextMenu();
+        MenuItem cmItem1 = new MenuItem("Something");
+        cm.getItems().add(cmItem1);
+
+        swingNode.addEventHandler(MouseEvent.MOUSE_CLICKED,
+                new EventHandler<MouseEvent>() {
+                    @Override
+                    public void handle(MouseEvent event) {
+                        if (event.getButton() == MouseButton.SECONDARY) {
+                            cm.show(swingNode, event.getScreenX(), event.getScreenY());
+                        }
+                    }
+                });
 
         BorderPane borderPane = new BorderPane();
         borderPane.setTop(settingsHBox);

@@ -260,6 +260,10 @@ public class HistogramPanel extends JComponent implements ComponentListener, Mou
         double binValueRange = (histogram.getDescriptiveStats().getMax() - histogram.getDescriptiveStats().getMin()) / binCount;
         for (double highlightValue : highlightValues) {
             int binIndex = (int) ((highlightValue - histogram.getDescriptiveStats().getMin()) / binValueRange);
+            if (binIndex >= highlightBinCounts.length) {
+                log.debug("Out of bounds with value: " + highlightValue + " max is " + histogram.getDescriptiveStats().getMax());
+                binIndex = highlightBinCounts.length - 1;
+            }
             highlightBinCounts[binIndex]++;
             if ((highlightValue < histogram.getDistributionStats().getBinStats().get(binIndex).getMin()) ||
                     (highlightValue > histogram.getDistributionStats().getBinStats().get(binIndex).getMax())) {
