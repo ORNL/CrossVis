@@ -253,6 +253,48 @@
                             </arguments>
                         </configuration>
                     </execution>
+
+					<execution>
+						<id>package-jar2</id>
+						<phase>package</phase>
+						<goals>
+							<goal>exec</goal>
+						</goals>
+						<configuration>
+							<executable>
+								${env.JAVA_HOME}/bin/javapackager
+							</executable>
+
+							<arguments>
+								<argument>-deploy</argument>
+								<argument>-native</argument>
+								<argument>installer</argument>
+								<argument>-name</argument>
+								<argument>Talon</argument>
+								<argument>-title</argument>
+								<argument>Talon</argument>
+								<argument>-vendor</argument>
+								<argument>ORNL</argument>
+								<argument>-outdir</argument>
+								<argument>./target</argument>
+								<argument>-srcfiles</argument>
+								<argument>./target/coalesce-0.1.2-jar-with-dependencies.jar</argument>
+								<argument>-appclass</argument>
+								<argument>gov.ornl.csed.cda.Talon.SegmentedSeries</argument>
+								<!--<argument>-srcfiles</argument>-->
+								<!--<argument>-->
+								<!--${project.build.directory}/${artifactId}-app.jar-->
+								<!--</argument>-->
+								<argument>-outdir</argument>
+								<argument>./target</argument>
+								<argument>-outfile</argument>
+								<argument>Talon</argument>
+								<argument>-BjvmOptions=-Xmx4g</argument>
+								<argument>-BjvmOptions=-Xms4g</argument>
+								<argument>-v</argument>
+							</arguments>
+						</configuration>
+					</execution>
                 </executions>
             </plugin>
 		</plugins>

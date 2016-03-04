@@ -1,4 +1,4 @@
-package gov.ornl.csed.cda.experimental;
+package gov.ornl.csed.cda.Talon;
 
 import gov.ornl.csed.cda.Falcon.PLGFileReader;
 import gov.ornl.csed.cda.Falcon.PLGVariableSchema;
@@ -26,6 +26,7 @@ import java.util.*;
 
 public class SegmentedSeries  {
     // ========== CLASS FIELDS ==========
+    private String version = "Talon v1.0";
     private JFrame frame;           // Frame for SegmentedSeries instance
     private JPanel topPanel;        // Panel for combobox
     private SegmentedTimeSeriesPanel segmentPanel;                  // Panel for segmented series plot
@@ -48,10 +49,9 @@ public class SegmentedSeries  {
     private void initialize () {
         // Create and set instance's frame
         frame = new JFrame();
-        frame.setTitle("title");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setBounds(50, 50, 1400, 700);
-        frame.setTitle("Talon v.1.1");
+        frame.setTitle(version);
 
         // Call helper functions to create panels and menu
         initializeMenu();
@@ -142,6 +142,9 @@ public class SegmentedSeries  {
 
                             // Debug: print number of points in time series for segmenting variable
                             System.out.println("buildHeightTimeSeries: " + buildHeightTimeSeries.getAllRecords().size());
+
+                            // Add the filename to the frame title
+                            frame.setTitle(version + " - " + plgFile.getName());
                         }
                     } catch (IOException e1) {
                         e1.printStackTrace();
