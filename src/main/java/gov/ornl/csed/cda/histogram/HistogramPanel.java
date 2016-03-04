@@ -261,14 +261,14 @@ public class HistogramPanel extends JComponent implements ComponentListener, Mou
         for (double highlightValue : highlightValues) {
             int binIndex = (int) ((highlightValue - histogram.getDescriptiveStats().getMin()) / binValueRange);
             if (binIndex >= highlightBinCounts.length) {
-                log.debug("Out of bounds with value: " + highlightValue + " max is " + histogram.getDescriptiveStats().getMax());
+//                log.debug("Out of bounds with value: " + highlightValue + " max is " + histogram.getDescriptiveStats().getMax());
                 binIndex = highlightBinCounts.length - 1;
             }
             highlightBinCounts[binIndex]++;
-            if ((highlightValue < histogram.getDistributionStats().getBinStats().get(binIndex).getMin()) ||
-                    (highlightValue > histogram.getDistributionStats().getBinStats().get(binIndex).getMax())) {
-                log.debug("highlightValue: " + highlightValue + " binMax: " + histogram.getDistributionStats().getBinStats().get(binIndex).getMax() + " binMin: " + histogram.getDistributionStats().getBinStats().get(binIndex).getMin());
-            }
+//            if ((highlightValue < histogram.getDistributionStats().getBinStats().get(binIndex).getMin()) ||
+//                    (highlightValue > histogram.getDistributionStats().getBinStats().get(binIndex).getMax())) {
+//                log.debug("highlightValue: " + highlightValue + " binMax: " + histogram.getDistributionStats().getBinStats().get(binIndex).getMax() + " binMin: " + histogram.getDistributionStats().getBinStats().get(binIndex).getMin());
+//            }
         }
 
         layoutPanel();
@@ -285,7 +285,7 @@ public class HistogramPanel extends JComponent implements ComponentListener, Mou
             int plotLeft = getInsets().left;
             int plotTop = getInsets().top;
             int plotHeight = getHeight() - (getInsets().bottom + getInsets().top);
-            int plotWidth = getWidth() - (getInsets().left + getInsets().right);
+            int plotWidth = getWidth() - (getInsets().left + getInsets().right) - 1;
             fullPlotRectangle = new Rectangle(plotLeft, plotTop, plotWidth, plotHeight);
             
             histogramBinRectangles = new ArrayList<>();

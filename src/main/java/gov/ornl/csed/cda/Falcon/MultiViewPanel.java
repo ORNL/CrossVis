@@ -10,7 +10,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
-import javax.swing.text.View;
 import java.awt.*;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
@@ -18,7 +17,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.AdjustmentEvent;
 import java.awt.event.AdjustmentListener;
 import java.awt.geom.AffineTransform;
-import java.awt.geom.Arc2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -39,7 +37,7 @@ public class MultiViewPanel extends JPanel {
     private int plotUnitWidth = 1;
     private Box panelBox;
     private Font fontAwesomeFont = null;
-//    private boolean alignTimeSeries = false;
+
     private boolean linkPanelScrollBars = false;
     private Color dataColor = new Color(80, 80, 130, 180);
     private ArrayList<ViewInfo> viewInfoList = new ArrayList<ViewInfo>();
@@ -47,11 +45,9 @@ public class MultiViewPanel extends JPanel {
 
     private boolean syncGroupScrollbars = false;
     private boolean showOverview = true;
-//    private Instant startInstant;
-//    private Instant endInstant;
+    private boolean showButtonPanels = true;
     private ChronoUnit detailChronoUnit = ChronoUnit.SECONDS;
     private TimeSeriesPanel.PlotDisplayOption timeSeriesDisplayOption = TimeSeriesPanel.PlotDisplayOption.STEPPED_LINE;
-
 
     public MultiViewPanel (int plotHeight) {
         this.plotHeight = plotHeight;
@@ -86,6 +82,20 @@ public class MultiViewPanel extends JPanel {
                     }
                 }
             }
+        }
+    }
+
+    public boolean getShowButtonPanelsEnabled() {
+        return showButtonPanels;
+    }
+
+    public void setShowButtonPanelsEnabled (boolean enabled) {
+        if (showButtonPanels != enabled) {
+            showButtonPanels = enabled;
+            for (ViewInfo viewInfo : viewInfoList) {
+                viewInfo.buttonPanel.setVisible(enabled);
+            }
+            panelBox.repaint();
         }
     }
 
@@ -273,28 +283,6 @@ public class MultiViewPanel extends JPanel {
     }
 
     public void addTimeSeries(TimeSeries timeSeries, String groupName) {
-//        if (viewInfoList.isEmpty()) {
-//            startInstant = Instant.from(timeSeries.getStartInstant());
-//            endInstant = Instant.from(timeSeries.getEndInstant());
-//        } else {
-//            boolean resetAllTimeSeriesRanges = false;
-//            if (timeSeries.getStartInstant().isBefore(startInstant)) {
-//                startInstant = Instant.from(timeSeries.getStartInstant());
-//                resetAllTimeSeriesRanges = true;
-//            }
-//            if (timeSeries.getEndInstant().isAfter(endInstant)) {
-//                endInstant = Instant.from(timeSeries.getEndInstant());
-//                resetAllTimeSeriesRanges = true;
-//            }
-//
-//            if (resetAllTimeSeriesRanges && alignTimeSeries) {
-//                for (ViewInfo viewInfo : viewInfoList) {
-//                    viewInfo.detailTimeSeriesPanel.setDisplayTimeRange(startInstant, endInstant);
-//                    viewInfo.overviewTimeSeriesPanel.setDisplayTimeRange(startInstant, endInstant);
-//                }
-//            }
-//        }
-
         ViewInfo viewInfo = new ViewInfo();
         viewInfo.timeSeries = timeSeries;
         viewInfoList.add(viewInfo);
@@ -336,7 +324,7 @@ public class MultiViewPanel extends JPanel {
         viewInfo.viewPanel.setBackground(Color.white);
         viewInfo.viewPanel.setLayout(new BorderLayout());
 
-        JPanel buttonPanel = createButtonPanel(viewInfo);
+        viewInfo.buttonPanel = createButtonPanel(viewInfo);
 
         viewInfo.detailTimeSeriesPanel = new TimeSeriesPanel(1, detailChronoUnit, timeSeriesDisplayOption);
         if (groupInfo.useCommonTimeScale) {
@@ -345,12 +333,9 @@ public class MultiViewPanel extends JPanel {
             viewInfo.detailTimeSeriesPanel.setTimeSeries(timeSeries, timeSeries.getStartInstant(), timeSeries.getEndInstant());
         }
 
-//        timeSeriesPanel.setPreferredSize(new Dimension(100, 80));
         viewInfo.detailsTimeSeriesPanelScrollPane = new JScrollPane(viewInfo.detailTimeSeriesPanel);
         viewInfo.detailsTimeSeriesPanelScrollPane.setPreferredSize(new Dimension(100, 100));
         viewInfo.detailsTimeSeriesPanelScrollPane.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
-
-
 
         viewInfo.detailHistogramPanel = new HistogramPanel(HistogramPanel.ORIENTATION.VERTICAL, HistogramPanel.STATISTICS_MODE.MEAN_BASED);
         viewInfo.detailHistogramPanel.setBackground(Color.white);
@@ -364,11 +349,6 @@ public class MultiViewPanel extends JPanel {
         } else {
             viewInfo.overviewTimeSeriesPanel.setTimeSeries(timeSeries, timeSeries.getStartInstant(), timeSeries.getEndInstant());
         }
-
-//        overviewTimeSeriesPanel.setPreferredSize(new Dimension(200, 100));
-//        overviewTimeSeriesPanel.setBorder(BorderFactory.createTitledBorder("Overview"));
-//        overviewTimeSeriesPanel.setPreferredSize(new Dimension(100, 50));
-//        overviewTimeSeriesPanel.setBorder(BorderFactory.createBevelBorder(BevelBorder.LOWERED));
 
         viewInfo.detailsTimeSeriesPanelScrollPane.getHorizontalScrollBar().addAdjustmentListener(new AdjustmentListener() {
             @Override
@@ -472,7 +452,7 @@ public class MultiViewPanel extends JPanel {
 
         viewInfo.viewPanel.add(detailsPanel, BorderLayout.CENTER);
         viewInfo.viewPanel.add(viewInfo.sidePanel, BorderLayout.EAST);
-        viewInfo.viewPanel.add(buttonPanel, BorderLayout.WEST);
+        viewInfo.viewPanel.add(viewInfo.buttonPanel, BorderLayout.WEST);
         viewInfo.viewPanel.setBorder(BorderFactory.createTitledBorder(timeSeries.getName()));
 
 //        if (groupInfo.syncScrollBars && (groupInfo.viewInfoList.size() > 1)) {
@@ -568,6 +548,8 @@ public class MultiViewPanel extends JPanel {
             e.printStackTrace();
         }
 
+        multiViewPanel.setShowButtonPanelsEnabled(false);
+
 //        log.debug("Saving screen capture");
 //        File imageFile = new File("test.png");
 //        multiViewPanel.drawToImage(imageFile);
@@ -577,6 +559,7 @@ public class MultiViewPanel extends JPanel {
         public TimeSeries timeSeries;
         public JPanel viewPanel;
         public JPanel sidePanel;
+        public JPanel buttonPanel;
         public JScrollPane detailsTimeSeriesPanelScrollPane;
         public TimeSeriesPanel detailTimeSeriesPanel;
         public TimeSeriesPanel overviewTimeSeriesPanel;

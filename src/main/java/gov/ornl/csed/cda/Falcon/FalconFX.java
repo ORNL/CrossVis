@@ -4,6 +4,7 @@ package gov.ornl.csed.cda.Falcon;/**
 
 import gov.ornl.csed.cda.histogram.Histogram;
 import gov.ornl.csed.cda.histogram.MultiHistogramPanel;
+import gov.ornl.csed.cda.histogram.MultiHistogramPanelOld;
 import gov.ornl.csed.cda.timevis.MultiTimeSeriesPanel;
 import gov.ornl.csed.cda.timevis.TimeSeries;
 import gov.ornl.csed.cda.timevis.TimeSeriesPanel;
@@ -11,14 +12,12 @@ import gov.ornl.csed.cda.timevis.TimeSeriesRecord;
 import javafx.application.Application;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.embed.swing.SwingNode;
 import javafx.event.*;
 import javafx.geometry.*;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
@@ -31,7 +30,6 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.*;
 import javafx.scene.text.Font;
 import javafx.stage.FileChooser;
-import javafx.stage.PopupWindow;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.util.Callback;
@@ -50,7 +48,6 @@ import java.awt.*;
 import java.awt.event.AdjustmentEvent;
 import java.awt.event.AdjustmentListener;
 import java.awt.geom.*;
-import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -122,12 +119,14 @@ public class FalconFX extends Application {
 
     // multi view panel preferences
     private Spinner multiViewPlotHeightSpinner;
-    private CheckBox multiViewSyncScrollbarsCheckBox;
     private ChoiceBox<ChronoUnit> multiViewChronoUnitChoice;
     private ColorPicker multipleViewDataColorPicker;
     private Spinner multipleViewPlotChronoUnitWidthSpinner;
-    private CheckBox multiViewShowOverviewCheckBox;
+    private ToggleButton multiViewSyncScrollbarsToggleButton;
+    private ToggleButton multiViewShowOverviewToggleButton;
+    private ToggleButton multiViewShowButtonsToggleButton;
 
+    // overview + detail panel
     private JPanel overviewDetailPanel;
 
     public static void main(String[] args) {
@@ -232,6 +231,7 @@ public class FalconFX extends Application {
         // left panel
         StackPane leftStackPane = new StackPane();
         leftStackPane.getChildren().add(dataTreeView);
+        leftStackPane.setMaxWidth(400.);
 
         // create main split between left and right panes
         SplitPane mainSplitPane = new SplitPane();
@@ -781,8 +781,8 @@ public class FalconFX extends Application {
 //            if (binCount < 1) {
 //                binCount = 1;
 //            }
-            int binCount = multiHistogramPanel.getBinCount();
-
+//            int binCount = multiHistogramPanel.getBinCount();
+            int binCount = 20;
             TimeSeries timeSeries = fileMetadata.timeSeriesMap.get(variableName);
             ArrayList<TimeSeriesRecord> records = timeSeries.getAllRecords();
             double values[] = new double[records.size()];
@@ -808,7 +808,7 @@ public class FalconFX extends Application {
         } else if (fileMetadata.fileType == FileMetadata.FileType.PLG) {
             try {
                 double variableData []= PLGFileReader.readPLGFileAsDoubleArray(fileMetadata.file, variableName);
-                Histogram histogram = new Histogram(variableName, variableData, multiHistogramPanel.getBinCount());
+                Histogram histogram = new Histogram(variableName, variableData, /*multiHistogramPanel.getBinCount()*/20);
                 multiHistogramPanel.addHistogram(histogram);
             } catch (IOException e) {
                 e.printStackTrace();
@@ -918,20 +918,27 @@ public class FalconFX extends Application {
 
         hBox = new HBox();
         hBox.setAlignment(Pos.CENTER_LEFT);
-        multiViewSyncScrollbarsCheckBox = new CheckBox("Sync Scrollbars");
-        multiViewSyncScrollbarsCheckBox.setIndeterminate(false);
-        multiViewSyncScrollbarsCheckBox.setSelected(multiViewPanel.getSyncGroupScrollbarsEnabled());
-        multiViewSyncScrollbarsCheckBox.selectedProperty().addListener((obs, oldValue, newValue) -> multiViewPanel.setSyncGroupScollbarsEnabled((Boolean)newValue));
-        hBox.getChildren().add(multiViewSyncScrollbarsCheckBox);
+        multiViewSyncScrollbarsToggleButton = new ToggleButton("Sync Scrollbars");
+        multiViewSyncScrollbarsToggleButton.setSelected(multiViewPanel.getSyncGroupScrollbarsEnabled());
+        multiViewSyncScrollbarsToggleButton.selectedProperty().addListener((obs, oldValue, newValue) -> multiViewPanel.setSyncGroupScollbarsEnabled((Boolean)newValue));
+        hBox.getChildren().add(multiViewSyncScrollbarsToggleButton);
         settingsHBox.getChildren().add(hBox);
 
         hBox = new HBox();
         hBox.setAlignment(Pos.CENTER_LEFT);
-        multiViewShowOverviewCheckBox = new CheckBox("Show Overview");
-        multiViewShowOverviewCheckBox.setIndeterminate(false);
-        multiViewShowOverviewCheckBox.setSelected(multiViewPanel.getShowOverviewEnabled());
-        multiViewShowOverviewCheckBox.selectedProperty().addListener((obs, oldValue, newValue) -> multiViewPanel.setShowOverviewEnabled((Boolean)newValue));
-        hBox.getChildren().add(multiViewShowOverviewCheckBox);
+        multiViewShowOverviewToggleButton = new ToggleButton("Show Overview");
+        multiViewShowOverviewToggleButton.setSelected(multiViewPanel.getShowOverviewEnabled());
+        multiViewShowOverviewToggleButton.selectedProperty().addListener((obs, oldValue, newValue) -> multiViewPanel.setShowOverviewEnabled((Boolean)newValue));
+        hBox.getChildren().add(multiViewShowOverviewToggleButton);
+        settingsHBox.getChildren().add(hBox);
+
+        hBox = new HBox();
+        hBox.setAlignment(Pos.CENTER_LEFT);
+        multiViewShowButtonsToggleButton = new ToggleButton("Show Buttons");
+        multiViewShowButtonsToggleButton.setTooltip(new Tooltip("Show or hide the buttons for each variable view panel"));
+        multiViewShowButtonsToggleButton.setSelected(multiViewPanel.getShowButtonPanelsEnabled());
+        multiViewShowButtonsToggleButton.selectedProperty().addListener((obs, oldValue, newValue) -> multiViewPanel.setShowButtonPanelsEnabled((Boolean)newValue));
+        hBox.getChildren().add(multiViewShowButtonsToggleButton);
         settingsHBox.getChildren().add(hBox);
 
         Border border = BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(10,10,10,10), BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
@@ -977,7 +984,7 @@ public class FalconFX extends Application {
     }
 
     private Node createMultiHistogramPanel() {
-        multiHistogramPanel = new MultiHistogramPanel();
+        multiHistogramPanel = new MultiHistogramPanel(120);
         multiHistogramPanel.setBackground(java.awt.Color.white);
 
         HBox settingsHBox = new HBox();
@@ -993,13 +1000,13 @@ public class FalconFX extends Application {
         hBox.getChildren().addAll(new Label("Plot Height: "), multipleHistogramPlotHeightSpinner);
         settingsHBox.getChildren().add(hBox);
 
-        hBox = new HBox();
-        hBox.setAlignment(Pos.CENTER_LEFT);
-        multipleHistogramBinSizeSpinner = new Spinner(10, 100, multiHistogramPanel.getBinCount());
-        multipleHistogramBinSizeSpinner.setEditable(true);
-        multipleHistogramBinSizeSpinner.valueProperty().addListener((obs, oldValue, newValue) -> multiHistogramPanel.setBinCount((Integer)newValue));
-        hBox.getChildren().addAll(new Label("Bin Count: "), multipleHistogramBinSizeSpinner);
-        settingsHBox.getChildren().add(hBox);
+//        hBox = new HBox();
+//        hBox.setAlignment(Pos.CENTER_LEFT);
+//        multipleHistogramBinSizeSpinner = new Spinner(10, 100, multiHistogramPanel.getBinCount());
+//        multipleHistogramBinSizeSpinner.setEditable(true);
+//        multipleHistogramBinSizeSpinner.valueProperty().addListener((obs, oldValue, newValue) -> multiHistogramPanel.setBinCount((Integer)newValue));
+//        hBox.getChildren().addAll(new Label("Bin Count: "), multipleHistogramBinSizeSpinner);
+//        settingsHBox.getChildren().add(hBox);
 
         Border border = BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(10,10,10,10), BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
         JScrollPane scroller = new JScrollPane(multiHistogramPanel);
