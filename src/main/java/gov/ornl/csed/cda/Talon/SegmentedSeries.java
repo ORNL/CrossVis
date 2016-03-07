@@ -16,6 +16,9 @@ import java.io.IOException;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
+import com.fastdtw.timeseries.TimeSeriesBase;
+import com.fastdtw.dtw.FastDTW;
+import com.fastdtw.util.Distances;
 
 /**
  * Created by whw on 2/26/16.
@@ -26,7 +29,7 @@ import java.util.*;
 
 public class SegmentedSeries  {
     // ========== CLASS FIELDS ==========
-    private String version = "Talon v1.0";
+    private String version = "Talon v0.1.0";
     private JFrame frame;           // Frame for SegmentedSeries instance
     private JPanel topPanel;        // Panel for combobox
     private SegmentedTimeSeriesPanel segmentPanel;                  // Panel for segmented series plot
@@ -37,6 +40,8 @@ public class SegmentedSeries  {
     private TimeSeries buildHeightTimeSeries;                       // Time series of variable to segment over
     private TimeSeries segmentTimeSeries;                           // Time series of variable to segment
     private TreeMap<Double, TimeSeries> segmentTimeSeriesMap;       // Tree map that holds final segmented time series
+    private TreeMap<Double, Double> segmentDistanceMap;             // Tree map that holds distances of time series to reference
+    private double reference;                                       // Reference build height for DTW
 
     // ========== CONSTRUCTOR ==========
     public SegmentedSeries () {
@@ -296,6 +301,40 @@ public class SegmentedSeries  {
         // TODO
         // CAN TEST THE DYNAMIC TIME WARPING HERE
         // START BY COMPARING ALL TO FIRST TIME SERIES
+        if (temp.size() > 3) {
+            segmentDistanceMap = new TreeMap<Double, Double>();
+            com.fastdtw.timeseries.TimeSeries referenceDTWtimeSeries;
+            TimeSeriesBase.Builder buildTemp1 = TimeSeriesBase.builder();
+
+            // set reference build height (initially set to second highest build height)
+            reference = temp.lowerKey(temp.lastKey());
+
+            // build reference time series
+            for (TimeSeriesRecord record : temp.get(reference).getAllRecords()) {
+                buildTemp1.add((double) record.instant.toEpochMilli(), record.value);
+            }
+
+            referenceDTWtimeSeries = buildTemp1.build();
+
+            // find the distance from reference to every other segment
+            for (Map.Entry<Double, TimeSeries> segment : temp.entrySet()) {
+
+                com.fastdtw.timeseries.TimeSeries ts2;
+                TimeSeriesBase.Builder buildTemp2 = TimeSeriesBase.builder();
+
+                for (TimeSeriesRecord record : segment.getValue().getAllRecords()) {
+                    buildTemp2.add((double) record.instant.toEpochMilli(), record.value);
+                }
+
+                ts2 = buildTemp2.build();
+
+                if (referenceDTWtimeSeries != null && ts2 != null) {
+                    double distance = FastDTW.compare(referenceDTWtimeSeries, ts2, 10, Distances.EUCLIDEAN_DISTANCE).getDistance();
+                    segmentDistanceMap.put(segment.getKey(), distance);
+                    System.out.println("Build Height " + segment.getKey() + ": The distance to reference is " + distance);
+                }
+            }
+        }
 
         return temp;
     }
