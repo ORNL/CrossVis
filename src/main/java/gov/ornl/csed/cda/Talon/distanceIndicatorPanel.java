@@ -10,8 +10,9 @@ import java.util.TreeMap;
  */
 public class DistanceIndicatorPanel extends JComponent{
     // ========== CLASS FIELDS ==========
-    TreeMap<Double, Double> segmentDistanceMap;
-    Double maxDistance;
+    private TreeMap<Double, Double> segmentDistanceMap;
+    private Double maxDistance;
+    private Double averageDistance;
 
     // ========== CONSTRUCTOR ==========
     public DistanceIndicatorPanel () {
@@ -23,7 +24,17 @@ public class DistanceIndicatorPanel extends JComponent{
     public void setDistanceMap(TreeMap<Double, Double> segmentDistanceMap) {
         this.segmentDistanceMap = segmentDistanceMap;
         maxDistance = findMaxDistance(segmentDistanceMap);
+        averageDistance = findAveragedDistance(segmentDistanceMap);
         repaint();
+    }
+
+    private Double findAveragedDistance(TreeMap<Double, Double> segmentDistanceMap) {
+        Double temp = 0.0;
+        for (Map.Entry<Double, Double> entry : segmentDistanceMap.entrySet()) {
+            temp += entry.getValue();
+        }
+        temp /= segmentDistanceMap.size();
+        return temp;
     }
 
     private Double findMaxDistance(TreeMap<Double, Double> segmentDistanceMap) {
@@ -47,7 +58,13 @@ public class DistanceIndicatorPanel extends JComponent{
         if (segmentDistanceMap != null && !segmentDistanceMap.isEmpty()) {
             int count = 1;
             for (Map.Entry<Double, Double> entry : segmentDistanceMap.entrySet()) {
-                g2.setColor(new Color(1, 0, 0, (float)(entry.getValue()/maxDistance)));
+
+                if (entry.getValue() < averageDistance) {
+                    g2.setColor(new Color(0, 1, 0, (float) (entry.getValue() / averageDistance)));
+                } else {
+                    g2.setColor(new Color(1, 0, 0, (float) ((entry.getValue() - averageDistance) / (maxDistance - averageDistance))));
+                }
+
                 g2.fillRect(0, (int) ((segmentDistanceMap.lastKey() - entry.getKey()) * segmentDistanceMap.size() / count), 15, 5);
                 count++;
             }
