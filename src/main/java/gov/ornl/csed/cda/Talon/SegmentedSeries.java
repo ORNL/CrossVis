@@ -52,11 +52,6 @@ public class SegmentedSeries  {
     }
 
     // ============ METHODS ============
-    // Getters/Setters
-    public TreeMap<Double, Double> getSegmentDistanceMap() {
-        return segmentDistanceMap;
-    }
-
     private void initialize () {
         // Create and set instance's frame
         frame = new JFrame();
@@ -179,6 +174,7 @@ public class SegmentedSeries  {
 
         // Initialize visual distance indicator panel
         distanceIndicatorPanel = new DistanceIndicatorPanel();
+        distanceIndicatorPanel.setPreferredSize(new Dimension(15, frame.getHeight()));
 
         // Create new panel for combobox and initialize
         topPanel = new JPanel();
@@ -231,6 +227,7 @@ public class SegmentedSeries  {
                     segmentPanel.setTimeSeries(segmentTimeSeriesMap);
                     reference = 0.1;
                     segmentDistanceMap = getDistance();
+                    distanceIndicatorPanel.setDistanceMap(segmentDistanceMap);
                 }
             }
         });
@@ -278,6 +275,7 @@ public class SegmentedSeries  {
                 if (segmentTimeSeriesMap.get(referenceSpinner.getValue()) != null) {
                     reference = (double)referenceSpinner.getValue();
                     segmentDistanceMap = getDistance();
+                    distanceIndicatorPanel.setDistanceMap(segmentDistanceMap);
                 }
             }
         });
@@ -292,8 +290,6 @@ public class SegmentedSeries  {
         mainPanel.setLayout(new BorderLayout());
         mainPanel.add(topPanel, BorderLayout.NORTH);
         mainPanel.add(segmentPanelScroller, BorderLayout.CENTER);
-        distanceIndicatorPanel.setPreferredSize(new Dimension(15, mainPanel.getHeight()));
-        distanceIndicatorPanel.setBackground(Color.DARK_GRAY);
         mainPanel.add(distanceIndicatorPanel, BorderLayout.EAST);
     }
 
