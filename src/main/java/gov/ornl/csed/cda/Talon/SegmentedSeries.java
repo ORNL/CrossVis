@@ -33,6 +33,7 @@ public class SegmentedSeries  {
     private JFrame frame;           // Frame for SegmentedSeries instance
     private JPanel topPanel;        // Panel for combobox
     private SegmentedTimeSeriesPanel segmentPanel;                  // Panel for segmented series plot
+    private DistanceIndicatorPanel distanceIndicatorPanel;          // Panel for distance indicator tick marks
     private File plgFile;           // Captures .plg filename on open
     private HashMap<String, PLGVariableSchema> variableSchemaMap;   // Holds variableSchema of variables in plgFile
     private JComboBox<String> variableCB;                           // Combobox of variable names from plgFile in topPanel
@@ -171,6 +172,9 @@ public class SegmentedSeries  {
         segmentPanelScroller.getVerticalScrollBar().setUnitIncrement(10);
         segmentPanelScroller.getHorizontalScrollBar().setUnitIncrement(10);
 
+        // Initialize visual distance indicator panel
+        distanceIndicatorPanel = new DistanceIndicatorPanel();
+
         // Create new panel for combobox and initialize
         topPanel = new JPanel();
         topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.LINE_AXIS));
@@ -220,6 +224,7 @@ public class SegmentedSeries  {
                     // Segment the time series and set it in segmentPanel
                     segmentTimeSeriesMap = segment();
                     segmentPanel.setTimeSeries(segmentTimeSeriesMap);
+                    reference = 0.1;
                     segmentDistanceMap = getDistance();
                 }
             }
@@ -282,6 +287,8 @@ public class SegmentedSeries  {
         mainPanel.setLayout(new BorderLayout());
         mainPanel.add(topPanel, BorderLayout.NORTH);
         mainPanel.add(segmentPanelScroller, BorderLayout.CENTER);
+        distanceIndicatorPanel.setBackground(Color.DARK_GRAY);
+        mainPanel.add(distanceIndicatorPanel, BorderLayout.EAST);
     }
 
     // Segments segmentTimeSeries by buildHeightTimeSeries
@@ -322,32 +329,31 @@ public class SegmentedSeries  {
             com.fastdtw.timeseries.TimeSeries referenceDTWtimeSeries;
             TimeSeriesBase.Builder buildTemp1 = TimeSeriesBase.builder();
 
-            // set reference build height (initially set to second highest build height)
-//            reference = segmentTimeSeriesMap.lowerKey(segmentTimeSeriesMap.lastKey());
-
-            // build reference time series
-            for (TimeSeriesRecord record : segmentTimeSeriesMap.get(reference).getAllRecords()) {
-                buildTemp1.add((double) record.instant.toEpochMilli(), record.value);
-            }
-
-            referenceDTWtimeSeries = buildTemp1.build();
-
-            // find the distance from reference to every other segment
-            for (Map.Entry<Double, TimeSeries> segment : segmentTimeSeriesMap.entrySet()) {
-
-                com.fastdtw.timeseries.TimeSeries ts2;
-                TimeSeriesBase.Builder buildTemp2 = TimeSeriesBase.builder();
-
-                for (TimeSeriesRecord record : segment.getValue().getAllRecords()) {
-                    buildTemp2.add((double) record.instant.toEpochMilli(), record.value);
+            if (segmentTimeSeriesMap.get(reference) != null) {
+                // build reference time series
+                for (TimeSeriesRecord record : segmentTimeSeriesMap.get(reference).getAllRecords()) {
+                    buildTemp1.add((double) record.instant.toEpochMilli(), record.value);
                 }
 
-                ts2 = buildTemp2.build();
+                referenceDTWtimeSeries = buildTemp1.build();
 
-                if (referenceDTWtimeSeries != null && ts2 != null) {
-                    double distance = FastDTW.compare(referenceDTWtimeSeries, ts2, 10, Distances.EUCLIDEAN_DISTANCE).getDistance();
-                    temp.put(segment.getKey(), distance);
-                    System.out.println("Build Height " + segment.getKey() + ": The distance to reference is " + distance);
+                // find the distance from reference to every other segment
+                for (Map.Entry<Double, TimeSeries> segment : segmentTimeSeriesMap.entrySet()) {
+
+                    com.fastdtw.timeseries.TimeSeries ts2;
+                    TimeSeriesBase.Builder buildTemp2 = TimeSeriesBase.builder();
+
+                    for (TimeSeriesRecord record : segment.getValue().getAllRecords()) {
+                        buildTemp2.add((double) record.instant.toEpochMilli(), record.value);
+                    }
+
+                    ts2 = buildTemp2.build();
+
+                    if (referenceDTWtimeSeries != null && ts2 != null) {
+                        double distance = FastDTW.compare(referenceDTWtimeSeries, ts2, 10, Distances.EUCLIDEAN_DISTANCE).getDistance();
+                        temp.put(segment.getKey(), distance);
+                        System.out.println("Build Height " + segment.getKey() + ": The distance to reference is " + distance);
+                    }
                 }
             }
         }
