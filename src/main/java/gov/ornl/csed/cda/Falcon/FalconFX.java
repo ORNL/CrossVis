@@ -4,7 +4,6 @@ package gov.ornl.csed.cda.Falcon;/**
 
 import gov.ornl.csed.cda.histogram.Histogram;
 import gov.ornl.csed.cda.histogram.MultiHistogramPanel;
-import gov.ornl.csed.cda.histogram.MultiHistogramPanelOld;
 import gov.ornl.csed.cda.timevis.MultiTimeSeriesPanel;
 import gov.ornl.csed.cda.timevis.TimeSeries;
 import gov.ornl.csed.cda.timevis.TimeSeriesPanel;
@@ -1004,7 +1003,7 @@ public class FalconFX extends Application {
 //        hBox.setAlignment(Pos.CENTER_LEFT);
 //        multipleHistogramBinSizeSpinner = new Spinner(10, 100, multiHistogramPanel.getBinCount());
 //        multipleHistogramBinSizeSpinner.setEditable(true);
-//        multipleHistogramBinSizeSpinner.valueProperty().addListener((obs, oldValue, newValue) -> multiHistogramPanel.setBinCount((Integer)newValue));
+//        multipleHistogramBinSizeSpinner.valueProperty().addListener((obs, oldValue, newValue) -> multiHistogramPanel.setNumBins((Integer)newValue));
 //        hBox.getChildren().addAll(new Label("Bin Count: "), multipleHistogramBinSizeSpinner);
 //        settingsHBox.getChildren().add(hBox);
 
