@@ -41,7 +41,7 @@ public class SegmentedSeries  {
     private TimeSeries segmentTimeSeries;                           // Time series of variable to segment
     private TreeMap<Double, TimeSeries> segmentTimeSeriesMap;       // Tree map that holds final segmented time series
     private TreeMap<Double, Double> segmentDistanceMap;             // Tree map that holds distances of time series to reference
-    private double reference;                                       // Reference build height for DTW
+    private double reference = 0.1;                                 // Reference build height for DTW
 
     // ========== CONSTRUCTOR ==========
     public SegmentedSeries () {
@@ -165,11 +165,6 @@ public class SegmentedSeries  {
     //  -> Creates panel for combobox and sets actionListener
     //  -> Creates new SegmentedTimeSeries panel for the vis
     private void initializePanel() {
-        /* TODO
-            main segmented view panel
-                custom
-                i will/make/paint this myself
-        */
         // Initialize draw panel and add scroll bar
         segmentPanel = new SegmentedTimeSeriesPanel(ChronoUnit.SECONDS);
         JScrollPane segmentPanelScroller = new JScrollPane(segmentPanel);
@@ -225,7 +220,7 @@ public class SegmentedSeries  {
                     // Segment the time series and set it in segmentPanel
                     segmentTimeSeriesMap = segment();
                     segmentPanel.setTimeSeries(segmentTimeSeriesMap);
-
+                    segmentDistanceMap = getDistance();
                 }
             }
         });
@@ -264,6 +259,22 @@ public class SegmentedSeries  {
         topPanel.add(heightLabel);
         topPanel.add(plotHeightSpinner);
 
+        SpinnerNumberModel referenceModel = new SpinnerNumberModel(0.1, 0.05, 1000, 0.05);
+        JSpinner referenceSpinner = new JSpinner(referenceModel);
+
+        referenceSpinner.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                if (segmentTimeSeriesMap.get(referenceSpinner.getValue()) != null) {
+                    reference = (double)referenceSpinner.getValue();
+                    segmentDistanceMap = getDistance();
+                }
+            }
+        });
+
+        JLabel referenceLabel = new JLabel("Reference Height");
+        topPanel.add(referenceLabel);
+        topPanel.add(referenceSpinner);
 
         // mainPanel is a "dummy" panel of parent frame
         // use it to set layout and add top and draw panels
@@ -298,26 +309,31 @@ public class SegmentedSeries  {
             lastSegmentRecord = currentSegmentRecord;
         }
 
+        return temp;
+    }
+
+    private TreeMap<Double, Double> getDistance () {
+        TreeMap<Double, Double> temp = new TreeMap<Double, Double>();
+
         // TODO
         // CAN TEST THE DYNAMIC TIME WARPING HERE
         // START BY COMPARING ALL TO FIRST TIME SERIES
-        if (temp.size() > 3) {
-            segmentDistanceMap = new TreeMap<Double, Double>();
+        if (segmentTimeSeriesMap.size() > 3) {
             com.fastdtw.timeseries.TimeSeries referenceDTWtimeSeries;
             TimeSeriesBase.Builder buildTemp1 = TimeSeriesBase.builder();
 
             // set reference build height (initially set to second highest build height)
-            reference = temp.lowerKey(temp.lastKey());
+//            reference = segmentTimeSeriesMap.lowerKey(segmentTimeSeriesMap.lastKey());
 
             // build reference time series
-            for (TimeSeriesRecord record : temp.get(reference).getAllRecords()) {
+            for (TimeSeriesRecord record : segmentTimeSeriesMap.get(reference).getAllRecords()) {
                 buildTemp1.add((double) record.instant.toEpochMilli(), record.value);
             }
 
             referenceDTWtimeSeries = buildTemp1.build();
 
             // find the distance from reference to every other segment
-            for (Map.Entry<Double, TimeSeries> segment : temp.entrySet()) {
+            for (Map.Entry<Double, TimeSeries> segment : segmentTimeSeriesMap.entrySet()) {
 
                 com.fastdtw.timeseries.TimeSeries ts2;
                 TimeSeriesBase.Builder buildTemp2 = TimeSeriesBase.builder();
@@ -330,7 +346,7 @@ public class SegmentedSeries  {
 
                 if (referenceDTWtimeSeries != null && ts2 != null) {
                     double distance = FastDTW.compare(referenceDTWtimeSeries, ts2, 10, Distances.EUCLIDEAN_DISTANCE).getDistance();
-                    segmentDistanceMap.put(segment.getKey(), distance);
+                    temp.put(segment.getKey(), distance);
                     System.out.println("Build Height " + segment.getKey() + ": The distance to reference is " + distance);
                 }
             }
