@@ -52,6 +52,11 @@ public class SegmentedSeries  {
     }
 
     // ============ METHODS ============
+    // Getters/Setters
+    public TreeMap<Double, Double> getSegmentDistanceMap() {
+        return segmentDistanceMap;
+    }
+
     private void initialize () {
         // Create and set instance's frame
         frame = new JFrame();
@@ -287,6 +292,7 @@ public class SegmentedSeries  {
         mainPanel.setLayout(new BorderLayout());
         mainPanel.add(topPanel, BorderLayout.NORTH);
         mainPanel.add(segmentPanelScroller, BorderLayout.CENTER);
+        distanceIndicatorPanel.setPreferredSize(new Dimension(15, mainPanel.getHeight()));
         distanceIndicatorPanel.setBackground(Color.DARK_GRAY);
         mainPanel.add(distanceIndicatorPanel, BorderLayout.EAST);
     }
@@ -340,6 +346,10 @@ public class SegmentedSeries  {
                 // find the distance from reference to every other segment
                 for (Map.Entry<Double, TimeSeries> segment : segmentTimeSeriesMap.entrySet()) {
 
+                    if (segment.getKey() == null) {
+                        continue;
+                    }
+
                     com.fastdtw.timeseries.TimeSeries ts2;
                     TimeSeriesBase.Builder buildTemp2 = TimeSeriesBase.builder();
 
@@ -349,7 +359,7 @@ public class SegmentedSeries  {
 
                     ts2 = buildTemp2.build();
 
-                    if (referenceDTWtimeSeries != null && ts2 != null) {
+                    if (!(referenceDTWtimeSeries.size() == 1 && ts2.size() == 1)) {
                         double distance = FastDTW.compare(referenceDTWtimeSeries, ts2, 10, Distances.EUCLIDEAN_DISTANCE).getDistance();
                         temp.put(segment.getKey(), distance);
                         System.out.println("Build Height " + segment.getKey() + ": The distance to reference is " + distance);

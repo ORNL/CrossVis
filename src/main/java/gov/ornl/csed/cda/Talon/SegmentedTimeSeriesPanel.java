@@ -101,7 +101,7 @@ public class SegmentedTimeSeriesPanel extends JComponent {
 //                double yOffset = normHeight * getHeight();                                                // old
 //                double plotBaselineY = getHeight() - yOffset;                                             // old
 
-                // Set the base line for the current build height time seriex
+                // Set the base line for the current build height time series
                 double plotBaselineY = plotSpacing * timeseriesCounter;
 
                 // Get time series for current build height
