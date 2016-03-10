@@ -37,6 +37,8 @@ public class MultiHistogramPanel extends JPanel {
     private Color highlightBinFillColor = Color.darkGray;
     private Color highlightBinLineColor = Color.black;
 
+    private int binCount = 20;
+
     // panels
     ArrayList<ViewInfo> viewInfoList = new ArrayList<>();
 
@@ -54,6 +56,18 @@ public class MultiHistogramPanel extends JPanel {
         }
 
         initialize();
+    }
+
+    public void setBinCount(int binCount) {
+        if (this.binCount != binCount) {
+            for (ViewInfo viewInfo : viewInfoList) {
+                viewInfo.histogramPanel.setBinCount(binCount);
+            }
+        }
+    }
+
+    public int getBinCount() {
+        return binCount;
     }
 
     private void initialize() {

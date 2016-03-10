@@ -35,6 +35,7 @@ public class MultiViewPanel extends JPanel {
 
     private int plotHeight;
     private int plotUnitWidth = 1;
+    private int binCount = 20;
     private Box panelBox;
     private Font fontAwesomeFont = null;
 
@@ -338,6 +339,7 @@ public class MultiViewPanel extends JPanel {
         viewInfo.detailsTimeSeriesPanelScrollPane.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
 
         viewInfo.detailHistogramPanel = new HistogramPanel(HistogramPanel.ORIENTATION.VERTICAL, HistogramPanel.STATISTICS_MODE.MEAN_BASED);
+        viewInfo.detailHistogramPanel.setBinCount(binCount);
         viewInfo.detailHistogramPanel.setBackground(Color.white);
         viewInfo.detailHistogramPanel.setPreferredSize(new Dimension(50, 80));
 
@@ -422,6 +424,7 @@ public class MultiViewPanel extends JPanel {
         });
 
         viewInfo.overviewHistogramPanel = new HistogramPanel(HistogramPanel.ORIENTATION.HORIZONTAL, HistogramPanel.STATISTICS_MODE.MEAN_BASED);
+        viewInfo.overviewHistogramPanel.setBinCount(binCount);
 
         ArrayList<TimeSeriesRecord> records = timeSeries.getAllRecords();
         double values[] = new double[records.size()];
@@ -432,7 +435,7 @@ public class MultiViewPanel extends JPanel {
             }
         }
 
-        Histogram histogram = new Histogram(timeSeries.getName(), values, viewInfo.overviewHistogramPanel.getBinCount());
+        Histogram histogram = new Histogram(timeSeries.getName(), values, binCount);
         viewInfo.overviewHistogramPanel.setBackground(Color.white);
         viewInfo.overviewHistogramPanel.setHistogram(histogram);
 
@@ -455,14 +458,21 @@ public class MultiViewPanel extends JPanel {
         viewInfo.viewPanel.add(viewInfo.buttonPanel, BorderLayout.WEST);
         viewInfo.viewPanel.setBorder(BorderFactory.createTitledBorder(timeSeries.getName()));
 
-//        if (groupInfo.syncScrollBars && (groupInfo.viewInfoList.size() > 1)) {
-//            ViewInfo firstView = groupInfo.viewInfoList.get(0);
-//            log.debug("first view scrollbar value is " + firstView.detailsTimeSeriesPanelScrollPane.getHorizontalScrollBar().getModel().getValue());
-//            viewInfo.detailsTimeSeriesPanelScrollPane.getHorizontalScrollBar().getModel().setValue(firstView.detailsTimeSeriesPanelScrollPane.getHorizontalScrollBar().getModel().getValue());
-//        }
-
         panelBox.add(viewInfo.viewPanel);
         revalidate();
+    }
+
+    public int getBinCount() {
+        return binCount;
+    }
+
+    public void setBinCount(int binCount) {
+        if (this.binCount != binCount) {
+            for (ViewInfo viewInfo : viewInfoList) {
+                viewInfo.detailHistogramPanel.setBinCount(binCount);
+                viewInfo.overviewHistogramPanel.setBinCount(binCount);
+            }
+        }
     }
 
     public void drawToImage(File imageFile) throws IOException {

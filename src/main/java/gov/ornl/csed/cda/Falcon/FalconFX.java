@@ -124,9 +124,11 @@ public class FalconFX extends Application {
     private ToggleButton multiViewSyncScrollbarsToggleButton;
     private ToggleButton multiViewShowOverviewToggleButton;
     private ToggleButton multiViewShowButtonsToggleButton;
+    private Spinner multipleViewHistogramBinSizeSpinner;
 
     // overview + detail panel
     private JPanel overviewDetailPanel;
+
 
     public static void main(String[] args) {
         launch(args);
@@ -888,6 +890,15 @@ public class FalconFX extends Application {
 
         hBox = new HBox();
         hBox.setAlignment(Pos.CENTER_LEFT);
+        multipleViewHistogramBinSizeSpinner = new Spinner(2, 200, multiViewPanel.getBinCount());
+        multipleViewHistogramBinSizeSpinner.setEditable(true);
+        multipleViewHistogramBinSizeSpinner.setPrefWidth(80.);
+        multipleViewHistogramBinSizeSpinner.valueProperty().addListener((obs, oldValue, newValue) -> multiViewPanel.setBinCount((Integer)newValue));
+        hBox.getChildren().addAll(new Label("Histogram Bin Count: "), multipleViewHistogramBinSizeSpinner);
+        settingsHBox.getChildren().add(hBox);
+
+        hBox = new HBox();
+        hBox.setAlignment(Pos.CENTER_LEFT);
         multipleViewDataColorPicker = new ColorPicker(dataColor);
         multipleViewDataColorPicker.setOnAction(new EventHandler<ActionEvent>() {
             @Override
@@ -999,13 +1010,13 @@ public class FalconFX extends Application {
         hBox.getChildren().addAll(new Label("Plot Height: "), multipleHistogramPlotHeightSpinner);
         settingsHBox.getChildren().add(hBox);
 
-//        hBox = new HBox();
-//        hBox.setAlignment(Pos.CENTER_LEFT);
-//        multipleHistogramBinSizeSpinner = new Spinner(10, 100, multiHistogramPanel.getBinCount());
-//        multipleHistogramBinSizeSpinner.setEditable(true);
-//        multipleHistogramBinSizeSpinner.valueProperty().addListener((obs, oldValue, newValue) -> multiHistogramPanel.setNumBins((Integer)newValue));
-//        hBox.getChildren().addAll(new Label("Bin Count: "), multipleHistogramBinSizeSpinner);
-//        settingsHBox.getChildren().add(hBox);
+        hBox = new HBox();
+        hBox.setAlignment(Pos.CENTER_LEFT);
+        multipleHistogramBinSizeSpinner = new Spinner(2, 200, multiHistogramPanel.getBinCount());
+        multipleHistogramBinSizeSpinner.setEditable(true);
+        multipleHistogramBinSizeSpinner.valueProperty().addListener((obs, oldValue, newValue) -> multiHistogramPanel.setBinCount((Integer)newValue));
+        hBox.getChildren().addAll(new Label("Bin Count: "), multipleHistogramBinSizeSpinner);
+        settingsHBox.getChildren().add(hBox);
 
         Border border = BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(10,10,10,10), BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
         JScrollPane scroller = new JScrollPane(multiHistogramPanel);

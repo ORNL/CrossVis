@@ -277,7 +277,10 @@ public class HistogramPanel extends JComponent implements ComponentListener, Mou
             histogram.setNumBins(binCount);
         }
 
-        // TODO: Update highlighted values bin counts
+        if (highlightHistogram != null) {
+            highlightHistogram.setNumBins(binCount);
+        }
+
         layoutPanel();
     }
 
