@@ -328,6 +328,7 @@ public class MultiViewPanel extends JPanel {
         viewInfo.buttonPanel = createButtonPanel(viewInfo);
 
         viewInfo.detailTimeSeriesPanel = new TimeSeriesPanel(1, detailChronoUnit, timeSeriesDisplayOption);
+        viewInfo.detailTimeSeriesPanel.setPlotDisplayOption(TimeSeriesPanel.PlotDisplayOption.STEPPED_LINE);
         if (groupInfo.useCommonTimeScale) {
             viewInfo.detailTimeSeriesPanel.setTimeSeries(timeSeries, groupInfo.startInstant, groupInfo.endInstant);
         } else {
@@ -346,6 +347,7 @@ public class MultiViewPanel extends JPanel {
         viewInfo.overviewTimeSeriesPanel = new TimeSeriesPanel(1, timeSeriesDisplayOption);
         viewInfo.overviewTimeSeriesPanel.setShowTimeRangeLabels(false);
         viewInfo.overviewTimeSeriesPanel.setBackground(Color.white);
+        viewInfo.overviewTimeSeriesPanel.setPlotDisplayOption(TimeSeriesPanel.PlotDisplayOption.LINE);
         if (groupInfo.useCommonTimeScale) {
             viewInfo.overviewTimeSeriesPanel.setTimeSeries(timeSeries, groupInfo.startInstant, groupInfo.endInstant);
         } else {

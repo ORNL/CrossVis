@@ -1148,7 +1148,7 @@ public class FalconFX extends Application {
         detailsTimeSeriesPanel = new TimeSeriesPanel(2, ChronoUnit.SECONDS, TimeSeriesPanel.PlotDisplayOption.STEPPED_LINE);
         detailsTimeSeriesPanel.setBackground(java.awt.Color.white);
 
-        overviewTimeSeriesPanel = new TimeSeriesPanel(2, TimeSeriesPanel.PlotDisplayOption.STEPPED_LINE);
+        overviewTimeSeriesPanel = new TimeSeriesPanel(2, TimeSeriesPanel.PlotDisplayOption.LINE);
         overviewTimeSeriesPanel.setPreferredSize(new Dimension(1400, 100));
         overviewTimeSeriesPanel.setBackground(java.awt.Color.white);
         Border border = BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(2, 4, 2, 4), BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));

@@ -1,5 +1,6 @@
 package gov.ornl.csed.cda.histogram;
 
+import gov.ornl.csed.cda.util.GraphicsUtil;
 import javafx.scene.control.TextInputDialog;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
@@ -39,9 +40,6 @@ public class HistogramPanel extends JComponent implements ComponentListener, Mou
     private Histogram highlightHistogram;
 
     // variables for highlighted values and summaries
-//    private int highlightBinCounts[];
-//    private double highlightValues[];
-//    private DescriptiveStatistics highlightStatistics;
     private Shape highlightMeanShape;
     private Shape highlightMedianShape;
     private Shape highlightStdevRangeShape;
@@ -331,10 +329,10 @@ public class HistogramPanel extends JComponent implements ComponentListener, Mou
         layoutPanel();
     }
 
-    private double mapValue(double value, double currentMin, double currentMax, double newMin, double newMax) {
-        double norm = (value - currentMin) / (currentMax - currentMin);
-        return (norm * (newMax - newMin)) + newMin;
-    }
+//    private double mapValue(double value, double currentMin, double currentMax, double newMin, double newMax) {
+//        double norm = (value - currentMin) / (currentMax - currentMin);
+//        return (norm * (newMax - newMin)) + newMin;
+//    }
 
     private void layoutPanel() {
         if (histogram != null) {
@@ -364,7 +362,7 @@ public class HistogramPanel extends JComponent implements ComponentListener, Mou
                 int binNumber = 0;
                 for (int i = 0; i < histogram.getNumBins(); i++) {
                     double x = histogramPlotRectangle.x + (binNumber * binRectangleSize);
-                    double binHeight = mapValue(histogram.getBinCount(i), 0., histogram.getMaxBinCount(), 0., histogramPlotRectangle.height);
+                    double binHeight = GraphicsUtil.mapValue(histogram.getBinCount(i), 0., histogram.getMaxBinCount(), 0., histogramPlotRectangle.height);
                     double y = (histogramPlotRectangle.y + histogramPlotRectangle.height) - binHeight;
                     Rectangle2D.Double binRect = new Rectangle2D.Double(x, y, binRectangleSize, binHeight);
                     Color binColor = Color.lightGray;
@@ -378,7 +376,7 @@ public class HistogramPanel extends JComponent implements ComponentListener, Mou
                 if (highlightHistogram != null) {
                     for (int binIndex = 0; binIndex < binCount; binIndex++) {
                         double x = histogramPlotRectangle.x + (binIndex * binRectangleSize);
-                        double binHeight = mapValue(highlightHistogram.getBinCount(binIndex), 0., histogram.getMaxBinCount(), 0., histogramPlotRectangle.height);
+                        double binHeight = GraphicsUtil.mapValue(highlightHistogram.getBinCount(binIndex), 0., histogram.getMaxBinCount(), 0., histogramPlotRectangle.height);
                         double y = (histogramPlotRectangle.y + histogramPlotRectangle.height) - binHeight;
                         Rectangle2D.Double binRect = new Rectangle2D.Double(x, y, binRectangleSize, binHeight);
                         Color binColor = Color.gray;
@@ -390,26 +388,26 @@ public class HistogramPanel extends JComponent implements ComponentListener, Mou
                 double yPosition = summaryStatsRectangle.getMaxY() - ((summaryStatsRectangle.getMaxY() - summaryStatsRectangle.getMinY()) / 3.);
 
                 // calculate mean position
-                double meanX = mapValue(histogram.getMean(), histogram.getMinValue(), histogram.getMaxValue(),
+                double meanX = GraphicsUtil.mapValue(histogram.getMean(), histogram.getMinValue(), histogram.getMaxValue(),
                         histogramPlotRectangle.getMinX(), histogramPlotRectangle.getMaxX());
                 meanShape = new Ellipse2D.Double(meanX-2., yPosition-2., 4., 4.);
 
                 // calculate median position
-                double medianX = mapValue(histogram.getMedian(), histogram.getMinValue(), histogram.getMaxValue(),
+                double medianX = GraphicsUtil.mapValue(histogram.getMedian(), histogram.getMinValue(), histogram.getMaxValue(),
                         histogramPlotRectangle.getMinX(), histogramPlotRectangle.getMaxX());
                 medianShape = new Ellipse2D.Double(medianX-2., yPosition-2., 4., 4.);
 
                 // calculate standard deviation range
-                double stdevRangeLeft = mapValue(histogram.getMean() - histogram.getStDev(),
+                double stdevRangeLeft = GraphicsUtil.mapValue(histogram.getMean() - histogram.getStDev(),
                         histogram.getMinValue(), histogram.getMaxValue(), histogramPlotRectangle.getMinX(), histogramPlotRectangle.width);
-                double stdevRangeRight = mapValue(histogram.getMean() + histogram.getStDev(),
+                double stdevRangeRight = GraphicsUtil.mapValue(histogram.getMean() + histogram.getStDev(),
                         histogram.getMinValue(), histogram.getMaxValue(), histogramPlotRectangle.getMinX(), histogramPlotRectangle.width);
                 stdevRangeShape = new Line2D.Double(stdevRangeLeft, yPosition, stdevRangeRight, yPosition);
 
                 // calculate IQR
-                double IQRLeft = mapValue(histogram.getPercentile25(),
+                double IQRLeft = GraphicsUtil.mapValue(histogram.getPercentile25(),
                         histogram.getMinValue(), histogram.getMaxValue(), histogramPlotRectangle.getMinX(), histogramPlotRectangle.width);
-                double IQRRight = mapValue(histogram.getPercentile75(),
+                double IQRRight = GraphicsUtil.mapValue(histogram.getPercentile75(),
                         histogram.getMinValue(), histogram.getMaxValue(), histogramPlotRectangle.getMinX(), histogramPlotRectangle.width);
                 IQRShape = new Line2D.Double(IQRLeft, yPosition, IQRRight, yPosition);
 
@@ -418,28 +416,28 @@ public class HistogramPanel extends JComponent implements ComponentListener, Mou
                     yPosition = summaryStatsRectangle.getMinY() + ((summaryStatsRectangle.getMaxY() - summaryStatsRectangle.getMinY()) / 3.);
 
                     // calculate mean position
-                    double highlightMeanX = mapValue(highlightHistogram.getMean(), histogram.getMinValue(),
+                    double highlightMeanX = GraphicsUtil.mapValue(highlightHistogram.getMean(), histogram.getMinValue(),
                             histogram.getMaxValue(), histogramPlotRectangle.getMinX(), histogramPlotRectangle.getMaxX());
                     highlightMeanShape = new Ellipse2D.Double(highlightMeanX-2., yPosition-2., 4., 4.);
 
                     // calculate median position
-                    double highlightMedianX = mapValue(highlightHistogram.getMedian(), histogram.getMinValue(),
+                    double highlightMedianX = GraphicsUtil.mapValue(highlightHistogram.getMedian(), histogram.getMinValue(),
                             histogram.getMaxValue(), histogramPlotRectangle.getMinX(), histogramPlotRectangle.getMaxX());
                     highlightMedianShape = new Ellipse2D.Double(highlightMedianX-2., yPosition-2., 4., 4.);
 
                     // calculate standard deviation range
-                    double highlightStdevRangeLeft = mapValue(highlightHistogram.getMean() - highlightHistogram.getStDev(),
+                    double highlightStdevRangeLeft = GraphicsUtil.mapValue(highlightHistogram.getMean() - highlightHistogram.getStDev(),
                             histogram.getMinValue(), histogram.getMaxValue(), histogramPlotRectangle.getMinX(),
                             histogramPlotRectangle.width);
-                    double highlightStdevRangeRight = mapValue(highlightHistogram.getMean() + highlightHistogram.getStDev(),
+                    double highlightStdevRangeRight = GraphicsUtil.mapValue(highlightHistogram.getMean() + highlightHistogram.getStDev(),
                             histogram.getMinValue(), histogram.getMaxValue(), histogramPlotRectangle.getMinX(),
                             histogramPlotRectangle.width);
                     highlightStdevRangeShape = new Line2D.Double(highlightStdevRangeLeft, yPosition, highlightStdevRangeRight, yPosition);
 
                     // calculate IQR
-                    double highlightIQRLeft = mapValue(highlightHistogram.getPercentile25(), histogram.getMinValue(),
+                    double highlightIQRLeft = GraphicsUtil.mapValue(highlightHistogram.getPercentile25(), histogram.getMinValue(),
                             histogram.getMaxValue(), histogramPlotRectangle.getMinX(), histogramPlotRectangle.width);
-                    double highlightIQRRight = mapValue(highlightHistogram.getPercentile75(), histogram.getMinValue(),
+                    double highlightIQRRight = GraphicsUtil.mapValue(highlightHistogram.getPercentile75(), histogram.getMinValue(),
                             histogram.getMaxValue(), histogramPlotRectangle.getMinX(), histogramPlotRectangle.width);
                     highlightIQRShape = new Line2D.Double(highlightIQRLeft, yPosition, highlightIQRRight, yPosition);
                 }
@@ -459,7 +457,7 @@ public class HistogramPanel extends JComponent implements ComponentListener, Mou
                 int binNumber = 0;
                 for (int i = 0; i < histogram.getNumBins(); i++) {
                     double y = (histogramPlotRectangle.y + histogramPlotRectangle.height) - ((binNumber + 1) * binRectangleSize);
-                    double binWidth = mapValue(histogram.getBinCount(i), 0., histogram.getMaxBinCount(), 0., histogramPlotRectangle.width);
+                    double binWidth = GraphicsUtil.mapValue(histogram.getBinCount(i), 0., histogram.getMaxBinCount(), 0., histogramPlotRectangle.width);
                     double x = histogramPlotRectangle.x;
                     Rectangle2D.Double binRect = new Rectangle2D.Double(x, y, binWidth, binRectangleSize);
                     Color binColor = Color.lightGray;
@@ -473,7 +471,7 @@ public class HistogramPanel extends JComponent implements ComponentListener, Mou
                     // calculate highlight histogram bin rectangles
                     for (int binIndex = 0; binIndex < binCount; binIndex++) {
                         double y = (histogramPlotRectangle.y + histogramPlotRectangle.height) - ((binIndex + 1) * binRectangleSize);
-                        double binWidth = mapValue(highlightHistogram.getBinCount(binIndex), 0., histogram.getMaxBinCount(), 0., histogramPlotRectangle.width);
+                        double binWidth = GraphicsUtil.mapValue(highlightHistogram.getBinCount(binIndex), 0., histogram.getMaxBinCount(), 0., histogramPlotRectangle.width);
                         double x = histogramPlotRectangle.x;
                         Rectangle2D.Double binRect = new Rectangle2D.Double(x, y, binWidth, binRectangleSize);
                         Color binColor = Color.gray;
@@ -485,29 +483,29 @@ public class HistogramPanel extends JComponent implements ComponentListener, Mou
                 double xPosition = summaryStatsRectangle.getMinX() + ((summaryStatsRectangle.getMaxX() - summaryStatsRectangle.getMinX()) / 3.);
 
                 // calculate mean position
-                double meanY = mapValue(histogram.getMean(), histogram.getMinValue(),
+                double meanY = GraphicsUtil.mapValue(histogram.getMean(), histogram.getMinValue(),
                         histogram.getMaxValue(),
                         histogramPlotRectangle.getMaxY(), histogramPlotRectangle.getMinY());
                 meanShape = new Ellipse2D.Double(xPosition-2., meanY-2., 4., 4.);
 
                 // calculate median position
-                double medianY = mapValue(histogram.getMedian(), histogram.getMinValue(),
+                double medianY = GraphicsUtil.mapValue(histogram.getMedian(), histogram.getMinValue(),
                         histogram.getMaxValue(), histogramPlotRectangle.getMaxY(), histogramPlotRectangle.getMinY());
                 medianShape = new Ellipse2D.Double(xPosition-2., medianY-2., 4., 4.);
 
                 // calculate standard deviation range
-                double stdevRangeLower = mapValue(histogram.getMean() - histogram.getStDev(),
+                double stdevRangeLower = GraphicsUtil.mapValue(histogram.getMean() - histogram.getStDev(),
                         histogram.getMinValue(), histogram.getMaxValue(), histogramPlotRectangle.getMaxY(),
                         histogramPlotRectangle.getMinY());
-                double stdevRangeUpper = mapValue(histogram.getMean() + histogram.getStDev(),
+                double stdevRangeUpper = GraphicsUtil.mapValue(histogram.getMean() + histogram.getStDev(),
                         histogram.getMinValue(), histogram.getMaxValue(), histogramPlotRectangle.getMaxY(),
                         histogramPlotRectangle.getMinY());
                 stdevRangeShape = new Line2D.Double(xPosition, stdevRangeLower, xPosition, stdevRangeUpper);
 
                 // calculate IQR
-                double IQRLower = mapValue(histogram.getPercentile25(), histogram.getMinValue(),
+                double IQRLower = GraphicsUtil.mapValue(histogram.getPercentile25(), histogram.getMinValue(),
                         histogram.getMaxValue(), histogramPlotRectangle.getMaxY(), histogramPlotRectangle.getMinY());
-                double IQRUpper = mapValue(histogram.getPercentile75(), histogram.getMinValue(),
+                double IQRUpper = GraphicsUtil.mapValue(histogram.getPercentile75(), histogram.getMinValue(),
                         histogram.getMaxValue(), histogramPlotRectangle.getMaxY(), histogramPlotRectangle.getMinY());
                 IQRShape = new Line2D.Double(xPosition, IQRLower, xPosition, IQRUpper);
 
@@ -516,28 +514,28 @@ public class HistogramPanel extends JComponent implements ComponentListener, Mou
                     xPosition = summaryStatsRectangle.getMaxX() - ((summaryStatsRectangle.getMaxX() - summaryStatsRectangle.getMinX()) / 3.);
 
                     // calculate mean position
-                    double highlightMeanY = mapValue(highlightHistogram.getMean(), histogram.getMinValue(),
+                    double highlightMeanY = GraphicsUtil.mapValue(highlightHistogram.getMean(), histogram.getMinValue(),
                             histogram.getMaxValue(), histogramPlotRectangle.getMaxY(), histogramPlotRectangle.getMinY());
                     highlightMeanShape = new Ellipse2D.Double(xPosition-2., highlightMeanY-2., 4., 4.);
 
                     // calculate median position
-                    double highlightMedianY = mapValue(highlightHistogram.getMedian(), histogram.getMinValue(),
+                    double highlightMedianY = GraphicsUtil.mapValue(highlightHistogram.getMedian(), histogram.getMinValue(),
                             histogram.getMaxValue(), histogramPlotRectangle.getMaxY(), histogramPlotRectangle.getMinY());
                     highlightMedianShape = new Ellipse2D.Double(xPosition-2., highlightMedianY-2., 4., 4.);
 
                     // calculate standard deviation range
-                    double highlightStdevRangeLower = mapValue(highlightHistogram.getMean() - highlightHistogram.getStDev(),
+                    double highlightStdevRangeLower = GraphicsUtil.mapValue(highlightHistogram.getMean() - highlightHistogram.getStDev(),
                             histogram.getMinValue(), histogram.getMaxValue(), histogramPlotRectangle.getMaxY(),
                             histogramPlotRectangle.getMinY());
-                    double highlightStdevRangeUpper = mapValue(highlightHistogram.getMean() + highlightHistogram.getStDev(),
+                    double highlightStdevRangeUpper = GraphicsUtil.mapValue(highlightHistogram.getMean() + highlightHistogram.getStDev(),
                             histogram.getMinValue(), histogram.getMaxValue(), histogramPlotRectangle.getMaxY(),
                             histogramPlotRectangle.getMinY());
                     highlightStdevRangeShape = new Line2D.Double(xPosition, highlightStdevRangeLower, xPosition, highlightStdevRangeUpper);
 
                     // calculate IQR
-                    double highlightIQRLower = mapValue(highlightHistogram.getPercentile25(), histogram.getMinValue(),
+                    double highlightIQRLower = GraphicsUtil.mapValue(highlightHistogram.getPercentile25(), histogram.getMinValue(),
                             histogram.getMaxValue(), histogramPlotRectangle.getMaxY(), histogramPlotRectangle.getMinY());
-                    double highlightIQRUpper = mapValue(highlightHistogram.getPercentile75(), histogram.getMinValue(),
+                    double highlightIQRUpper = GraphicsUtil.mapValue(highlightHistogram.getPercentile75(), histogram.getMinValue(),
                             histogram.getMaxValue(), histogramPlotRectangle.getMaxY(), histogramPlotRectangle.getMinY());
                     highlightIQRShape = new Line2D.Double(xPosition, highlightIQRLower, xPosition, highlightIQRUpper);
                 }
