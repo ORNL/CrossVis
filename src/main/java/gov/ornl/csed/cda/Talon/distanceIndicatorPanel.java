@@ -18,7 +18,7 @@ public class DistanceIndicatorPanel extends JComponent{
     private Double upperQuantile;
     private Double medianDistance;
     private Double lowerQuantile;
-    private int tickMarksize = 5;
+    private int tickMarksize = 3;
     private int tickMarkSpacing;
 
     // ========== CONSTRUCTOR ==========
