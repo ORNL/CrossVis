@@ -174,7 +174,7 @@ public class SegmentedSeries  {
 
         // Initialize visual distance indicator panel
         distanceIndicatorPanel = new DistanceIndicatorPanel();
-        distanceIndicatorPanel.setPreferredSize(new Dimension(15, frame.getHeight()));
+        distanceIndicatorPanel.setPreferredSize(new Dimension(15, segmentPanelScroller.getHeight()));
 
         // Create new panel for combobox and initialize
         topPanel = new JPanel();

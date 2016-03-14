@@ -6,28 +6,31 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.ceil;
 
 /**
  * Created by whw on 3/9/16.
  */
-public class DistanceIndicatorPanel extends JComponent implements MouseListener {
+public class DistanceIndicatorPanel extends JComponent implements MouseMotionListener {
     // ========== CLASS FIELDS ==========
     private TreeMap<Double, Double> segmentDistanceMap;
-    private Double upperQuantile;
-    private Double medianDistance;
-    private Double lowerQuantile;
-    private int tickMarksize = 3;
+    private double max;
+    private double upperQuantile;
+    private double medianDistance;
+    private double lowerQuantile;
+    private int tickMarksize = 5;
     private int tickMarkSpacing;
-    private HashMap <Integer, Map.Entry<Double, Double>> displayedDistances;
+    private HashMap <Integer, Map.Entry<Double, Double>> displayedDistances = new HashMap<>();
 
     // ========== CONSTRUCTOR ==========
     public DistanceIndicatorPanel () {
-
+        addMouseMotionListener(this);
     }
 
 
@@ -36,7 +39,10 @@ public class DistanceIndicatorPanel extends JComponent implements MouseListener 
     public void setDistanceMap(TreeMap<Double, Double> segmentDistanceMap) {
         this.segmentDistanceMap = segmentDistanceMap;
         setStats(segmentDistanceMap);
-        displayedDistances.clear();
+        max = findMaxDistance(segmentDistanceMap);
+        if (displayedDistances != null && !displayedDistances.isEmpty()) {
+            displayedDistances.clear();
+        }
         repaint();
     }
 
@@ -76,6 +82,7 @@ public class DistanceIndicatorPanel extends JComponent implements MouseListener 
             int count = 1;
 
             double upperBound = upperQuantile + (upperQuantile-lowerQuantile)*1.5;
+            upperBound = (upperBound > max) ? max : upperBound;
             double lowerBound = lowerQuantile - (upperQuantile-lowerQuantile)*1.5;
             lowerBound = (lowerBound < 0) ? 0 : lowerBound;
 
@@ -84,26 +91,27 @@ public class DistanceIndicatorPanel extends JComponent implements MouseListener 
             // In order to print a tick mark per level tickMarkSpacing ≥ tickMarkSize
             if (tickMarkSpacing < tickMarksize) {
 
+                System.out.println("screen size = " + this.getHeight() + " and  " + segmentDistanceMap.size() + " elements");
                 tickMarkSpacing = tickMarksize;
-                double max = 0;
-                double maxKey = 0;
+                double max = medianDistance;
+                Map.Entry<Double, Double> me = segmentDistanceMap.firstEntry();
                 int combine = 1;
 
                 // TODO: Must combine multiple build height "distances" into a single tick mark. Will probably choose to do maximum magnitude from average distance
                 for (Map.Entry<Double, Double> entry : segmentDistanceMap.entrySet()) {
                     if (abs(max) < abs(medianDistance - entry.getValue())) {
                         max = entry.getValue();
-                        maxKey = entry.getKey();
+                        me = entry;
                     }
 
-                    if (combine % (segmentDistanceMap.size()/this.getHeight()) != 0) {
+                    if (combine % ceil(segmentDistanceMap.size()/this.getHeight()*tickMarksize) != 0) {
                         combine++;
                         continue;
                     }
 
-                    g2.setColor(getColor(medianDistance, lowerBound, upperBound, entry.getValue()));
+                    g2.setColor(getColor(medianDistance, lowerBound, upperBound, me.getValue()));
 
-                    displayedDistances.put(this.getHeight() - tickMarkSpacing*count, segmentDistanceMap.ceilingEntry(maxKey));
+                    displayedDistances.put(this.getHeight() - tickMarkSpacing*count, me);
 
                     g2.fillRect(0, this.getHeight() - tickMarkSpacing*count, 15, tickMarksize);
                     max = 0;
@@ -171,29 +179,17 @@ public class DistanceIndicatorPanel extends JComponent implements MouseListener 
     }
 
     @Override
-    public void mouseClicked(MouseEvent e) {
+    public void mouseDragged(MouseEvent e) {
 
     }
 
     @Override
-    public void mousePressed(MouseEvent e) {
-
-    }
-
-    @Override
-    public void mouseReleased(MouseEvent e) {
-
-    }
-
-    @Override
-    public void mouseEntered(MouseEvent e) {
+    public void mouseMoved(MouseEvent e) {
         setToolTipText("");
 
-        int location = e.getY();
-    }
-
-    @Override
-    public void mouseExited(MouseEvent e) {
-
+        int location = e.getYOnScreen();
+        if (displayedDistances.containsKey(location)) {
+            setToolTipText("Build Height: " + displayedDistances.get(location).getKey() + "\nDistance: " + displayedDistances.get(location).getValue());
+        }
     }
 }
