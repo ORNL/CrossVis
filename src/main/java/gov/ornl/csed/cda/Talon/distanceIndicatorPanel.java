@@ -1,5 +1,7 @@
 package gov.ornl.csed.cda.Talon;
 
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
+
 import javax.swing.*;
 import java.awt.*;
 import java.util.Map;
@@ -13,9 +15,10 @@ import static java.lang.Math.abs;
 public class DistanceIndicatorPanel extends JComponent{
     // ========== CLASS FIELDS ==========
     private TreeMap<Double, Double> segmentDistanceMap;
-    private Double maxDistance;
-    private Double averageDistance;
-    private int tickMarksize = 3;
+    private Double upperQuantile;
+    private Double medianDistance;
+    private Double lowerQuantile;
+    private int tickMarksize = 5;
     private int tickMarkSpacing;
 
     // ========== CONSTRUCTOR ==========
@@ -23,25 +26,27 @@ public class DistanceIndicatorPanel extends JComponent{
 
     }
 
+
     // ========== METHODS ==========
     // Getters/Setters
     public void setDistanceMap(TreeMap<Double, Double> segmentDistanceMap) {
         this.segmentDistanceMap = segmentDistanceMap;
-        maxDistance = findMaxDistance(segmentDistanceMap);
-        averageDistance = findAveragedDistance(segmentDistanceMap);
+        upperQuantile = findMaxDistance(segmentDistanceMap);
+        setStats(segmentDistanceMap);
         repaint();
     }
 
-    private Double findAveragedDistance(TreeMap<Double, Double> segmentDistanceMap) {
-        Double temp = 0.0;
+    private void setStats(TreeMap<Double, Double> segmentDistanceMap) {
+        DescriptiveStatistics stats = new DescriptiveStatistics();
+
         for (Map.Entry<Double, Double> entry : segmentDistanceMap.entrySet()) {
-            if (entry.getValue() == maxDistance) {
-                continue;
-            }
-            temp += entry.getValue();
+            stats.addValue(entry.getValue());
         }
-        temp /= segmentDistanceMap.size()-1;
-        return temp;
+
+        upperQuantile = stats.getPercentile(75);
+        medianDistance = stats.getPercentile(50);
+        lowerQuantile = stats.getPercentile(25);
+
     }
 
     private Double findMaxDistance(TreeMap<Double, Double> segmentDistanceMap) {
@@ -66,8 +71,13 @@ public class DistanceIndicatorPanel extends JComponent{
         g2.setColor(getBackground());
         g2.fillRect(0, 0, getWidth(), getHeight());
 
+
         if (segmentDistanceMap != null && !segmentDistanceMap.isEmpty()) {
             int count = 1;
+
+            double upperBound = upperQuantile + (upperQuantile-lowerQuantile)*1.5;
+            double lowerBound = lowerQuantile - (upperQuantile-lowerQuantile)*1.5;
+            lowerBound = (lowerBound < 0) ? 0 : lowerBound;
 
             tickMarkSpacing = this.getHeight()/segmentDistanceMap.size();
 
@@ -80,22 +90,14 @@ public class DistanceIndicatorPanel extends JComponent{
 
                 // TODO: Must combine multiple build height "distances" into a single tick mark. Will probably choose to do maximum magnitude from average distance
                 for (Map.Entry<Double, Double> entry : segmentDistanceMap.entrySet()) {
-                    max = (abs(max) < abs(averageDistance - entry.getValue())) ? entry.getValue() : max;
+                    max = (abs(max) < abs(medianDistance - entry.getValue())) ? entry.getValue() : max;
 
                     if (combine % (segmentDistanceMap.size()/this.getHeight()) != 0) {
                         combine++;
                         continue;
                     }
 
-                    if (max < averageDistance) {
-                        g2.setColor(new Color(0, 1, 0, (float) ((averageDistance - max) / averageDistance)));
-                    } else {
-                        if (max > maxDistance) {
-                            g2.setColor(new Color(1, 0, 0, 0));
-                        } else {
-                            g2.setColor(new Color(1, 0, 0, (float) ((max - averageDistance) / (maxDistance - averageDistance))));
-                        }
-                    }
+                    g2.setColor(getColor(medianDistance, lowerBound, upperBound, entry.getValue()));
 
                     g2.fillRect(0, this.getHeight() - tickMarkSpacing*count, 15, tickMarksize);
                     max = 0;
@@ -107,15 +109,7 @@ public class DistanceIndicatorPanel extends JComponent{
 
                 for (Map.Entry<Double, Double> entry : segmentDistanceMap.entrySet()) {
 
-                    if (entry.getValue() < averageDistance) {
-                        g2.setColor(new Color(0, 1, 0, (float) ((averageDistance - entry.getValue()) / averageDistance)));
-                    } else {
-                        if (entry.getValue() > maxDistance) {
-                            g2.setColor(new Color(1, 0, 0, 0));
-                        } else {
-                            g2.setColor(new Color(1, 0, 0, (float) ((entry.getValue() - averageDistance) / (maxDistance - averageDistance))));
-                        }
-                    }
+                    g2.setColor(getColor(medianDistance, lowerBound, upperBound, entry.getValue()));
 
                     g2.fillRect(0, this.getHeight() - tickMarkSpacing*count, 15, tickMarksize);
                     count++;
@@ -123,5 +117,48 @@ public class DistanceIndicatorPanel extends JComponent{
 
             }
         }
+    }
+
+    public static Color getColor(double midpoint, double lowerThreshold, double upperThreshold, double value) {
+        Color c;
+        double norm;
+
+        if (value == Double.NaN) {
+            return null;
+        }
+
+        if (value > midpoint) {
+            Color c0 = new Color(211, 37, 37); // high pos. corr.
+            Color c1 = new Color(240, 240, 240); // low pos. corr.
+
+            value = (value > upperThreshold) ? upperThreshold : value;
+            norm = abs(value - midpoint) / abs(upperThreshold - midpoint);
+
+            int r = c0.getRed()
+                    + (int) (norm * (c1.getRed() - c0.getRed()));
+            int green = c0.getGreen()
+                    + (int) (norm * (c1.getGreen() - c0.getGreen()));
+            int b = c0.getBlue()
+                    + (int) (norm * (c1.getBlue() - c0.getBlue()));
+            c = new Color(r, green, b);
+
+        } else {
+            Color c0 = new Color(44, 110, 211/* 177 */); // high neg. corr.
+            Color c1 = new Color(240, 240, 240);// low neg. corr.
+
+            value = (value < lowerThreshold) ? lowerThreshold : value;
+            norm = abs(value - midpoint) / abs(lowerThreshold - midpoint);
+
+            int r = c0.getRed()
+                    + (int) (norm * (c1.getRed() - c0.getRed()));
+            int green = c0.getGreen()
+                    + (int) (norm * (c1.getGreen() - c0.getGreen()));
+            int b = c0.getBlue()
+                    + (int) (norm * (c1.getBlue() - c0.getBlue()));
+            c = new Color(r, green, b);
+
+        }
+
+        return c;
     }
 }
