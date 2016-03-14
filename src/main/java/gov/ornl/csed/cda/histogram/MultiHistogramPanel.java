@@ -37,6 +37,8 @@ public class MultiHistogramPanel extends JPanel {
     private Color highlightBinFillColor = Color.darkGray;
     private Color highlightBinLineColor = Color.black;
 
+    private int binCount = 20;
+
     // panels
     ArrayList<ViewInfo> viewInfoList = new ArrayList<>();
 
@@ -54,6 +56,18 @@ public class MultiHistogramPanel extends JPanel {
         }
 
         initialize();
+    }
+
+    public void setBinCount(int binCount) {
+        if (this.binCount != binCount) {
+            for (ViewInfo viewInfo : viewInfoList) {
+                viewInfo.histogramPanel.setBinCount(binCount);
+            }
+        }
+    }
+
+    public int getBinCount() {
+        return binCount;
     }
 
     private void initialize() {
@@ -111,7 +125,7 @@ public class MultiHistogramPanel extends JPanel {
             }
         });
 
-        JButton settingsButton = new JButton();
+//        JButton settingsButton = new JButton();
 
         JPanel buttonPanel = new JPanel();
         buttonPanel.setBackground(getBackground());
@@ -119,7 +133,7 @@ public class MultiHistogramPanel extends JPanel {
         buttonPanel.setLayout(new GridLayout(4, 0, 0, 0));
         buttonPanel.add(moveUpButton);
         buttonPanel.add(removeButton);
-        buttonPanel.add(settingsButton);
+//        buttonPanel.add(settingsButton);
         buttonPanel.add(moveDownButton);
 
         if (fontAwesomeFont != null) {
@@ -130,13 +144,13 @@ public class MultiHistogramPanel extends JPanel {
             moveUpButton.setText("\uf077");
             removeButton.setFont(fontAwesomeFont);
             removeButton.setText("\uf1f8");
-            settingsButton.setFont(fontAwesomeFont);
-            settingsButton.setText("\uf085");
+//            settingsButton.setFont(fontAwesomeFont);
+//            settingsButton.setText("\uf085");
         } else {
             moveUpButton.setText("Move Up");
             moveDownButton.setText("Move Down");
             removeButton.setText("Remove");
-            settingsButton.setText("Settings");
+//            settingsButton.setText("Settings");
         }
 
         return buttonPanel;
