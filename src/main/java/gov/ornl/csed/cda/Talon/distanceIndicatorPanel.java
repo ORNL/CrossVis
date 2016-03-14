@@ -4,6 +4,9 @@ import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -12,7 +15,7 @@ import static java.lang.Math.abs;
 /**
  * Created by whw on 3/9/16.
  */
-public class DistanceIndicatorPanel extends JComponent {
+public class DistanceIndicatorPanel extends JComponent implements MouseListener {
     // ========== CLASS FIELDS ==========
     private TreeMap<Double, Double> segmentDistanceMap;
     private Double upperQuantile;
@@ -20,6 +23,7 @@ public class DistanceIndicatorPanel extends JComponent {
     private Double lowerQuantile;
     private int tickMarksize = 3;
     private int tickMarkSpacing;
+    private HashMap <Integer, Map.Entry<Double, Double>> displayedDistances;
 
     // ========== CONSTRUCTOR ==========
     public DistanceIndicatorPanel () {
@@ -31,8 +35,8 @@ public class DistanceIndicatorPanel extends JComponent {
     // Getters/Setters
     public void setDistanceMap(TreeMap<Double, Double> segmentDistanceMap) {
         this.segmentDistanceMap = segmentDistanceMap;
-        upperQuantile = findMaxDistance(segmentDistanceMap);
         setStats(segmentDistanceMap);
+        displayedDistances.clear();
         repaint();
     }
 
@@ -51,12 +55,8 @@ public class DistanceIndicatorPanel extends JComponent {
 
     private Double findMaxDistance(TreeMap<Double, Double> segmentDistanceMap) {
         Double temp = 0.0;
-        Double temp2 = 0.0;
         for (Map.Entry<Double, Double> entry : segmentDistanceMap.entrySet()) {
             temp = (entry.getValue() > temp) ? entry.getValue() : temp;
-        }
-        for (Map.Entry<Double, Double> entry : segmentDistanceMap.entrySet()) {
-            temp2 = (entry.getValue() > temp2 && entry.getValue() != temp) ? entry.getValue() : temp2;
         }
         System.out.println("max distance is: " + temp);
         return temp;
@@ -86,11 +86,15 @@ public class DistanceIndicatorPanel extends JComponent {
 
                 tickMarkSpacing = tickMarksize;
                 double max = 0;
+                double maxKey = 0;
                 int combine = 1;
 
                 // TODO: Must combine multiple build height "distances" into a single tick mark. Will probably choose to do maximum magnitude from average distance
                 for (Map.Entry<Double, Double> entry : segmentDistanceMap.entrySet()) {
-                    max = (abs(max) < abs(medianDistance - entry.getValue())) ? entry.getValue() : max;
+                    if (abs(max) < abs(medianDistance - entry.getValue())) {
+                        max = entry.getValue();
+                        maxKey = entry.getKey();
+                    }
 
                     if (combine % (segmentDistanceMap.size()/this.getHeight()) != 0) {
                         combine++;
@@ -98,6 +102,8 @@ public class DistanceIndicatorPanel extends JComponent {
                     }
 
                     g2.setColor(getColor(medianDistance, lowerBound, upperBound, entry.getValue()));
+
+                    displayedDistances.put(this.getHeight() - tickMarkSpacing*count, segmentDistanceMap.ceilingEntry(maxKey));
 
                     g2.fillRect(0, this.getHeight() - tickMarkSpacing*count, 15, tickMarksize);
                     max = 0;
@@ -110,6 +116,8 @@ public class DistanceIndicatorPanel extends JComponent {
                 for (Map.Entry<Double, Double> entry : segmentDistanceMap.entrySet()) {
 
                     g2.setColor(getColor(medianDistance, lowerBound, upperBound, entry.getValue()));
+
+                    displayedDistances.put(this.getHeight() - tickMarkSpacing*count, entry);
 
                     g2.fillRect(0, this.getHeight() - tickMarkSpacing*count, 15, tickMarksize);
                     count++;
@@ -160,5 +168,32 @@ public class DistanceIndicatorPanel extends JComponent {
         }
 
         return c;
+    }
+
+    @Override
+    public void mouseClicked(MouseEvent e) {
+
+    }
+
+    @Override
+    public void mousePressed(MouseEvent e) {
+
+    }
+
+    @Override
+    public void mouseReleased(MouseEvent e) {
+
+    }
+
+    @Override
+    public void mouseEntered(MouseEvent e) {
+        setToolTipText("");
+
+        int location = e.getY();
+    }
+
+    @Override
+    public void mouseExited(MouseEvent e) {
+
     }
 }
