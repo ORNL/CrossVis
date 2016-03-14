@@ -1,6 +1,7 @@
 package gov.ornl.csed.cda.timevis;
 
 import gov.ornl.csed.cda.util.GraphicsUtil;
+import org.apache.commons.math3.stat.descriptive.StatisticalSummary;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -445,6 +446,10 @@ public class TimeSeriesPanel extends JComponent implements ComponentListener, Mo
             if (numPlotUnits > 0) {
                 summaryInfoArray = new TimeSeriesSummaryInfo[numPlotUnits];
 
+                // the overall min and max value for all statistics
+                double overallMaxValue = 0.;
+                double overallMinValue = 0.;
+
                 for (int i = 0; i < numPlotUnits; i++) {
                     // determine the start and end time instants for the current time unit
                     Instant unitStartInstant = startInstant.plusMillis(i * plotUnitDurationMillis);
@@ -467,40 +472,50 @@ public class TimeSeriesPanel extends JComponent implements ComponentListener, Mo
                         summaryInfo.minValue = stats.getMin();
                         summaryInfo.standardDeviationValue = stats.getStandardDeviation();
 
+                        summaryInfoArray[i] = summaryInfo;
+
+                        // find overall min and max values
+                        double currentMinValue = Math.min(summaryInfo.minValue, summaryInfo.meanValue - summaryInfo.standardDeviationValue);
+                        double currentMaxValue = Math.max(summaryInfo.maxValue, summaryInfo.meanValue + summaryInfo.standardDeviationValue);
+                        if (i == 0) {
+                            overallMinValue = currentMinValue;
+                            overallMaxValue = currentMaxValue;
+                        } else {
+                            overallMinValue = Math.min(overallMinValue, currentMinValue);
+                            overallMaxValue = Math.max(overallMaxValue, currentMaxValue);
+                        }
+                    }
+                }
+
+                for (int i = 0; i < summaryInfoArray.length; i++) {
+                    TimeSeriesSummaryInfo summaryInfo = summaryInfoArray[i];
+                    if (summaryInfo != null) {
                         // calculate mean point
-                        int x = (int) ((i * plotUnitWidth) + (plotUnitWidth/2.));
-//                        double norm = (stats.getMean() - timeSeries.getMinValue()) / (timeSeries.getMaxValue() - timeSeries.getMinValue());
-//                        double yOffset = norm * (plotRectangle.getHeight());
-//                        double y = (plotRectangle.getHeight() - yOffset);
-                        double y = GraphicsUtil.mapValue(stats.getMean(), timeSeries.getMinValue(),
-                                timeSeries.getMaxValue(), plotRectangle.height, 0.);
+                        int x = (int) ((i * plotUnitWidth) + (plotUnitWidth / 2.));
+                        //                        double norm = (stats.getMean() - timeSeries.getMinValue()) / (timeSeries.getMaxValue() - timeSeries.getMinValue());
+                        //                        double yOffset = norm * (plotRectangle.getHeight());
+                        //                        double y = (plotRectangle.getHeight() - yOffset);
+                        double y = GraphicsUtil.mapValue(summaryInfo.meanValue, overallMinValue,
+                                overallMaxValue, plotRectangle.height, 0.);
                         summaryInfo.meanPoint = new Point2D.Double(x, y);
 
                         // calculate max value point
-                        y = GraphicsUtil.mapValue(stats.getMax(), timeSeries.getMinValue(),
-                                timeSeries.getMaxValue(), plotRectangle.height, 0.);
+                        y = GraphicsUtil.mapValue(summaryInfo.maxValue, overallMinValue,
+                                overallMaxValue, plotRectangle.height, 0.);
                         summaryInfo.maxPoint = new Point2D.Double(x, y);
 
                         // calculate min value point
-                        y = GraphicsUtil.mapValue(stats.getMin(), timeSeries.getMinValue(),
-                                timeSeries.getMaxValue(), plotRectangle.height, 0.);
+                        y = GraphicsUtil.mapValue(summaryInfo.minValue, overallMinValue,
+                                overallMaxValue, plotRectangle.height, 0.);
                         summaryInfo.minPoint = new Point2D.Double(x, y);
 
                         // calculate standard deviation upper and lower range points
-                        y = GraphicsUtil.mapValue(stats.getMean() + stats.getStandardDeviation(), timeSeries.getMinValue(),
-                                timeSeries.getMaxValue(), plotRectangle.height, 0.);
-                        if (y > plotRectangle.height) {
-                            y = plotRectangle.height;
-                        }
+                        y = GraphicsUtil.mapValue(summaryInfo.meanValue + summaryInfo.standardDeviationValue, overallMinValue,
+                                overallMaxValue, plotRectangle.height, 0.);
                         summaryInfo.upperStandardDeviationRangePoint = new Point2D.Double(x, y);
-                        y = GraphicsUtil.mapValue(stats.getMean() - stats.getStandardDeviation(), timeSeries.getMinValue(),
-                                timeSeries.getMaxValue(), plotRectangle.height, 0.);
-                        if (y < 0.) {
-                            y = 0.;
-                        }
+                        y = GraphicsUtil.mapValue(summaryInfo.meanValue - summaryInfo.standardDeviationValue, overallMinValue,
+                                overallMaxValue, plotRectangle.height, 0.);
                         summaryInfo.lowerStandardDeviationRangePoint = new Point2D.Double(x, y);
-
-                        summaryInfoArray[i] = summaryInfo;
                     }
                 }
             }

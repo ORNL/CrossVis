@@ -243,7 +243,7 @@ public class MultiViewPanel extends JPanel {
             }
         });
 
-        JButton settingsButton = new JButton();
+//        JButton settingsButton = new JButton();
 
         JPanel buttonPanel = new JPanel();
         buttonPanel.setBackground(Color.WHITE);
@@ -251,7 +251,7 @@ public class MultiViewPanel extends JPanel {
         buttonPanel.setLayout(new GridLayout(4, 0, 0, 0));
         buttonPanel.add(moveUpButton);
         buttonPanel.add(removeButton);
-        buttonPanel.add(settingsButton);
+//        buttonPanel.add(settingsButton);
         buttonPanel.add(moveDownButton);
 
         if (fontAwesomeFont != null) {
@@ -262,13 +262,13 @@ public class MultiViewPanel extends JPanel {
             moveUpButton.setText("\uf077");
             removeButton.setFont(fontAwesomeFont);
             removeButton.setText("\uf1f8");
-            settingsButton.setFont(fontAwesomeFont);
-            settingsButton.setText("\uf085");
+//            settingsButton.setFont(fontAwesomeFont);
+//            settingsButton.setText("\uf085");
         } else {
             moveUpButton.setText("Move Up");
             moveDownButton.setText("Move Down");
             removeButton.setText("Remove");
-            settingsButton.setText("Settings");
+//            settingsButton.setText("Settings");
         }
 
         return buttonPanel;
