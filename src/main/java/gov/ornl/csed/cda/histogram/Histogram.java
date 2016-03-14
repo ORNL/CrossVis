@@ -147,6 +147,7 @@ public class Histogram {
         distributionStats = new EmpiricalDistribution(binCount);
         distributionStats.load(values);
         descriptiveStats = new DescriptiveStatistics(values);
+
     }
 
     public void layoutAxis(int width, int height) {
