@@ -35,6 +35,7 @@ public class MultiViewPanel extends JPanel {
 
     private int plotHeight;
     private int plotUnitWidth = 1;
+    private int binCount = 20;
     private Box panelBox;
     private Font fontAwesomeFont = null;
 
@@ -242,7 +243,7 @@ public class MultiViewPanel extends JPanel {
             }
         });
 
-        JButton settingsButton = new JButton();
+//        JButton settingsButton = new JButton();
 
         JPanel buttonPanel = new JPanel();
         buttonPanel.setBackground(Color.WHITE);
@@ -250,7 +251,7 @@ public class MultiViewPanel extends JPanel {
         buttonPanel.setLayout(new GridLayout(4, 0, 0, 0));
         buttonPanel.add(moveUpButton);
         buttonPanel.add(removeButton);
-        buttonPanel.add(settingsButton);
+//        buttonPanel.add(settingsButton);
         buttonPanel.add(moveDownButton);
 
         if (fontAwesomeFont != null) {
@@ -261,13 +262,13 @@ public class MultiViewPanel extends JPanel {
             moveUpButton.setText("\uf077");
             removeButton.setFont(fontAwesomeFont);
             removeButton.setText("\uf1f8");
-            settingsButton.setFont(fontAwesomeFont);
-            settingsButton.setText("\uf085");
+//            settingsButton.setFont(fontAwesomeFont);
+//            settingsButton.setText("\uf085");
         } else {
             moveUpButton.setText("Move Up");
             moveDownButton.setText("Move Down");
             removeButton.setText("Remove");
-            settingsButton.setText("Settings");
+//            settingsButton.setText("Settings");
         }
 
         return buttonPanel;
@@ -327,6 +328,7 @@ public class MultiViewPanel extends JPanel {
         viewInfo.buttonPanel = createButtonPanel(viewInfo);
 
         viewInfo.detailTimeSeriesPanel = new TimeSeriesPanel(1, detailChronoUnit, timeSeriesDisplayOption);
+        viewInfo.detailTimeSeriesPanel.setPlotDisplayOption(TimeSeriesPanel.PlotDisplayOption.STEPPED_LINE);
         if (groupInfo.useCommonTimeScale) {
             viewInfo.detailTimeSeriesPanel.setTimeSeries(timeSeries, groupInfo.startInstant, groupInfo.endInstant);
         } else {
@@ -338,12 +340,14 @@ public class MultiViewPanel extends JPanel {
         viewInfo.detailsTimeSeriesPanelScrollPane.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
 
         viewInfo.detailHistogramPanel = new HistogramPanel(HistogramPanel.ORIENTATION.VERTICAL, HistogramPanel.STATISTICS_MODE.MEAN_BASED);
+        viewInfo.detailHistogramPanel.setBinCount(binCount);
         viewInfo.detailHistogramPanel.setBackground(Color.white);
         viewInfo.detailHistogramPanel.setPreferredSize(new Dimension(50, 80));
 
         viewInfo.overviewTimeSeriesPanel = new TimeSeriesPanel(1, timeSeriesDisplayOption);
         viewInfo.overviewTimeSeriesPanel.setShowTimeRangeLabels(false);
         viewInfo.overviewTimeSeriesPanel.setBackground(Color.white);
+        viewInfo.overviewTimeSeriesPanel.setPlotDisplayOption(TimeSeriesPanel.PlotDisplayOption.LINE);
         if (groupInfo.useCommonTimeScale) {
             viewInfo.overviewTimeSeriesPanel.setTimeSeries(timeSeries, groupInfo.startInstant, groupInfo.endInstant);
         } else {
@@ -422,6 +426,7 @@ public class MultiViewPanel extends JPanel {
         });
 
         viewInfo.overviewHistogramPanel = new HistogramPanel(HistogramPanel.ORIENTATION.HORIZONTAL, HistogramPanel.STATISTICS_MODE.MEAN_BASED);
+        viewInfo.overviewHistogramPanel.setBinCount(binCount);
 
         ArrayList<TimeSeriesRecord> records = timeSeries.getAllRecords();
         double values[] = new double[records.size()];
@@ -432,7 +437,7 @@ public class MultiViewPanel extends JPanel {
             }
         }
 
-        Histogram histogram = new Histogram(timeSeries.getName(), values, viewInfo.overviewHistogramPanel.getBinCount());
+        Histogram histogram = new Histogram(timeSeries.getName(), values, binCount);
         viewInfo.overviewHistogramPanel.setBackground(Color.white);
         viewInfo.overviewHistogramPanel.setHistogram(histogram);
 
@@ -455,14 +460,21 @@ public class MultiViewPanel extends JPanel {
         viewInfo.viewPanel.add(viewInfo.buttonPanel, BorderLayout.WEST);
         viewInfo.viewPanel.setBorder(BorderFactory.createTitledBorder(timeSeries.getName()));
 
-//        if (groupInfo.syncScrollBars && (groupInfo.viewInfoList.size() > 1)) {
-//            ViewInfo firstView = groupInfo.viewInfoList.get(0);
-//            log.debug("first view scrollbar value is " + firstView.detailsTimeSeriesPanelScrollPane.getHorizontalScrollBar().getModel().getValue());
-//            viewInfo.detailsTimeSeriesPanelScrollPane.getHorizontalScrollBar().getModel().setValue(firstView.detailsTimeSeriesPanelScrollPane.getHorizontalScrollBar().getModel().getValue());
-//        }
-
         panelBox.add(viewInfo.viewPanel);
         revalidate();
+    }
+
+    public int getBinCount() {
+        return binCount;
+    }
+
+    public void setBinCount(int binCount) {
+        if (this.binCount != binCount) {
+            for (ViewInfo viewInfo : viewInfoList) {
+                viewInfo.detailHistogramPanel.setBinCount(binCount);
+                viewInfo.overviewHistogramPanel.setBinCount(binCount);
+            }
+        }
     }
 
     public void drawToImage(File imageFile) throws IOException {

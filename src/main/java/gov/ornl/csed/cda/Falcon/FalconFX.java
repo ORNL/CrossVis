@@ -4,7 +4,6 @@ package gov.ornl.csed.cda.Falcon;/**
 
 import gov.ornl.csed.cda.histogram.Histogram;
 import gov.ornl.csed.cda.histogram.MultiHistogramPanel;
-import gov.ornl.csed.cda.histogram.MultiHistogramPanelOld;
 import gov.ornl.csed.cda.timevis.MultiTimeSeriesPanel;
 import gov.ornl.csed.cda.timevis.TimeSeries;
 import gov.ornl.csed.cda.timevis.TimeSeriesPanel;
@@ -125,9 +124,11 @@ public class FalconFX extends Application {
     private ToggleButton multiViewSyncScrollbarsToggleButton;
     private ToggleButton multiViewShowOverviewToggleButton;
     private ToggleButton multiViewShowButtonsToggleButton;
+    private Spinner multipleViewHistogramBinSizeSpinner;
 
     // overview + detail panel
     private JPanel overviewDetailPanel;
+
 
     public static void main(String[] args) {
         launch(args);
@@ -889,6 +890,15 @@ public class FalconFX extends Application {
 
         hBox = new HBox();
         hBox.setAlignment(Pos.CENTER_LEFT);
+        multipleViewHistogramBinSizeSpinner = new Spinner(2, 200, multiViewPanel.getBinCount());
+        multipleViewHistogramBinSizeSpinner.setEditable(true);
+        multipleViewHistogramBinSizeSpinner.setPrefWidth(80.);
+        multipleViewHistogramBinSizeSpinner.valueProperty().addListener((obs, oldValue, newValue) -> multiViewPanel.setBinCount((Integer)newValue));
+        hBox.getChildren().addAll(new Label("Histogram Bin Count: "), multipleViewHistogramBinSizeSpinner);
+        settingsHBox.getChildren().add(hBox);
+
+        hBox = new HBox();
+        hBox.setAlignment(Pos.CENTER_LEFT);
         multipleViewDataColorPicker = new ColorPicker(dataColor);
         multipleViewDataColorPicker.setOnAction(new EventHandler<ActionEvent>() {
             @Override
@@ -1000,13 +1010,13 @@ public class FalconFX extends Application {
         hBox.getChildren().addAll(new Label("Plot Height: "), multipleHistogramPlotHeightSpinner);
         settingsHBox.getChildren().add(hBox);
 
-//        hBox = new HBox();
-//        hBox.setAlignment(Pos.CENTER_LEFT);
-//        multipleHistogramBinSizeSpinner = new Spinner(10, 100, multiHistogramPanel.getBinCount());
-//        multipleHistogramBinSizeSpinner.setEditable(true);
-//        multipleHistogramBinSizeSpinner.valueProperty().addListener((obs, oldValue, newValue) -> multiHistogramPanel.setBinCount((Integer)newValue));
-//        hBox.getChildren().addAll(new Label("Bin Count: "), multipleHistogramBinSizeSpinner);
-//        settingsHBox.getChildren().add(hBox);
+        hBox = new HBox();
+        hBox.setAlignment(Pos.CENTER_LEFT);
+        multipleHistogramBinSizeSpinner = new Spinner(2, 200, multiHistogramPanel.getBinCount());
+        multipleHistogramBinSizeSpinner.setEditable(true);
+        multipleHistogramBinSizeSpinner.valueProperty().addListener((obs, oldValue, newValue) -> multiHistogramPanel.setBinCount((Integer)newValue));
+        hBox.getChildren().addAll(new Label("Bin Count: "), multipleHistogramBinSizeSpinner);
+        settingsHBox.getChildren().add(hBox);
 
         Border border = BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(10,10,10,10), BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
         JScrollPane scroller = new JScrollPane(multiHistogramPanel);
@@ -1138,7 +1148,7 @@ public class FalconFX extends Application {
         detailsTimeSeriesPanel = new TimeSeriesPanel(2, ChronoUnit.SECONDS, TimeSeriesPanel.PlotDisplayOption.STEPPED_LINE);
         detailsTimeSeriesPanel.setBackground(java.awt.Color.white);
 
-        overviewTimeSeriesPanel = new TimeSeriesPanel(2, TimeSeriesPanel.PlotDisplayOption.STEPPED_LINE);
+        overviewTimeSeriesPanel = new TimeSeriesPanel(2, TimeSeriesPanel.PlotDisplayOption.LINE);
         overviewTimeSeriesPanel.setPreferredSize(new Dimension(1400, 100));
         overviewTimeSeriesPanel.setBackground(java.awt.Color.white);
         Border border = BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(2, 4, 2, 4), BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));

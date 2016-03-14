@@ -11,8 +11,11 @@ public class TimeSeriesSummaryInfo {
     Point2D meanPoint;
     Point2D maxPoint;
     Point2D minPoint;
+    Point2D upperStandardDeviationRangePoint;
+    Point2D lowerStandardDeviationRangePoint;
     double meanValue;
     double maxValue;
     double minValue;
+    double standardDeviationValue;
     int numSamples;
 }

@@ -1,5 +1,7 @@
 package gov.ornl.csed.cda.timevis;
 
+import gov.ornl.csed.cda.util.GraphicsUtil;
+import org.apache.commons.math3.stat.descriptive.StatisticalSummary;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,7 +53,7 @@ public class TimeSeriesPanel extends JComponent implements ComponentListener, Mo
     private int numPlotUnits = 0;
     private int plotUnitDurationMillis = 0;
 
-    private DateTimeFormatter dtFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.systemDefault());
+    private static DateTimeFormatter dtFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.systemDefault());
 
     private int hoverX;
     private Instant hoverInstant;
@@ -61,12 +63,11 @@ public class TimeSeriesPanel extends JComponent implements ComponentListener, Mo
     private PlotDisplayOption plotDisplayOption = PlotDisplayOption.POINT;
 
     private TreeMap<Instant, ArrayList<Point2D.Double>> plotPointMap = new TreeMap<>();
-//    private ArrayList<TimeSeriesSummaryInfo> summaryInfoList = new ArrayList<>();
     private TimeSeriesSummaryInfo summaryInfoArray[];
 
     private Color gridLineColor = new Color(230, 230, 230);
     private Color hoverLineColor = new Color(50, 50, 50, 100);
-    private Color unselectedRegionFillColor = new Color(220, 220, 220);
+    private Color unselectedRegionFillColor = new Color(240, 240, 240);
     private Color dataColor = new Color(80, 80, 130, 180);
     private Color rangeColor = new Color(140, 140, 160, 100);
 
@@ -74,7 +75,7 @@ public class TimeSeriesPanel extends JComponent implements ComponentListener, Mo
 
     private Instant startHighlightInstant;
     private Instant endHighlightInstant;
-    private Rectangle highlightRectangle;
+    private Rectangle2D.Double highlightRectangle;
 
     private boolean showTimeRangeLabels = true;
 
@@ -116,7 +117,7 @@ public class TimeSeriesPanel extends JComponent implements ComponentListener, Mo
                     TimeSeriesPanel detailsTimeSeriesPanel = new TimeSeriesPanel(plotUnitWidth, ChronoUnit.SECONDS, PlotDisplayOption.STEPPED_LINE);
                     detailsTimeSeriesPanel.setBackground(Color.white);
 
-                    TimeSeriesPanel overviewTimeSeriesPanel = new TimeSeriesPanel(plotUnitWidth, PlotDisplayOption.STEPPED_LINE);
+                    TimeSeriesPanel overviewTimeSeriesPanel = new TimeSeriesPanel(plotUnitWidth, PlotDisplayOption.LINE);
                     overviewTimeSeriesPanel.setPreferredSize(new Dimension(1000, 100));
                     overviewTimeSeriesPanel.setBackground(Color.white);
                     Border border = BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(10,10,10,10), BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
@@ -162,14 +163,16 @@ public class TimeSeriesPanel extends JComponent implements ComponentListener, Mo
                         public void adjustmentValueChanged(AdjustmentEvent e) {
                             JScrollBar scrollBar = (JScrollBar)e.getSource();
                             double scrollBarModelWidth = scrollBar.getModel().getMaximum() - scrollBar.getModel().getMinimum();
-                            double norm = (double)scrollBar.getModel().getValue() / scrollBarModelWidth;
 
+                            double norm = (double)scrollBar.getModel().getValue() / scrollBarModelWidth;
                             double deltaTime = norm * Duration.between(overviewTimeSeriesPanel.getStartInstant(), overviewTimeSeriesPanel.getEndInstant()).toMillis();
                             Instant startHighlightInstant = overviewTimeSeriesPanel.getStartInstant().plusMillis((long)deltaTime);
+
                             int scrollBarRight = scrollBar.getModel().getValue() + scrollBar.getModel().getExtent();
                             norm = 1. - (double) scrollBarRight / (double) scrollBarModelWidth;
                             deltaTime = norm * Duration.between(overviewTimeSeriesPanel.getStartInstant(), overviewTimeSeriesPanel.getEndInstant()).toMillis();
                             Instant endHighlightInstant = overviewTimeSeriesPanel.getEndInstant().minusMillis((long) deltaTime);
+
                             overviewTimeSeriesPanel.setHighlightRange(startHighlightInstant, endHighlightInstant);
                         }
                     });
@@ -358,19 +361,31 @@ public class TimeSeriesPanel extends JComponent implements ComponentListener, Mo
         }
 
         if (shrinkToFit) {
-            long deltaTimeMillis = Duration.between(startInstant, start).toMillis();
-            int summaryUnitIndex = (int) (deltaTimeMillis / plotUnitDurationMillis);
-            int highlightLeft = plotRectangle.x + (summaryUnitIndex * plotUnitWidth);
-            deltaTimeMillis = Duration.between(startInstant, end).toMillis();
-            summaryUnitIndex = (int) (deltaTimeMillis / plotUnitDurationMillis);
-            int highlightRight = plotRectangle.x + (summaryUnitIndex * plotUnitWidth);
+            long totalPlotDeltaTime = ChronoUnit.MILLIS.between(startInstant, endInstant);
+
+            long deltaTime = ChronoUnit.MILLIS.between(startInstant, start);
+            double normTime = (double)deltaTime / totalPlotDeltaTime;
+            double highlightLeft = plotRectangle.x + ((double)plotRectangle.width * normTime);
+
+            deltaTime = ChronoUnit.MILLIS.between(startInstant, end);
+            normTime = (double)deltaTime / totalPlotDeltaTime;
+            double highlightRight = plotRectangle.x + ((double)plotRectangle.width * normTime);
+
+
+
+//            long deltaTimeMillis = Duration.between(startInstant, start).toMillis();
+//            int summaryUnitIndex = (int) (deltaTimeMillis / plotUnitDurationMillis);
+//            int highlightLeft = plotRectangle.x + (summaryUnitIndex * plotUnitWidth);
+//            deltaTimeMillis = Duration.between(startInstant, end).toMillis();
+//            summaryUnitIndex = (int) (deltaTimeMillis / plotUnitDurationMillis);
+//            int highlightRight = plotRectangle.x + (summaryUnitIndex * plotUnitWidth);
             if (highlightLeft > plotRectangle.x) {
                 highlightLeft = highlightLeft--;
             }
             if (highlightRight < (plotRectangle.x + plotRectangle.width)) {
                 highlightRight++;
             }
-            highlightRectangle = new Rectangle(highlightLeft, plotRectangle.y, highlightRight-highlightLeft, plotRectangle.height);
+            highlightRectangle = new Rectangle2D.Double(highlightLeft, plotRectangle.y, highlightRight-highlightLeft, plotRectangle.height);
         } else {
 
         }
@@ -430,8 +445,10 @@ public class TimeSeriesPanel extends JComponent implements ComponentListener, Mo
         if (shrinkToFit) {
             if (numPlotUnits > 0) {
                 summaryInfoArray = new TimeSeriesSummaryInfo[numPlotUnits];
-                //            summaryInfoList.clear();
-                //            summaryInfoList.ensureCapacity(numPlotUnits);
+
+                // the overall min and max value for all statistics
+                double overallMaxValue = 0.;
+                double overallMinValue = 0.;
 
                 for (int i = 0; i < numPlotUnits; i++) {
                     // determine the start and end time instants for the current time unit
@@ -448,26 +465,59 @@ public class TimeSeriesPanel extends JComponent implements ComponentListener, Mo
                             stats.addValue(record.value);
                         }
 
-                        int x = (int) ((i * plotUnitWidth) + (plotUnitWidth/2.));
-                        double norm = (stats.getMean() - timeSeries.getMinValue()) / (timeSeries.getMaxValue() - timeSeries.getMinValue());
-                        double yOffset = norm * (plotRectangle.getHeight());
-                        double y = (plotRectangle.getHeight() - yOffset);
-
-                        Point2D.Double meanPoint = new Point2D.Double(x, y);
                         TimeSeriesSummaryInfo summaryInfo = new TimeSeriesSummaryInfo();
                         summaryInfo.instant = unitStartInstant;
                         summaryInfo.meanValue = stats.getMean();
                         summaryInfo.maxValue = stats.getMax();
                         summaryInfo.minValue = stats.getMin();
-                        summaryInfo.meanPoint = meanPoint;
-                        //                    summaryInfoList.set(i,summaryInfo);
+                        summaryInfo.standardDeviationValue = stats.getStandardDeviation();
 
                         summaryInfoArray[i] = summaryInfo;
+
+                        // find overall min and max values
+                        double currentMinValue = Math.min(summaryInfo.minValue, summaryInfo.meanValue - summaryInfo.standardDeviationValue);
+                        double currentMaxValue = Math.max(summaryInfo.maxValue, summaryInfo.meanValue + summaryInfo.standardDeviationValue);
+                        if (i == 0) {
+                            overallMinValue = currentMinValue;
+                            overallMaxValue = currentMaxValue;
+                        } else {
+                            overallMinValue = Math.min(overallMinValue, currentMinValue);
+                            overallMaxValue = Math.max(overallMaxValue, currentMaxValue);
+                        }
                     }
                 }
-//                log.debug("numPlotPoints = " + numPlotUnits + "summaryInfoArray.length = " + summaryInfoArray.length);
-                //            summaryInfoList = TimeSeriesRenderer.calculateOverviewPlotPoints(timeSeries, plotRectangle, numPlotUnits,
-                //                    plotUnitWidth, plotUnitDurationMillis, startInstant);
+
+                for (int i = 0; i < summaryInfoArray.length; i++) {
+                    TimeSeriesSummaryInfo summaryInfo = summaryInfoArray[i];
+                    if (summaryInfo != null) {
+                        // calculate mean point
+                        int x = (int) ((i * plotUnitWidth) + (plotUnitWidth / 2.));
+                        //                        double norm = (stats.getMean() - timeSeries.getMinValue()) / (timeSeries.getMaxValue() - timeSeries.getMinValue());
+                        //                        double yOffset = norm * (plotRectangle.getHeight());
+                        //                        double y = (plotRectangle.getHeight() - yOffset);
+                        double y = GraphicsUtil.mapValue(summaryInfo.meanValue, overallMinValue,
+                                overallMaxValue, plotRectangle.height, 0.);
+                        summaryInfo.meanPoint = new Point2D.Double(x, y);
+
+                        // calculate max value point
+                        y = GraphicsUtil.mapValue(summaryInfo.maxValue, overallMinValue,
+                                overallMaxValue, plotRectangle.height, 0.);
+                        summaryInfo.maxPoint = new Point2D.Double(x, y);
+
+                        // calculate min value point
+                        y = GraphicsUtil.mapValue(summaryInfo.minValue, overallMinValue,
+                                overallMaxValue, plotRectangle.height, 0.);
+                        summaryInfo.minPoint = new Point2D.Double(x, y);
+
+                        // calculate standard deviation upper and lower range points
+                        y = GraphicsUtil.mapValue(summaryInfo.meanValue + summaryInfo.standardDeviationValue, overallMinValue,
+                                overallMaxValue, plotRectangle.height, 0.);
+                        summaryInfo.upperStandardDeviationRangePoint = new Point2D.Double(x, y);
+                        y = GraphicsUtil.mapValue(summaryInfo.meanValue - summaryInfo.standardDeviationValue, overallMinValue,
+                                overallMaxValue, plotRectangle.height, 0.);
+                        summaryInfo.lowerStandardDeviationRangePoint = new Point2D.Double(x, y);
+                    }
+                }
             }
         } else {
             plotPointMap.clear();
@@ -475,9 +525,6 @@ public class TimeSeriesPanel extends JComponent implements ComponentListener, Mo
             if (records != null) {
                 long totalPlotDeltaTime = ChronoUnit.MILLIS.between(startInstant, endInstant);
                 for (TimeSeriesRecord record : records) {
-//                    long deltaTime = plotChronoUnit.between(startInstant, record.instant);
-//                    int x = (int)deltaTime * plotUnitWidth;
-
                     long deltaTime = ChronoUnit.MILLIS.between(startInstant, record.instant);
                     double normTime = (double)deltaTime / totalPlotDeltaTime;
                     double x = plotRectangle.x + ((double)plotRectangle.width * normTime);
@@ -496,31 +543,6 @@ public class TimeSeriesPanel extends JComponent implements ComponentListener, Mo
                     instantPoints.add(point);
                 }
             }
-//            plotPointMap = TimeSeriesRenderer.calculateDetailedPlotPoints(timeSeries, plotChronoUnit, plotUnitWidth,
-//                    plotRectangle, startInstant);
-//            plotPointMap.clear();
-//            int numPointsCalculated = 0;
-//            ArrayList<TimeSeriesRecord> records = timeSeries.getAllRecords();
-//            if (records != null) {
-//                for (TimeSeriesRecord record : records) {
-//                    long deltaTime = plotChronoUnit.between(startInstant, record.instant);
-//                    int x = (int)deltaTime * plotUnitWidth;
-//
-//                    double norm = (record.value - timeSeries.getMinValue()) / (timeSeries.getMaxValue() - timeSeries.getMinValue());
-//                    double yOffset = norm * (plotRectangle.height);
-//                    double y = plotRectangle.height - yOffset;
-//
-//                    Point2D.Double point = new Point2D.Double(x, y);
-//
-//                    ArrayList<Point2D.Double> instantPoints = plotPointMap.get(record.instant);
-//                    if (instantPoints == null) {
-//                        instantPoints = new ArrayList<>();
-//                        plotPointMap.put(record.instant, instantPoints);
-//                    }
-//                    instantPoints.add(point);
-//                    numPointsCalculated++;
-//                }
-//            }
         }
     }
 
@@ -533,8 +555,8 @@ public class TimeSeriesPanel extends JComponent implements ComponentListener, Mo
 
         if (shrinkToFit) {
             TimeSeriesRenderer.renderAsOverview(g2, timeSeries, plotRectangle.width, plotRectangle.height,
-                    plotUnitWidth, plotChronoUnit, plotDisplayOption, gridLineColor, dataColor, dataColor,
-                    rangeColor, summaryInfoArray);
+                    plotUnitWidth, plotChronoUnit, plotDisplayOption, gridLineColor, dataColor, dataColor.darker(),
+                    rangeColor.brighter(), rangeColor, summaryInfoArray);
         } else {
             if (plotPointMap != null && !plotPointMap.isEmpty()) {
                 TimeSeriesRenderer.renderAsDetailed(g2, timeSeries, startClipInstant, endClipInstant,
