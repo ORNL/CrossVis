@@ -12,7 +12,7 @@ import static java.lang.Math.abs;
 /**
  * Created by whw on 3/9/16.
  */
-public class DistanceIndicatorPanel extends JComponent{
+public class DistanceIndicatorPanel extends JComponent {
     // ========== CLASS FIELDS ==========
     private TreeMap<Double, Double> segmentDistanceMap;
     private Double upperQuantile;
