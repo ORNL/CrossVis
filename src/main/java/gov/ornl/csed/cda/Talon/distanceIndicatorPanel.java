@@ -78,6 +78,7 @@ public class DistanceIndicatorPanel extends JComponent implements MouseMotionLis
         g2.setColor(getBackground());
         g2.fillRect(0, 0, getWidth(), getHeight());
 
+        tickMarksize = 5;
 
         if (segmentDistanceMap != null && !segmentDistanceMap.isEmpty()) {
             int count = 1;
@@ -105,7 +106,7 @@ public class DistanceIndicatorPanel extends JComponent implements MouseMotionLis
                         me = entry;
                     }
 
-                    if (combine % (ceil((float)segmentDistanceMap.size()/this.getHeight()*tickMarksize)- 1) != 0) {
+                    if (combine % (floor((float)segmentDistanceMap.size()/floor((float)this.getHeight()/tickMarksize))) != 0 && combine != segmentDistanceMap.size()) {
                         combine++;
                         continue;
                     }
