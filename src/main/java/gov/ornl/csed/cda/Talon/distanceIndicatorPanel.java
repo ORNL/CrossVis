@@ -13,6 +13,7 @@ import java.util.TreeMap;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.ceil;
+import static java.lang.Math.floor;
 
 /**
  * Created by whw on 3/9/16.
@@ -26,7 +27,7 @@ public class DistanceIndicatorPanel extends JComponent implements MouseMotionLis
     private double lowerQuantile;
     private int tickMarksize = 5;
     private int tickMarkSpacing;
-    private HashMap <Integer, Map.Entry<Double, Double>> displayedDistances = new HashMap<>();
+    private TreeMap <Integer, Map.Entry<Double, Double>> displayedDistances = new TreeMap<>();
 
     // ========== CONSTRUCTOR ==========
     public DistanceIndicatorPanel () {
@@ -91,7 +92,7 @@ public class DistanceIndicatorPanel extends JComponent implements MouseMotionLis
             // In order to print a tick mark per level tickMarkSpacing ≥ tickMarkSize
             if (tickMarkSpacing < tickMarksize) {
 
-                System.out.println("screen size = " + this.getHeight() + " and  " + segmentDistanceMap.size() + " elements");
+                System.out.println("screen size = " + this.getHeight() + " but visible is " + this.getVisibleRect().getHeight() + " and  " + segmentDistanceMap.size() + " elements");
                 tickMarkSpacing = tickMarksize;
                 double max = medianDistance;
                 Map.Entry<Double, Double> me = segmentDistanceMap.firstEntry();
@@ -104,7 +105,7 @@ public class DistanceIndicatorPanel extends JComponent implements MouseMotionLis
                         me = entry;
                     }
 
-                    if (combine % ceil(segmentDistanceMap.size()/this.getHeight()*tickMarksize) != 0) {
+                    if (combine % (ceil((float)segmentDistanceMap.size()/this.getHeight()*tickMarksize)- 1) != 0) {
                         combine++;
                         continue;
                     }
@@ -132,10 +133,12 @@ public class DistanceIndicatorPanel extends JComponent implements MouseMotionLis
                 }
 
             }
+
+            System.out.println("displaying distances for " + count + " objects");
         }
     }
 
-    public static Color getColor(double midpoint, double lowerThreshold, double upperThreshold, double value) {
+    public Color getColor(double midpoint, double lowerThreshold, double upperThreshold, double value) {
         Color c;
         double norm;
 
@@ -143,9 +146,14 @@ public class DistanceIndicatorPanel extends JComponent implements MouseMotionLis
             return null;
         }
 
+        upperThreshold = (upperThreshold == midpoint) ? upperThreshold + 0.01 : upperThreshold;
+        lowerThreshold = (lowerThreshold == midpoint) ? lowerThreshold - 0.01 : lowerThreshold;
+        upperThreshold = (upperThreshold > max) ? max : upperThreshold;
+        lowerThreshold = (lowerThreshold < 0) ? 0 : lowerThreshold;
+
         if (value > midpoint) {
-            Color c0 = new Color(211, 37, 37); // high pos. corr.
-            Color c1 = new Color(240, 240, 240); // low pos. corr.
+            Color c1 = new Color(211, 37, 37); // high pos. corr.
+            Color c0 = new Color(240, 240, 240); // low pos. corr.
 
             value = (value > upperThreshold) ? upperThreshold : value;
             norm = abs(value - midpoint) / abs(upperThreshold - midpoint);
@@ -159,8 +167,8 @@ public class DistanceIndicatorPanel extends JComponent implements MouseMotionLis
             c = new Color(r, green, b);
 
         } else {
-            Color c0 = new Color(44, 110, 211/* 177 */); // high neg. corr.
-            Color c1 = new Color(240, 240, 240);// low neg. corr.
+            Color c1 = new Color(44, 110, 211/* 177 */); // high neg. corr.
+            Color c0 = new Color(240, 240, 240);// low neg. corr.
 
             value = (value < lowerThreshold) ? lowerThreshold : value;
             norm = abs(value - midpoint) / abs(lowerThreshold - midpoint);
@@ -187,9 +195,10 @@ public class DistanceIndicatorPanel extends JComponent implements MouseMotionLis
     public void mouseMoved(MouseEvent e) {
         setToolTipText("");
 
-        int location = e.getYOnScreen();
-        if (displayedDistances.containsKey(location)) {
-            setToolTipText("Build Height: " + displayedDistances.get(location).getKey() + "\nDistance: " + displayedDistances.get(location).getValue());
+        int location = e.getY();
+
+        if (displayedDistances.floorEntry(location) != null) {
+            setToolTipText("Build Height: " + displayedDistances.floorEntry(location).getValue().getKey() + "\nDistance: " + displayedDistances.floorEntry(location).getValue().getValue());
         }
     }
 }
