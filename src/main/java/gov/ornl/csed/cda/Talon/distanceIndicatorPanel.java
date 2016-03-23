@@ -27,10 +27,17 @@ public class DistanceIndicatorPanel extends JComponent implements MouseMotionLis
     private double lowerQuantile;
     private int tickMarksize = 5;
     private int tickMarkSpacing;
+    private int option;
     private TreeMap <Integer, Map.Entry<Double, Double>> displayedDistances = new TreeMap<>();
 
     // ========== CONSTRUCTOR ==========
     public DistanceIndicatorPanel () {
+        this.option = 0;
+        addMouseMotionListener(this);
+    }
+
+    public DistanceIndicatorPanel (int option) {
+        this.option = option;
         addMouseMotionListener(this);
     }
 
@@ -95,15 +102,34 @@ public class DistanceIndicatorPanel extends JComponent implements MouseMotionLis
 
                 System.out.println("screen size = " + this.getHeight() + " but visible is " + this.getVisibleRect().getHeight() + " and  " + segmentDistanceMap.size() + " elements");
                 tickMarkSpacing = tickMarksize;
-                double max = medianDistance;
                 Map.Entry<Double, Double> me = segmentDistanceMap.firstEntry();
+                double max = me.getValue();
                 int combine = 1;
 
                 // TODO: Must combine multiple build height "distances" into a single tick mark. Will probably choose to do maximum magnitude from average distance
                 for (Map.Entry<Double, Double> entry : segmentDistanceMap.entrySet()) {
-                    if (abs(max) < abs(medianDistance - entry.getValue())) {
-                        max = entry.getValue();
-                        me = entry;
+
+                    switch (option) {
+                        case 1:
+                            if (abs(max) < abs(entry.getValue())) {
+                                max = entry.getValue();
+                                me = entry;
+                            }
+                            break;
+
+                        case 2:
+                            if (abs(max) > abs(entry.getValue())) {
+                                max = entry.getValue();
+                                me = entry;
+                            }
+                            break;
+
+                        default:
+                            if (abs(max) < abs(medianDistance - entry.getValue())) {
+                                max = entry.getValue();
+                                me = entry;
+                            }
+                            break;
                     }
 
                     if (combine % (floor((float)segmentDistanceMap.size()/floor((float)this.getHeight()/tickMarksize))) != 0 && combine != segmentDistanceMap.size()) {
@@ -116,7 +142,13 @@ public class DistanceIndicatorPanel extends JComponent implements MouseMotionLis
                     displayedDistances.put(this.getHeight() - tickMarkSpacing*count, me);
 
                     g2.fillRect(0, this.getHeight() - tickMarkSpacing*count, 15, tickMarksize);
-                    max = 0;
+
+                    me = segmentDistanceMap.higherEntry(entry.getKey());
+
+                    if (me != null) {
+                        max = me.getValue();
+                    }
+
                     combine++;
                     count++;
                 }
