@@ -231,8 +231,9 @@ public class SegmentedSeries  {
                     segmentPanel.setTimeSeries(segmentTimeSeriesMap);
                     reference = 0.1;
                     segmentDistanceMap = getDistance();
-                    distanceIndicatorPanel1.setDistanceMap(segmentDistanceMap);
-                    distanceIndicatorPanel2.setDistanceMap(segmentDistanceMap);
+                    DistanceIndicatorPanel.setDistanceMap(segmentDistanceMap);
+                    distanceIndicatorPanel1.resetDisplay();
+                    distanceIndicatorPanel2.resetDisplay();
                 }
             }
         });
@@ -280,8 +281,9 @@ public class SegmentedSeries  {
                 if (segmentTimeSeriesMap.get(referenceSpinner.getValue()) != null) {
                     reference = (double)referenceSpinner.getValue();
                     segmentDistanceMap = getDistance();
-                    distanceIndicatorPanel1.setDistanceMap(segmentDistanceMap);
-                    distanceIndicatorPanel2.setDistanceMap(segmentDistanceMap);
+                    DistanceIndicatorPanel.setDistanceMap(segmentDistanceMap);
+                    distanceIndicatorPanel1.resetDisplay();
+                    distanceIndicatorPanel2.resetDisplay();
                 }
             }
         });

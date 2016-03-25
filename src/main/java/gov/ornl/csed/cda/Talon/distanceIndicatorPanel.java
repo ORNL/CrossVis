@@ -17,13 +17,13 @@ import static java.lang.Math.floor;
  */
 public class DistanceIndicatorPanel extends JComponent implements MouseMotionListener {
     // ========== CLASS FIELDS ==========
-    private TreeMap<Double, Double> segmentDistanceMap;
-    private double maxValue;
-    private double upperQuantile;
-    private double medianDistance;
-    private double lowerQuantile;
-    private int tickMarksize = 5;
-    private int tickMarkSpacing;
+    private static TreeMap<Double, Double> segmentDistanceMap;
+    private static double maxValue;
+    private static double upperQuantile;
+    private static double medianDistance;
+    private static double lowerQuantile;
+    private static int tickMarksize = 5;
+    private static int tickMarkSpacing;
 
     private int option;
     private TreeMap <Integer, Map.Entry<Double, Double>> displayedDistances = new TreeMap<>();
@@ -42,17 +42,13 @@ public class DistanceIndicatorPanel extends JComponent implements MouseMotionLis
 
     // ========== METHODS ==========
     // Getters/Setters
-    public void setDistanceMap(TreeMap<Double, Double> segmentDistanceMap) {
-        this.segmentDistanceMap = segmentDistanceMap;
+    public static void setDistanceMap(TreeMap<Double, Double> segmentDistanceMap) {
+        DistanceIndicatorPanel.segmentDistanceMap = segmentDistanceMap;
         setStats(segmentDistanceMap);
         maxValue = findMaxDistance(segmentDistanceMap);
-        if (displayedDistances != null && !displayedDistances.isEmpty()) {
-            displayedDistances.clear();
-        }
-        repaint();
     }
 
-    private void setStats(TreeMap<Double, Double> segmentDistanceMap) {
+    private static void setStats(TreeMap<Double, Double> segmentDistanceMap) {
         DescriptiveStatistics stats = new DescriptiveStatistics();
 
         for (Map.Entry<Double, Double> entry : segmentDistanceMap.entrySet()) {
@@ -65,13 +61,20 @@ public class DistanceIndicatorPanel extends JComponent implements MouseMotionLis
 
     }
 
-    private Double findMaxDistance(TreeMap<Double, Double> segmentDistanceMap) {
+    private static Double findMaxDistance(TreeMap<Double, Double> segmentDistanceMap) {
         Double temp = 0.0;
         for (Map.Entry<Double, Double> entry : segmentDistanceMap.entrySet()) {
             temp = (entry.getValue() > temp) ? entry.getValue() : temp;
         }
         System.out.println("maxValue distance is: " + temp);
         return temp;
+    }
+
+    public void resetDisplay() {
+        if (displayedDistances != null && !displayedDistances.isEmpty()) {
+            displayedDistances.clear();
+        }
+        repaint();
     }
 
     public void paintComponent(Graphics g) {
@@ -139,6 +142,10 @@ public class DistanceIndicatorPanel extends JComponent implements MouseMotionLis
                     }
 
                     displayedDistances.put(this.getHeight() - tickMarkSpacing*count, me);
+
+
+                    g2.setColor(getColor(medianDistance, lowerBound, upperBound, me.getValue()));
+
 
                     g2.fillRect(0, this.getHeight() - tickMarkSpacing*count, 15, tickMarksize);
 
