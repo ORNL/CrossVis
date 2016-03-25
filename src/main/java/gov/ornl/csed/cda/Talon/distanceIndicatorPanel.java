@@ -5,14 +5,11 @@ import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 
 import static java.lang.Math.abs;
-import static java.lang.Math.ceil;
 import static java.lang.Math.floor;
 
 /**
@@ -21,12 +18,13 @@ import static java.lang.Math.floor;
 public class DistanceIndicatorPanel extends JComponent implements MouseMotionListener {
     // ========== CLASS FIELDS ==========
     private TreeMap<Double, Double> segmentDistanceMap;
-    private double max;
+    private double maxValue;
     private double upperQuantile;
     private double medianDistance;
     private double lowerQuantile;
     private int tickMarksize = 5;
     private int tickMarkSpacing;
+
     private int option;
     private TreeMap <Integer, Map.Entry<Double, Double>> displayedDistances = new TreeMap<>();
 
@@ -47,7 +45,7 @@ public class DistanceIndicatorPanel extends JComponent implements MouseMotionLis
     public void setDistanceMap(TreeMap<Double, Double> segmentDistanceMap) {
         this.segmentDistanceMap = segmentDistanceMap;
         setStats(segmentDistanceMap);
-        max = findMaxDistance(segmentDistanceMap);
+        maxValue = findMaxDistance(segmentDistanceMap);
         if (displayedDistances != null && !displayedDistances.isEmpty()) {
             displayedDistances.clear();
         }
@@ -72,7 +70,7 @@ public class DistanceIndicatorPanel extends JComponent implements MouseMotionLis
         for (Map.Entry<Double, Double> entry : segmentDistanceMap.entrySet()) {
             temp = (entry.getValue() > temp) ? entry.getValue() : temp;
         }
-        System.out.println("max distance is: " + temp);
+        System.out.println("maxValue distance is: " + temp);
         return temp;
     }
 
@@ -91,7 +89,7 @@ public class DistanceIndicatorPanel extends JComponent implements MouseMotionLis
             int count = 1;
 
             double upperBound = upperQuantile + (upperQuantile-lowerQuantile)*1.5;
-            upperBound = (upperBound > max) ? max : upperBound;
+            upperBound = (upperBound > maxValue) ? maxValue : upperBound;
             double lowerBound = lowerQuantile - (upperQuantile-lowerQuantile)*1.5;
             lowerBound = (lowerBound < 0) ? 0 : lowerBound;
 
@@ -115,6 +113,7 @@ public class DistanceIndicatorPanel extends JComponent implements MouseMotionLis
                                 max = entry.getValue();
                                 me = entry;
                             }
+                            g2.setColor(getColor(0, 0, upperBound, me.getValue()));
                             break;
 
                         case 2:
@@ -122,6 +121,7 @@ public class DistanceIndicatorPanel extends JComponent implements MouseMotionLis
                                 max = entry.getValue();
                                 me = entry;
                             }
+                            g2.setColor(getColor(0, -upperBound, 0, -me.getValue()));
                             break;
 
                         default:
@@ -129,6 +129,7 @@ public class DistanceIndicatorPanel extends JComponent implements MouseMotionLis
                                 max = entry.getValue();
                                 me = entry;
                             }
+                            g2.setColor(getColor(medianDistance, lowerBound, upperBound, me.getValue()));
                             break;
                     }
 
@@ -136,8 +137,6 @@ public class DistanceIndicatorPanel extends JComponent implements MouseMotionLis
                         combine++;
                         continue;
                     }
-
-                    g2.setColor(getColor(medianDistance, lowerBound, upperBound, me.getValue()));
 
                     displayedDistances.put(this.getHeight() - tickMarkSpacing*count, me);
 
@@ -181,7 +180,7 @@ public class DistanceIndicatorPanel extends JComponent implements MouseMotionLis
 
         upperThreshold = (upperThreshold == midpoint) ? upperThreshold + 0.01 : upperThreshold;
         lowerThreshold = (lowerThreshold == midpoint) ? lowerThreshold - 0.01 : lowerThreshold;
-        upperThreshold = (upperThreshold > max) ? max : upperThreshold;
+        upperThreshold = (upperThreshold > maxValue) ? maxValue : upperThreshold;
         lowerThreshold = (lowerThreshold < 0) ? 0 : lowerThreshold;
 
         if (value > midpoint) {
