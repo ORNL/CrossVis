@@ -33,7 +33,8 @@ public class SegmentedSeries  {
     private JFrame frame;           // Frame for SegmentedSeries instance
     private JPanel topPanel;        // Panel for combobox
     private SegmentedTimeSeriesPanel segmentPanel;                  // Panel for segmented series plot
-    private DistanceIndicatorPanel distanceIndicatorPanel;          // Panel for distance indicator tick marks
+    private DistanceIndicatorPanel distanceIndicatorPanel1;          // Panel for distance indicator tick marks
+    private DistanceIndicatorPanel distanceIndicatorPanel2;
     private File plgFile;           // Captures .plg filename on open
     private HashMap<String, PLGVariableSchema> variableSchemaMap;   // Holds variableSchema of variables in plgFile
     private JComboBox<String> variableCB;                           // Combobox of variable names from plgFile in topPanel
@@ -173,8 +174,11 @@ public class SegmentedSeries  {
         segmentPanelScroller.getHorizontalScrollBar().setUnitIncrement(10);
 
         // Initialize visual distance indicator panel
-        distanceIndicatorPanel = new DistanceIndicatorPanel();
-        distanceIndicatorPanel.setPreferredSize(new Dimension(15, frame.getHeight()));
+        distanceIndicatorPanel1 = new DistanceIndicatorPanel(1);
+        distanceIndicatorPanel1.setPreferredSize(new Dimension(15, segmentPanelScroller.getHeight()));
+
+        distanceIndicatorPanel2 = new DistanceIndicatorPanel(2);
+        distanceIndicatorPanel2.setPreferredSize(new Dimension(15, segmentPanelScroller.getHeight()));
 
         // Create new panel for combobox and initialize
         topPanel = new JPanel();
@@ -227,7 +231,8 @@ public class SegmentedSeries  {
                     segmentPanel.setTimeSeries(segmentTimeSeriesMap);
                     reference = 0.1;
                     segmentDistanceMap = getDistance();
-                    distanceIndicatorPanel.setDistanceMap(segmentDistanceMap);
+                    distanceIndicatorPanel1.setDistanceMap(segmentDistanceMap);
+                    distanceIndicatorPanel2.setDistanceMap(segmentDistanceMap);
                 }
             }
         });
@@ -275,7 +280,8 @@ public class SegmentedSeries  {
                 if (segmentTimeSeriesMap.get(referenceSpinner.getValue()) != null) {
                     reference = (double)referenceSpinner.getValue();
                     segmentDistanceMap = getDistance();
-                    distanceIndicatorPanel.setDistanceMap(segmentDistanceMap);
+                    distanceIndicatorPanel1.setDistanceMap(segmentDistanceMap);
+                    distanceIndicatorPanel2.setDistanceMap(segmentDistanceMap);
                 }
             }
         });
@@ -290,6 +296,12 @@ public class SegmentedSeries  {
         mainPanel.setLayout(new BorderLayout());
         mainPanel.add(topPanel, BorderLayout.NORTH);
         mainPanel.add(segmentPanelScroller, BorderLayout.CENTER);
+
+        JPanel distanceIndicatorPanel = new JPanel(new GridLayout(1, 2, 0, 1));
+        distanceIndicatorPanel.setPreferredSize(new Dimension(30, segmentPanelScroller.getHeight()));
+        distanceIndicatorPanel.add(distanceIndicatorPanel1);
+        distanceIndicatorPanel.add(distanceIndicatorPanel2);
+
         mainPanel.add(distanceIndicatorPanel, BorderLayout.EAST);
     }
 
