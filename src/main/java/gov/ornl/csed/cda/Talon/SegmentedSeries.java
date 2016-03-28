@@ -148,7 +148,7 @@ public class SegmentedSeries  {
                             buildHeightTimeSeries = readVarsMap.get(buildHeightVarName);
 
                             // Debug: print number of points in time series for segmenting variable
-                            System.out.println("buildHeightTimeSeries: " + buildHeightTimeSeries.getAllRecords().size());
+//                            System.out.println("buildHeightTimeSeries: " + buildHeightTimeSeries.getAllRecords().size());
 
                             // Add the filename to the frame title
                             frame.setTitle(version + " - " + plgFile.getName());
@@ -220,11 +220,11 @@ public class SegmentedSeries  {
                         segmentTimeSeries = readVarsMap.get(varName);
 
                         // Debug: print number of points in time series for segmenting variable
-                        System.out.println("segmentTimeSeries: " + segmentTimeSeries.getAllRecords().size());
+//                        System.out.println("segmentTimeSeries: " + segmentTimeSeries.getAllRecords().size());
                     }
 
                     // Debug: print out variable name selected
-                    System.out.println(varName);
+//                    System.out.println(varName);
 
                     // Segment the time series and set it in segmentPanel
                     segmentTimeSeriesMap = segment();
@@ -372,7 +372,7 @@ public class SegmentedSeries  {
                     if (!(referenceDTWtimeSeries.size() == 1 && ts2.size() == 1)) {
                         double distance = FastDTW.compare(referenceDTWtimeSeries, ts2, 10, Distances.EUCLIDEAN_DISTANCE).getDistance();
                         temp.put(segment.getKey(), distance);
-                        System.out.println("Build Height " + segment.getKey() + ": The distance to reference is " + distance);
+//                        System.out.println("Build Height " + segment.getKey() + ": The distance to reference is " + distance);
                     }
                 }
             }

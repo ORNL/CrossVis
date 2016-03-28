@@ -18,10 +18,8 @@ import static java.lang.Math.floor;
 public class DistanceIndicatorPanel extends JComponent implements MouseMotionListener {
     // ========== CLASS FIELDS ==========
     private static TreeMap<Double, Double> segmentDistanceMap;
-    private static double maxValue;
-    private static double upperQuantile;
-    private static double medianDistance;
-    private static double lowerQuantile;
+    private static double ninetyNinthQuantile;
+    private static double median;
     private static int tickMarksize = 5;
     private static int tickMarkSpacing;
 
@@ -45,7 +43,9 @@ public class DistanceIndicatorPanel extends JComponent implements MouseMotionLis
     public static void setDistanceMap(TreeMap<Double, Double> segmentDistanceMap) {
         DistanceIndicatorPanel.segmentDistanceMap = segmentDistanceMap;
         setStats(segmentDistanceMap);
-        maxValue = findMaxDistance(segmentDistanceMap);
+        for (Map.Entry<Double, Double> entry : segmentDistanceMap.entrySet()){
+            segmentDistanceMap.replace(entry.getKey(), entry.getValue(), entry.getValue()/ ninetyNinthQuantile);
+        }
     }
 
     private static void setStats(TreeMap<Double, Double> segmentDistanceMap) {
@@ -55,19 +55,10 @@ public class DistanceIndicatorPanel extends JComponent implements MouseMotionLis
             stats.addValue(entry.getValue());
         }
 
-        upperQuantile = stats.getPercentile(75);
-        medianDistance = stats.getPercentile(50);
-        lowerQuantile = stats.getPercentile(25);
-
-    }
-
-    private static Double findMaxDistance(TreeMap<Double, Double> segmentDistanceMap) {
-        Double temp = 0.0;
-        for (Map.Entry<Double, Double> entry : segmentDistanceMap.entrySet()) {
-            temp = (entry.getValue() > temp) ? entry.getValue() : temp;
-        }
-        System.out.println("maxValue distance is: " + temp);
-        return temp;
+        ninetyNinthQuantile = stats.getPercentile(99.9);
+        median = stats.getPercentile(50);
+//        ninetyNinthQuantile = segmentDistanceMap.get(segmentDistanceMap.lowerKey(segmentDistanceMap.));
+//        System.out.println("second highest value is " + ninetyNinthQuantile);
     }
 
     public void resetDisplay() {
@@ -91,17 +82,12 @@ public class DistanceIndicatorPanel extends JComponent implements MouseMotionLis
         if (segmentDistanceMap != null && !segmentDistanceMap.isEmpty()) {
             int count = 1;
 
-            double upperBound = upperQuantile + (upperQuantile-lowerQuantile)*1.5;
-            upperBound = (upperBound > maxValue) ? maxValue : upperBound;
-            double lowerBound = lowerQuantile - (upperQuantile-lowerQuantile)*1.5;
-            lowerBound = (lowerBound < 0) ? 0 : lowerBound;
-
             tickMarkSpacing = this.getHeight()/segmentDistanceMap.size();
 
             // In order to print a tick mark per level tickMarkSpacing ≥ tickMarkSize
             if (tickMarkSpacing < tickMarksize) {
 
-                System.out.println("screen size = " + this.getHeight() + " but visible is " + this.getVisibleRect().getHeight() + " and  " + segmentDistanceMap.size() + " elements");
+//                System.out.println("screen size = " + this.getHeight() + " but visible is " + this.getVisibleRect().getHeight() + " and  " + segmentDistanceMap.size() + " elements");
                 tickMarkSpacing = tickMarksize;
                 Map.Entry<Double, Double> me = segmentDistanceMap.firstEntry();
                 double max = me.getValue();
@@ -116,7 +102,7 @@ public class DistanceIndicatorPanel extends JComponent implements MouseMotionLis
                                 max = entry.getValue();
                                 me = entry;
                             }
-                            g2.setColor(getColor(0, 0, upperBound, me.getValue()));
+                            g2.setColor(getColor(me.getValue()));
                             break;
 
                         case 2:
@@ -124,15 +110,10 @@ public class DistanceIndicatorPanel extends JComponent implements MouseMotionLis
                                 max = entry.getValue();
                                 me = entry;
                             }
-                            g2.setColor(getColor(0, -upperBound, 0, -me.getValue()));
+                            g2.setColor(getColor(-me.getValue()));
                             break;
 
                         default:
-                            if (abs(max) < abs(medianDistance - entry.getValue())) {
-                                max = entry.getValue();
-                                me = entry;
-                            }
-                            g2.setColor(getColor(medianDistance, lowerBound, upperBound, me.getValue()));
                             break;
                     }
 
@@ -142,10 +123,6 @@ public class DistanceIndicatorPanel extends JComponent implements MouseMotionLis
                     }
 
                     displayedDistances.put(this.getHeight() - tickMarkSpacing*count, me);
-
-
-                    g2.setColor(getColor(medianDistance, lowerBound, upperBound, me.getValue()));
-
 
                     g2.fillRect(0, this.getHeight() - tickMarkSpacing*count, 15, tickMarksize);
 
@@ -163,7 +140,20 @@ public class DistanceIndicatorPanel extends JComponent implements MouseMotionLis
 
                 for (Map.Entry<Double, Double> entry : segmentDistanceMap.entrySet()) {
 
-                    g2.setColor(getColor(medianDistance, lowerBound, upperBound, entry.getValue()));
+                    switch (option) {
+                        case 1:
+
+                            g2.setColor(getColor(entry.getValue()));
+                            break;
+
+                        case 2:
+
+                            g2.setColor(getColor(-entry.getValue()));
+                            break;
+
+                        default:
+                            break;
+                    }
 
                     displayedDistances.put(this.getHeight() - tickMarkSpacing*count, entry);
 
@@ -173,11 +163,11 @@ public class DistanceIndicatorPanel extends JComponent implements MouseMotionLis
 
             }
 
-            System.out.println("displaying distances for " + count + " objects");
+//            System.out.println("displaying distances for " + count + " objects");
         }
     }
 
-    public Color getColor(double midpoint, double lowerThreshold, double upperThreshold, double value) {
+    public Color getColor(double value) {
         Color c;
         double norm;
 
@@ -185,17 +175,12 @@ public class DistanceIndicatorPanel extends JComponent implements MouseMotionLis
             return null;
         }
 
-        upperThreshold = (upperThreshold == midpoint) ? upperThreshold + 0.01 : upperThreshold;
-        lowerThreshold = (lowerThreshold == midpoint) ? lowerThreshold - 0.01 : lowerThreshold;
-        upperThreshold = (upperThreshold > maxValue) ? maxValue : upperThreshold;
-        lowerThreshold = (lowerThreshold < 0) ? 0 : lowerThreshold;
-
-        if (value > midpoint) {
+        if (this.option == 1) {
             Color c1 = new Color(211, 37, 37); // high pos. corr.
             Color c0 = new Color(240, 240, 240); // low pos. corr.
 
-            value = (value > upperThreshold) ? upperThreshold : value;
-            norm = abs(value - midpoint) / abs(upperThreshold - midpoint);
+            value = (value > 1) ? 1 : value;
+            norm = value;
 
             int r = c0.getRed()
                     + (int) (norm * (c1.getRed() - c0.getRed()));
@@ -209,15 +194,16 @@ public class DistanceIndicatorPanel extends JComponent implements MouseMotionLis
             Color c1 = new Color(44, 110, 211/* 177 */); // high neg. corr.
             Color c0 = new Color(240, 240, 240);// low neg. corr.
 
-            value = (value < lowerThreshold) ? lowerThreshold : value;
-            norm = abs(value - midpoint) / abs(lowerThreshold - midpoint);
+            value = -ninetyNinthQuantile / median * value;
+            value = (value > 1) ? 1 : value;
+            norm = value;
 
             int r = c0.getRed()
-                    + (int) (norm * (c1.getRed() - c0.getRed()));
+                    + (int) ((1-norm) * (c1.getRed() - c0.getRed()));
             int green = c0.getGreen()
-                    + (int) (norm * (c1.getGreen() - c0.getGreen()));
+                    + (int) ((1-norm) * (c1.getGreen() - c0.getGreen()));
             int b = c0.getBlue()
-                    + (int) (norm * (c1.getBlue() - c0.getBlue()));
+                    + (int) ((1-norm) * (c1.getBlue() - c0.getBlue()));
             c = new Color(r, green, b);
 
         }
