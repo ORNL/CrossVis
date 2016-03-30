@@ -266,9 +266,9 @@ public class FalconFX extends Application {
 //        fileTypeMap.put(plgFile, FalconDataTreeItem.FileType.PLG);
 
         for (PLGVariableSchema schema : variableSchemaMap.values()) {
-            if (schema.variableName.contains("ArcTrip")) {
-                log.debug(schema.variableName + " " + schema.typeString + " " + schema.numValues);
-            }
+//            if (schema.variableName.contains("ArcTrip")) {
+//                log.debug(schema.variableName + " " + schema.typeString + " " + schema.numValues);
+//            }
 
             if (schema.typeString.equals("Int16") ||
                     schema.typeString.equals("Double") ||
@@ -414,9 +414,11 @@ public class FalconFX extends Application {
                 TimeSeries timeSeries = new TimeSeries(dataTable.getColumnName(icolumn));
                 for (int ituple = 0; ituple < dataTable.getTupleCount(); ituple++) {
                     Instant instant = Instant.ofEpochMilli(dataTable.getLong(ituple, timeColumnIdx));
-                    double value = dataTable.getDouble(ituple, icolumn);
-                    if (!Double.isNaN(value)) {
-                        timeSeries.addRecord(instant, value, Double.NaN, Double.NaN);
+                    if (dataTable.canGetDouble(dataTable.getColumnName(icolumn))) {
+                        double value = dataTable.getDouble(ituple, icolumn);
+                        if (!Double.isNaN(value)) {
+                            timeSeries.addRecord(instant, value, Double.NaN, Double.NaN);
+                        }
                     }
                 }
 
@@ -598,21 +600,39 @@ public class FalconFX extends Application {
     }
 
     private VariableClipboardData treeItemToVariableClipboardData(TreeItem<String> treeItem) {
-        String variableName = treeItem.getValue();
+        String variableName = null;
 
-        treeItem = treeItem.getParent();
-        while (treeItem.getParent() != null) {
-            variableName = treeItem.getValue() + "." + variableName;
-            treeItem = treeItem.getParent();
+        TreeItem<String> currentTreeItem = treeItem;
+        while (currentTreeItem.getParent() != null) {
+            if (variableName == null) {
+                variableName = currentTreeItem.getValue();
+            } else {
+                variableName = currentTreeItem.getValue() + "." + variableName;
+            }
 
-            // if parent tree item is a file node, get file details and stop
-            if (fileTreeItemMetadataMap.containsKey(treeItem)) {
-                FileMetadata fileMetadata = fileTreeItemMetadataMap.get(treeItem);
-                VariableClipboardData variableClipboardData = new VariableClipboardData(fileMetadata.file,
-                        fileMetadata.fileType, variableName);
+            currentTreeItem = currentTreeItem.getParent();
+            if (fileTreeItemMetadataMap.containsKey(currentTreeItem)) {
+                FileMetadata fileMetadata = fileTreeItemMetadataMap.get(currentTreeItem);
+                VariableClipboardData variableClipboardData = new VariableClipboardData(fileMetadata.file, fileMetadata.fileType,
+                        variableName);
                 return variableClipboardData;
             }
         }
+
+//        String variableName = treeItem.getValue();
+//        treeItem = treeItem.getParent();
+//        while (treeItem.getParent() != null) {
+//            variableName = treeItem.getValue() + "." + variableName;
+//            treeItem = treeItem.getParent();
+//
+//            // if parent tree item is a file node, get file details and stop
+//            if (fileTreeItemMetadataMap.containsKey(treeItem)) {
+//                FileMetadata fileMetadata = fileTreeItemMetadataMap.get(treeItem);
+//                VariableClipboardData variableClipboardData = new VariableClipboardData(fileMetadata.file,
+//                        fileMetadata.fileType, variableName);
+//                return variableClipboardData;
+//            }
+//        }
 
         return null;
     }
