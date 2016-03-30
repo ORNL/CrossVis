@@ -93,7 +93,6 @@ public class DistanceIndicatorPanel extends JComponent implements MouseMotionLis
                 double max = me.getValue();
                 int combine = 1;
 
-                // TODO: Must combine multiple build height "distances" into a single tick mark. Will probably choose to do maximum magnitude from average distance
                 for (Map.Entry<Double, Double> entry : segmentDistanceMap.entrySet()) {
 
                     switch (option) {
