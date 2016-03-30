@@ -29,7 +29,8 @@ public class HistogramPanel extends JComponent implements ComponentListener, Mou
     public static final int SUMMARY_STATS_DEFAULT_SIZE = 18;
     public static final int DEFAULT_RANGE_LABEL_HEIGHT = 16;
     public final static float DEFAULT_LABEL_FONT_SIZE = 10f;
-    public final static DecimalFormat DECIMAL_FORMATTER = new DecimalFormat("##0.0#######");
+    public final static DecimalFormat DECIMAL_FORMATTER = new DecimalFormat("####0.0#######");
+    public final static DecimalFormat PERCENT_FORMATTER = new DecimalFormat("##0.0%");
 
     private final static Logger log = LoggerFactory.getLogger(HistogramPanel.class);
 
@@ -229,9 +230,10 @@ public class HistogramPanel extends JComponent implements ComponentListener, Mou
                 ", <b>Min:</b> " + histogram.getBinLowerBound(binIndex) + ", <b>Max:</b> " +
                 histogram.getBinUpperBound(binIndex));
                 if (highlightHistogram != null) {
+                    double percentage = (double)highlightHistogram.getBinCount(binIndex) / histogram.getBinCount(binIndex);
+                    String percentString = PERCENT_FORMATTER.format(percentage);
                     buffer.append("<br/><b>Highlight Bin Count:</b> " + highlightHistogram.getBinCount(binIndex) +
-                            ", <b>Min:</b> " + highlightHistogram.getBinLowerBound(binIndex) + ", <b>Max:</b> " +
-                            highlightHistogram.getBinUpperBound(binIndex));
+                            ", <b>Percent of Overall:</b> " + percentString);
                 }
                 buffer.append("</html>");
                 setToolTipText(buffer.toString());
@@ -339,7 +341,7 @@ public class HistogramPanel extends JComponent implements ComponentListener, Mou
 
             int plotLeft = getInsets().left;
             int plotTop = getInsets().top;
-            int plotHeight = getHeight() - (getInsets().bottom + getInsets().top);
+            int plotHeight = getHeight() - (getInsets().bottom + getInsets().top) - 1;
             int plotWidth = getWidth() - (getInsets().left + getInsets().right) - 1;
             fullPlotRectangle = new Rectangle(plotLeft, plotTop, plotWidth, plotHeight);
             

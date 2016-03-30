@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
+import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
@@ -338,6 +339,7 @@ public class MultiViewPanel extends JPanel {
         viewInfo.detailsTimeSeriesPanelScrollPane = new JScrollPane(viewInfo.detailTimeSeriesPanel);
         viewInfo.detailsTimeSeriesPanelScrollPane.setPreferredSize(new Dimension(100, 100));
         viewInfo.detailsTimeSeriesPanelScrollPane.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
+        viewInfo.detailsTimeSeriesPanelScrollPane.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEtchedBorder(), BorderFactory.createEmptyBorder(4, 4, 4, 4)));
 
         viewInfo.detailHistogramPanel = new HistogramPanel(HistogramPanel.ORIENTATION.VERTICAL, HistogramPanel.STATISTICS_MODE.MEAN_BASED);
         viewInfo.detailHistogramPanel.setBinCount(binCount);
@@ -446,7 +448,7 @@ public class MultiViewPanel extends JPanel {
         viewInfo.sidePanel.setLayout(new GridLayout(2, 1));
         viewInfo.sidePanel.add(viewInfo.overviewHistogramPanel);
         viewInfo.sidePanel.add(viewInfo.overviewTimeSeriesPanel);
-        viewInfo.sidePanel.setPreferredSize(new Dimension(200, plotHeight));
+        viewInfo.sidePanel.setPreferredSize(new Dimension(300, plotHeight));
         viewInfo.sidePanel.setBorder(BorderFactory.createTitledBorder("Overview"));
         viewInfo.sidePanel.setVisible(showOverview);
 

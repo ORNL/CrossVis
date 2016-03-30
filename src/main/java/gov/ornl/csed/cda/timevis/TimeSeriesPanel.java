@@ -108,13 +108,13 @@ public class TimeSeriesPanel extends JComponent implements ComponentListener, Mo
                     Random random = new Random(System.currentTimeMillis());
 
 //                    int numTimeRecords = 50400;
-                    int numTimeRecords = 86400;
+                    int numTimeRecords = 86400/8;
 //                    int numTimeRecords = 1200;
                     int plotUnitWidth = 10;
                     JFrame frame = new JFrame();
                     frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-                    TimeSeriesPanel detailsTimeSeriesPanel = new TimeSeriesPanel(plotUnitWidth, ChronoUnit.SECONDS, PlotDisplayOption.STEPPED_LINE);
+                    TimeSeriesPanel detailsTimeSeriesPanel = new TimeSeriesPanel(plotUnitWidth, ChronoUnit.SECONDS, PlotDisplayOption.LINE);
                     detailsTimeSeriesPanel.setBackground(Color.white);
 
                     TimeSeriesPanel overviewTimeSeriesPanel = new TimeSeriesPanel(plotUnitWidth, PlotDisplayOption.LINE);
@@ -141,11 +141,11 @@ public class TimeSeriesPanel extends JComponent implements ComponentListener, Mo
 
                     Instant startInstant = Instant.now().truncatedTo(ChronoUnit.HOURS);
 //                    Instant startInstant = Instant.now();
-                    Instant endInstant = Instant.from(startInstant).plus(numTimeRecords+3600, ChronoUnit.SECONDS);
+                    Instant endInstant = Instant.from(startInstant).plus(numTimeRecords+120, ChronoUnit.SECONDS);
 
                     double value = 0.;
 
-                    for (int i = 3600; i < numTimeRecords; i++) {
+                    for (int i = 120; i < numTimeRecords; i++) {
                         Instant instant = Instant.from(startInstant).plus(i, ChronoUnit.SECONDS);
                         instant = instant.plusMillis(random.nextInt(1000));
                         value = Math.max(-20., Math.min(10., value + .8 * Math.random() - .4 + .2 * Math.cos(i + .2)));
