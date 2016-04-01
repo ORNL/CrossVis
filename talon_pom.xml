@@ -5,7 +5,7 @@
 	<groupId>gov.ornl.csed.cda.coalesce</groupId>
 	<artifactId>coalesce</artifactId>
 	<packaging>jar</packaging>
-	<version>0.1.0</version>
+	<version>0.2.0</version>
 
 	<name>coalesce</name>
 
@@ -128,6 +128,7 @@
 								<argument>-BjvmOptions=-Xmx4g</argument>
 								<argument>-BjvmOptions=-Xms4g</argument>
 								<argument>-v</argument>
+								<argument>-BappVersion=${version}</argument>
 							</arguments>
 						</configuration>
 					</execution>
