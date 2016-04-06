@@ -29,10 +29,11 @@ import java.util.concurrent.ArrayBlockingQueue;
 public class MultiImagePanel extends JComponent implements ComponentListener {
     private final static Logger log = LoggerFactory.getLogger(MultiImagePanel.class);
 
-
     private Orientation orientation;
     private TreeMap<Double, ImageInfo> imageInfoMap = new TreeMap<>();
     private HashMap<ImageInfo, BufferedImage> imageCacheMap = new HashMap<>();
+    private TreeMap<Long, ImageInfo> imageCacheTimeMap = new TreeMap<>();
+
     private int maxImageCacheSize = 10;
 
     private int imageSpacing = 4;
@@ -67,7 +68,6 @@ public class MultiImagePanel extends JComponent implements ComponentListener {
             if (orientation == Orientation.VERTICAL) {
                 panelDimension.width = getWidth() - 1;
 
-
                 int x = 0;
                 int y = 0;
                 for (ImageInfo info : imageInfoMap.values()) {
@@ -78,7 +78,7 @@ public class MultiImagePanel extends JComponent implements ComponentListener {
                     info.screenRect = new Rectangle(x, y, width, height);
 //                    log.debug(info.screenRect.toString());
                     y += height + imageSpacing;
-                    log.debug("width: " + width + "height: " + height + " aspect ratio: " + info.aspectRatio);
+//                    log.debug("width: " + width + "height: " + height + " aspect ratio: " + info.aspectRatio);
                 }
 
                 panelDimension.height = y - imageSpacing;
@@ -104,7 +104,13 @@ public class MultiImagePanel extends JComponent implements ComponentListener {
                     if (image == null) {
                         try {
                             image = ImageIO.read(info.file);
+                            if (imageCacheMap.size() == maxImageCacheSize) {
+                                ImageInfo infoToDelete = imageCacheTimeMap.pollFirstEntry().getValue();
+                                imageCacheMap.remove(infoToDelete);
+                            }
                             imageCacheMap.put(info, image);
+                            info.lastAccessTime = System.currentTimeMillis();
+                            imageCacheTimeMap.put(info.lastAccessTime, info);
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
@@ -112,10 +118,14 @@ public class MultiImagePanel extends JComponent implements ComponentListener {
                         // we need to get the info object for this image out of the cache queue
                         // and re-add it (this essentially helps us keep track of the order of last
                         // reading each image so that we can remove the older image when we need to)
-
+                        imageCacheTimeMap.remove(info.lastAccessTime);
+                        info.lastAccessTime = System.currentTimeMillis();
+                        imageCacheTimeMap.put(info.lastAccessTime, info);
                     }
+                    log.debug("image cache size is " + imageCacheMap.size());
+
                     g2.drawImage(image, info.screenRect.x, info.screenRect.y, info.screenRect.width, info.screenRect.height, this);
-                    g2.draw(info.screenRect);
+//                    g2.draw(info.screenRect);
                 }
             }
         }
@@ -124,6 +134,7 @@ public class MultiImagePanel extends JComponent implements ComponentListener {
     public static void main (String args[]) {
         // read images
         File imageDirectory = new File("/Users/csg/Desktop/TestAMImages");
+//        File imageDirectory = new File("/Users/csg/Desktop/AM_data/R1140_2015-01-30_15.06/R1140_2015-01-30_15.06_Images/Image_2");
         ArrayList<File> imageFiles = new ArrayList<>();
         ArrayList<Double> heightValues = new ArrayList<>();
         ArrayList<Dimension> imageDimensions = new ArrayList<>();
@@ -164,18 +175,19 @@ public class MultiImagePanel extends JComponent implements ComponentListener {
 
                 MultiImagePanel imagePanel = new MultiImagePanel(Orientation.VERTICAL);
                 imagePanel.setImageFileInfo(imageFiles, heightValues, imageDimensions);
+                imagePanel.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
 
                 JScrollPane scrollPane = new JScrollPane(imagePanel);
-                scrollPane.addComponentListener(new ComponentAdapter() {
-                    @Override
-                    public void componentResized(ComponentEvent e) {
-                        int height = imagePanel.getPreferredSize().height;
-                        int width = scrollPane.getWidth();
-                        imagePanel.setPreferredSize(new Dimension(width, height));
-                        log.debug("image panel preferred size: " + imagePanel.getPreferredSize().toString());
-//                        super.componentResized(e);
-                    }
-                });
+//                scrollPane.addComponentListener(new ComponentAdapter() {
+//                    @Override
+//                    public void componentResized(ComponentEvent e) {
+//                        int height = imagePanel.getPreferredSize().height;
+//                        int width = scrollPane.getWidth();
+//                        imagePanel.setPreferredSize(new Dimension(width, height));
+//                        log.debug("image panel preferred size: " + imagePanel.getPreferredSize().toString());
+////                        super.componentResized(e);
+//                    }
+//                });
 
                 ((JPanel)frame.getContentPane()).setLayout(new BorderLayout());
                 ((JPanel)frame.getContentPane()).add(scrollPane, BorderLayout.CENTER);
@@ -214,5 +226,6 @@ public class MultiImagePanel extends JComponent implements ComponentListener {
         public double aspectRatio; // width / height
         public Rectangle screenRect;
         public double heightValue;
+        public long lastAccessTime;
     }
 }
