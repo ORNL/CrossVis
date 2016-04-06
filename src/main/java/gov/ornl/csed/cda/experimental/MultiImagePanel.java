@@ -33,9 +33,7 @@ public class MultiImagePanel extends JComponent implements ComponentListener {
     private Orientation orientation;
     private TreeMap<Double, ImageInfo> imageInfoMap = new TreeMap<>();
     private HashMap<ImageInfo, BufferedImage> imageCacheMap = new HashMap<>();
-//    private TreeMap<Long, ImageInfo> imageCacheAccessMap = new TreeMap<>();
-    private int imageCacheSize = 10;
-    private PriorityQueue<ImageInfo> imageCacheQueue = new PriorityQueue<ImageInfo>(imageCacheSize);
+    private int maxImageCacheSize = 10;
 
     private int imageSpacing = 4;
     private Insets margins = new Insets(2,2,2,2);
@@ -106,13 +104,7 @@ public class MultiImagePanel extends JComponent implements ComponentListener {
                     if (image == null) {
                         try {
                             image = ImageIO.read(info.file);
-                            if (imageCacheMap.size() == imageCacheSize) {
-                                // we need to delete the oldest cached image (the one that hasn't been touched for the longest time)
-                                ImageInfo infoToDelete = imageCacheQueue.poll();
-                                imageCacheMap.remove(infoToDelete);
-                            }
                             imageCacheMap.put(info, image);
-                            imageCacheQueue.add(info);
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
@@ -120,10 +112,9 @@ public class MultiImagePanel extends JComponent implements ComponentListener {
                         // we need to get the info object for this image out of the cache queue
                         // and re-add it (this essentially helps us keep track of the order of last
                         // reading each image so that we can remove the older image when we need to)
-                        imageCacheQueue.remove(info);
-                        imageCacheQueue.add(info);
+
                     }
-                    g2.drawImage(imageCacheMap.get(info), info.screenRect.x, info.screenRect.y, info.screenRect.width, info.screenRect.height, this);
+                    g2.drawImage(image, info.screenRect.x, info.screenRect.y, info.screenRect.width, info.screenRect.height, this);
                     g2.draw(info.screenRect);
                 }
             }
@@ -223,6 +214,5 @@ public class MultiImagePanel extends JComponent implements ComponentListener {
         public double aspectRatio; // width / height
         public Rectangle screenRect;
         public double heightValue;
-
     }
 }
