@@ -393,8 +393,6 @@ public class FalconFX extends Application {
             return;
         }
 
-
-
         // populate data tree view
         Text itemIcon = new Text("\uf1c0");
         itemIcon.setFont(fontAwesomeFont);
@@ -413,7 +411,14 @@ public class FalconFX extends Application {
             if (!dataTable.getColumnName(icolumn).equals(timeColumnName)) {
                 TimeSeries timeSeries = new TimeSeries(dataTable.getColumnName(icolumn));
                 for (int ituple = 0; ituple < dataTable.getTupleCount(); ituple++) {
-                    Instant instant = Instant.ofEpochMilli(dataTable.getLong(ituple, timeColumnIdx));
+                    Instant instant = null;
+                    if (timeChronoUnit == ChronoUnit.MILLIS) {
+                        instant = Instant.ofEpochMilli(dataTable.getLong(ituple, timeColumnIdx));
+                    } else {
+                        double seconds = dataTable.getDouble(ituple, timeColumnIdx);
+                        long timeMillis = (long)(seconds * 1000.);
+                        instant = Instant.ofEpochMilli(timeMillis);
+                    }
                     if (dataTable.canGetDouble(dataTable.getColumnName(icolumn))) {
                         double value = dataTable.getDouble(ituple, icolumn);
                         if (!Double.isNaN(value)) {
