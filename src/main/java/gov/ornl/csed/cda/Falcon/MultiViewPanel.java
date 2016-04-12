@@ -13,12 +13,11 @@ import javax.swing.*;
 import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.Color;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.AdjustmentEvent;
-import java.awt.event.AdjustmentListener;
+import java.awt.event.*;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -50,6 +49,8 @@ public class MultiViewPanel extends JPanel {
     private boolean showButtonPanels = true;
     private ChronoUnit detailChronoUnit = ChronoUnit.SECONDS;
     private TimeSeriesPanel.PlotDisplayOption timeSeriesDisplayOption = TimeSeriesPanel.PlotDisplayOption.STEPPED_LINE;
+
+    private int currentSplitDividerPosition = 0;
 
     public MultiViewPanel (int plotHeight) {
         this.plotHeight = plotHeight;
@@ -109,10 +110,6 @@ public class MultiViewPanel extends JPanel {
         return showOverview;
     }
 
-//    public boolean getAlignTimeSeriesEnabled () {
-//        return alignTimeSeries;
-//    }
-
     public ChronoUnit getDetailChronoUnit() {
         return detailChronoUnit;
     }
@@ -152,27 +149,6 @@ public class MultiViewPanel extends JPanel {
     public Color getDataColor() {
         return dataColor;
     }
-
-
-//    public void setAlignTimeSeriesEnabled (boolean enabled) {
-//        if (alignTimeSeries != enabled) {
-//            if (enabled) {
-//                // enabling aligned timeseries
-//                for (ViewInfo viewInfo : viewInfoList) {
-//                    viewInfo.detailTimeSeriesPanel.setDisplayTimeRange(startInstant, endInstant);
-//                    viewInfo.overviewTimeSeriesPanel.setDisplayTimeRange(startInstant, endInstant);
-//                }
-//            } else {
-//                // disabling aligned timeseries
-//                for (ViewInfo viewInfo : viewInfoList) {
-//                    viewInfo.detailTimeSeriesPanel.setDisplayTimeRange(viewInfo.timeSeries.getStartInstant(), viewInfo.timeSeries.getEndInstant());
-//                    viewInfo.overviewTimeSeriesPanel.setDisplayTimeRange(viewInfo.timeSeries.getStartInstant(), viewInfo.timeSeries.getEndInstant());
-//                }
-//            }
-//
-//            alignTimeSeries = enabled;
-//        }
-//    }
 
     public int getPlotHeight() {
         return plotHeight;
@@ -244,15 +220,11 @@ public class MultiViewPanel extends JPanel {
             }
         });
 
-//        JButton settingsButton = new JButton();
-
         JPanel buttonPanel = new JPanel();
         buttonPanel.setBackground(Color.WHITE);
-//        buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.PAGE_AXIS));
         buttonPanel.setLayout(new GridLayout(4, 0, 0, 0));
         buttonPanel.add(moveUpButton);
         buttonPanel.add(removeButton);
-//        buttonPanel.add(settingsButton);
         buttonPanel.add(moveDownButton);
 
         if (fontAwesomeFont != null) {
@@ -285,9 +257,13 @@ public class MultiViewPanel extends JPanel {
     }
 
     public void addTimeSeries(TimeSeries timeSeries, String groupName) {
+        if (viewInfoList.isEmpty()) {
+            currentSplitDividerPosition = (int) (getWidth() * .75);
+            log.debug("currentSplitDividerPosition: " + currentSplitDividerPosition);
+        }
+
         ViewInfo viewInfo = new ViewInfo();
         viewInfo.timeSeries = timeSeries;
-        viewInfoList.add(viewInfo);
 
         // assign view to a group (create new one if necessary)
         GroupInfo groupInfo = viewGroupMap.get(groupName);
@@ -319,13 +295,6 @@ public class MultiViewPanel extends JPanel {
         }
         groupInfo.viewInfoList.add(viewInfo);
 
-        viewInfo.viewPanel = new JPanel();
-        viewInfo.viewPanel.setPreferredSize(new Dimension(100, plotHeight));
-        viewInfo.viewPanel.setMinimumSize(new Dimension(100, plotHeight));
-        viewInfo.viewPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, plotHeight));
-        viewInfo.viewPanel.setBackground(Color.white);
-        viewInfo.viewPanel.setLayout(new BorderLayout());
-
         viewInfo.buttonPanel = createButtonPanel(viewInfo);
 
         viewInfo.detailTimeSeriesPanel = new TimeSeriesPanel(1, detailChronoUnit, timeSeriesDisplayOption);
@@ -337,9 +306,9 @@ public class MultiViewPanel extends JPanel {
         }
 
         viewInfo.detailsTimeSeriesPanelScrollPane = new JScrollPane(viewInfo.detailTimeSeriesPanel);
-        viewInfo.detailsTimeSeriesPanelScrollPane.setPreferredSize(new Dimension(100, 100));
-        viewInfo.detailsTimeSeriesPanelScrollPane.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
-        viewInfo.detailsTimeSeriesPanelScrollPane.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEtchedBorder(), BorderFactory.createEmptyBorder(4, 4, 4, 4)));
+        viewInfo.detailsTimeSeriesPanelScrollPane.setPreferredSize(new Dimension(400, 100));
+//        viewInfo.detailsTimeSeriesPanelScrollPane.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
+//        viewInfo.detailsTimeSeriesPanelScrollPane.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEtchedBorder(), BorderFactory.createEmptyBorder(4, 4, 4, 4)));
 
         viewInfo.detailHistogramPanel = new HistogramPanel(HistogramPanel.ORIENTATION.VERTICAL, HistogramPanel.STATISTICS_MODE.MEAN_BASED);
         viewInfo.detailHistogramPanel.setBinCount(binCount);
@@ -457,11 +426,41 @@ public class MultiViewPanel extends JPanel {
         detailsPanel.add(viewInfo.detailsTimeSeriesPanelScrollPane, BorderLayout.CENTER);
         detailsPanel.add(viewInfo.detailHistogramPanel, BorderLayout.EAST);
 
-        viewInfo.viewPanel.add(detailsPanel, BorderLayout.CENTER);
-        viewInfo.viewPanel.add(viewInfo.sidePanel, BorderLayout.EAST);
-        viewInfo.viewPanel.add(viewInfo.buttonPanel, BorderLayout.WEST);
+        viewInfo.viewPanel = new JPanel();
+        viewInfo.viewPanel.setPreferredSize(new Dimension(100, plotHeight));
+        viewInfo.viewPanel.setMinimumSize(new Dimension(100, plotHeight));
+        viewInfo.viewPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, plotHeight));
+        viewInfo.viewPanel.setBackground(Color.white);
+        viewInfo.viewPanel.setLayout(new BorderLayout());
         viewInfo.viewPanel.setBorder(BorderFactory.createTitledBorder(timeSeries.getName()));
 
+        viewInfo.splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, detailsPanel, viewInfo.sidePanel);
+        viewInfo.splitPane.setContinuousLayout(true);
+        viewInfo.splitPane.setResizeWeight(0.75);
+        viewInfo.splitPane.setDividerLocation(currentSplitDividerPosition);
+        viewInfo.splitPane.setOneTouchExpandable(true);
+        viewInfo.splitPane.addPropertyChangeListener(JSplitPane.DIVIDER_LOCATION_PROPERTY,
+            new PropertyChangeListener() {
+                @Override
+                public void propertyChange(PropertyChangeEvent event) {
+                    currentSplitDividerPosition = (Integer)event.getNewValue();
+                    for (ViewInfo otherViewInfo : viewInfoList) {
+                        if (viewInfo != otherViewInfo) {
+                            otherViewInfo.splitPane.setDividerLocation(currentSplitDividerPosition);
+                        }
+                    }
+                }
+            }
+        );
+
+        viewInfo.viewPanel.add(viewInfo.splitPane, BorderLayout.CENTER);
+        viewInfo.viewPanel.add(viewInfo.buttonPanel, BorderLayout.WEST);
+
+//        viewInfo.viewPanel.add(detailsPanel, BorderLayout.CENTER);
+//        viewInfo.viewPanel.add(viewInfo.sidePanel, BorderLayout.EAST);
+//        viewInfo.viewPanel.add(viewInfo.buttonPanel, BorderLayout.WEST);
+
+        viewInfoList.add(viewInfo);
         panelBox.add(viewInfo.viewPanel);
         revalidate();
     }
@@ -579,6 +578,7 @@ public class MultiViewPanel extends JPanel {
         public TimeSeriesPanel overviewTimeSeriesPanel;
         public HistogramPanel overviewHistogramPanel;
         public HistogramPanel detailHistogramPanel;
+        public JSplitPane splitPane;
     }
 
     private class GroupInfo{

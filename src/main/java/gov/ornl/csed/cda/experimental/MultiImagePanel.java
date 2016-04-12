@@ -133,7 +133,7 @@ public class MultiImagePanel extends JComponent implements ComponentListener {
 
     public static void main (String args[]) {
         // read images
-        File imageDirectory = new File("/Users/csg/Desktop/TestAMImages");
+        File imageDirectory = new File("/Users/csg/Desktop/AM_data/TestAMImages");
 //        File imageDirectory = new File("/Users/csg/Desktop/AM_data/R1140_2015-01-30_15.06/R1140_2015-01-30_15.06_Images/Image_2");
         ArrayList<File> imageFiles = new ArrayList<>();
         ArrayList<Double> heightValues = new ArrayList<>();
