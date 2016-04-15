@@ -3,11 +3,9 @@ package gov.ornl.csed.cda.Falcon;/**
  */
 
 import gov.ornl.csed.cda.histogram.Histogram;
+import gov.ornl.csed.cda.histogram.HistogramPanel;
 import gov.ornl.csed.cda.histogram.MultiHistogramPanel;
-import gov.ornl.csed.cda.timevis.MultiTimeSeriesPanel;
-import gov.ornl.csed.cda.timevis.TimeSeries;
-import gov.ornl.csed.cda.timevis.TimeSeriesPanel;
-import gov.ornl.csed.cda.timevis.TimeSeriesRecord;
+import gov.ornl.csed.cda.timevis.*;
 import javafx.application.Application;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -114,7 +112,7 @@ public class FalconFX extends Application {
     private Spinner multipleHistogramPlotHeightSpinner;
     private Spinner multipleHistogramBinSizeSpinner;
     private JLabel overviewDetailTimeSeriesNameLabel;
-    private TabPane visTabPane;
+//    private TabPane visTabPane;
 
     // multi view panel preferences
     private Spinner multiViewPlotHeightSpinner;
@@ -129,6 +127,7 @@ public class FalconFX extends Application {
     // overview + detail panel
     private JPanel overviewDetailPanel;
 
+    private HashMap<TimeSeriesSelection, SelectionViewInfo> selectionViewInfoMap = new HashMap<>();
 
     public static void main(String[] args) {
         launch(args);
@@ -166,29 +165,31 @@ public class FalconFX extends Application {
         BorderPane rootNode = new BorderPane();
 
         javafx.geometry.Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
-        Scene scene = new Scene(rootNode, screenBounds.getWidth()-20, 800);
+        Scene scene = new Scene(rootNode, screenBounds.getWidth()-20, screenBounds.getHeight()*.5);
+//        Scene scene = new Scene(rootNode, 1000, 800);
 
-        Node ODTimeSeriesNode = createOverviewDetailTimeSeriesPanel();
+//        Node ODTimeSeriesNode = createOverviewDetailTimeSeriesPanel();
 //        Node multiTimeSeriesNode = createMultiTimeSeriesPanel();
-        Node multiHistogramNode = createMultiHistogramPanel();
+//        Node multiHistogramNode = createMultiHistogramPanel();
         Node multiViewNode = createMultiViewPanel();
+        Node selectionViewNode = createMultiHistogramPanel();
 
         createDataTreeView();
         createColumnTableView();
         createDataTableView();
 
         // TabPane setup for main visualization area
-        visTabPane = new TabPane();
-        visTabPane.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
-        Tab multiViewTab = new Tab(" Multi View ");
-        multiViewTab.setContent(multiViewNode);
-        Tab ODTimeTab = new Tab(" Single Time Series ");
-        ODTimeTab.setContent(ODTimeSeriesNode);
+//        visTabPane = new TabPane();
+//        visTabPane.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
+//        Tab multiViewTab = new Tab(" Multi View ");
+//        multiViewTab.setContent(multiViewNode);
+//        Tab ODTimeTab = new Tab(" Single Time Series ");
+//        ODTimeTab.setContent(ODTimeSeriesNode);
 //        Tab multiTimeTab = new Tab(" Multiple Time Series ");
 //        multiTimeTab.setContent(multiTimeSeriesNode);
-        Tab multiHistoTab = new Tab(" Multiple Histograms ");
-        multiHistoTab.setContent(multiHistogramNode);
-        visTabPane.getTabs().addAll(multiViewTab, ODTimeTab, multiHistoTab);
+//        Tab multiHistoTab = new Tab(" Multiple Histograms ");
+//        multiHistoTab.setContent(multiHistogramNode);
+//        visTabPane.getTabs().addAll(multiViewTab, ODTimeTab, multiHistoTab);
 
 //        // Create left pane as a vertically split node
 //        StackPane topStackPane = new StackPane();
@@ -234,11 +235,17 @@ public class FalconFX extends Application {
         leftStackPane.getChildren().add(dataTreeView);
         leftStackPane.setMaxWidth(400.);
 
+        // right panel (selection view)
+        StackPane rightStackPane = new StackPane();
+        rightStackPane.getChildren().add(selectionViewNode);
+        rightStackPane.setMinWidth(150);
+
         // create main split between left and right panes
         SplitPane mainSplitPane = new SplitPane();
-        mainSplitPane.getItems().addAll(leftStackPane, visTabPane);
-        mainSplitPane.setDividerPositions(0.25);
+        mainSplitPane.getItems().addAll(leftStackPane, multiViewNode, rightStackPane);
+        mainSplitPane.setDividerPositions(0.2, .9);
         mainSplitPane.setResizableWithParent(leftStackPane, false);
+        mainSplitPane.setResizableWithParent(rightStackPane, false);
 
         MenuBar menubar = createMenuBar(primaryStage);
 
@@ -310,23 +317,23 @@ public class FalconFX extends Application {
     }
 
     private void captureVisualizationImage(File imageFile) throws IOException {
-        JPanel activePanel = null;
+//        JPanel activePanel = null;
 
         // get active visualization tab
-        if (visTabPane.getSelectionModel().getSelectedItem().getText().equals(" Single Time Series ")) {
-            activePanel = overviewDetailPanel;
-        } else if (visTabPane.getSelectionModel().getSelectedItem().getText().equals(" Multiple Time Series ")) {
+//        if (visTabPane.getSelectionModel().getSelectedItem().getText().equals(" Single Time Series ")) {
+//            activePanel = overviewDetailPanel;
+//        } else if (visTabPane.getSelectionModel().getSelectedItem().getText().equals(" Multiple Time Series ")) {
+//
+//        } else if (visTabPane.getSelectionModel().getSelectedItem().getText().equals(" Multiple Histograms ")) {
+//
+//        } else if (visTabPane.getSelectionModel().getSelectedItem().getText().equals(" Multi View ")) {
+//            activePanel = multiViewPanel;
+//        } else {
+//            return;
+//        }
 
-        } else if (visTabPane.getSelectionModel().getSelectedItem().getText().equals(" Multiple Histograms ")) {
-
-        } else if (visTabPane.getSelectionModel().getSelectedItem().getText().equals(" Multi View ")) {
-            activePanel = multiViewPanel;
-        } else {
-            return;
-        }
-
-        int imageWidth = activePanel.getWidth() * 4;
-        int imageHeight = activePanel.getHeight() * 4;
+        int imageWidth = multiViewPanel.getWidth() * 4;
+        int imageHeight = multiViewPanel.getHeight() * 4;
 
 
         BufferedImage image = new BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_INT_ARGB);
@@ -341,7 +348,7 @@ public class FalconFX extends Application {
         g2.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
         g2.setTransform(AffineTransform.getScaleInstance(4., 4.));
 
-        activePanel.paint(g2);
+        multiViewPanel.paint(g2);
         g2.dispose();
 
         ImageIO.write(image, "png", imageFile);
@@ -674,15 +681,16 @@ public class FalconFX extends Application {
 //                                VariableClipboardData variableClipboardData = new VariableClipboardData(fileMetadata.file, fileMetadata.fileType, variableName);
 //                                VariableClipboardData variableClipboardData = treeItemToVariableClipboardData(treeItem);
 //                                // based on the visible tab pane, show data in visualization
-                                if (visTabPane.getSelectionModel().getSelectedItem().getText().equals(" Single Time Series ")) {
-                                    loadColumnIntoODTimeSeries(fileMetadata, variableName);
-                                } else if (visTabPane.getSelectionModel().getSelectedItem().getText().equals(" Multiple Time Series ")) {
-                                    loadColumnIntoMultiTimeSeries(fileMetadata, variableName);
-                                } else if (visTabPane.getSelectionModel().getSelectedItem().getText().equals(" Multiple Histograms ")) {
-                                    loadColumnIntoMultiHistogram(fileMetadata, variableName);
-                                } else if (visTabPane.getSelectionModel().getSelectedItem().getText().equals(" Multi View ")) {
-                                    loadColumnIntoMultiView(fileMetadata, variableName);
-                                }
+//                                if (visTabPane.getSelectionModel().getSelectedItem().getText().equals(" Single Time Series ")) {
+//                                    loadColumnIntoODTimeSeries(fileMetadata, variableName);
+//                                } else if (visTabPane.getSelectionModel().getSelectedItem().getText().equals(" Multiple Time Series ")) {
+//                                    loadColumnIntoMultiTimeSeries(fileMetadata, variableName);
+//                                } else if (visTabPane.getSelectionModel().getSelectedItem().getText().equals(" Multiple Histograms ")) {
+//                                    loadColumnIntoMultiHistogram(fileMetadata, variableName);
+//                                } else if (visTabPane.getSelectionModel().getSelectedItem().getText().equals(" Multi View ")) {
+//                                    loadColumnIntoMultiView(fileMetadata, variableName);
+//                                }
+                                loadColumnIntoMultiView(fileMetadata, variableName);
                             }
                         }
                     }
@@ -794,6 +802,58 @@ public class FalconFX extends Application {
                 for (TimeSeries timeSeries : PLGTimeSeriesMap.values()) {
                     timeSeries.setName(fileMetadata.file.getName() + ":" + timeSeries.getName());
                     multiViewPanel.addTimeSeries(timeSeries, fileMetadata.file.getName());
+                    TimeSeriesPanel detailsTimeSeries = multiViewPanel.getDetailTimeSeriesPanel(timeSeries);
+
+                    detailsTimeSeries.addTimeSeriesPanelSelectionListener(new TimeSeriesPanelSelectionListener() {
+                        @Override
+                        public void selectionCreated(TimeSeriesPanel timeSeriesPanel, TimeSeriesSelection timeSeriesSelection) {
+                            log.debug("TimeSeries selection created");
+                            // get the data in the selection range
+                            ArrayList<TimeSeriesRecord> records = timeSeriesPanel.getTimeSeries().getRecordsBetween(timeSeriesSelection.getStartInstant(), timeSeriesSelection.getEndInstant());
+
+                            // add to selection view
+                            int binCount = 20;
+                            double values[] = new double[records.size()];
+                            for (int i = 0; i < values.length; i++) {
+                                values[i] = records.get(i).value;
+                            }
+                            Histogram histogram = new Histogram(timeSeries.getName(), values, binCount);
+                            HistogramPanel histogramPanel = multiHistogramPanel.addHistogram(histogram);
+
+                            SelectionViewInfo selectionViewInfo = new SelectionViewInfo();
+                            selectionViewInfo.detailTimeSeriesPanel = timeSeriesPanel;
+                            selectionViewInfo.selection = timeSeriesSelection;
+                            selectionViewInfo.histogramPanel = histogramPanel;
+                            selectionViewInfoMap.put(timeSeriesSelection, selectionViewInfo);
+                        }
+
+                        @Override
+                        public void selectionMoved(TimeSeriesPanel timeSeriesPanel, TimeSeriesSelection timeSeriesSelection) {
+                            log.debug("TimeSeries selection moved");
+                            // get the data in the selection range
+                            ArrayList<TimeSeriesRecord> records = timeSeriesPanel.getTimeSeries().getRecordsBetween(timeSeriesSelection.getStartInstant(), timeSeriesSelection.getEndInstant());
+
+                            // add to selection view
+                            int binCount = 20;
+                            double values[] = new double[records.size()];
+                            for (int i = 0; i < values.length; i++) {
+                                values[i] = records.get(i).value;
+                            }
+                            Histogram histogram = new Histogram(timeSeries.getName(), values, binCount);
+
+                            // update selection view
+                            SelectionViewInfo selectionViewInfo = selectionViewInfoMap.get(timeSeriesSelection);
+                            selectionViewInfo.histogramPanel.setHistogram(histogram);
+                        }
+
+                        @Override
+                        public void selectionDeleted(TimeSeriesPanel timeSeriesPanel, TimeSeriesSelection timeSeriesSelection) {
+                            log.debug("TimeSeries selection deleted");
+                            // remove selection view
+                            SelectionViewInfo selectionViewInfo = selectionViewInfoMap.remove(timeSeriesSelection);
+                            multiHistogramPanel.removeHistogramPanel(selectionViewInfo.histogramPanel);
+                        }
+                    });
                 }
             } catch (IOException ex) {
                 ex.printStackTrace();
@@ -1277,5 +1337,12 @@ public class FalconFX extends Application {
         borderPane.setCenter(tsSwingNode);
 
         return borderPane;
+    }
+
+    private class SelectionViewInfo {
+        public TimeSeriesPanel detailTimeSeriesPanel;
+        public TimeSeriesPanel overviewTimeSeriesPanel;
+        public HistogramPanel histogramPanel;
+        public TimeSeriesSelection selection;
     }
 }

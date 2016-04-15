@@ -173,7 +173,7 @@ public class MultiHistogramPanel extends JPanel {
         return plotHeight;
     }
 
-    public void addHistogram(Histogram histogram) {
+    public HistogramPanel addHistogram(Histogram histogram) {
         ViewInfo viewInfo = new ViewInfo();
         viewInfoList.add(viewInfo);
 
@@ -200,10 +200,33 @@ public class MultiHistogramPanel extends JPanel {
 
         panelBox.add(viewInfo.viewPanel);
         revalidate();
+
+        return viewInfo.histogramPanel;
+    }
+
+    public HistogramPanel getHistogramPanel(Histogram histogram) {
+        for (ViewInfo viewInfo : viewInfoList) {
+            if (viewInfo.histogramPanel.getHistogram() == histogram) {
+                return viewInfo.histogramPanel;
+            }
+        }
+        return null;
     }
 
     public void removeHistogramPanel(HistogramPanel histogramPanel) {
+        ViewInfo viewToRemove = null;
 
+        for (ViewInfo viewInfo : viewInfoList) {
+            if (viewInfo.histogramPanel == histogramPanel) {
+                viewToRemove = viewInfo;
+            }
+        }
+
+        if (viewToRemove != null) {
+            viewInfoList.remove(viewToRemove);
+            // TODO: Need to remove from group here and reset time range for the group
+            rebuildBoxPanel();
+        }
     }
 
     public static void main (String args[]) {

@@ -39,9 +39,8 @@ public class MultiViewPanel extends JPanel {
     private Box panelBox;
     private Font fontAwesomeFont = null;
 
-    private boolean linkPanelScrollBars = false;
     private Color dataColor = new Color(80, 80, 130, 180);
-    private ArrayList<ViewInfo> viewInfoList = new ArrayList<ViewInfo>();
+    private ArrayList<ViewInfo> viewInfoList = new ArrayList<>();
     private HashMap<String, GroupInfo> viewGroupMap = new HashMap<>();
 
     private boolean syncGroupScrollbars = false;
@@ -66,6 +65,15 @@ public class MultiViewPanel extends JPanel {
         }
 
         initialize();
+    }
+
+    public TimeSeriesPanel getDetailTimeSeriesPanel(TimeSeries timeSeries) {
+        for (ViewInfo viewInfo : viewInfoList) {
+            if (viewInfo.timeSeries == timeSeries) {
+                return viewInfo.detailTimeSeriesPanel;
+            }
+        }
+        return null;
     }
 
     public void setSyncGroupScollbarsEnabled (boolean enabled) {
@@ -307,6 +315,7 @@ public class MultiViewPanel extends JPanel {
 
         viewInfo.detailsTimeSeriesPanelScrollPane = new JScrollPane(viewInfo.detailTimeSeriesPanel);
         viewInfo.detailsTimeSeriesPanelScrollPane.setPreferredSize(new Dimension(400, 100));
+        viewInfo.detailsTimeSeriesPanelScrollPane.setMinimumSize(new Dimension(200, 40));
 //        viewInfo.detailsTimeSeriesPanelScrollPane.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
 //        viewInfo.detailsTimeSeriesPanelScrollPane.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEtchedBorder(), BorderFactory.createEmptyBorder(4, 4, 4, 4)));
 
@@ -418,6 +427,7 @@ public class MultiViewPanel extends JPanel {
         viewInfo.sidePanel.add(viewInfo.overviewHistogramPanel);
         viewInfo.sidePanel.add(viewInfo.overviewTimeSeriesPanel);
         viewInfo.sidePanel.setPreferredSize(new Dimension(300, plotHeight));
+        viewInfo.sidePanel.setMinimumSize(new Dimension(200, 40));
         viewInfo.sidePanel.setBorder(BorderFactory.createTitledBorder("Overview"));
         viewInfo.sidePanel.setVisible(showOverview);
 
@@ -436,7 +446,7 @@ public class MultiViewPanel extends JPanel {
 
         viewInfo.splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, detailsPanel, viewInfo.sidePanel);
         viewInfo.splitPane.setContinuousLayout(true);
-        viewInfo.splitPane.setResizeWeight(0.75);
+        viewInfo.splitPane.setResizeWeight(0.7);
         viewInfo.splitPane.setDividerLocation(currentSplitDividerPosition);
         viewInfo.splitPane.setOneTouchExpandable(true);
         viewInfo.splitPane.addPropertyChangeListener(JSplitPane.DIVIDER_LOCATION_PROPERTY,
@@ -537,7 +547,7 @@ public class MultiViewPanel extends JPanel {
 
 //        ((JPanel)frame.getContentPane()).add(scroller, BorderLayout.CENTER);
         ((JPanel)frame.getContentPane()).add(scroller, BorderLayout.CENTER);
-        frame.setSize(1000, 300);
+        frame.setSize(600, 300);
         frame.setVisible(true);
 
         for (int i = 0; i < 3; i++) {

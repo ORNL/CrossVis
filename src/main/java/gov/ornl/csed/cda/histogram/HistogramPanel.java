@@ -81,6 +81,14 @@ public class HistogramPanel extends JComponent implements ComponentListener, Mou
         addMouseMotionListener(this);
     }
 
+    public Histogram getHistogram() {
+        return histogram;
+    }
+
+    public Histogram getHighlightHistogram() {
+        return highlightHistogram;
+    }
+
     public static void main (String args[]) {
         EventQueue.invokeLater(new Runnable() {
             @Override

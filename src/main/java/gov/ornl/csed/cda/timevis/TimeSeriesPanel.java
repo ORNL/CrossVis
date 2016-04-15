@@ -1,27 +1,26 @@
 package gov.ornl.csed.cda.timevis;
 
 import gov.ornl.csed.cda.util.GraphicsUtil;
-import org.apache.commons.math3.stat.descriptive.StatisticalSummary;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
-import javax.swing.border.BevelBorder;
 import javax.swing.border.Border;
 import javax.swing.border.EtchedBorder;
 import java.awt.*;
 import java.awt.event.*;
-import java.awt.geom.Ellipse2D;
-import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.awt.geom.RoundRectangle2D;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Random;
+import java.util.TreeMap;
 
 /**
  * Created by csg on 12/2/15.
@@ -58,6 +57,7 @@ public class TimeSeriesPanel extends JComponent implements ComponentListener, Mo
     private int hoverX;
     private Instant hoverInstant;
     private double hoverValue = Double.NaN;
+    private TimeSeriesSelection hoverTimeSeriesSelection = null;
 
     private boolean shrinkToFit = false;
     private PlotDisplayOption plotDisplayOption = PlotDisplayOption.POINT;
@@ -79,6 +79,16 @@ public class TimeSeriesPanel extends JComponent implements ComponentListener, Mo
 
     private boolean showTimeRangeLabels = true;
 
+    // range selection dragging stuff
+    private Point startDragPoint = new Point();
+    private Point endDragPoint = new Point();
+    private boolean draggingSelection;
+    private TimeSeriesSelection draggingTimeSeriesSelecton;
+
+    // range selection data
+    private ArrayList<TimeSeriesSelection> selectionList = new ArrayList<>();
+    private ArrayList<TimeSeriesPanelSelectionListener> selectionListeners = new ArrayList<>();
+
     // not shrink to fit constructor
     public TimeSeriesPanel (int plotUnitWidth, ChronoUnit plotChronoUnit, PlotDisplayOption plotDisplayOption) {
         this.plotUnitWidth = plotUnitWidth;
@@ -89,6 +99,34 @@ public class TimeSeriesPanel extends JComponent implements ComponentListener, Mo
         addComponentListener(this);
         addMouseListener(this);
         addMouseMotionListener(this);
+    }
+
+    public void addTimeSeriesPanelSelectionListener (TimeSeriesPanelSelectionListener listener) {
+        if (!selectionListeners.contains(listener)) {
+            selectionListeners.add(listener);
+        }
+    }
+
+    public void removeTimeSeriesPanelSelectionListener (TimeSeriesPanelSelectionListener listener) {
+        selectionListeners.remove(listener);
+    }
+
+    private void fireSelectionCreated(TimeSeriesSelection selection) {
+        for (TimeSeriesPanelSelectionListener listener : selectionListeners) {
+            listener.selectionCreated(this, selection);
+        }
+    }
+
+    private void fireSelectionMoved(TimeSeriesSelection selection) {
+        for (TimeSeriesPanelSelectionListener listener : selectionListeners) {
+            listener.selectionMoved(this, selection);
+        }
+    }
+
+    private void fireSelectionDeleted(TimeSeriesSelection selection) {
+        for (TimeSeriesPanelSelectionListener listener : selectionListeners) {
+            listener.selectionDeleted(this, selection);
+        }
     }
 
     // shrink to fit constructor
@@ -236,17 +274,29 @@ public class TimeSeriesPanel extends JComponent implements ComponentListener, Mo
 
     @Override
     public void mouseClicked(MouseEvent e) {
-
+        if (SwingUtilities.isLeftMouseButton(e)) {
+            if (hoverTimeSeriesSelection != null) {
+                selectionList.remove(hoverTimeSeriesSelection);
+                fireSelectionDeleted(hoverTimeSeriesSelection);
+                hoverTimeSeriesSelection = null;
+                repaint();
+            }
+        }
     }
 
     @Override
     public void mousePressed(MouseEvent e) {
-
+        startDragPoint.setLocation(e.getX(), e.getY());
+        endDragPoint.setLocation(e.getX(), e.getY());
     }
 
     @Override
     public void mouseReleased(MouseEvent e) {
-
+        if (draggingSelection) {
+            fireSelectionCreated(draggingTimeSeriesSelecton);
+            draggingSelection = false;
+            draggingTimeSeriesSelecton = null;
+        }
     }
 
     @Override
@@ -261,7 +311,71 @@ public class TimeSeriesPanel extends JComponent implements ComponentListener, Mo
 
     @Override
     public void mouseDragged(MouseEvent e) {
+        if (hoverTimeSeriesSelection != null) {
+            int deltaX = e.getX() - endDragPoint.x;
+            endDragPoint.setLocation(e.getPoint());
+            hoverTimeSeriesSelection.setStartScreenLocation(hoverTimeSeriesSelection.getStartScreenLocation() + deltaX);
+            hoverTimeSeriesSelection.setEndScreenLocation(hoverTimeSeriesSelection.getEndScreenLocation() + deltaX);
 
+            // clamp start location to plot left
+            int plotLeft = plotRectangle.x;
+            if (hoverTimeSeriesSelection.getStartScreenLocation() < plotLeft) {
+                deltaX = plotLeft - hoverTimeSeriesSelection.getStartScreenLocation();
+                hoverTimeSeriesSelection.setStartScreenLocation(plotLeft);
+                hoverTimeSeriesSelection.setEndScreenLocation(hoverTimeSeriesSelection.getEndScreenLocation() + deltaX);
+            }
+
+            // clamp end location to plot right
+            int plotRight = plotRectangle.x + plotRectangle.width;
+            if (hoverTimeSeriesSelection.getEndScreenLocation() > plotRight) {
+                deltaX = hoverTimeSeriesSelection.getEndScreenLocation() - plotRight;
+                hoverTimeSeriesSelection.setStartScreenLocation(hoverTimeSeriesSelection.getStartScreenLocation() - deltaX);
+                hoverTimeSeriesSelection.setEndScreenLocation(plotRight);
+            }
+
+            double selectionStartMillis = GraphicsUtil.mapValue(hoverTimeSeriesSelection.getStartScreenLocation(), plotRectangle.getX(), plotRectangle.getMaxX(), startInstant.toEpochMilli(), endInstant.toEpochMilli());
+            Instant selectionStart = Instant.ofEpochMilli((long) selectionStartMillis);
+            double selectionEndMillis = GraphicsUtil.mapValue(hoverTimeSeriesSelection.getEndScreenLocation(), plotRectangle.getX(), plotRectangle.getMaxX(), startInstant.toEpochMilli(), endInstant.toEpochMilli());
+            Instant selectionEnd = Instant.ofEpochMilli((long) selectionEndMillis);
+
+            hoverTimeSeriesSelection.setStartInstant(selectionStart);
+            hoverTimeSeriesSelection.setEndInstant(selectionEnd);
+
+            fireSelectionMoved(hoverTimeSeriesSelection);
+        } else {
+            draggingSelection = true;
+            endDragPoint.setLocation(e.getPoint());
+
+            int leftPosition = startDragPoint.x < endDragPoint.x ? startDragPoint.x : endDragPoint.x;
+            if (leftPosition < plotRectangle.x) {
+                leftPosition = plotRectangle.x;
+            }
+
+            int rightPosition = startDragPoint.x > endDragPoint.x ? startDragPoint.x : endDragPoint.x;
+            if (rightPosition > (plotRectangle.x + plotRectangle.width)) {
+                rightPosition = plotRectangle.x + plotRectangle.width;
+            }
+
+            log.debug("leftPosition: " + leftPosition + " rightPosition: " + rightPosition);
+
+            double selectionStartMillis = GraphicsUtil.mapValue(leftPosition, plotRectangle.getX(), plotRectangle.getMaxX(), startInstant.toEpochMilli(), endInstant.toEpochMilli());
+            Instant selectionStart = Instant.ofEpochMilli((long) selectionStartMillis);
+            double selectionEndMillis = GraphicsUtil.mapValue(rightPosition, plotRectangle.getX(), plotRectangle.getMaxX(), startInstant.toEpochMilli(), endInstant.toEpochMilli());
+            Instant selectionEnd = Instant.ofEpochMilli((long) selectionEndMillis);
+            log.debug("Selection start: " + dtFormatter.format(selectionStart) + " end: " + dtFormatter.format(selectionEnd));
+
+            if (draggingTimeSeriesSelecton == null) {
+                draggingTimeSeriesSelecton = new TimeSeriesSelection(selectionStart, selectionEnd, leftPosition, rightPosition);
+                selectionList.add(draggingTimeSeriesSelecton);
+            } else {
+                draggingTimeSeriesSelecton.setStartInstant(selectionStart);
+                draggingTimeSeriesSelecton.setEndInstant(selectionEnd);
+            }
+
+            draggingTimeSeriesSelecton.setStartScreenLocation(leftPosition);
+            draggingTimeSeriesSelecton.setEndScreenLocation(rightPosition);
+        }
+        repaint();
     }
 
     @Override
@@ -269,8 +383,9 @@ public class TimeSeriesPanel extends JComponent implements ComponentListener, Mo
         hoverInstant = null;
         hoverX = -1;
         hoverValue = Double.NaN;
+        hoverTimeSeriesSelection = null;
 
-        if ( (plotRectangle != null) && (plotRectangle.contains(e.getPoint())) ) {
+        if ((plotRectangle != null) && (plotRectangle.contains(e.getPoint()))) {
             hoverX = e.getX();
 
             double norm = (double)(hoverX - plotRectangle.x) / (plotRectangle.width);
@@ -305,6 +420,16 @@ public class TimeSeriesPanel extends JComponent implements ComponentListener, Mo
                     }
                     if (nearestRecord != null) {
                         hoverValue = nearestRecord.value;
+                    }
+                }
+            }
+
+            if (!selectionList.isEmpty()) {
+                for (TimeSeriesSelection selection : selectionList) {
+                    if (e.getX() >= selection.getStartScreenLocation() &&
+                            e.getX() <= selection.getEndScreenLocation()) {
+                        hoverTimeSeriesSelection = selection;
+                        break;
                     }
                 }
             }
@@ -418,7 +543,7 @@ public class TimeSeriesPanel extends JComponent implements ComponentListener, Mo
                 plotRectangle = new Rectangle(plotLeft, plotTop, plotWidth, plotBottom - plotTop);
                 plotLeftInstant = startInstant;
                 plotRightInstant = startInstant.plusMillis(plotUnitDurationMillis * numPlotUnits);
-                log.debug("plotWidth = " + plotWidth + " plotUnitDurationMillis = " + plotUnitDurationMillis);
+//                log.debug("plotWidth = " + plotWidth + " plotUnitDurationMillis = " + plotUnitDurationMillis);
             } else {
                 int plotWidth = (int) (plotChronoUnit.between(startInstant, endInstant) * plotUnitWidth);
                 plotRectangle = new Rectangle(plotLeft, plotTop, plotWidth, plotBottom - plotTop);
@@ -825,12 +950,30 @@ public class TimeSeriesPanel extends JComponent implements ComponentListener, Mo
             }
 
             drawTimeSeries(g2, clipStartInstant, clipEndInstant);
-
             drawTimeInfoBar(g2);
+            drawTimeSelections(g2);
 
             if (hoverInstant != null) {
                 g2.setColor(hoverLineColor);
                 g2.drawLine(hoverX, 0, hoverX, getHeight());
+            }
+        }
+    }
+
+    private void drawTimeSelections(Graphics2D g2) {
+        if (selectionList != null && !selectionList.isEmpty()) {
+            for (TimeSeriesSelection selection : selectionList) {
+                RoundRectangle2D.Float selectionRect = new RoundRectangle2D.Float(selection.getStartScreenLocation(),
+                        plotRectangle.y, selection.getEndScreenLocation() - selection.getStartScreenLocation(),
+                        plotRectangle.height, 2.f, 2.f);
+                RoundRectangle2D.Float selectionRectOutline = new RoundRectangle2D.Float(selectionRect.x - 1,
+                        selectionRect.y-1, selectionRect.width + 2, selectionRect.height + 2, 2f, 2f);
+
+//				g2.setStroke(new BasicStroke(2.f));
+                g2.setColor(Color.darkGray);
+                g2.draw(selectionRectOutline);
+                g2.setColor(Color.orange);
+                g2.draw(selectionRect);
             }
         }
     }

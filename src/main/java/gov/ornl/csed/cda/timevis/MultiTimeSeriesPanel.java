@@ -4,7 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
-import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
@@ -52,7 +51,7 @@ public class MultiTimeSeriesPanel extends JComponent implements MouseMotionListe
     private int timeInfoBarHeight = 14;
     private Rectangle timeInfoBarRectangle;
     private int dragHandleWidth = 12;
-    private ArrayList<Rectangle> dragHandleRectangles = new ArrayList<Rectangle>();
+    private ArrayList<Rectangle> dragHandleRectangles = new ArrayList<>();
     private ArrayList<Rectangle> timeSeriesRectangles = new ArrayList<>();
     private ArrayList<Rectangle> removeButtonRectangles = new ArrayList<>();
 
@@ -586,6 +585,9 @@ public class MultiTimeSeriesPanel extends JComponent implements MouseMotionListe
                     removeTimeSeries(timeSeriesList.get(hoverTimeSeriesIndex));
                 }
             }
+        } else if (SwingUtilities.isRightMouseButton(e)) {
+            // show details popup window
+
         }
     }
 
