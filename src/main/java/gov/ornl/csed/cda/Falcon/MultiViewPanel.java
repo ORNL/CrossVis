@@ -76,6 +76,15 @@ public class MultiViewPanel extends JPanel {
         return null;
     }
 
+    public JScrollPane getDetailsTimeSeriesScrollPane(TimeSeries timeSeries) {
+        for (ViewInfo viewInfo : viewInfoList) {
+            if (viewInfo.timeSeries == timeSeries) {
+                return viewInfo.detailsTimeSeriesPanelScrollPane;
+            }
+        }
+        return null;
+    }
+
     public void setSyncGroupScollbarsEnabled (boolean enabled) {
         if (syncGroupScrollbars != enabled) {
             syncGroupScrollbars = enabled;
@@ -235,6 +244,7 @@ public class MultiViewPanel extends JPanel {
         buttonPanel.add(removeButton);
         buttonPanel.add(moveDownButton);
 
+        
         if (fontAwesomeFont != null) {
             buttonPanel.setPreferredSize(new Dimension(40, 100));
             moveDownButton.setFont(fontAwesomeFont);

@@ -183,7 +183,7 @@ public class MultiHistogramPanel extends JPanel {
         viewInfo.histogramPanel.setPreferredSize(new Dimension(100, plotHeight));
         viewInfo.histogramPanel.setMinimumSize(new Dimension(100, plotHeight));
         viewInfo.histogramPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, plotHeight));
-        viewInfo.histogramPanel.setBorder(BorderFactory.createTitledBorder(histogram.getName()));
+//        viewInfo.histogramPanel.setBorder(BorderFactory.createTitledBorder(histogram.getName()));
 
         viewInfo.buttonPanel = createButtonPanel(viewInfo);
 

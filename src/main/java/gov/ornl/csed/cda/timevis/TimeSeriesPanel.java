@@ -129,6 +129,14 @@ public class TimeSeriesPanel extends JComponent implements ComponentListener, Mo
         }
     }
 
+    public boolean removeTimeSeriesSelection(TimeSeriesSelection timeSeriesSelection) {
+        if (selectionList.remove(timeSeriesSelection)) {
+            repaint();
+            return true;
+        }
+        return false;
+    }
+
     // shrink to fit constructor
     public TimeSeriesPanel (int plotUnitWidth, PlotDisplayOption plotDisplayOption) {
         this.plotUnitWidth = plotUnitWidth;
@@ -669,6 +677,14 @@ public class TimeSeriesPanel extends JComponent implements ComponentListener, Mo
                 }
             }
         }
+    }
+
+    public int getXForInstant(Instant instant) {
+        long totalPlotDeltaTime = ChronoUnit.MILLIS.between(startInstant, endInstant);
+        long deltaTime = ChronoUnit.MILLIS.between(startInstant, instant);
+        double normTime = (double)deltaTime / totalPlotDeltaTime;
+        double x = plotRectangle.x + ((double)plotRectangle.width * normTime);
+        return (int)x;
     }
 
     private void drawTimeSeries(Graphics2D g2, Instant startClipInstant, Instant endClipInstant) {

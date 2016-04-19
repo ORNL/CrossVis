@@ -20,9 +20,7 @@ import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.input.*;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.StackPane;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.*;
 import javafx.scene.text.Font;
@@ -42,6 +40,7 @@ import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.EtchedBorder;
 import java.awt.*;
+import java.awt.Insets;
 import java.awt.event.AdjustmentEvent;
 import java.awt.event.AdjustmentListener;
 import java.awt.geom.*;
@@ -129,6 +128,10 @@ public class FalconFX extends Application {
 
     private HashMap<TimeSeriesSelection, SelectionViewInfo> selectionViewInfoMap = new HashMap<>();
 
+    private SelectionDetailsPanel selectionDetailPanel;
+    private Spinner selectionDetailPlotHeightSpinner;
+    private Spinner selectionDetailBinSizeSpinner;
+
     public static void main(String[] args) {
         launch(args);
     }
@@ -172,7 +175,8 @@ public class FalconFX extends Application {
 //        Node multiTimeSeriesNode = createMultiTimeSeriesPanel();
 //        Node multiHistogramNode = createMultiHistogramPanel();
         Node multiViewNode = createMultiViewPanel();
-        Node selectionViewNode = createMultiHistogramPanel();
+//        Node selectionViewNode = createMultiHistogramPanel();
+        Node selectionViewNode = createSelectionDetailPanel();
 
         createDataTreeView();
         createColumnTableView();
@@ -768,7 +772,6 @@ public class FalconFX extends Application {
     private void loadColumnIntoODTimeSeries (FileMetadata fileMetadata, String variableName) {
         if (fileMetadata.fileType == FileMetadata.FileType.CSV) {
             TimeSeries timeSeries = fileMetadata.timeSeriesMap.get(variableName);
-//            TimeSeries timeSeries = timeSeriesMap.get(variableClipboardData.variableName);
             overviewTimeSeriesPanel.setTimeSeries(timeSeries, timeSeries.getStartInstant(), timeSeries.getEndInstant());
             detailsTimeSeriesPanel.setTimeSeries(timeSeries, timeSeries.getStartInstant(), timeSeries.getEndInstant());
             overviewDetailTimeSeriesNameLabel.setText(timeSeries.getName());
@@ -779,7 +782,6 @@ public class FalconFX extends Application {
                 variableList.add(variableName);
                 Map<String, TimeSeries> PLGTimeSeriesMap = PLGFileReader.readPLGFileAsTimeSeries(fileMetadata.file, variableList);
                 for (TimeSeries timeSeries : PLGTimeSeriesMap.values()) {
-//                    timeSeriesMap.put(timeSeries.getName(), timeSeries);
                     overviewTimeSeriesPanel.setTimeSeries(timeSeries, timeSeries.getStartInstant(), timeSeries.getEndInstant());
                     detailsTimeSeriesPanel.setTimeSeries(timeSeries, timeSeries.getStartInstant(), timeSeries.getEndInstant());
                     overviewDetailTimeSeriesNameLabel.setText(timeSeries.getName());
@@ -790,10 +792,79 @@ public class FalconFX extends Application {
         }
     }
 
+    private void addSelectionView(TimeSeriesPanel detailTimeSeriesPanel, JScrollPane detailTimeSeriesPanelScrollPane, TimeSeriesSelection timeSeriesSelection) {
+        log.debug("TimeSeries selection created");
+        selectionDetailPanel.addSelection(detailTimeSeriesPanel, detailTimeSeriesPanelScrollPane, timeSeriesSelection);
+//        // get the data in the selection range
+//        ArrayList<TimeSeriesRecord> records = detailTimeSeriesPanel.getTimeSeries().getRecordsBetween(timeSeriesSelection.getStartInstant(), timeSeriesSelection.getEndInstant());
+//
+//        // add to selection view
+//        int binCount = 20;
+//        double values[] = new double[records.size()];
+//        for (int i = 0; i < values.length; i++) {
+//            values[i] = records.get(i).value;
+//        }
+//        Histogram histogram = new Histogram(detailTimeSeriesPanel.getTimeSeries().getName(), values, binCount);
+//        HistogramPanel histogramPanel = multiHistogramPanel.addHistogram(histogram);
+//
+//        SelectionViewInfo selectionViewInfo = new SelectionViewInfo();
+//        selectionViewInfo.detailTimeSeriesPanel = detailTimeSeriesPanel;
+//        selectionViewInfo.selection = timeSeriesSelection;
+//        selectionViewInfo.histogramPanel = histogramPanel;
+//        selectionViewInfoMap.put(timeSeriesSelection, selectionViewInfo);
+    }
+
+    private void updateSelectionView(TimeSeriesPanel detailTimeSeriesPanel, TimeSeriesSelection timeSeriesSelection) {
+        log.debug("TimeSeries selection moved");
+        selectionDetailPanel.updateSelection(timeSeriesSelection);
+//        // get the data in the selection range
+//        ArrayList<TimeSeriesRecord> records = detailTimeSeriesPanel.getTimeSeries().getRecordsBetween(timeSeriesSelection.getStartInstant(), timeSeriesSelection.getEndInstant());
+//
+//        // add to selection view
+//        int binCount = 20;
+//        double values[] = new double[records.size()];
+//        for (int i = 0; i < values.length; i++) {
+//            values[i] = records.get(i).value;
+//        }
+//        Histogram histogram = new Histogram(detailTimeSeriesPanel.getTimeSeries().getName(), values, binCount);
+//
+//        // update selection view
+//        SelectionViewInfo selectionViewInfo = selectionViewInfoMap.get(timeSeriesSelection);
+//        selectionViewInfo.histogramPanel.setHistogram(histogram);
+    }
+
+    private void deleteSelectionView(TimeSeriesPanel detailTimeSeriesPanel, TimeSeriesSelection timeSeriesSelection) {
+        log.debug("TimeSeries selection deleted");
+        selectionDetailPanel.deleteSelection(timeSeriesSelection);
+//        // remove selection view
+//        SelectionViewInfo selectionViewInfo = selectionViewInfoMap.remove(timeSeriesSelection);
+//        multiHistogramPanel.removeHistogramPanel(selectionViewInfo.histogramPanel);
+    }
+
     private void loadColumnIntoMultiView (FileMetadata fileMetadata, String variableName) {
         if (fileMetadata.fileType == FileMetadata.FileType.CSV) {
             TimeSeries timeSeries = fileMetadata.timeSeriesMap.get(variableName);
             multiViewPanel.addTimeSeries(timeSeries, fileMetadata.file.getName());
+
+            TimeSeriesPanel detailsTimeSeries = multiViewPanel.getDetailTimeSeriesPanel(timeSeries);
+            JScrollPane detailsTimeSeriesPanelScrollPanel = multiViewPanel.getDetailsTimeSeriesScrollPane(timeSeries);
+
+            detailsTimeSeries.addTimeSeriesPanelSelectionListener(new TimeSeriesPanelSelectionListener() {
+                @Override
+                public void selectionCreated(TimeSeriesPanel timeSeriesPanel, TimeSeriesSelection timeSeriesSelection) {
+                    addSelectionView(timeSeriesPanel, detailsTimeSeriesPanelScrollPanel, timeSeriesSelection);
+                }
+
+                @Override
+                public void selectionMoved(TimeSeriesPanel timeSeriesPanel, TimeSeriesSelection timeSeriesSelection) {
+                    updateSelectionView(timeSeriesPanel, timeSeriesSelection);
+                }
+
+                @Override
+                public void selectionDeleted(TimeSeriesPanel timeSeriesPanel, TimeSeriesSelection timeSeriesSelection) {
+                    deleteSelectionView(timeSeriesPanel, timeSeriesSelection);
+                }
+            });
         } else if (fileMetadata.fileType == FileMetadata.FileType.PLG) {
             try {
                 ArrayList<String> variableList = new ArrayList<>();
@@ -803,55 +874,22 @@ public class FalconFX extends Application {
                     timeSeries.setName(fileMetadata.file.getName() + ":" + timeSeries.getName());
                     multiViewPanel.addTimeSeries(timeSeries, fileMetadata.file.getName());
                     TimeSeriesPanel detailsTimeSeries = multiViewPanel.getDetailTimeSeriesPanel(timeSeries);
+                    JScrollPane detailsTimeSeriesPanelScrollPanel = multiViewPanel.getDetailsTimeSeriesScrollPane(timeSeries);
 
                     detailsTimeSeries.addTimeSeriesPanelSelectionListener(new TimeSeriesPanelSelectionListener() {
                         @Override
                         public void selectionCreated(TimeSeriesPanel timeSeriesPanel, TimeSeriesSelection timeSeriesSelection) {
-                            log.debug("TimeSeries selection created");
-                            // get the data in the selection range
-                            ArrayList<TimeSeriesRecord> records = timeSeriesPanel.getTimeSeries().getRecordsBetween(timeSeriesSelection.getStartInstant(), timeSeriesSelection.getEndInstant());
-
-                            // add to selection view
-                            int binCount = 20;
-                            double values[] = new double[records.size()];
-                            for (int i = 0; i < values.length; i++) {
-                                values[i] = records.get(i).value;
-                            }
-                            Histogram histogram = new Histogram(timeSeries.getName(), values, binCount);
-                            HistogramPanel histogramPanel = multiHistogramPanel.addHistogram(histogram);
-
-                            SelectionViewInfo selectionViewInfo = new SelectionViewInfo();
-                            selectionViewInfo.detailTimeSeriesPanel = timeSeriesPanel;
-                            selectionViewInfo.selection = timeSeriesSelection;
-                            selectionViewInfo.histogramPanel = histogramPanel;
-                            selectionViewInfoMap.put(timeSeriesSelection, selectionViewInfo);
+                            addSelectionView(timeSeriesPanel, detailsTimeSeriesPanelScrollPanel, timeSeriesSelection);
                         }
 
                         @Override
                         public void selectionMoved(TimeSeriesPanel timeSeriesPanel, TimeSeriesSelection timeSeriesSelection) {
-                            log.debug("TimeSeries selection moved");
-                            // get the data in the selection range
-                            ArrayList<TimeSeriesRecord> records = timeSeriesPanel.getTimeSeries().getRecordsBetween(timeSeriesSelection.getStartInstant(), timeSeriesSelection.getEndInstant());
-
-                            // add to selection view
-                            int binCount = 20;
-                            double values[] = new double[records.size()];
-                            for (int i = 0; i < values.length; i++) {
-                                values[i] = records.get(i).value;
-                            }
-                            Histogram histogram = new Histogram(timeSeries.getName(), values, binCount);
-
-                            // update selection view
-                            SelectionViewInfo selectionViewInfo = selectionViewInfoMap.get(timeSeriesSelection);
-                            selectionViewInfo.histogramPanel.setHistogram(histogram);
+                            updateSelectionView(timeSeriesPanel, timeSeriesSelection);
                         }
 
                         @Override
                         public void selectionDeleted(TimeSeriesPanel timeSeriesPanel, TimeSeriesSelection timeSeriesSelection) {
-                            log.debug("TimeSeries selection deleted");
-                            // remove selection view
-                            SelectionViewInfo selectionViewInfo = selectionViewInfoMap.remove(timeSeriesSelection);
-                            multiHistogramPanel.removeHistogramPanel(selectionViewInfo.histogramPanel);
+                            deleteSelectionView(timeSeriesPanel, timeSeriesSelection);
                         }
                     });
                 }
@@ -863,11 +901,6 @@ public class FalconFX extends Application {
 
     private void loadColumnIntoMultiHistogram (FileMetadata fileMetadata, String variableName) {
         if (fileMetadata.fileType == FileMetadata.FileType.CSV) {
-//            int binCount = (int) Math.floor(Math.sqrt(dataTable.getTupleCount()));
-//            if (binCount < 1) {
-//                binCount = 1;
-//            }
-//            int binCount = multiHistogramPanel.getBinCount();
             int binCount = 20;
             TimeSeries timeSeries = fileMetadata.timeSeriesMap.get(variableName);
             ArrayList<TimeSeriesRecord> records = timeSeries.getAllRecords();
@@ -877,20 +910,6 @@ public class FalconFX extends Application {
             }
             Histogram histogram = new Histogram(timeSeries.getName(), values, binCount);
             multiHistogramPanel.addHistogram(histogram);
-
-//            for (int icol = 0; icol < dataTable.getColumnCount(); icol++) {
-//                if (dataTable.getColumnName(icol).equals(variableClipboardData.variableName)) {
-//                    Column column = dataTable.getColumn(icol);
-//                    double values[] = new double[column.getRowCount()];
-//                    for (int i = 0; i < column.getRowCount(); i++) {
-//                        values[i] = column.getDouble(i);
-//                    }
-//
-//                    Histogram histogram = new Histogram(dataTable.getColumnName(icol), values, binCount);
-//                    multiHistogramPanel.addHistogram(histogram);
-//                    break;
-//                }
-//            }
         } else if (fileMetadata.fileType == FileMetadata.FileType.PLG) {
             try {
                 double variableData []= PLGFileReader.readPLGFileAsDoubleArray(fileMetadata.file, variableName);
@@ -924,8 +943,6 @@ public class FalconFX extends Application {
                 variableList.add(variableName);
                 Map<String, TimeSeries> PLGTimeSeriesMap = PLGFileReader.readPLGFileAsTimeSeries(fileMetadata.file, variableList);
                 for (TimeSeries timeSeries : PLGTimeSeriesMap.values()) {
-//                    timeSeriesMap.put(timeSeries.getName(), timeSeries);
-
                     if (multiTimeSeriesStartInstant == null) {
                         multiTimeSeriesStartInstant = timeSeries.getStartInstant();
                     } else if (multiTimeSeriesStartInstant.isBefore(timeSeries.getStartInstant())) {
@@ -1078,6 +1095,43 @@ public class FalconFX extends Application {
         return borderPane;
     }
 
+    private Node createSelectionDetailPanel() {
+        selectionDetailPanel = new SelectionDetailsPanel(120, 20);
+        selectionDetailPanel.setBackground(java.awt.Color.WHITE);
+
+        GridPane grid = new GridPane();
+        grid.setVgap(4);
+        grid.setPadding(new javafx.geometry.Insets(4, 4, 4, 4));
+
+        grid.add(new Label("Plot Height: "), 0, 0);
+        selectionDetailPlotHeightSpinner = new Spinner(40, 400, selectionDetailPanel.getPlotHeight());
+        selectionDetailPlotHeightSpinner.setEditable(true);
+        selectionDetailPlotHeightSpinner.valueProperty().addListener((obs, oldValue, newValue) -> selectionDetailPanel.setPlotHeight((Integer)newValue));
+        grid.add(selectionDetailPlotHeightSpinner, 1, 0);
+
+        grid.add(new Label("Bin Count: "), 0, 1);
+        selectionDetailBinSizeSpinner = new Spinner(2, 200, selectionDetailPanel.getBinCount());
+        selectionDetailBinSizeSpinner.setEditable(true);
+        selectionDetailBinSizeSpinner.valueProperty().addListener((obs, oldValue, newValue) -> selectionDetailPanel.setBinCount((Integer)newValue));
+        grid.add(selectionDetailBinSizeSpinner, 1, 1);
+
+        TitledPane settingsTitledPane = new TitledPane("Display Settings", grid);
+
+        Border border = BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(10,10,10,10), BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
+        JScrollPane scroller = new JScrollPane(selectionDetailPanel);
+        scroller.getVerticalScrollBar().setUnitIncrement(2);
+        scroller.setBorder(border);
+
+        SwingNode tsSwingNode = new SwingNode();
+        tsSwingNode.setContent(scroller);
+
+        BorderPane borderPane = new BorderPane();
+        borderPane.setTop(settingsTitledPane);
+        borderPane.setCenter(tsSwingNode);
+
+        return borderPane;
+    }
+
     private Node createMultiHistogramPanel() {
         multiHistogramPanel = new MultiHistogramPanel(120);
         multiHistogramPanel.setBackground(java.awt.Color.white);
@@ -1116,7 +1170,6 @@ public class FalconFX extends Application {
             if (db.hasContent(objectDataFormat)) {
                 VariableClipboardData variableClipboardData = (VariableClipboardData)db.getContent(objectDataFormat);
 
-//                FalconDataTreeItem dataTreeItem = (FalconDataTreeItem)db.getContent(objectDataFormat);
                 FileMetadata fileMetadata = fileMetadataMap.get(variableClipboardData.getFile());
                 loadColumnIntoMultiHistogram(fileMetadata, variableClipboardData.getVariableName());
 
@@ -1125,29 +1178,21 @@ public class FalconFX extends Application {
             event.consume();
         });
 
-//        ScrollPane scrollPane = new ScrollPane();
-//        scrollPane.setContent(tsSwingNode);
-//        scrollPane.setFitToWidth(true);
-
-//        scrollPane.setOnDragOver(event -> event.acceptTransferModes(TransferMode.COPY));
-//        scrollPane.setOnDragDropped(event -> {
-//            Dragboard db = event.getDragboard();
-//            if (db.hasContent(objectDataFormat)) {
-//                FalconDataTreeItem dataTreeItem = (FalconDataTreeItem)db.getContent(objectDataFormat);
-//
-//                if (dataTreeItem.variableName != null) {
-//                    loadColumnIntoMultiHistogram(dataTreeItem);
-//                }
-//
-//                event.setDropCompleted(true);
-//            }
-//            event.consume();
-//        });
-
         BorderPane borderPane = new BorderPane();
         borderPane.setTop(settingsHBox);
         borderPane.setCenter(tsSwingNode);
+
+//        Label title = new Label(" Selection View ");
+//        StackPane.setAlignment(title, Pos.TOP_CENTER);
+//
+//        StackPane contentPane = new StackPane();
+//        contentPane.getChildren().add(tsSwingNode);
+//
+//        getChildren().addAll(title, contentPane);
+//        StackPane stackPane = new StackPane();
+
         return borderPane;
+
     }
 
     private Node createMultiTimeSeriesPanel() {
@@ -1341,8 +1386,7 @@ public class FalconFX extends Application {
 
     private class SelectionViewInfo {
         public TimeSeriesPanel detailTimeSeriesPanel;
-        public TimeSeriesPanel overviewTimeSeriesPanel;
-        public HistogramPanel histogramPanel;
+        public JScrollPane detailsTimeSeriesPanelScrollPane;
         public TimeSeriesSelection selection;
     }
 }
