@@ -2,6 +2,7 @@ package gov.ornl.csed.cda.Falcon;
 
 import gov.ornl.csed.cda.histogram.Histogram;
 import gov.ornl.csed.cda.histogram.HistogramPanel;
+import gov.ornl.csed.cda.histogram.HistogramPanelListener;
 import gov.ornl.csed.cda.timevis.TimeSeries;
 import gov.ornl.csed.cda.timevis.TimeSeriesPanel;
 import gov.ornl.csed.cda.timevis.TimeSeriesRecord;
@@ -333,6 +334,18 @@ public class MultiViewPanel extends JPanel {
         viewInfo.detailHistogramPanel.setBinCount(binCount);
         viewInfo.detailHistogramPanel.setBackground(Color.white);
         viewInfo.detailHistogramPanel.setPreferredSize(new Dimension(50, 80));
+        viewInfo.detailHistogramPanel.setBorder(BorderFactory.createEmptyBorder(viewInfo.detailTimeSeriesPanel.getTimeBarHeight()+2, 0, viewInfo.detailTimeSeriesPanel.getValueBarHeight()+2, 0));
+        viewInfo.detailHistogramPanel.addHistogramPanelListener(new HistogramPanelListener() {
+            @Override
+            public void histogramPanelLowerLimitChanged(HistogramPanel histogramPanel, double lowerLimitValue) {
+                viewInfo.detailTimeSeriesPanel.setValueAxisMin(lowerLimitValue);
+            }
+
+            @Override
+            public void histogramPanelUpperLimitChanged(HistogramPanel histogramPanel, double upperLimitValue) {
+                viewInfo.detailTimeSeriesPanel.setValueAxisMax(upperLimitValue);
+            }
+        });
 
         viewInfo.overviewTimeSeriesPanel = new TimeSeriesPanel(1, timeSeriesDisplayOption);
         viewInfo.overviewTimeSeriesPanel.setShowTimeRangeLabels(false);
@@ -417,6 +430,17 @@ public class MultiViewPanel extends JPanel {
 
         viewInfo.overviewHistogramPanel = new HistogramPanel(HistogramPanel.ORIENTATION.HORIZONTAL, HistogramPanel.STATISTICS_MODE.MEAN_BASED);
         viewInfo.overviewHistogramPanel.setBinCount(binCount);
+        viewInfo.overviewHistogramPanel.addHistogramPanelListener(new HistogramPanelListener() {
+            @Override
+            public void histogramPanelLowerLimitChanged(HistogramPanel histogramPanel, double lowerLimitValue) {
+                viewInfo.detailTimeSeriesPanel.setValueAxisMin(lowerLimitValue);
+            }
+
+            @Override
+            public void histogramPanelUpperLimitChanged(HistogramPanel histogramPanel, double upperLimitValue) {
+                viewInfo.detailTimeSeriesPanel.setValueAxisMax(upperLimitValue);
+            }
+        });
 
         ArrayList<TimeSeriesRecord> records = timeSeries.getAllRecords();
         double values[] = new double[records.size()];
@@ -441,10 +465,10 @@ public class MultiViewPanel extends JPanel {
         viewInfo.sidePanel.setBorder(BorderFactory.createTitledBorder("Overview"));
         viewInfo.sidePanel.setVisible(showOverview);
 
-        JPanel detailsPanel = new JPanel();
-        detailsPanel.setLayout(new BorderLayout());
-        detailsPanel.add(viewInfo.detailsTimeSeriesPanelScrollPane, BorderLayout.CENTER);
-        detailsPanel.add(viewInfo.detailHistogramPanel, BorderLayout.EAST);
+//        JPanel detailsPanel = new JPanel();
+//        detailsPanel.setLayout(new BorderLayout());
+//        detailsPanel.add(viewInfo.detailsTimeSeriesPanelScrollPane, BorderLayout.CENTER);
+//        detailsPanel.add(viewInfo.detailHistogramPanel, BorderLayout.EAST);
 
         viewInfo.viewPanel = new JPanel();
         viewInfo.viewPanel.setPreferredSize(new Dimension(100, plotHeight));
@@ -454,7 +478,7 @@ public class MultiViewPanel extends JPanel {
         viewInfo.viewPanel.setLayout(new BorderLayout());
         viewInfo.viewPanel.setBorder(BorderFactory.createTitledBorder(timeSeries.getName()));
 
-        viewInfo.splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, detailsPanel, viewInfo.sidePanel);
+        viewInfo.splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, viewInfo.detailsTimeSeriesPanelScrollPane, viewInfo.sidePanel);
         viewInfo.splitPane.setContinuousLayout(true);
         viewInfo.splitPane.setResizeWeight(0.7);
         viewInfo.splitPane.setDividerLocation(currentSplitDividerPosition);
@@ -550,7 +574,7 @@ public class MultiViewPanel extends JPanel {
 
 //        TimeSeriesPanel overviewPanel = new TimeSeriesPanel(1, TimeSeriesPanel.PlotDisplayOption.LINE);
 //        overviewPanel.setTimeSeries(timeSeriesList.get(0));
-        MultiViewPanel multiViewPanel = new MultiViewPanel(150);
+        MultiViewPanel multiViewPanel = new MultiViewPanel(200);
 //        multiViewPanel.setAlignTimeSeriesEnabled(true);
         JScrollPane scroller = new JScrollPane(multiViewPanel);
 

@@ -72,6 +72,8 @@ public class HistogramPanel extends JComponent implements ComponentListener, Mou
     private boolean mouseOverMaxLabel = false;
     private boolean mouseOverMinLabel = false;
 
+    private ArrayList<HistogramPanelListener> listeners = new ArrayList<>();
+
     public HistogramPanel (ORIENTATION orientation, STATISTICS_MODE statisticsMode) {
         this.orientation = orientation;
         this.statisticsMode = statisticsMode;
@@ -79,6 +81,28 @@ public class HistogramPanel extends JComponent implements ComponentListener, Mou
         addComponentListener(this);
         addMouseListener(this);
         addMouseMotionListener(this);
+    }
+
+    public void addHistogramPanelListener(HistogramPanelListener listener) {
+        if (!listeners.contains(listener)) {
+            listeners.add(listener);
+        }
+    }
+
+    public boolean removeHistogramPanelListener(HistogramPanelListener listener) {
+        return listeners.remove(listener);
+    }
+
+    private void fireHistogramPanelLowerLimitChanged() {
+        for (HistogramPanelListener listener : listeners) {
+            listener.histogramPanelLowerLimitChanged(this, histogram.getMinValue());
+        }
+    }
+
+    private void fireHistogramPanelUpperLimitChanged() {
+        for (HistogramPanelListener listener : listeners) {
+            listener.histogramPanelUpperLimitChanged(this, histogram.getMaxValue());
+        }
     }
 
     public Histogram getHistogram() {
@@ -107,11 +131,13 @@ public class HistogramPanel extends JComponent implements ComponentListener, Mou
 
                 HistogramPanel horizontalHistogramPanel = new HistogramPanel(ORIENTATION.HORIZONTAL, STATISTICS_MODE.MEAN_BASED);
                 horizontalHistogramPanel.setBackground(Color.white);
-                horizontalHistogramPanel.setBorder(BorderFactory.createTitledBorder("Horizontal Histogram"));
+//                horizontalHistogramPanel.setBorder(BorderFactory.createTitledBorder("Horizontal Histogram"));
+                horizontalHistogramPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 10, 10));
 
                 HistogramPanel verticalHistogramPanel = new HistogramPanel(ORIENTATION.VERTICAL, STATISTICS_MODE.MEAN_BASED);
                 verticalHistogramPanel.setBackground(Color.white);
-                verticalHistogramPanel.setBorder(BorderFactory.createTitledBorder("Vertical Histogram"));
+                verticalHistogramPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 10, 10));
+//                verticalHistogramPanel.setBorder(BorderFactory.createTitledBorder("Vertical Histogram"));
 
                 JPanel mainPanel = (JPanel)frame.getContentPane();
                 mainPanel.setLayout(new GridLayout(1, 2));
@@ -170,6 +196,7 @@ public class HistogramPanel extends JComponent implements ComponentListener, Mou
                     highlightHistogram.setMinValue(value);
                 }
                 layoutPanel();
+                fireHistogramPanelLowerLimitChanged();
             }
         } else if (mouseOverMaxLabel = maxLabelRectangle.contains(e.getPoint())) {
             String maxValueString = DECIMAL_FORMATTER.format(histogram.getMaxValue());
@@ -183,6 +210,7 @@ public class HistogramPanel extends JComponent implements ComponentListener, Mou
                     highlightHistogram.setMaxValue(value);
                 }
                 layoutPanel();
+                fireHistogramPanelUpperLimitChanged();
             }
         }
     }
@@ -346,7 +374,6 @@ public class HistogramPanel extends JComponent implements ComponentListener, Mou
 
     private void layoutPanel() {
         if (histogram != null) {
-
             int plotLeft = getInsets().left;
             int plotTop = getInsets().top;
             int plotHeight = getHeight() - (getInsets().bottom + getInsets().top) - 1;
@@ -560,7 +587,8 @@ public class HistogramPanel extends JComponent implements ComponentListener, Mou
         g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 
         g2.setColor(getBackground());
-        g2.fillRect(getInsets().left, getInsets().top, getWidth()-(getInsets().left+getInsets().right), getHeight()-(getInsets().top+getInsets().bottom));
+        g2.fillRect(0, 0, getWidth(), getHeight());
+//        g2.fillRect(getInsets().left, getInsets().top, getWidth()-(getInsets().left+getInsets().right), getHeight()-(getInsets().top+getInsets().bottom));
 
         if (histogram != null) {
 //            if (valueRangeLabelsRectangle != null) {
@@ -672,6 +700,7 @@ public class HistogramPanel extends JComponent implements ComponentListener, Mou
                 g2.drawString(maxValueString, strX, strY);
 
 //                g2.setColor(Color.blue);
+//                g2.draw(fullPlotRectangle);
 //                g2.draw(maxLabelRectangle);
 //                g2.draw(minLabelRectangle);
             } else if (orientation == ORIENTATION.VERTICAL) {
@@ -708,6 +737,7 @@ public class HistogramPanel extends JComponent implements ComponentListener, Mou
                 g2.rotate(-Math.toRadians(90.), strX, strY);
 
 //                g2.setColor(Color.blue);
+//                g2.draw(fullPlotRectangle);
 //                g2.draw(maxLabelRectangle);
 //                g2.draw(minLabelRectangle);
             }

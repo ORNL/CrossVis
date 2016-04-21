@@ -1107,12 +1107,14 @@ public class FalconFX extends Application {
         selectionDetailPlotHeightSpinner = new Spinner(40, 400, selectionDetailPanel.getPlotHeight());
         selectionDetailPlotHeightSpinner.setEditable(true);
         selectionDetailPlotHeightSpinner.valueProperty().addListener((obs, oldValue, newValue) -> selectionDetailPanel.setPlotHeight((Integer)newValue));
+        selectionDetailPlotHeightSpinner.setPrefWidth(80.);
         grid.add(selectionDetailPlotHeightSpinner, 1, 0);
 
         grid.add(new Label("Bin Count: "), 0, 1);
         selectionDetailBinSizeSpinner = new Spinner(2, 200, selectionDetailPanel.getBinCount());
         selectionDetailBinSizeSpinner.setEditable(true);
         selectionDetailBinSizeSpinner.valueProperty().addListener((obs, oldValue, newValue) -> selectionDetailPanel.setBinCount((Integer)newValue));
+        selectionDetailBinSizeSpinner.setPrefWidth(80.);
         grid.add(selectionDetailBinSizeSpinner, 1, 1);
 
         TitledPane settingsTitledPane = new TitledPane("Display Settings", grid);

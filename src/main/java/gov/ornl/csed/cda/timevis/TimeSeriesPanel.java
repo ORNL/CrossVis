@@ -45,8 +45,11 @@ public class TimeSeriesPanel extends JComponent implements ComponentListener, Mo
     private Duration totalDuration;
 
     private int plotNameBarHeight = 14;
-    private int timeInfoBarHeight = 14;
-    private int plotValueBarHeight = 14;
+    private int timeBarHeight = 14;
+
+
+
+    private int valueBarHeight = 14;
 
     private int plotUnitWidth = 1;
     private int numPlotUnits = 0;
@@ -89,6 +92,12 @@ public class TimeSeriesPanel extends JComponent implements ComponentListener, Mo
     private ArrayList<TimeSeriesSelection> selectionList = new ArrayList<>();
     private ArrayList<TimeSeriesPanelSelectionListener> selectionListeners = new ArrayList<>();
 
+
+
+    // value axis range
+    private double valueAxisMax;
+    private double valueAxisMin;
+
     // not shrink to fit constructor
     public TimeSeriesPanel (int plotUnitWidth, ChronoUnit plotChronoUnit, PlotDisplayOption plotDisplayOption) {
         this.plotUnitWidth = plotUnitWidth;
@@ -99,6 +108,40 @@ public class TimeSeriesPanel extends JComponent implements ComponentListener, Mo
         addComponentListener(this);
         addMouseListener(this);
         addMouseMotionListener(this);
+    }
+
+    public double getValueAxisMax() {
+        return valueAxisMax;
+    }
+
+    public void setValueAxisMax(double valueAxisMax) {
+        this.valueAxisMax = valueAxisMax;
+        layoutPanel();
+    }
+
+    public double getValueAxisMin() {
+        return valueAxisMin;
+    }
+
+    public void setValueAxisMin(double valueAxisMin) {
+        this.valueAxisMin = valueAxisMin;
+        layoutPanel();
+    }
+
+    public int getValueBarHeight() {
+        return valueBarHeight;
+    }
+
+    public void setValueBarHeight(int valueBarHeight) {
+        this.valueBarHeight = valueBarHeight;
+    }
+
+    public int getTimeBarHeight() {
+        return timeBarHeight;
+    }
+
+    public void setTimeBarHeight(int timeBarHeight) {
+        this.timeBarHeight = timeBarHeight;
     }
 
     public void addTimeSeriesPanelSelectionListener (TimeSeriesPanelSelectionListener listener) {
@@ -257,6 +300,8 @@ public class TimeSeriesPanel extends JComponent implements ComponentListener, Mo
         this.startInstant = startInstant;
         this.endInstant = endInstant;
         totalDuration = Duration.between(startInstant, endInstant);
+        valueAxisMin = timeSeries.getMinValue();
+        valueAxisMax = timeSeries.getMaxValue();
         layoutPanel();
     }
 
@@ -536,12 +581,12 @@ public class TimeSeriesPanel extends JComponent implements ComponentListener, Mo
     public void layoutPanel() {
         if (timeSeries != null) {
             int plotLeft = getInsets().left;
-            int plotTop = getInsets().top + timeInfoBarHeight;
-            int plotBottom = getHeight() - (getInsets().bottom + plotValueBarHeight);
+            int plotTop = getInsets().top + timeBarHeight;
+            int plotBottom = getHeight() - (getInsets().bottom + valueBarHeight);
             timeInfoBarTop = getInsets().top;
-            timeInfoBarBottom = timeInfoBarTop + timeInfoBarHeight;
+            timeInfoBarBottom = timeInfoBarTop + timeBarHeight;
             valueInfoBarTop = plotBottom;
-            valueInfoBarBottom = valueInfoBarTop + plotValueBarHeight;
+            valueInfoBarBottom = valueInfoBarTop + valueBarHeight;
 
             if (shrinkToFit) {
                 int plotWidth = getWidth() - (getInsets().left + getInsets().right);
@@ -662,7 +707,8 @@ public class TimeSeriesPanel extends JComponent implements ComponentListener, Mo
                     double normTime = (double)deltaTime / totalPlotDeltaTime;
                     double x = plotRectangle.x + ((double)plotRectangle.width * normTime);
 
-                    double norm = (record.value - timeSeries.getMinValue()) / (timeSeries.getMaxValue() - timeSeries.getMinValue());
+//                    double norm = (record.value - timeSeries.getMinValue()) / (timeSeries.getMaxValue() - timeSeries.getMinValue());
+                    double norm = (record.value - valueAxisMin) / (valueAxisMax - valueAxisMin);
                     double yOffset = norm * (plotRectangle.height);
                     double y = plotRectangle.height - yOffset;
 
