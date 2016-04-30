@@ -77,7 +77,7 @@ public class FalconFX extends Application {
     private Spinner ODTimeSeriesPlotChronoUnitWidthSpinner;
 
     // Multiple TimeSeries Objects
-    private MultiTimeSeriesPanel multiTimeSeriesPanel;
+//    private MultiTimeSeriesPanel multiTimeSeriesPanel;
     private Instant multiTimeSeriesStartInstant;
     private Instant multiTimeSeriesEndInstant;
 
@@ -921,47 +921,47 @@ public class FalconFX extends Application {
         }
     }
 
-    private void loadColumnIntoMultiTimeSeries (FileMetadata fileMetadata, String variableName) {
-        if (fileMetadata.fileType == FileMetadata.FileType.CSV) {
-            TimeSeries timeSeries = fileMetadata.timeSeriesMap.get(variableName);
-            if (multiTimeSeriesStartInstant == null) {
-                multiTimeSeriesStartInstant = timeSeries.getStartInstant();
-            } else if (multiTimeSeriesStartInstant.isBefore(timeSeries.getStartInstant())) {
-                multiTimeSeriesStartInstant = timeSeries.getStartInstant();
-            }
-
-            if (multiTimeSeriesEndInstant == null) {
-                multiTimeSeriesEndInstant = timeSeries.getEndInstant();
-            } else if (multiTimeSeriesEndInstant.isAfter(timeSeries.getEndInstant())) {
-                multiTimeSeriesEndInstant = timeSeries.getEndInstant();
-            }
-            multiTimeSeriesPanel.setDateTimeRange(multiTimeSeriesStartInstant, multiTimeSeriesEndInstant, multiTimeSeriesChronoUnitChoice.getSelectionModel().getSelectedItem());
-            multiTimeSeriesPanel.addTimeSeries(timeSeries);
-        } else if (fileMetadata.fileType == FileMetadata.FileType.PLG) {
-            try {
-                ArrayList<String> variableList = new ArrayList<>();
-                variableList.add(variableName);
-                Map<String, TimeSeries> PLGTimeSeriesMap = PLGFileReader.readPLGFileAsTimeSeries(fileMetadata.file, variableList);
-                for (TimeSeries timeSeries : PLGTimeSeriesMap.values()) {
-                    if (multiTimeSeriesStartInstant == null) {
-                        multiTimeSeriesStartInstant = timeSeries.getStartInstant();
-                    } else if (multiTimeSeriesStartInstant.isBefore(timeSeries.getStartInstant())) {
-                        multiTimeSeriesStartInstant = timeSeries.getStartInstant();
-                    }
-
-                    if (multiTimeSeriesEndInstant == null) {
-                        multiTimeSeriesEndInstant = timeSeries.getEndInstant();
-                    } else if (multiTimeSeriesEndInstant.isAfter(timeSeries.getEndInstant())) {
-                        multiTimeSeriesEndInstant = timeSeries.getEndInstant();
-                    }
-                    multiTimeSeriesPanel.setDateTimeRange(multiTimeSeriesStartInstant, multiTimeSeriesEndInstant, multiTimeSeriesChronoUnitChoice.getSelectionModel().getSelectedItem());
-                    multiTimeSeriesPanel.addTimeSeries(timeSeries);
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
+//    private void loadColumnIntoMultiTimeSeries (FileMetadata fileMetadata, String variableName) {
+//        if (fileMetadata.fileType == FileMetadata.FileType.CSV) {
+//            TimeSeries timeSeries = fileMetadata.timeSeriesMap.get(variableName);
+//            if (multiTimeSeriesStartInstant == null) {
+//                multiTimeSeriesStartInstant = timeSeries.getStartInstant();
+//            } else if (multiTimeSeriesStartInstant.isBefore(timeSeries.getStartInstant())) {
+//                multiTimeSeriesStartInstant = timeSeries.getStartInstant();
+//            }
+//
+//            if (multiTimeSeriesEndInstant == null) {
+//                multiTimeSeriesEndInstant = timeSeries.getEndInstant();
+//            } else if (multiTimeSeriesEndInstant.isAfter(timeSeries.getEndInstant())) {
+//                multiTimeSeriesEndInstant = timeSeries.getEndInstant();
+//            }
+//            multiTimeSeriesPanel.setDateTimeRange(multiTimeSeriesStartInstant, multiTimeSeriesEndInstant, multiTimeSeriesChronoUnitChoice.getSelectionModel().getSelectedItem());
+//            multiTimeSeriesPanel.addTimeSeries(timeSeries);
+//        } else if (fileMetadata.fileType == FileMetadata.FileType.PLG) {
+//            try {
+//                ArrayList<String> variableList = new ArrayList<>();
+//                variableList.add(variableName);
+//                Map<String, TimeSeries> PLGTimeSeriesMap = PLGFileReader.readPLGFileAsTimeSeries(fileMetadata.file, variableList);
+//                for (TimeSeries timeSeries : PLGTimeSeriesMap.values()) {
+//                    if (multiTimeSeriesStartInstant == null) {
+//                        multiTimeSeriesStartInstant = timeSeries.getStartInstant();
+//                    } else if (multiTimeSeriesStartInstant.isBefore(timeSeries.getStartInstant())) {
+//                        multiTimeSeriesStartInstant = timeSeries.getStartInstant();
+//                    }
+//
+//                    if (multiTimeSeriesEndInstant == null) {
+//                        multiTimeSeriesEndInstant = timeSeries.getEndInstant();
+//                    } else if (multiTimeSeriesEndInstant.isAfter(timeSeries.getEndInstant())) {
+//                        multiTimeSeriesEndInstant = timeSeries.getEndInstant();
+//                    }
+//                    multiTimeSeriesPanel.setDateTimeRange(multiTimeSeriesStartInstant, multiTimeSeriesEndInstant, multiTimeSeriesChronoUnitChoice.getSelectionModel().getSelectedItem());
+//                    multiTimeSeriesPanel.addTimeSeries(timeSeries);
+//                }
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//        }
+//    }
 
     private Node createMultiViewPanel() {
         multiViewPanel = new MultiViewPanel(160);
@@ -1197,84 +1197,84 @@ public class FalconFX extends Application {
 
     }
 
-    private Node createMultiTimeSeriesPanel() {
-        multiTimeSeriesPanel = new MultiTimeSeriesPanel();
-        multiTimeSeriesPanel.setBackground(java.awt.Color.white);
-
-        HBox settingsHBox = new HBox();
-        settingsHBox.setAlignment(Pos.CENTER_LEFT);
-        settingsHBox.setPadding(new javafx.geometry.Insets(4));
-        settingsHBox.setSpacing(8.);
-
-        HBox hBox = new HBox();
-        hBox.setAlignment(Pos.CENTER_LEFT);
-        multiTimeSeriesChronoUnitChoice = new ChoiceBox<ChronoUnit>();
-        multiTimeSeriesChronoUnitChoice.getItems().addAll(ChronoUnit.SECONDS, ChronoUnit.MINUTES, ChronoUnit.HOURS, ChronoUnit.HALF_DAYS, ChronoUnit.DAYS);
-        multiTimeSeriesChronoUnitChoice.getSelectionModel().selectFirst();
-        multiTimeSeriesChronoUnitChoice.getSelectionModel().selectedItemProperty().addListener(
-                (ObservableValue<? extends ChronoUnit> ov,
-                 ChronoUnit oldValue, ChronoUnit newValue) -> {
-                    if (oldValue != newValue) {
-                        multiTimeSeriesPanel.setChronoUnit(newValue);
-                    }
-                }
-        );
-        hBox.getChildren().addAll(new Label("Plot ChronoUnit: "), multiTimeSeriesChronoUnitChoice);
-        settingsHBox.getChildren().add(hBox);
-
-        hBox = new HBox();
-        hBox.setAlignment(Pos.CENTER_LEFT);
-        multipleTimeSeriesDataColorPicker = new ColorPicker(dataColor);
-        multipleTimeSeriesDataColorPicker.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                Color dataColor = multipleTimeSeriesDataColorPicker.getValue();
-                multiTimeSeriesPanel.setDataColor(convertToAWTColor(dataColor));
-            }
-        });
-        hBox.getChildren().addAll(new Label("Data Color: "), multipleTimeSeriesDataColorPicker);
-        settingsHBox.getChildren().add(hBox);
-
-        hBox = new HBox();
-        hBox.setAlignment(Pos.CENTER_LEFT);
-        multipleTimeSeriesPlotHeightSpinner = new Spinner(40, 400, multiTimeSeriesPanel.getPlotHeight());
-        multipleTimeSeriesPlotHeightSpinner.setEditable(true);
-        multipleTimeSeriesPlotHeightSpinner.valueProperty().addListener((obs, oldValue, newValue) -> multiTimeSeriesPanel.setPlotHeight((Integer)newValue));
-        hBox.getChildren().addAll(new Label("Plot Height: "), multipleTimeSeriesPlotHeightSpinner);
-        settingsHBox.getChildren().add(hBox);
-
-        hBox = new HBox();
-        hBox.setAlignment(Pos.CENTER_LEFT);
-        multipleTimeSeriesPlotChronoUnitWidthSpinner = new Spinner(1, 10, multiTimeSeriesPanel.getChronoUnitWidth());
-        multipleTimeSeriesPlotChronoUnitWidthSpinner.setEditable(true);
-        multipleTimeSeriesPlotChronoUnitWidthSpinner.valueProperty().addListener((obs, oldValue, newValue) -> multiTimeSeriesPanel.setChronoUnitWidth((Integer)newValue));
-        hBox.getChildren().addAll(new Label("Plot Unit Width: "), multipleTimeSeriesPlotChronoUnitWidthSpinner);
-        settingsHBox.getChildren().add(hBox);
-
-        JScrollPane scroller = new JScrollPane(multiTimeSeriesPanel);
-        scroller.getHorizontalScrollBar().setUnitIncrement(2);
-
-        SwingNode tsSwingNode = new SwingNode();
-        tsSwingNode.setContent(scroller);
-        tsSwingNode.setOnDragOver(event -> event.acceptTransferModes(TransferMode.COPY));
-        tsSwingNode.setOnDragDropped(event -> {
-            Dragboard db = event.getDragboard();
-            if (db.hasContent(objectDataFormat)) {
-//                FalconDataTreeItem dataTreeItem = (FalconDataTreeItem)db.getContent(objectDataFormat);
-                VariableClipboardData variableClipboardData = (VariableClipboardData)db.getContent(objectDataFormat);
-                FileMetadata fileMetadata = fileMetadataMap.get(variableClipboardData.getFile());
-                loadColumnIntoMultiTimeSeries(fileMetadata, variableClipboardData.getVariableName());
-
-                event.setDropCompleted(true);
-            }
-            event.consume();
-        });
-
-        BorderPane borderPane = new BorderPane();
-        borderPane.setTop(settingsHBox);
-        borderPane.setCenter(tsSwingNode);
-        return borderPane;
-    }
+//    private Node createMultiTimeSeriesPanel() {
+//        multiTimeSeriesPanel = new MultiTimeSeriesPanel();
+//        multiTimeSeriesPanel.setBackground(java.awt.Color.white);
+//
+//        HBox settingsHBox = new HBox();
+//        settingsHBox.setAlignment(Pos.CENTER_LEFT);
+//        settingsHBox.setPadding(new javafx.geometry.Insets(4));
+//        settingsHBox.setSpacing(8.);
+//
+//        HBox hBox = new HBox();
+//        hBox.setAlignment(Pos.CENTER_LEFT);
+//        multiTimeSeriesChronoUnitChoice = new ChoiceBox<ChronoUnit>();
+//        multiTimeSeriesChronoUnitChoice.getItems().addAll(ChronoUnit.SECONDS, ChronoUnit.MINUTES, ChronoUnit.HOURS, ChronoUnit.HALF_DAYS, ChronoUnit.DAYS);
+//        multiTimeSeriesChronoUnitChoice.getSelectionModel().selectFirst();
+//        multiTimeSeriesChronoUnitChoice.getSelectionModel().selectedItemProperty().addListener(
+//                (ObservableValue<? extends ChronoUnit> ov,
+//                 ChronoUnit oldValue, ChronoUnit newValue) -> {
+//                    if (oldValue != newValue) {
+//                        multiTimeSeriesPanel.setChronoUnit(newValue);
+//                    }
+//                }
+//        );
+//        hBox.getChildren().addAll(new Label("Plot ChronoUnit: "), multiTimeSeriesChronoUnitChoice);
+//        settingsHBox.getChildren().add(hBox);
+//
+//        hBox = new HBox();
+//        hBox.setAlignment(Pos.CENTER_LEFT);
+//        multipleTimeSeriesDataColorPicker = new ColorPicker(dataColor);
+//        multipleTimeSeriesDataColorPicker.setOnAction(new EventHandler<ActionEvent>() {
+//            @Override
+//            public void handle(ActionEvent event) {
+//                Color dataColor = multipleTimeSeriesDataColorPicker.getValue();
+//                multiTimeSeriesPanel.setDataColor(convertToAWTColor(dataColor));
+//            }
+//        });
+//        hBox.getChildren().addAll(new Label("Data Color: "), multipleTimeSeriesDataColorPicker);
+//        settingsHBox.getChildren().add(hBox);
+//
+//        hBox = new HBox();
+//        hBox.setAlignment(Pos.CENTER_LEFT);
+//        multipleTimeSeriesPlotHeightSpinner = new Spinner(40, 400, multiTimeSeriesPanel.getPlotHeight());
+//        multipleTimeSeriesPlotHeightSpinner.setEditable(true);
+//        multipleTimeSeriesPlotHeightSpinner.valueProperty().addListener((obs, oldValue, newValue) -> multiTimeSeriesPanel.setPlotHeight((Integer)newValue));
+//        hBox.getChildren().addAll(new Label("Plot Height: "), multipleTimeSeriesPlotHeightSpinner);
+//        settingsHBox.getChildren().add(hBox);
+//
+//        hBox = new HBox();
+//        hBox.setAlignment(Pos.CENTER_LEFT);
+//        multipleTimeSeriesPlotChronoUnitWidthSpinner = new Spinner(1, 10, multiTimeSeriesPanel.getChronoUnitWidth());
+//        multipleTimeSeriesPlotChronoUnitWidthSpinner.setEditable(true);
+//        multipleTimeSeriesPlotChronoUnitWidthSpinner.valueProperty().addListener((obs, oldValue, newValue) -> multiTimeSeriesPanel.setChronoUnitWidth((Integer)newValue));
+//        hBox.getChildren().addAll(new Label("Plot Unit Width: "), multipleTimeSeriesPlotChronoUnitWidthSpinner);
+//        settingsHBox.getChildren().add(hBox);
+//
+//        JScrollPane scroller = new JScrollPane(multiTimeSeriesPanel);
+//        scroller.getHorizontalScrollBar().setUnitIncrement(2);
+//
+//        SwingNode tsSwingNode = new SwingNode();
+//        tsSwingNode.setContent(scroller);
+//        tsSwingNode.setOnDragOver(event -> event.acceptTransferModes(TransferMode.COPY));
+//        tsSwingNode.setOnDragDropped(event -> {
+//            Dragboard db = event.getDragboard();
+//            if (db.hasContent(objectDataFormat)) {
+////                FalconDataTreeItem dataTreeItem = (FalconDataTreeItem)db.getContent(objectDataFormat);
+//                VariableClipboardData variableClipboardData = (VariableClipboardData)db.getContent(objectDataFormat);
+//                FileMetadata fileMetadata = fileMetadataMap.get(variableClipboardData.getFile());
+//                loadColumnIntoMultiTimeSeries(fileMetadata, variableClipboardData.getVariableName());
+//
+//                event.setDropCompleted(true);
+//            }
+//            event.consume();
+//        });
+//
+//        BorderPane borderPane = new BorderPane();
+//        borderPane.setTop(settingsHBox);
+//        borderPane.setCenter(tsSwingNode);
+//        return borderPane;
+//    }
 
     private Node createOverviewDetailTimeSeriesPanel () {
         detailsTimeSeriesPanel = new TimeSeriesPanel(2, ChronoUnit.SECONDS, TimeSeriesPanel.PlotDisplayOption.STEPPED_LINE);

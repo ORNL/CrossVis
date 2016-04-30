@@ -12,6 +12,7 @@ import java.awt.geom.Point2D;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.NavigableMap;
 import java.util.TreeMap;
 
@@ -24,11 +25,12 @@ public class TimeSeriesRenderer {
     public static void renderAsOverview(Graphics2D g2, TimeSeries timeSeries, int plotWidth, int plotHeight,
                                         int plotUnitWidth, ChronoUnit plotChronoUnit, TimeSeriesPanel.PlotDisplayOption plotDisplayOption,
                                         Color gridColor, Color lineColor, Color pointColor, Color rangeColor, Color stdevRangeColor,
-                                        TimeSeriesSummaryInfo summaryInfoArray[]) {
+                                        TimeSeriesSummaryInfo summaryInfoArray[],
+                                        double valueAxisMin, double valueAxisMax) {
 
         if (summaryInfoArray != null) {
             g2.setColor(gridColor);
-            TimeSeriesRenderer.drawZeroLine(g2, timeSeries, plotWidth, plotHeight);
+            TimeSeriesRenderer.drawZeroLine(g2, timeSeries, plotWidth, plotHeight, valueAxisMin, valueAxisMax);
 
             Path2D.Double maxPath = null;
             Path2D.Double minPath = null;
@@ -175,10 +177,11 @@ public class TimeSeriesRenderer {
                                         ChronoUnit plotChronoUnit,
                                         TimeSeriesPanel.PlotDisplayOption plotDisplayOption, Color gridColor,
                                         Color lineColor, Color pointColor, Color rangeColor,
-                                        TreeMap<Instant, ArrayList<Point2D.Double>> plotPointMap) {
-
+                                        TreeMap<Instant, ArrayList<Point2D.Double>> plotPointMap,
+                                        double valueAxisMin, double valueAxisMax) {
+//        ConcurrentSkipListMap
         g2.setColor(gridColor);
-        TimeSeriesRenderer.drawZeroLine(g2, timeSeries, plotWidth, plotHeight);
+        TimeSeriesRenderer.drawZeroLine(g2, timeSeries, plotWidth, plotHeight, valueAxisMin, valueAxisMax);
 
         Instant start = plotPointMap.firstKey();
         if (clipStartInstant.isAfter(start)) {
@@ -230,10 +233,11 @@ public class TimeSeriesRenderer {
         }
     }
 
-    private static void drawZeroLine(Graphics2D g2, TimeSeries timeSeries, int plotWidth, int plotHeight) {
+    private static void drawZeroLine(Graphics2D g2, TimeSeries timeSeries, int plotWidth,
+                                     int plotHeight, double valueAxisMax, double valueAxisMin) {
         // draw the zero value line if min < 0 and max > 0
         if (timeSeries.getMinValue() < 0. && timeSeries.getMaxValue() > 0.) {
-            double norm = (0. - timeSeries.getMinValue()) / (timeSeries.getMaxValue() - timeSeries.getMinValue());
+            double norm = (0. - valueAxisMin) / (valueAxisMax - valueAxisMin);
             double yOffset = norm * plotHeight;
             double zeroY = plotHeight - yOffset;
             Line2D.Double line = new Line2D.Double(0, zeroY, plotWidth, zeroY);

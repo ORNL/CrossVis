@@ -8,6 +8,9 @@ import gov.ornl.csed.cda.datatable.DataModelListener;
 import gov.ornl.csed.cda.datatable.IOUtilities;
 import gov.ornl.csed.cda.datatable.Tuple;
 import gov.ornl.csed.cda.hypervis.*;
+import gov.ornl.csed.cda.overviewbar.OverviewBar;
+import gov.ornl.csed.cda.overviewbar.OverviewBarListener;
+import gov.ornl.csed.cda.overviewbar.OverviewBarMarker;
 import gov.ornl.csed.cda.pcvis.CorrelationMatrixPanel;
 
 import java.awt.BorderLayout;

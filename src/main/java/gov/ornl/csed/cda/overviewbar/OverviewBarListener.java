@@ -1,4 +1,4 @@
-package gov.ornl.csed.cda.hypervis;
+package gov.ornl.csed.cda.overviewbar;
 
 /**
  * Created by csg on 1/30/15.

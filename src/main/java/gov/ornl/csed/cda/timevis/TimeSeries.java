@@ -25,7 +25,8 @@ public class TimeSeries {
     private Instant startInstant;
     private Instant endInstant;
 	private TreeMap<Instant, TimeSeriesBin> binTreeMap = new TreeMap<>();
-	
+	private ArrayList<TimeSeriesListener> listeners = new ArrayList<>();
+
 	public TimeSeries(String name) {
 		this.name = name;
 	}
@@ -37,9 +38,24 @@ public class TimeSeries {
         maxValue = Double.NaN;
         minValue = Double.NaN;
         Point2D point = new Point2D.Double();
-
     }
-	
+
+    public void addTimeSeriesListener(TimeSeriesListener listener) {
+        if (!listeners.contains(listener)) {
+            listeners.add(listener);
+        }
+    }
+
+    public boolean removeTimeSeriesListener (TimeSeriesListener listener) {
+        return listeners.remove(listener);
+    }
+
+    public void fireDataRecordAdded (TimeSeriesRecord record, TimeSeriesBin bin) {
+        for (TimeSeriesListener listener : listeners) {
+            listener.timeSeriesRecordAdded(this, record, bin);
+        }
+    }
+
 	public Instant getStartInstant() {
 		return startInstant;
 	}
@@ -107,6 +123,8 @@ public class TimeSeries {
 
         bin.records.add(record);
         Collections.sort(bin.records);
+
+        fireDataRecordAdded(record, bin);
     }
 	
 	public ArrayList<TimeSeriesRecord> recordsAt(Instant instant) {

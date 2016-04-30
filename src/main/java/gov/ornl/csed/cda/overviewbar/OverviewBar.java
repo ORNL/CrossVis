@@ -1,4 +1,4 @@
-package gov.ornl.csed.cda.hypervis;
+package gov.ornl.csed.cda.overviewbar;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
