@@ -1,16 +1,11 @@
 package gov.ornl.csed.cda.timevis;
 
-import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.*;
-import java.awt.geom.Ellipse2D;
-import java.awt.geom.Path2D;
 import java.awt.geom.Point2D;
-import java.awt.geom.Rectangle2D;
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.NavigableMap;
@@ -24,15 +19,17 @@ public class TimeSeries {
 	private double minValue = Double.NaN;
     private Instant startInstant;
     private Instant endInstant;
-	private TreeMap<Instant, TimeSeriesBin> binTreeMap = new TreeMap<>();
-	private ArrayList<TimeSeriesListener> listeners = new ArrayList<>();
+
+	private TreeMap<Instant, ArrayList<TimeSeriesRecord>> recordMap = new TreeMap<>();
+
+    private ArrayList<TimeSeriesListener> listeners = new ArrayList<>();
 
 	public TimeSeries(String name) {
 		this.name = name;
 	}
 
 	public void clear() {
-        binTreeMap.clear();
+        recordMap.clear();
         startInstant = null;
         endInstant = null;
         maxValue = Double.NaN;
@@ -50,9 +47,9 @@ public class TimeSeries {
         return listeners.remove(listener);
     }
 
-    public void fireDataRecordAdded (TimeSeriesRecord record, TimeSeriesBin bin) {
+    public void fireDataRecordAdded (TimeSeriesRecord record) {
         for (TimeSeriesListener listener : listeners) {
-            listener.timeSeriesRecordAdded(this, record, bin);
+            listener.timeSeriesRecordAdded(this, record);
         }
     }
 
@@ -95,7 +92,7 @@ public class TimeSeries {
 		record.upperRange = upperRange;
 		record.lowerRange = lowerRange;
 
-        if (binTreeMap.isEmpty()) {
+        if (recordMap.isEmpty()) {
             maxValue = value;
             minValue = value;
             startInstant = instant;
@@ -115,43 +112,48 @@ public class TimeSeries {
             }
         }
 
-        TimeSeriesBin bin = binTreeMap.get(instant);
-        if (bin == null) {
-            bin = new TimeSeriesBin(instant);
-            binTreeMap.put(instant, bin);
+        ArrayList<TimeSeriesRecord> instantRecordList = recordMap.get(instant);
+        if (instantRecordList == null) {
+//            bin = new TimeSeriesBin(instant);
+            instantRecordList = new ArrayList<>();
+//            recordMap.put(instant, bin);
+            recordMap.put(instant, instantRecordList);
         }
 
-        bin.records.add(record);
-        Collections.sort(bin.records);
+        instantRecordList.add(record);
+        Collections.sort(instantRecordList);
+//        bin.records.add(record);
+//        Collections.sort(bin.records);
 
-        fireDataRecordAdded(record, bin);
+        fireDataRecordAdded(record);
     }
 	
 	public ArrayList<TimeSeriesRecord> recordsAt(Instant instant) {
-		if (binTreeMap.isEmpty()) {
+		if (recordMap.isEmpty()) {
 			return null;
 		}
 		
-		if (instant.isBefore(binTreeMap.firstKey()) || instant.isAfter(binTreeMap.lastKey())) {
+		if (instant.isBefore(recordMap.firstKey()) || instant.isAfter(recordMap.lastKey())) {
 			return null;
 		}
 
-        TimeSeriesBin bin = binTreeMap.get(instant);
-        if (bin != null) {
-            return bin.records;
-        }
-
-        return null;
+        return recordMap.get(instant);
+//        TimeSeriesBin bin = recordMap.get(instant);
+//        if (recordList != null) {
+//            return bin.records;
+//        }
+//
+//        return null;
 	}
 
 	public ArrayList<TimeSeriesRecord> getRecordsBetween(Instant start, Instant end) {
 		ArrayList<TimeSeriesRecord> records = null;
 
-		NavigableMap<Instant, TimeSeriesBin> subRecordMap = binTreeMap.subMap(start, true, end, true);
+		NavigableMap<Instant, ArrayList<TimeSeriesRecord>> subRecordMap = recordMap.subMap(start, true, end, true);
 		if (!subRecordMap.isEmpty()) {
 			records = new ArrayList<>();
-			for (TimeSeriesBin bin : subRecordMap.values()) {
-				for (TimeSeriesRecord record : bin.records) {
+			for (ArrayList<TimeSeriesRecord> instantRecordList : subRecordMap.values()) {
+				for (TimeSeriesRecord record : instantRecordList) {
                     if (record.instant.isBefore(start)) {
                         continue;
                     } else if (record.instant.equals(end) || record.instant.isAfter(end)) {
@@ -162,33 +164,40 @@ public class TimeSeries {
 				}
 			}
 		}
-
 		return records;
 	}
 
 	public ArrayList<TimeSeriesRecord> getAllRecords() {
 		ArrayList<TimeSeriesRecord> records = new ArrayList<>();
-        for (TimeSeriesBin bin : binTreeMap.values()) {
-            for (TimeSeriesRecord record : bin.records) {
+        for (ArrayList<TimeSeriesRecord> instantRecordList : recordMap.values()) {
+            for (TimeSeriesRecord record : instantRecordList) {
                 records.add(record);
             }
         }
-
         return records;
 	}
 
+    public boolean isEmpty() {
+        return recordMap.isEmpty();
+    }
+
 	public int getRecordCount() {
-		return binTreeMap.size();
+        int recordCount = 0;
+        for (ArrayList<TimeSeriesRecord> instantRecordList : recordMap.values()) {
+            recordCount += instantRecordList.size();
+        }
+
+        return recordCount;
 	}
 
-    public TreeMap<Instant, TimeSeriesBin> getBinTreeMap() {
-        return binTreeMap;
-    }
+//    public TreeMap<Instant, TimeSeriesBin> getRecordMap() {
+//        return recordMap;
+//    }
 
-    public void draw(Graphics2D g2, Instant startInstant, Instant endInstant,
-                     int plotHeight, int plotWidth, int plotChronoUnitWidth) {
-
-    }
+//    public void draw(Graphics2D g2, Instant startInstant, Instant endInstant,
+//                     int plotHeight, int plotWidth, int plotChronoUnitWidth) {
+//
+//    }
 //    public void drawOverview(Graphics2D g2, Instant startInstant, Instant endInstant,
 //                             int plotHeight, int plotWidth, int plotChronoUnitWidth) {
 //        // draws an overview plot by condensing all records into the provided width
@@ -204,7 +213,7 @@ public class TimeSeries {
 //            Instant unitEndInstant = unitStartInstant.plusMillis(plotUnitDuration);
 //
 //            // get values between start (inclusive) and end time instants (exclusive)
-//            NavigableMap<Instant, TimeSeriesRecord> unitSubMap = binTreeMap.subMap(unitStartInstant, true, unitEndInstant, false);
+//            NavigableMap<Instant, TimeSeriesRecord> unitSubMap = recordMap.subMap(unitStartInstant, true, unitEndInstant, false);
 //
 //            if (!unitSubMap.isEmpty()) {
 //                // calculate mean value for records in plot time unit
@@ -258,17 +267,17 @@ public class TimeSeries {
 //		g2.setColor(plotOutlineColor);
 //		g2.draw(plotRectangle);
 //
-//		if (!binTreeMap.isEmpty()) {
-//            Instant start = binTreeMap.firstKey();
+//		if (!recordMap.isEmpty()) {
+//            Instant start = recordMap.firstKey();
 //            if (clipStartInstant.isAfter(start)) {
-//                start = binTreeMap.lowerKey(clipStartInstant);
+//                start = recordMap.lowerKey(clipStartInstant);
 //            }
-//            Instant end = binTreeMap.lastKey();
+//            Instant end = recordMap.lastKey();
 //            if (clipEndInstant.isBefore(end)) {
-//                end = binTreeMap.higherKey(clipEndInstant);
+//                end = recordMap.higherKey(clipEndInstant);
 //            }
 //
-//            NavigableMap<Instant, TimeSeriesRecord> subMap = binTreeMap.subMap(start, true, end, true);
+//            NavigableMap<Instant, TimeSeriesRecord> subMap = recordMap.subMap(start, true, end, true);
 //            if (subMap.isEmpty()) {
 //                log.debug("No records in clip range. Nothing to draw.");
 //            } else {

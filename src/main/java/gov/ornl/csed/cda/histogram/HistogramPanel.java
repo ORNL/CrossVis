@@ -1,9 +1,6 @@
 package gov.ornl.csed.cda.histogram;
 
 import gov.ornl.csed.cda.util.GraphicsUtil;
-import javafx.scene.control.TextInputDialog;
-import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
-import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import prefuse.data.Table;
@@ -14,13 +11,13 @@ import prefuse.data.io.DataIOException;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.font.FontRenderContext;
+import java.awt.font.GlyphVector;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Line2D;
 import java.awt.geom.Rectangle2D;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Optional;
 
 /**
  * Created by csg on 2/15/16.
@@ -67,10 +64,19 @@ public class HistogramPanel extends JComponent implements ComponentListener, Mou
     private Shape stdevRangeShape;
     private Shape IQRShape;
 
+    // count axis variables
+    private int countAxisMax;
+    private int countAxisMin = 0;
+    private Rectangle countAxisMaxLabelBounds;
+    private Rectangle countAxisMinLabelBounds;
+    private Rectangle countAxisRectangle;
+    private boolean mouseOverMaxCountLabel = false;
+    private boolean mouseOverMinCountLabel = false;
+
 //    private double maxOverallBinSize;
     private double maxHighlightBinSize;
-    private boolean mouseOverMaxLabel = false;
-    private boolean mouseOverMinLabel = false;
+    private boolean mouseOverMaxValueLabel = false;
+    private boolean mouseOverMinValueLabel = false;
 
     private ArrayList<HistogramPanelListener> listeners = new ArrayList<>();
 
@@ -130,13 +136,13 @@ public class HistogramPanel extends JComponent implements ComponentListener, Mou
                 frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
                 HistogramPanel horizontalHistogramPanel = new HistogramPanel(ORIENTATION.HORIZONTAL, STATISTICS_MODE.MEAN_BASED);
-                horizontalHistogramPanel.setBackground(Color.white);
+                horizontalHistogramPanel.setBackground(Color.yellow);
 //                horizontalHistogramPanel.setBorder(BorderFactory.createTitledBorder("Horizontal Histogram"));
-                horizontalHistogramPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 10, 10));
+//                horizontalHistogramPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 10, 10));
 
                 HistogramPanel verticalHistogramPanel = new HistogramPanel(ORIENTATION.VERTICAL, STATISTICS_MODE.MEAN_BASED);
-                verticalHistogramPanel.setBackground(Color.white);
-                verticalHistogramPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 10, 10));
+                verticalHistogramPanel.setBackground(Color.cyan);
+//                verticalHistogramPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 10, 10));
 //                verticalHistogramPanel.setBorder(BorderFactory.createTitledBorder("Vertical Histogram"));
 
                 JPanel mainPanel = (JPanel)frame.getContentPane();
@@ -184,7 +190,7 @@ public class HistogramPanel extends JComponent implements ComponentListener, Mou
 
     @Override
     public void mouseClicked(MouseEvent e) {
-        if (minLabelRectangle.contains(e.getPoint())) {
+        if (mouseOverMinValueLabel) {
             String minValueString = DECIMAL_FORMATTER.format(histogram.getMinValue());
             String newValue = JOptionPane.showInputDialog(null,
                     "Enter Minimum Histogram Value:",
@@ -195,10 +201,11 @@ public class HistogramPanel extends JComponent implements ComponentListener, Mou
                 if (highlightHistogram != null) {
                     highlightHistogram.setMinValue(value);
                 }
+                countAxisMax = histogram.getMaxBinCount();
                 layoutPanel();
                 fireHistogramPanelLowerLimitChanged();
             }
-        } else if (mouseOverMaxLabel = maxLabelRectangle.contains(e.getPoint())) {
+        } else if (mouseOverMaxValueLabel) {
             String maxValueString = DECIMAL_FORMATTER.format(histogram.getMaxValue());
             String newValue = JOptionPane.showInputDialog(null,
                     "Enter Maximum Histogram Value:",
@@ -206,12 +213,25 @@ public class HistogramPanel extends JComponent implements ComponentListener, Mou
             if (newValue != null && !newValue.equals(maxValueString)) {
                 double value = Double.parseDouble(newValue);
                 histogram.setMaxValue(value);
+                countAxisMax = histogram.getMaxBinCount();
                 if (highlightHistogram != null) {
                     highlightHistogram.setMaxValue(value);
                 }
                 layoutPanel();
                 fireHistogramPanelUpperLimitChanged();
             }
+        } else if (mouseOverMaxCountLabel) {
+            String maxCountString = String.valueOf(countAxisMax);
+            String newValue = JOptionPane.showInputDialog(null,
+                    "Enter New Histogram Bin Count Upper Limit:",
+                    maxCountString);
+            if (newValue != null && !newValue.equals(maxCountString)) {
+                countAxisMax = Integer.parseInt(newValue);
+                layoutPanel();
+//                fireHistogramPanelUpperLimitChanged();
+            }
+        } else if (mouseOverMinCountLabel) {
+
         }
     }
 
@@ -244,8 +264,10 @@ public class HistogramPanel extends JComponent implements ComponentListener, Mou
     @Override
     public void mouseMoved(MouseEvent e) {
         hoverBinRect = null;
-        mouseOverMinLabel = false;
-        mouseOverMaxLabel = false;
+        mouseOverMinValueLabel = false;
+        mouseOverMaxValueLabel = false;
+        mouseOverMaxCountLabel = false;
+        mouseOverMinCountLabel = false;
         setToolTipText("");
 
         if (histogramPlotRectangle.contains(e.getPoint())) {
@@ -295,8 +317,10 @@ public class HistogramPanel extends JComponent implements ComponentListener, Mou
             }
             setToolTipText(buffer.toString());
         } else {
-            mouseOverMinLabel = minLabelRectangle.contains(e.getPoint());
-            mouseOverMaxLabel = maxLabelRectangle.contains(e.getPoint());
+            mouseOverMinValueLabel = minLabelRectangle.contains(e.getPoint());
+            mouseOverMaxValueLabel = maxLabelRectangle.contains(e.getPoint());
+            mouseOverMaxCountLabel = countAxisMaxLabelBounds.contains(e.getPoint());
+            mouseOverMinCountLabel = countAxisMinLabelBounds.contains(e.getPoint());
         }
 
         repaint();
@@ -327,6 +351,8 @@ public class HistogramPanel extends JComponent implements ComponentListener, Mou
     public void setHistogram (Histogram histogram) {
         this.histogram = histogram;
         this.histogram.setNumBins(binCount);
+        this.countAxisMax = histogram.getMaxBinCount();
+        log.debug("countAxisMax = " + countAxisMax);
 
 //        maxOverallBinSize = 0.;
 //        for (int i = 0; i < histogram.getNumBins(); i++) {
@@ -374,12 +400,9 @@ public class HistogramPanel extends JComponent implements ComponentListener, Mou
 
     private void layoutPanel() {
         if (histogram != null) {
-            int plotLeft = getInsets().left;
-            int plotTop = getInsets().top;
-            int plotHeight = getHeight() - (getInsets().bottom + getInsets().top) - 1;
-            int plotWidth = getWidth() - (getInsets().left + getInsets().right) - 1;
-            fullPlotRectangle = new Rectangle(plotLeft, plotTop, plotWidth, plotHeight);
-            
+            Graphics2D g2 = (Graphics2D)getGraphics();
+            g2.setFont(g2.getFont().deriveFont(Font.PLAIN, DEFAULT_LABEL_FONT_SIZE));
+
             histogramBinRectangles = new ArrayList<>();
             histogramBinColors = new ArrayList<>();
             highlightHistogramBinRectangles = new ArrayList<>();
@@ -387,19 +410,58 @@ public class HistogramPanel extends JComponent implements ComponentListener, Mou
 
             if (orientation == ORIENTATION.HORIZONTAL) {
                 // horizontal histogram
-                int histogramPlotHeight = (int) (fullPlotRectangle.height - (SUMMARY_STATS_DEFAULT_SIZE + DEFAULT_RANGE_LABEL_HEIGHT));
-                histogramPlotRectangle = new Rectangle(plotLeft, plotTop, plotWidth, histogramPlotHeight);
+                int plotTop = getInsets().top;
+                int plotHeight = getHeight() - (getInsets().bottom + getInsets().top) - 1;
+                int histogramPlotHeight = (int) (plotHeight - (SUMMARY_STATS_DEFAULT_SIZE + DEFAULT_RANGE_LABEL_HEIGHT));
+
+                // layout the countAxisRectangle
+                String labelString = String.valueOf(countAxisMax);
+                int stringWidth = g2.getFontMetrics().stringWidth(labelString);
+                countAxisRectangle = new Rectangle(getInsets().left, plotTop, stringWidth+4, histogramPlotHeight);
+
+                int stringX = (countAxisRectangle.x + countAxisRectangle.width) - stringWidth - 2;
+                countAxisMaxLabelBounds = new Rectangle(stringX, countAxisRectangle.y,
+                        stringWidth, g2.getFontMetrics().getHeight());
+
+                labelString = String.valueOf(countAxisMin);
+                stringWidth = g2.getFontMetrics().stringWidth(labelString);
+                stringX = (countAxisRectangle.x + countAxisRectangle.width) - stringWidth - 2;
+                countAxisMinLabelBounds = new Rectangle(stringX,
+                        (countAxisRectangle.y + countAxisRectangle.height) - g2.getFontMetrics().getHeight() - 2,
+                        stringWidth, g2.getFontMetrics().getHeight());
+
+                int plotLeft = countAxisRectangle.x + countAxisRectangle.width;
+                int plotWidth = getWidth() - (getInsets().left + getInsets().right) - countAxisRectangle.width - 1;
+                fullPlotRectangle = new Rectangle(plotLeft, plotTop, plotWidth, plotHeight);
+
+                histogramPlotRectangle = new Rectangle(plotLeft, fullPlotRectangle.y, plotWidth, histogramPlotHeight);
                 binRectangleSize = (double) histogramPlotRectangle.width / (double) binCount;
                 summaryStatsRectangle = new Rectangle(plotLeft, (histogramPlotRectangle.y + histogramPlotRectangle.height),
                         plotWidth, SUMMARY_STATS_DEFAULT_SIZE);
                 valueRangeLabelsRectangle = new Rectangle(plotLeft, (summaryStatsRectangle.y + summaryStatsRectangle.height),
                         plotWidth, DEFAULT_RANGE_LABEL_HEIGHT);
 
+                // calculate the max value label bounds
+                labelString = String.valueOf(histogram.getMaxValue());
+                stringWidth = g2.getFontMetrics().stringWidth(labelString);
+                int strX = (valueRangeLabelsRectangle.x + valueRangeLabelsRectangle.width) - (stringWidth + 1);
+                maxLabelRectangle = new Rectangle(strX, (valueRangeLabelsRectangle.y - 2), stringWidth,
+                        valueRangeLabelsRectangle.height);
+
+                // calculate the min value label bounds
+                labelString = String.valueOf(histogram.getMinValue());
+                stringWidth = g2.getFontMetrics().stringWidth(labelString);
+                int strY = (valueRangeLabelsRectangle.y + valueRangeLabelsRectangle.height) - 4;
+                minLabelRectangle = new Rectangle(valueRangeLabelsRectangle.x, (valueRangeLabelsRectangle.y - 2),
+                        stringWidth, valueRangeLabelsRectangle.height);
+
+
                 // calculate bin rectangles
                 int binNumber = 0;
                 for (int i = 0; i < histogram.getNumBins(); i++) {
                     double x = histogramPlotRectangle.x + (binNumber * binRectangleSize);
-                    double binHeight = GraphicsUtil.mapValue(histogram.getBinCount(i), 0., histogram.getMaxBinCount(), 0., histogramPlotRectangle.height);
+                    double binHeight = GraphicsUtil.mapValue(histogram.getBinCount(i), countAxisMin, countAxisMax,
+                            0., histogramPlotRectangle.height);
                     double y = (histogramPlotRectangle.y + histogramPlotRectangle.height) - binHeight;
                     Rectangle2D.Double binRect = new Rectangle2D.Double(x, y, binRectangleSize, binHeight);
                     Color binColor = Color.lightGray;
@@ -413,7 +475,8 @@ public class HistogramPanel extends JComponent implements ComponentListener, Mou
                 if (highlightHistogram != null) {
                     for (int binIndex = 0; binIndex < binCount; binIndex++) {
                         double x = histogramPlotRectangle.x + (binIndex * binRectangleSize);
-                        double binHeight = GraphicsUtil.mapValue(highlightHistogram.getBinCount(binIndex), 0., histogram.getMaxBinCount(), 0., histogramPlotRectangle.height);
+                        double binHeight = GraphicsUtil.mapValue(highlightHistogram.getBinCount(binIndex), countAxisMin,
+                                countAxisMax, 0., histogramPlotRectangle.height);
                         double y = (histogramPlotRectangle.y + histogramPlotRectangle.height) - binHeight;
                         Rectangle2D.Double binRect = new Rectangle2D.Double(x, y, binRectangleSize, binHeight);
                         Color binColor = Color.gray;
@@ -480,6 +543,12 @@ public class HistogramPanel extends JComponent implements ComponentListener, Mou
                 }
             } else {
                 // vertical histogram
+                int plotLeft = getInsets().left;
+                int plotTop = getInsets().top;
+                int plotHeight = getHeight() - (getInsets().bottom + getInsets().top) - g2.getFontMetrics().getHeight() - 1;
+                int plotWidth = getWidth() - (getInsets().left + getInsets().right) - 1;
+                fullPlotRectangle = new Rectangle(plotLeft, plotTop, plotWidth, plotHeight);
+
                 int histogramPlotWidth = (int)(fullPlotRectangle.width - (SUMMARY_STATS_DEFAULT_SIZE + DEFAULT_RANGE_LABEL_HEIGHT));
 
                 valueRangeLabelsRectangle = new Rectangle(plotLeft, plotTop, DEFAULT_RANGE_LABEL_HEIGHT,
@@ -488,13 +557,28 @@ public class HistogramPanel extends JComponent implements ComponentListener, Mou
                         plotTop, SUMMARY_STATS_DEFAULT_SIZE, fullPlotRectangle.height);
                 histogramPlotRectangle = new Rectangle((summaryStatsRectangle.x + summaryStatsRectangle.width),
                         plotTop, histogramPlotWidth, fullPlotRectangle.height);
+
+                // layout the countAxisRectangle
+                countAxisRectangle = new Rectangle(histogramPlotRectangle.x, (histogramPlotRectangle.y + histogramPlotRectangle.height),
+                        histogramPlotRectangle.width, g2.getFontMetrics().getHeight());
+
+                String string = String.valueOf(countAxisMin);
+                int stringWidth = g2.getFontMetrics().stringWidth(string);
+                countAxisMinLabelBounds = new Rectangle(countAxisRectangle.x + 1, (countAxisRectangle.y - 2),
+                        stringWidth, g2.getFontMetrics().getHeight());
+
+                string = String.valueOf(countAxisMax);
+                stringWidth = g2.getFontMetrics().stringWidth(string);
+                countAxisMaxLabelBounds = new Rectangle((countAxisRectangle.x + countAxisRectangle.width) - stringWidth - 1,
+                        (countAxisRectangle.y - 2), stringWidth, g2.getFontMetrics().getHeight());
+
                 binRectangleSize = (double) histogramPlotRectangle.height / (double) binCount;
 
                 // calculate bin rectangles
                 int binNumber = 0;
                 for (int i = 0; i < histogram.getNumBins(); i++) {
                     double y = (histogramPlotRectangle.y + histogramPlotRectangle.height) - ((binNumber + 1) * binRectangleSize);
-                    double binWidth = GraphicsUtil.mapValue(histogram.getBinCount(i), 0., histogram.getMaxBinCount(), 0., histogramPlotRectangle.width);
+                    double binWidth = GraphicsUtil.mapValue(histogram.getBinCount(i), countAxisMin, countAxisMax, 0., histogramPlotRectangle.width);
                     double x = histogramPlotRectangle.x;
                     Rectangle2D.Double binRect = new Rectangle2D.Double(x, y, binWidth, binRectangleSize);
                     Color binColor = Color.lightGray;
@@ -508,7 +592,8 @@ public class HistogramPanel extends JComponent implements ComponentListener, Mou
                     // calculate highlight histogram bin rectangles
                     for (int binIndex = 0; binIndex < binCount; binIndex++) {
                         double y = (histogramPlotRectangle.y + histogramPlotRectangle.height) - ((binIndex + 1) * binRectangleSize);
-                        double binWidth = GraphicsUtil.mapValue(highlightHistogram.getBinCount(binIndex), 0., histogram.getMaxBinCount(), 0., histogramPlotRectangle.width);
+                        double binWidth = GraphicsUtil.mapValue(highlightHistogram.getBinCount(binIndex), countAxisMin,
+                                countAxisMax, 0., histogramPlotRectangle.width);
                         double x = histogramPlotRectangle.x;
                         Rectangle2D.Double binRect = new Rectangle2D.Double(x, y, binWidth, binRectangleSize);
                         Color binColor = Color.gray;
@@ -677,28 +762,63 @@ public class HistogramPanel extends JComponent implements ComponentListener, Mou
 
                 // draw the minimum value string
                 String minValueString = DECIMAL_FORMATTER.format(histogram.getMinValue());
-                int strWidth = g2.getFontMetrics().stringWidth(minValueString);
-                int strY = (valueRangeLabelsRectangle.y + valueRangeLabelsRectangle.height) - 4;
-                minLabelRectangle = new Rectangle(valueRangeLabelsRectangle.x, valueRangeLabelsRectangle.y, strWidth, valueRangeLabelsRectangle.height);
-                if (mouseOverMinLabel) {
+//                int strWidth = g2.getFontMetrics().stringWidth(minValueString);
+//                int strY = (valueRangeLabelsRectangle.y + valueRangeLabelsRectangle.height) - 4;
+//                minLabelRectangle = new Rectangle(valueRangeLabelsRectangle.x, valueRangeLabelsRectangle.y, strWidth, valueRangeLabelsRectangle.height);
+                if (mouseOverMinValueLabel) {
                     g2.setColor(Color.black);
                 } else {
                     g2.setColor(Color.darkGray);
                 }
-                g2.drawString(minValueString, valueRangeLabelsRectangle.x + 1, strY);
+                g2.drawString(minValueString, minLabelRectangle.x, minLabelRectangle.y + minLabelRectangle.height);
+//                g2.drawString(minValueString, valueRangeLabelsRectangle.x + 1, strY);
 
                 // draw the maximum value string
                 String maxValueString = DECIMAL_FORMATTER.format(histogram.getMaxValue());
-                strWidth = g2.getFontMetrics().stringWidth(maxValueString);
-                int strX = (valueRangeLabelsRectangle.x + valueRangeLabelsRectangle.width) - (strWidth + 1);
-                maxLabelRectangle = new Rectangle(strX, valueRangeLabelsRectangle.y, strWidth, valueRangeLabelsRectangle.height);
-                if (mouseOverMaxLabel) {
+//                strWidth = g2.getFontMetrics().stringWidth(maxValueString);
+//                int strX = (valueRangeLabelsRectangle.x + valueRangeLabelsRectangle.width) - (strWidth + 1);
+//                maxLabelRectangle = new Rectangle(strX, valueRangeLabelsRectangle.y, strWidth, valueRangeLabelsRectangle.height);
+                if (mouseOverMaxValueLabel) {
                     g2.setColor(Color.black);
                 } else {
                     g2.setColor(Color.darkGray);
                 }
-                g2.drawString(maxValueString, strX, strY);
+                g2.drawString(maxValueString, maxLabelRectangle.x, maxLabelRectangle.y + minLabelRectangle.height);
+//                g2.drawString(maxValueString, strX, strY);
 
+                // draw the count axis max value (upper limit)
+                String maxCountString = String.valueOf(countAxisMax);
+//                int strWidth = g2.getFontMetrics().stringWidth(maxCountString);
+//                int strX = (int) (countAxisMaxLabelBounds.getMaxX() - (strWidth + 2));
+                if (mouseOverMaxCountLabel) {
+                    g2.setColor(Color.black);
+                } else {
+                    g2.setColor(Color.darkGray);
+                }
+                g2.drawString(maxCountString, countAxisMaxLabelBounds.x, countAxisMaxLabelBounds.y + countAxisMaxLabelBounds.height);
+//                g2.drawString(maxCountString, strX, countAxisMaxLabelBounds.y + countAxisMaxLabelBounds.height);
+//                g2.draw(countAxisMaxLabelBounds);
+
+                // draw the count axis min value (lower limit)
+                String minCountString = String.valueOf(countAxisMin);
+//                strWidth = g2.getFontMetrics().stringWidth(minCountString);
+//                strX = (int) (countAxisMinLabelBounds.getMaxX() - (strWidth + 2));
+                if (mouseOverMinCountLabel) {
+                    g2.setColor(Color.black);
+                } else {
+                    g2.setColor(Color.darkGray);
+                }
+                g2.drawString(minCountString, countAxisMinLabelBounds.x, countAxisMinLabelBounds.y + countAxisMinLabelBounds.height);
+//                g2.drawString(minCountString, strX, countAxisMinLabelBounds.y + countAxisMinLabelBounds.height);
+//                g2.draw(countAxisMinLabelBounds);
+
+                g2.setColor(Color.gray);
+                g2.drawLine(histogramPlotRectangle.x, histogramPlotRectangle.y, histogramPlotRectangle.x,
+                        histogramPlotRectangle.y + histogramPlotRectangle.height);
+
+
+//                g2.setColor(Color.orange);
+//                g2.draw(countAxisRectangle);
 //                g2.setColor(Color.blue);
 //                g2.draw(fullPlotRectangle);
 //                g2.draw(maxLabelRectangle);
@@ -714,7 +834,7 @@ public class HistogramPanel extends JComponent implements ComponentListener, Mou
                 int strY = fullPlotRectangle.y + 1;
                 maxLabelRectangle = new Rectangle(valueRangeLabelsRectangle.x, valueRangeLabelsRectangle.y, valueRangeLabelsRectangle.width, strWidth);
                 g2.rotate(Math.toRadians(90.), strX, strY);
-                if (mouseOverMaxLabel) {
+                if (mouseOverMaxValueLabel) {
                     g2.setColor(Color.black);
                 } else {
                     g2.setColor(Color.darkGray);
@@ -728,13 +848,49 @@ public class HistogramPanel extends JComponent implements ComponentListener, Mou
                 strY = (fullPlotRectangle.y + fullPlotRectangle.height) - (strWidth + 1);
                 minLabelRectangle = new Rectangle(valueRangeLabelsRectangle.x, strY, valueRangeLabelsRectangle.width, strWidth);
                 g2.rotate(Math.toRadians(90.), strX, strY);
-                if (mouseOverMinLabel) {
+                if (mouseOverMinValueLabel) {
                     g2.setColor(Color.black);
                 } else {
                     g2.setColor(Color.darkGray);
                 }
                 g2.drawString(minValueString, strX, strY);
                 g2.rotate(-Math.toRadians(90.), strX, strY);
+
+//
+//                if (countAxisRectangle != null) {
+//                    g2.setColor(Color.blue);
+//                    g2.draw(countAxisRectangle);
+//                }
+
+                // draw the count axis max value (upper limit)
+                String maxCountString = String.valueOf(countAxisMax);
+                if (mouseOverMaxCountLabel) {
+                    g2.setColor(Color.black);
+                } else {
+                    g2.setColor(Color.darkGray);
+                }
+                g2.drawString(maxCountString, countAxisMaxLabelBounds.x, countAxisMaxLabelBounds.y + countAxisMaxLabelBounds.height);
+//                g2.draw(countAxisMaxLabelBounds);
+
+                // draw the count axis min value (lower limit)
+                String minCountString = String.valueOf(countAxisMin);
+                if (mouseOverMinCountLabel) {
+                    g2.setColor(Color.black);
+                } else {
+                    g2.setColor(Color.darkGray);
+                }
+                g2.drawString(minCountString, countAxisMinLabelBounds.x, countAxisMinLabelBounds.y + countAxisMinLabelBounds.height);
+//                g2.draw(countAxisMinLabelBounds);
+
+                g2.setColor(Color.gray);
+                g2.drawLine(countAxisRectangle.x, countAxisRectangle.y,
+                        countAxisRectangle.x + countAxisRectangle.width,
+                        countAxisRectangle.y);
+
+//                g2.setColor(Color.orange);
+//                g2.draw(countAxisRectangle);
+//                g2.setColor(Color.blue);
+//                g2.draw(fullPlotRectangle);
 
 //                g2.setColor(Color.blue);
 //                g2.draw(fullPlotRectangle);

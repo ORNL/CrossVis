@@ -599,13 +599,13 @@ public class MultiViewPanel extends JPanel {
 //        multiViewPanel.setShowOverviewEnabled(false);
 //        multiViewPanel.setShowOverviewEnabled(true);
 
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        multiViewPanel.setShowButtonPanelsEnabled(false);
+//        try {
+//            Thread.sleep(2000);
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
+//
+//        multiViewPanel.setShowButtonPanelsEnabled(false);
 
 //        log.debug("Saving screen capture");
 //        File imageFile = new File("test.png");
