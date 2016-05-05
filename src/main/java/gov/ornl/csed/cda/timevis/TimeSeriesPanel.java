@@ -57,9 +57,9 @@ public class TimeSeriesPanel extends JComponent implements TimeSeriesListener, C
     private boolean mouseOverTimeBar = false;
     private boolean mouseOverValueBar = false;
 
-    // pin marker list
+    // pin marker variables
     private ArrayList<PinMarkerInfo> pinMarkerList = new ArrayList<>();
-
+    private boolean pinningEnabled = true;
 
     private boolean shrinkToFit = false;
     private PlotDisplayOption plotDisplayOption = PlotDisplayOption.POINT;
@@ -89,6 +89,7 @@ public class TimeSeriesPanel extends JComponent implements TimeSeriesListener, C
     private Point endDragPoint = new Point();
     private boolean draggingSelection;
     private TimeSeriesSelection draggingTimeSeriesSelecton;
+    private boolean interactiveSelectionEnabled = true;
 
     // range selection data
     private ArrayList<TimeSeriesSelection> selectionList = new ArrayList<>();
@@ -118,6 +119,35 @@ public class TimeSeriesPanel extends JComponent implements TimeSeriesListener, C
         addComponentListener(this);
         addMouseListener(this);
         addMouseMotionListener(this);
+    }
+
+    public boolean isInteractiveSelectionsEnabled () {
+        return interactiveSelectionEnabled;
+    }
+
+    public void setInteractiveSelectionEnabled (boolean enabled) {
+        if (interactiveSelectionEnabled != enabled) {
+            interactiveSelectionEnabled = enabled;
+        }
+    }
+
+    public boolean isPinningEnabled() {
+        return pinningEnabled;
+    }
+
+    public void setPinningEnabled (boolean enabled) {
+        if (pinningEnabled != enabled) {
+            pinningEnabled = enabled;
+            if (enabled == false) {
+                pinMarkerList.clear();
+                repaint();
+            }
+        }
+    }
+
+    public void clearAllPinMarkers () {
+        pinMarkerList.clear();
+        repaint();
     }
 
     public double getValueAxisMax() {
@@ -292,27 +322,28 @@ public class TimeSeriesPanel extends JComponent implements TimeSeriesListener, C
     public void mouseClicked(MouseEvent e) {
         if (SwingUtilities.isLeftMouseButton(e)) {
             if (mouseOverValueBar || mouseOverTimeBar) {
-                // user has clicked on the time info or value info bar
-                // pin the mouse over value so that it does not change
-                // TODO: First see if this is a pin within a pixel or two of the hover position
-                if (!pinMarkerList.isEmpty()) {
-                    for (PinMarkerInfo pinMarker : pinMarkerList) {
-                        if ( (e.getX() >= (pinMarker.x - 2)) && (e.getX() <= (pinMarker.x + 2)) ) {
-                            // delete the pin marker and return from the function
-                            pinMarkerList.remove(pinMarker);
-                            repaint();
-                            return;
+                if (pinningEnabled) {
+                    // user has clicked on the time info or value info bar
+                    // pin the mouse over value so that it does not change
+                    if (!pinMarkerList.isEmpty()) {
+                        for (PinMarkerInfo pinMarker : pinMarkerList) {
+                            if ((e.getX() >= (pinMarker.x - 2)) && (e.getX() <= (pinMarker.x + 2))) {
+                                // delete the pin marker and return from the function
+                                pinMarkerList.remove(pinMarker);
+                                repaint();
+                                return;
+                            }
                         }
                     }
-                }
 
-                if (!Double.isNaN(hoverValue)) {
-                    PinMarkerInfo pinMarker = new PinMarkerInfo();
-                    pinMarker.instant = Instant.from(hoverInstant);
-                    pinMarker.value = hoverValue;
-                    pinMarker.x = hoverX;
-                    pinMarkerList.add(pinMarker);
-                    repaint();
+                    if (!Double.isNaN(hoverValue)) {
+                        PinMarkerInfo pinMarker = new PinMarkerInfo();
+                        pinMarker.instant = Instant.from(hoverInstant);
+                        pinMarker.value = hoverValue;
+                        pinMarker.x = hoverX;
+                        pinMarkerList.add(pinMarker);
+                        repaint();
+                    }
                 }
             } else if (hoverTimeSeriesSelection != null) {
                 selectionList.remove(hoverTimeSeriesSelection);
@@ -325,8 +356,10 @@ public class TimeSeriesPanel extends JComponent implements TimeSeriesListener, C
 
     @Override
     public void mousePressed(MouseEvent e) {
-        startDragPoint.setLocation(e.getX(), e.getY());
-        endDragPoint.setLocation(e.getX(), e.getY());
+        if (interactiveSelectionEnabled) {
+            startDragPoint.setLocation(e.getX(), e.getY());
+            endDragPoint.setLocation(e.getX(), e.getY());
+        }
     }
 
     @Override
@@ -350,7 +383,7 @@ public class TimeSeriesPanel extends JComponent implements TimeSeriesListener, C
 
     @Override
     public void mouseDragged(MouseEvent e) {
-        if (hoverTimeSeriesSelection != null) {
+        if (hoverTimeSeriesSelection != null && interactiveSelectionEnabled) {
             int deltaX = e.getX() - endDragPoint.x;
             endDragPoint.setLocation(e.getPoint());
             hoverTimeSeriesSelection.setStartScreenLocation(hoverTimeSeriesSelection.getStartScreenLocation() + deltaX);
@@ -381,7 +414,7 @@ public class TimeSeriesPanel extends JComponent implements TimeSeriesListener, C
             hoverTimeSeriesSelection.setEndInstant(selectionEnd);
 
             fireSelectionMoved(hoverTimeSeriesSelection);
-        } else {
+        } else if (interactiveSelectionEnabled){
             draggingSelection = true;
             endDragPoint.setLocation(e.getPoint());
 
@@ -1451,6 +1484,8 @@ public class TimeSeriesPanel extends JComponent implements TimeSeriesListener, C
                         }
                     });
 
+                    overviewTimeSeriesPanel.setPinningEnabled(false);
+                    overviewTimeSeriesPanel.setInteractiveSelectionEnabled(false);
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }

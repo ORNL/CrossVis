@@ -351,6 +351,8 @@ public class MultiViewPanel extends JPanel {
         viewInfo.overviewTimeSeriesPanel.setShowTimeRangeLabels(false);
         viewInfo.overviewTimeSeriesPanel.setBackground(Color.white);
         viewInfo.overviewTimeSeriesPanel.setPlotDisplayOption(TimeSeriesPanel.PlotDisplayOption.LINE);
+        viewInfo.overviewTimeSeriesPanel.setPinningEnabled(false);
+        viewInfo.overviewTimeSeriesPanel.setInteractiveSelectionEnabled(false);
         if (groupInfo.useCommonTimeScale) {
             viewInfo.overviewTimeSeriesPanel.setTimeSeries(timeSeries, groupInfo.startInstant, groupInfo.endInstant);
         } else {
@@ -454,6 +456,7 @@ public class MultiViewPanel extends JPanel {
         Histogram histogram = new Histogram(timeSeries.getName(), values, binCount);
         viewInfo.overviewHistogramPanel.setBackground(Color.white);
         viewInfo.overviewHistogramPanel.setHistogram(histogram);
+
 
         viewInfo.sidePanel = new JPanel();
         viewInfo.sidePanel.setBackground(Color.WHITE);

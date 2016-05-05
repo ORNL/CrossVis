@@ -23,8 +23,8 @@ import java.util.ArrayList;
  * Created by csg on 2/15/16.
  */
 public class HistogramPanel extends JComponent implements ComponentListener, MouseListener, MouseMotionListener {
-    public static final int SUMMARY_STATS_DEFAULT_SIZE = 18;
-    public static final int DEFAULT_RANGE_LABEL_HEIGHT = 16;
+    public static final int SUMMARY_STATS_DEFAULT_SIZE = 14;
+    public static final int DEFAULT_RANGE_LABEL_HEIGHT = 14;
     public final static float DEFAULT_LABEL_FONT_SIZE = 10f;
     public final static DecimalFormat DECIMAL_FORMATTER = new DecimalFormat("####0.0#######");
     public final static DecimalFormat PERCENT_FORMATTER = new DecimalFormat("##0.0%");
@@ -401,6 +401,10 @@ public class HistogramPanel extends JComponent implements ComponentListener, Mou
     private void layoutPanel() {
         if (histogram != null) {
             Graphics2D g2 = (Graphics2D)getGraphics();
+            if (g2 == null) {
+                return;
+            }
+
             g2.setFont(g2.getFont().deriveFont(Font.PLAIN, DEFAULT_LABEL_FONT_SIZE));
 
             histogramBinRectangles = new ArrayList<>();
@@ -500,15 +504,27 @@ public class HistogramPanel extends JComponent implements ComponentListener, Mou
                 // calculate standard deviation range
                 double stdevRangeLeft = GraphicsUtil.mapValue(histogram.getMean() - histogram.getStDev(),
                         histogram.getMinValue(), histogram.getMaxValue(), histogramPlotRectangle.getMinX(), histogramPlotRectangle.width);
+                if (stdevRangeLeft < histogramPlotRectangle.x) {
+                    stdevRangeLeft = histogramPlotRectangle.x;
+                }
                 double stdevRangeRight = GraphicsUtil.mapValue(histogram.getMean() + histogram.getStDev(),
                         histogram.getMinValue(), histogram.getMaxValue(), histogramPlotRectangle.getMinX(), histogramPlotRectangle.width);
+                if (stdevRangeRight > histogramPlotRectangle.getMaxX()) {
+                    stdevRangeRight = histogramPlotRectangle.getMaxX();
+                }
                 stdevRangeShape = new Line2D.Double(stdevRangeLeft, yPosition, stdevRangeRight, yPosition);
 
                 // calculate IQR
                 double IQRLeft = GraphicsUtil.mapValue(histogram.getPercentile25(),
                         histogram.getMinValue(), histogram.getMaxValue(), histogramPlotRectangle.getMinX(), histogramPlotRectangle.width);
+                if (IQRLeft < histogramPlotRectangle.x) {
+                    IQRLeft = histogramPlotRectangle.x;
+                }
                 double IQRRight = GraphicsUtil.mapValue(histogram.getPercentile75(),
                         histogram.getMinValue(), histogram.getMaxValue(), histogramPlotRectangle.getMinX(), histogramPlotRectangle.width);
+                if (IQRRight > histogramPlotRectangle.getMaxX()) {
+                    IQRRight = histogramPlotRectangle.getMaxX();
+                }
                 IQRShape = new Line2D.Double(IQRLeft, yPosition, IQRRight, yPosition);
 
                 // calculate shapes for highlight statistics
@@ -529,16 +545,28 @@ public class HistogramPanel extends JComponent implements ComponentListener, Mou
                     double highlightStdevRangeLeft = GraphicsUtil.mapValue(highlightHistogram.getMean() - highlightHistogram.getStDev(),
                             histogram.getMinValue(), histogram.getMaxValue(), histogramPlotRectangle.getMinX(),
                             histogramPlotRectangle.width);
+                    if (highlightStdevRangeLeft < histogramPlotRectangle.x) {
+                        highlightStdevRangeLeft = histogramPlotRectangle.x;
+                    }
                     double highlightStdevRangeRight = GraphicsUtil.mapValue(highlightHistogram.getMean() + highlightHistogram.getStDev(),
                             histogram.getMinValue(), histogram.getMaxValue(), histogramPlotRectangle.getMinX(),
                             histogramPlotRectangle.width);
+                    if (highlightStdevRangeRight > histogramPlotRectangle.getMaxX()) {
+                        highlightStdevRangeRight = histogramPlotRectangle.getMaxX();
+                    }
                     highlightStdevRangeShape = new Line2D.Double(highlightStdevRangeLeft, yPosition, highlightStdevRangeRight, yPosition);
 
                     // calculate IQR
                     double highlightIQRLeft = GraphicsUtil.mapValue(highlightHistogram.getPercentile25(), histogram.getMinValue(),
                             histogram.getMaxValue(), histogramPlotRectangle.getMinX(), histogramPlotRectangle.width);
+                    if (highlightIQRLeft < histogramPlotRectangle.x) {
+                        highlightIQRLeft = histogramPlotRectangle.x;
+                    }
                     double highlightIQRRight = GraphicsUtil.mapValue(highlightHistogram.getPercentile75(), histogram.getMinValue(),
                             histogram.getMaxValue(), histogramPlotRectangle.getMinX(), histogramPlotRectangle.width);
+                    if (highlightIQRRight > histogramPlotRectangle.getMaxX()) {
+                        highlightIQRRight = histogramPlotRectangle.getMaxX();
+                    }
                     highlightIQRShape = new Line2D.Double(highlightIQRLeft, yPosition, highlightIQRRight, yPosition);
                 }
             } else {
@@ -682,21 +710,27 @@ public class HistogramPanel extends JComponent implements ComponentListener, Mou
 //            }
 
             // draw histogram bins
-            for (int i = 0; i < histogramBinRectangles.size(); i++) {
-                Rectangle2D binRect = histogramBinRectangles.get(i);
-                g2.setColor(histogramBinColors.get(i));
-                g2.fill(binRect);
-                g2.setColor(Color.darkGray);
-                g2.draw(binRect);
+            if (histogramBinRectangles != null) {
+                for (int i = 0; i < histogramBinRectangles.size(); i++) {
+                    Rectangle2D binRect = histogramBinRectangles.get(i);
+                    g2.setColor(histogramBinColors.get(i));
+                    g2.fill(binRect);
+                    g2.setColor(Color.darkGray);
+                    g2.draw(binRect);
+                }
+            } else {
+                return;
             }
 
             // draw highlight histogram bins
-            for (int i = 0; i < highlightHistogramBinRectangles.size(); i++) {
-                Rectangle2D binRect = highlightHistogramBinRectangles.get(i);
-                g2.setColor(highlightHistogramBinColors.get(i).darker());
-                g2.fill(binRect);
-                g2.setColor(Color.black);
-                g2.draw(binRect);
+            if (highlightHistogramBinRectangles != null) {
+                for (int i = 0; i < highlightHistogramBinRectangles.size(); i++) {
+                    Rectangle2D binRect = highlightHistogramBinRectangles.get(i);
+                    g2.setColor(highlightHistogramBinColors.get(i).darker());
+                    g2.fill(binRect);
+                    g2.setColor(Color.black);
+                    g2.draw(binRect);
+                }
             }
 
             g2.setStroke(new BasicStroke(2.f));
@@ -916,7 +950,8 @@ public class HistogramPanel extends JComponent implements ComponentListener, Mou
     public void componentMoved(ComponentEvent e) {}
 
     @Override
-    public void componentShown(ComponentEvent e) {}
+    public void componentShown(ComponentEvent e) {
+    }
 
     @Override
     public void componentHidden(ComponentEvent e) {}
