@@ -39,18 +39,18 @@ public class Flight {
             public void run() {
 
                 TimeSeriesPanel timeSeriesPanel = new TimeSeriesPanel(10, ChronoUnit.MINUTES, TimeSeriesPanel.PlotDisplayOption.LINE);
-//                timeSeriesPanel.setPreferredSize(new Dimension(1000, 100));
+//                detailsTimeSeriesPanel.setPreferredSize(new Dimension(1000, 100));
                 timeSeriesPanel.setBackground(Color.white);
-//                timeSeriesPanel.setDisplayTimeRange(startInstant, endInstant);
+//                detailsTimeSeriesPanel.setDisplayTimeRange(startInstant, endInstant);
                 timeSeriesPanel.setTimeSeries(timeSeries, startInstant, endInstant);
                 timeSeriesPanel.setValueAxisMax(11.0);
                 timeSeriesPanel.setValueAxisMin(-11.0);
                 timeSeriesPanel.setDataColor(new Color(80, 80, 130, 100));
 
                 Border border = BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(10,10,10,10), BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
-//                timeSeriesPanel.setBorder(border);
+//                detailsTimeSeriesPanel.setBorder(border);
 
-//                timeSeriesPanel.setTimeSeries(timeSeries, timeSeries.getStartInstant(), timeSeries.getEndInstant());
+//                detailsTimeSeriesPanel.setTimeSeries(timeSeries, timeSeries.getStartInstant(), timeSeries.getEndInstant());
 
                 JScrollPane scrollPane = new JScrollPane(timeSeriesPanel);
 

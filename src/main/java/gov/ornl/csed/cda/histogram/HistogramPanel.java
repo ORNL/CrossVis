@@ -829,7 +829,7 @@ public class HistogramPanel extends JComponent implements ComponentListener, Mou
                 } else {
                     g2.setColor(Color.darkGray);
                 }
-                g2.drawString(maxCountString, countAxisMaxLabelBounds.x, countAxisMaxLabelBounds.y + countAxisMaxLabelBounds.height);
+                g2.drawString(maxCountString, countAxisMaxLabelBounds.x, (countAxisMaxLabelBounds.y + countAxisMaxLabelBounds.height - 2));
 //                g2.drawString(maxCountString, strX, countAxisMaxLabelBounds.y + countAxisMaxLabelBounds.height);
 //                g2.draw(countAxisMaxLabelBounds);
 
@@ -842,7 +842,7 @@ public class HistogramPanel extends JComponent implements ComponentListener, Mou
                 } else {
                     g2.setColor(Color.darkGray);
                 }
-                g2.drawString(minCountString, countAxisMinLabelBounds.x, countAxisMinLabelBounds.y + countAxisMinLabelBounds.height);
+                g2.drawString(minCountString, countAxisMinLabelBounds.x, (countAxisMinLabelBounds.y + countAxisMinLabelBounds.height));
 //                g2.drawString(minCountString, strX, countAxisMinLabelBounds.y + countAxisMinLabelBounds.height);
 //                g2.draw(countAxisMinLabelBounds);
 

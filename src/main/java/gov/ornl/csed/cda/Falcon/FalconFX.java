@@ -3,7 +3,6 @@ package gov.ornl.csed.cda.Falcon;/**
  */
 
 import gov.ornl.csed.cda.histogram.Histogram;
-import gov.ornl.csed.cda.histogram.HistogramPanel;
 import gov.ornl.csed.cda.histogram.MultiHistogramPanel;
 import gov.ornl.csed.cda.timevis.*;
 import javafx.application.Application;
@@ -40,7 +39,6 @@ import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.EtchedBorder;
 import java.awt.*;
-import java.awt.Insets;
 import java.awt.event.AdjustmentEvent;
 import java.awt.event.AdjustmentListener;
 import java.awt.geom.*;
@@ -792,9 +790,10 @@ public class FalconFX extends Application {
         }
     }
 
-    private void addSelectionView(TimeSeriesPanel detailTimeSeriesPanel, JScrollPane detailTimeSeriesPanelScrollPane, TimeSeriesSelection timeSeriesSelection) {
+    private void addSelectionView(TimeSeriesPanel detailTimeSeriesPanel, TimeSeriesPanel overviewTimeSeriesPanel, JScrollPane detailTimeSeriesPanelScrollPane, TimeSeriesSelection timeSeriesSelection) {
         log.debug("TimeSeries selection created");
-        selectionDetailPanel.addSelection(detailTimeSeriesPanel, detailTimeSeriesPanelScrollPane, timeSeriesSelection);
+        overviewTimeSeriesPanel.addTimeSeriesSelection(timeSeriesSelection.getStartInstant(), timeSeriesSelection.getEndInstant());
+        selectionDetailPanel.addSelection(detailTimeSeriesPanel, overviewTimeSeriesPanel, detailTimeSeriesPanelScrollPane, timeSeriesSelection);
 //        // get the data in the selection range
 //        ArrayList<TimeSeriesRecord> records = detailTimeSeriesPanel.getTimeSeries().getRecordsBetween(timeSeriesSelection.getStartInstant(), timeSeriesSelection.getEndInstant());
 //
@@ -814,8 +813,12 @@ public class FalconFX extends Application {
 //        selectionViewInfoMap.put(timeSeriesSelection, selectionViewInfo);
     }
 
-    private void updateSelectionView(TimeSeriesPanel detailTimeSeriesPanel, TimeSeriesSelection timeSeriesSelection) {
+    private void updateSelectionView(TimeSeriesPanel detailTimeSeriesPanel, TimeSeriesPanel overviewTimeSeriesPanel,
+                                     TimeSeriesSelection timeSeriesSelection, Instant previousStartInstant, Instant previousEndInstant) {
         log.debug("TimeSeries selection moved");
+        // TODO: Move selection in overview
+        overviewTimeSeriesPanel.updateTimeSeriesSelection(previousStartInstant, previousEndInstant, timeSeriesSelection.getStartInstant(),
+                timeSeriesSelection.getEndInstant());
         selectionDetailPanel.updateSelection(timeSeriesSelection);
 //        // get the data in the selection range
 //        ArrayList<TimeSeriesRecord> records = detailTimeSeriesPanel.getTimeSeries().getRecordsBetween(timeSeriesSelection.getStartInstant(), timeSeriesSelection.getEndInstant());
@@ -833,8 +836,9 @@ public class FalconFX extends Application {
 //        selectionViewInfo.histogramPanel.setHistogram(histogram);
     }
 
-    private void deleteSelectionView(TimeSeriesPanel detailTimeSeriesPanel, TimeSeriesSelection timeSeriesSelection) {
+    private void deleteSelectionView(TimeSeriesPanel detailTimeSeriesPanel, TimeSeriesPanel overviewTimeSeriesPanel, TimeSeriesSelection timeSeriesSelection) {
         log.debug("TimeSeries selection deleted");
+        overviewTimeSeriesPanel.removeTimeSeriesSelection(timeSeriesSelection.getStartInstant(), timeSeriesSelection.getEndInstant());
         selectionDetailPanel.deleteSelection(timeSeriesSelection);
 //        // remove selection view
 //        SelectionViewInfo selectionViewInfo = selectionViewInfoMap.remove(timeSeriesSelection);
@@ -846,23 +850,25 @@ public class FalconFX extends Application {
             TimeSeries timeSeries = fileMetadata.timeSeriesMap.get(variableName);
             multiViewPanel.addTimeSeries(timeSeries, fileMetadata.file.getName());
 
-            TimeSeriesPanel detailsTimeSeries = multiViewPanel.getDetailTimeSeriesPanel(timeSeries);
+            TimeSeriesPanel overviewTSPanel = multiViewPanel.getOverviewTimeSeriesPanel(timeSeries);
+            TimeSeriesPanel detailsTSPanel = multiViewPanel.getDetailTimeSeriesPanel(timeSeries);
             JScrollPane detailsTimeSeriesPanelScrollPanel = multiViewPanel.getDetailsTimeSeriesScrollPane(timeSeries);
 
-            detailsTimeSeries.addTimeSeriesPanelSelectionListener(new TimeSeriesPanelSelectionListener() {
+            detailsTSPanel.addTimeSeriesPanelSelectionListener(new TimeSeriesPanelSelectionListener() {
                 @Override
                 public void selectionCreated(TimeSeriesPanel timeSeriesPanel, TimeSeriesSelection timeSeriesSelection) {
-                    addSelectionView(timeSeriesPanel, detailsTimeSeriesPanelScrollPanel, timeSeriesSelection);
+                    addSelectionView(timeSeriesPanel, overviewTSPanel, detailsTimeSeriesPanelScrollPanel, timeSeriesSelection);
                 }
 
                 @Override
-                public void selectionMoved(TimeSeriesPanel timeSeriesPanel, TimeSeriesSelection timeSeriesSelection) {
-                    updateSelectionView(timeSeriesPanel, timeSeriesSelection);
+                public void selectionMoved(TimeSeriesPanel timeSeriesPanel, TimeSeriesSelection timeSeriesSelection,
+                                           Instant previousStartInstant, Instant previousEndInstant) {
+                    updateSelectionView(timeSeriesPanel, overviewTSPanel, timeSeriesSelection, previousStartInstant, previousEndInstant);
                 }
 
                 @Override
                 public void selectionDeleted(TimeSeriesPanel timeSeriesPanel, TimeSeriesSelection timeSeriesSelection) {
-                    deleteSelectionView(timeSeriesPanel, timeSeriesSelection);
+                    deleteSelectionView(timeSeriesPanel, overviewTSPanel, timeSeriesSelection);
                 }
             });
         } else if (fileMetadata.fileType == FileMetadata.FileType.PLG) {
@@ -873,23 +879,27 @@ public class FalconFX extends Application {
                 for (TimeSeries timeSeries : PLGTimeSeriesMap.values()) {
                     timeSeries.setName(fileMetadata.file.getName() + ":" + timeSeries.getName());
                     multiViewPanel.addTimeSeries(timeSeries, fileMetadata.file.getName());
+
+                    TimeSeriesPanel overviewTSPanel = multiViewPanel.getOverviewTimeSeriesPanel(timeSeries);
                     TimeSeriesPanel detailsTimeSeries = multiViewPanel.getDetailTimeSeriesPanel(timeSeries);
                     JScrollPane detailsTimeSeriesPanelScrollPanel = multiViewPanel.getDetailsTimeSeriesScrollPane(timeSeries);
 
                     detailsTimeSeries.addTimeSeriesPanelSelectionListener(new TimeSeriesPanelSelectionListener() {
                         @Override
                         public void selectionCreated(TimeSeriesPanel timeSeriesPanel, TimeSeriesSelection timeSeriesSelection) {
-                            addSelectionView(timeSeriesPanel, detailsTimeSeriesPanelScrollPanel, timeSeriesSelection);
+                            addSelectionView(timeSeriesPanel, overviewTSPanel, detailsTimeSeriesPanelScrollPanel, timeSeriesSelection);
                         }
 
                         @Override
-                        public void selectionMoved(TimeSeriesPanel timeSeriesPanel, TimeSeriesSelection timeSeriesSelection) {
-                            updateSelectionView(timeSeriesPanel, timeSeriesSelection);
+                        public void selectionMoved(TimeSeriesPanel timeSeriesPanel, TimeSeriesSelection timeSeriesSelection,
+                                                   Instant previousStartInstant, Instant previousEndInstant) {
+                            updateSelectionView(timeSeriesPanel, overviewTSPanel, timeSeriesSelection, previousStartInstant,
+                                    previousEndInstant);
                         }
 
                         @Override
                         public void selectionDeleted(TimeSeriesPanel timeSeriesPanel, TimeSeriesSelection timeSeriesSelection) {
-                            deleteSelectionView(timeSeriesPanel, timeSeriesSelection);
+                            deleteSelectionView(timeSeriesPanel, overviewTSPanel, timeSeriesSelection);
                         }
                     });
                 }

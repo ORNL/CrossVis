@@ -68,6 +68,15 @@ public class MultiViewPanel extends JPanel {
         initialize();
     }
 
+    public TimeSeriesPanel getOverviewTimeSeriesPanel(TimeSeries timeSeries) {
+        for (ViewInfo viewInfo : viewInfoList) {
+            if (viewInfo.timeSeries == timeSeries) {
+                return viewInfo.overviewTimeSeriesPanel;
+            }
+        }
+        return null;
+    }
+
     public TimeSeriesPanel getDetailTimeSeriesPanel(TimeSeries timeSeries) {
         for (ViewInfo viewInfo : viewInfoList) {
             if (viewInfo.timeSeries == timeSeries) {
@@ -456,7 +465,6 @@ public class MultiViewPanel extends JPanel {
         Histogram histogram = new Histogram(timeSeries.getName(), values, binCount);
         viewInfo.overviewHistogramPanel.setBackground(Color.white);
         viewInfo.overviewHistogramPanel.setHistogram(histogram);
-
 
         viewInfo.sidePanel = new JPanel();
         viewInfo.sidePanel.setBackground(Color.WHITE);

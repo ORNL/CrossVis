@@ -8,8 +8,8 @@ public class TimeSeriesSelection {
 	private int startScreenLocation;
 	private int endScreenLocation;
 	
-	public TimeSeriesSelection(Instant startInstant, Instant endInstant,
-			int startScreenLocation, int endScreenLocations) {
+	public TimeSeriesSelection(Instant startInstant, Instant endInstant, int startScreenLocation,
+							   int endScreenLocation) {
 		this.startInstant = startInstant;
 		this.endInstant = endInstant;
 		this.startScreenLocation = startScreenLocation;

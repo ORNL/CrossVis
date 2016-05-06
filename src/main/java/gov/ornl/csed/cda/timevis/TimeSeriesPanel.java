@@ -200,9 +200,9 @@ public class TimeSeriesPanel extends JComponent implements TimeSeriesListener, C
         }
     }
 
-    private void fireSelectionMoved(TimeSeriesSelection selection) {
+    private void fireSelectionMoved(TimeSeriesSelection selection, Instant previousStartInstant, Instant previousEndInstant) {
         for (TimeSeriesPanelSelectionListener listener : selectionListeners) {
-            listener.selectionMoved(this, selection);
+            listener.selectionMoved(this, selection, previousStartInstant, previousEndInstant);
         }
     }
 
@@ -218,6 +218,77 @@ public class TimeSeriesPanel extends JComponent implements TimeSeriesListener, C
             return true;
         }
         return false;
+    }
+
+    public TimeSeriesSelection updateTimeSeriesSelection(Instant previousStartInstant, Instant previousEndInstant,
+                                                         Instant newStartInstant, Instant newEndInstant) {
+        if (!selectionList.isEmpty()) {
+            for (TimeSeriesSelection selection : selectionList) {
+                if (selection.getStartInstant().equals(previousStartInstant) &&
+                        selection.getEndInstant().equals(previousEndInstant)) {
+                    Instant start;
+                    Instant end;
+                    double leftPosition;
+                    double rightPosition;
+
+                    // clamp selection start to panels range and calculate left x position
+                    if (newStartInstant.isAfter(startInstant)) {
+                        start = Instant.from(newStartInstant);
+                        leftPosition = GraphicsUtil.mapValue(start.toEpochMilli(), startInstant.toEpochMilli(),
+                                endInstant.toEpochMilli(), plotRectangle.getX(), plotRectangle.getMaxX());
+                    } else {
+                        start = Instant.from(startInstant);
+                        leftPosition = plotRectangle.getX();
+                    }
+
+                    // clamp selection end to panel's range and calculate right x position
+                    if (newEndInstant.isBefore(endInstant)) {
+                        end = Instant.from(newEndInstant);
+                        rightPosition = GraphicsUtil.mapValue(end.toEpochMilli(), startInstant.toEpochMilli(),
+                                endInstant.toEpochMilli(), plotRectangle.getX(), plotRectangle.getMaxX());
+                    } else {
+                        end = Instant.from(endInstant);
+                        rightPosition = plotRectangle.getX();
+                    }
+
+                    selection.setStartInstant(start);
+                    selection.setEndInstant(end);
+                    selection.setStartScreenLocation((int) leftPosition);
+                    selection.setEndScreenLocation((int) rightPosition);
+
+                    repaint();
+                    return selection;
+                }
+            }
+        }
+        return null;
+    }
+
+    public boolean removeTimeSeriesSelection(Instant selectionStart, Instant selectionEnd) {
+        if (!selectionList.isEmpty()) {
+            TimeSeriesSelection selectionToRemove = null;
+            for (TimeSeriesSelection selection : selectionList) {
+                if (selection.getStartInstant().equals(selectionStart) &&
+                        selection.getEndInstant().equals(selectionEnd)) {
+                    selectionToRemove = selection;
+                    break;
+                }
+            }
+
+            if (selectionToRemove != null) {
+                if (selectionList.remove(selectionToRemove)) {
+                    repaint();
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    public void removeAllTimeSeriesSelections() {
+        selectionList.clear();
+        repaint();
     }
 
     public Color getDataColor() {
@@ -327,7 +398,7 @@ public class TimeSeriesPanel extends JComponent implements TimeSeriesListener, C
                     // pin the mouse over value so that it does not change
                     if (!pinMarkerList.isEmpty()) {
                         for (PinMarkerInfo pinMarker : pinMarkerList) {
-                            if ((e.getX() >= (pinMarker.x - 2)) && (e.getX() <= (pinMarker.x + 2))) {
+                            if ((e.getX() >= (pinMarker.x - 3)) && (e.getX() <= (pinMarker.x + 3))) {
                                 // delete the pin marker and return from the function
                                 pinMarkerList.remove(pinMarker);
                                 repaint();
@@ -345,7 +416,7 @@ public class TimeSeriesPanel extends JComponent implements TimeSeriesListener, C
                         repaint();
                     }
                 }
-            } else if (hoverTimeSeriesSelection != null) {
+            } else if ((hoverTimeSeriesSelection != null) && interactiveSelectionEnabled) {
                 selectionList.remove(hoverTimeSeriesSelection);
                 fireSelectionDeleted(hoverTimeSeriesSelection);
                 hoverTimeSeriesSelection = null;
@@ -410,10 +481,12 @@ public class TimeSeriesPanel extends JComponent implements TimeSeriesListener, C
             double selectionEndMillis = GraphicsUtil.mapValue(hoverTimeSeriesSelection.getEndScreenLocation(), plotRectangle.getX(), plotRectangle.getMaxX(), startInstant.toEpochMilli(), endInstant.toEpochMilli());
             Instant selectionEnd = Instant.ofEpochMilli((long) selectionEndMillis);
 
+            Instant previousStartInstant  = Instant.from(hoverTimeSeriesSelection.getStartInstant());
+            Instant previousEndInstant = Instant.from(hoverTimeSeriesSelection.getEndInstant());
             hoverTimeSeriesSelection.setStartInstant(selectionStart);
             hoverTimeSeriesSelection.setEndInstant(selectionEnd);
 
-            fireSelectionMoved(hoverTimeSeriesSelection);
+            fireSelectionMoved(hoverTimeSeriesSelection, previousStartInstant, previousEndInstant);
         } else if (interactiveSelectionEnabled){
             draggingSelection = true;
             endDragPoint.setLocation(e.getPoint());
@@ -449,6 +522,43 @@ public class TimeSeriesPanel extends JComponent implements TimeSeriesListener, C
         }
         repaint();
     }
+
+    public void addTimeSeriesSelection(Instant selectionStart, Instant selectionEnd) {
+        if (timeSeries != null) {
+            Instant start;
+            Instant end;
+            double leftPosition;
+            double rightPosition;
+
+            // clamp selection start to panels range and calculate left x position
+            if (selectionStart.isAfter(startInstant)) {
+                start = Instant.from(selectionStart);
+                leftPosition = GraphicsUtil.mapValue(start.toEpochMilli(), startInstant.toEpochMilli(),
+                        endInstant.toEpochMilli(), plotRectangle.getX(), plotRectangle.getMaxX());
+            } else {
+                start = Instant.from(startInstant);
+                leftPosition = plotRectangle.getX();
+            }
+
+            // clamp selection end to panel's range and calculate right x position
+            if (selectionEnd.isBefore(endInstant)) {
+                end = Instant.from(selectionEnd);
+                rightPosition = GraphicsUtil.mapValue(end.toEpochMilli(), startInstant.toEpochMilli(),
+                        endInstant.toEpochMilli(), plotRectangle.getX(), plotRectangle.getMaxX());
+            } else {
+                end = Instant.from(endInstant);
+                rightPosition = plotRectangle.getX();
+            }
+
+            // create selection object and add to selection list
+            TimeSeriesSelection selection = new TimeSeriesSelection(start, end, (int)leftPosition, (int)rightPosition);
+            selectionList.add(selection);
+
+            repaint();
+        }
+    }
+
+
 
     @Override
     public void mouseMoved(MouseEvent e) {

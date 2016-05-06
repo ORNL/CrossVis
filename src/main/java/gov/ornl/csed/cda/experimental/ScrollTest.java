@@ -41,7 +41,7 @@ public class ScrollTest {
 
                 timeSeriesPanel.setTimeSeries(timeSeries, timeSeries.getStartInstant(), timeSeries.getEndInstant());
 //
-//                JScrollPane scrollPane = new JScrollPane(timeSeriesPanel) {
+//                JScrollPane scrollPane = new JScrollPane(detailsTimeSeriesPanel) {
 //                    public void paintComponent(Graphics g) {
 //                        Graphics2D g2 = (Graphics2D)g;
 //
@@ -58,7 +58,7 @@ public class ScrollTest {
 //                    }
 //                };
 //                scrollPane.getHorizontalScrollBar().setOpaque(false);
-////                JScrollPane scrollPane = new JScrollPane(timeSeriesPanel);
+////                JScrollPane scrollPane = new JScrollPane(detailsTimeSeriesPanel);
 
 //                scrollPane.getViewport()
 //                scrollPane.getHorizontalScrollBar().setUI(new MyScrollBarUI());

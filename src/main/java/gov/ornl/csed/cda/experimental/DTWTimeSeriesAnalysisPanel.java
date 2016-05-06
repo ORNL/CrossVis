@@ -235,7 +235,8 @@ public class DTWTimeSeriesAnalysisPanel extends JPanel {
                         }
 
                         @Override
-                        public void selectionMoved(TimeSeriesPanel timeSeriesPanel, TimeSeriesSelection timeSeriesSelection) {
+                        public void selectionMoved(TimeSeriesPanel timeSeriesPanel, TimeSeriesSelection timeSeriesSelection,
+                                                   Instant previousStartInstant, Instant previousEndInstant) {
 
                         }
 

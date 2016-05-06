@@ -2,7 +2,6 @@ package gov.ornl.csed.cda.Falcon;
 
 import gov.ornl.csed.cda.histogram.Histogram;
 import gov.ornl.csed.cda.histogram.HistogramPanel;
-import gov.ornl.csed.cda.histogram.MultiHistogramPanel;
 import gov.ornl.csed.cda.timevis.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,7 +61,7 @@ public class SelectionDetailsPanel extends JPanel {
                     // find the position in the time series panel for the mid point of the selection
                     long midDeltaTime = (ChronoUnit.MILLIS.between(selection.getStartInstant(), selection.getEndInstant()) / 2);
                     Instant middleInstant = selection.getStartInstant().plusMillis(midDeltaTime);
-                    int middleX = viewInfoList.get(index).timeSeriesPanel.getXForInstant(middleInstant);
+                    int middleX = viewInfoList.get(index).detailsTimeSeriesPanel.getXForInstant(middleInstant);
                     int halfViewPortWidth = viewInfoList.get(index).timeSeriesPanelScrollPane.getViewport().getWidth() / 2;
                     viewInfoList.get(index).timeSeriesPanelScrollPane.getHorizontalScrollBar().setValue(middleX - halfViewPortWidth);
                     // change scroll position so that mid point is in center of view point
@@ -177,7 +176,9 @@ public class SelectionDetailsPanel extends JPanel {
                 if (viewInfoList.remove(viewInfo)) {
                     // TODO: Need to remove from group here and reset time range for the group
                     rebuildBoxPanel();
-                    viewInfo.timeSeriesPanel.removeTimeSeriesSelection(viewInfo.timeSeriesSelection);
+                    viewInfo.detailsTimeSeriesPanel.removeTimeSeriesSelection(viewInfo.timeSeriesSelection);
+                    viewInfo.overviewTimeSeriesPanel.removeTimeSeriesSelection(viewInfo.timeSeriesSelection.getStartInstant(),
+                            viewInfo.timeSeriesSelection.getEndInstant());
                 }
             }
         });
@@ -213,12 +214,13 @@ public class SelectionDetailsPanel extends JPanel {
         return buttonPanel;
     }
 
-    public void addSelection(TimeSeriesPanel timeSeriesPanel, JScrollPane timeSeriesScrollPane, TimeSeriesSelection timeSeriesSelection) {
+    public void addSelection(TimeSeriesPanel detailsTimeSeriesPanel, TimeSeriesPanel overviewTimeSeriesPanel, JScrollPane timeSeriesScrollPane, TimeSeriesSelection timeSeriesSelection) {
         // get the data in the selection range
-        ArrayList<TimeSeriesRecord> records = timeSeriesPanel.getTimeSeries().getRecordsBetween(timeSeriesSelection.getStartInstant(), timeSeriesSelection.getEndInstant());
+        ArrayList<TimeSeriesRecord> records = detailsTimeSeriesPanel.getTimeSeries().getRecordsBetween(timeSeriesSelection.getStartInstant(), timeSeriesSelection.getEndInstant());
 
         ViewInfo viewInfo = new ViewInfo();
-        viewInfo.timeSeriesPanel = timeSeriesPanel;
+        viewInfo.detailsTimeSeriesPanel = detailsTimeSeriesPanel;
+        viewInfo.overviewTimeSeriesPanel = overviewTimeSeriesPanel;
         viewInfo.timeSeriesPanelScrollPane = timeSeriesScrollPane;
         viewInfo.timeSeriesSelection = timeSeriesSelection;
 
@@ -228,7 +230,7 @@ public class SelectionDetailsPanel extends JPanel {
         for (int i = 0; i < values.length; i++) {
             values[i] = records.get(i).value;
         }
-        Histogram histogram = new Histogram(timeSeriesPanel.getTimeSeries().getName(), values, binCount);
+        Histogram histogram = new Histogram(detailsTimeSeriesPanel.getTimeSeries().getName(), values, binCount);
 
         viewInfo.histogramPanel = new HistogramPanel(HistogramPanel.ORIENTATION.HORIZONTAL, HistogramPanel.STATISTICS_MODE.MEAN_BASED);
         viewInfo.histogramPanel.setBinCount(binCount);
@@ -270,13 +272,13 @@ public class SelectionDetailsPanel extends JPanel {
                 viewInfo.startLabel.setText("Start Instant: " + dtFormatter.format(timeSeriesSelection.getStartInstant()));
                 viewInfo.endLabel.setText("End Instant: " + dtFormatter.format(timeSeriesSelection.getEndInstant()));
 
-                ArrayList<TimeSeriesRecord> records = viewInfo.timeSeriesPanel.getTimeSeries().getRecordsBetween(timeSeriesSelection.getStartInstant(), timeSeriesSelection.getEndInstant());
+                ArrayList<TimeSeriesRecord> records = viewInfo.detailsTimeSeriesPanel.getTimeSeries().getRecordsBetween(timeSeriesSelection.getStartInstant(), timeSeriesSelection.getEndInstant());
                 int binCount = 20;
                 double values[] = new double[records.size()];
                 for (int i = 0; i < values.length; i++) {
                     values[i] = records.get(i).value;
                 }
-                Histogram histogram = new Histogram(viewInfo.timeSeriesPanel.getTimeSeries().getName(), values, binCount);
+                Histogram histogram = new Histogram(viewInfo.detailsTimeSeriesPanel.getTimeSeries().getName(), values, binCount);
                 viewInfo.histogramPanel.setHistogram(histogram);
 
             }
@@ -303,7 +305,7 @@ public class SelectionDetailsPanel extends JPanel {
 
         if (viewToRemove != null) {
             viewInfoList.remove(viewToRemove);
-            viewToRemove.timeSeriesPanel.removeTimeSeriesSelection(viewToRemove.timeSeriesSelection);
+            viewToRemove.detailsTimeSeriesPanel.removeTimeSeriesSelection(viewToRemove.timeSeriesSelection);
             rebuildBoxPanel();
         }
     }
@@ -348,11 +350,12 @@ public class SelectionDetailsPanel extends JPanel {
                 timeSeriesPanel.addTimeSeriesPanelSelectionListener(new TimeSeriesPanelSelectionListener() {
                     @Override
                     public void selectionCreated(TimeSeriesPanel timeSeriesPanel, TimeSeriesSelection timeSeriesSelection) {
-                        selectionDetailsPanel.addSelection(timeSeriesPanel, scroller, timeSeriesSelection);
+                        selectionDetailsPanel.addSelection(timeSeriesPanel, timeSeriesPanel, scroller, timeSeriesSelection);
                     }
 
                     @Override
-                    public void selectionMoved(TimeSeriesPanel timeSeriesPanel, TimeSeriesSelection timeSeriesSelection) {
+                    public void selectionMoved(TimeSeriesPanel timeSeriesPanel, TimeSeriesSelection timeSeriesSelection,
+                                               Instant previousStartInstant, Instant previousEndInstant) {
                         selectionDetailsPanel.updateSelection(timeSeriesSelection);
                     }
 
@@ -379,7 +382,8 @@ public class SelectionDetailsPanel extends JPanel {
 
     private class ViewInfo {
         public TimeSeriesSelection timeSeriesSelection;
-        public TimeSeriesPanel timeSeriesPanel;
+        public TimeSeriesPanel detailsTimeSeriesPanel;
+        public TimeSeriesPanel overviewTimeSeriesPanel;
         public JScrollPane timeSeriesPanelScrollPane;
         public JPanel viewPanel;
         public JPanel buttonPanel;
