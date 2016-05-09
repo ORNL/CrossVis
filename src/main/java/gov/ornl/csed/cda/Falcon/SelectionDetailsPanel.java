@@ -3,12 +3,15 @@ package gov.ornl.csed.cda.Falcon;
 import gov.ornl.csed.cda.histogram.Histogram;
 import gov.ornl.csed.cda.histogram.HistogramPanel;
 import gov.ornl.csed.cda.timevis.*;
+import javafx.stage.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.Window;
 import java.awt.event.*;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Instant;
@@ -183,6 +186,31 @@ public class SelectionDetailsPanel extends JPanel {
             }
         });
 
+        JButton saveButton = new JButton();
+        saveButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // get file to save to
+                JFileChooser chooser = new JFileChooser();
+                chooser.setDialogTitle("Save Selected Data to CSV File");
+                chooser.setMultiSelectionEnabled(false);
+                chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+                int ret = chooser.showSaveDialog(SwingUtilities.getWindowAncestor(saveButton));
+                if (ret == JFileChooser.APPROVE_OPTION) {
+                    File csvFile = chooser.getSelectedFile();
+
+                    if (csvFile != null) {
+                        // save data to file
+                        try {
+                            TimeSeriesRecord.writeRecordsToFile(csvFile, viewInfo.records);
+                        } catch (IOException e1) {
+                            e1.printStackTrace();
+                        }
+                    }
+                }
+            }
+        });
+
 //        JButton settingsButton = new JButton();
 
         JPanel buttonPanel = new JPanel();
@@ -191,23 +219,26 @@ public class SelectionDetailsPanel extends JPanel {
         buttonPanel.setLayout(new GridLayout(4, 0, 0, 0));
         buttonPanel.add(moveUpButton);
         buttonPanel.add(removeButton);
-//        buttonPanel.add(settingsButton);
+        buttonPanel.add(saveButton);
         buttonPanel.add(moveDownButton);
 
         if (fontAwesomeFont != null) {
-            buttonPanel.setPreferredSize(new Dimension(40, 100));
+            buttonPanel.setPreferredSize(new Dimension(50, 100));
             moveDownButton.setFont(fontAwesomeFont);
             moveDownButton.setText("\uf078");
             moveUpButton.setFont(fontAwesomeFont);
             moveUpButton.setText("\uf077");
             removeButton.setFont(fontAwesomeFont);
             removeButton.setText("\uf1f8");
+            saveButton.setFont(fontAwesomeFont);
+            saveButton.setText("\uf0c7");
 //            settingsButton.setFont(fontAwesomeFont);
 //            settingsButton.setText("\uf085");
         } else {
             moveUpButton.setText("Move Up");
             moveDownButton.setText("Move Down");
             removeButton.setText("Remove");
+            saveButton.setText("Save");
 //            settingsButton.setText("Settings");
         }
 
@@ -219,6 +250,7 @@ public class SelectionDetailsPanel extends JPanel {
         ArrayList<TimeSeriesRecord> records = detailsTimeSeriesPanel.getTimeSeries().getRecordsBetween(timeSeriesSelection.getStartInstant(), timeSeriesSelection.getEndInstant());
 
         ViewInfo viewInfo = new ViewInfo();
+        viewInfo.records = records;
         viewInfo.detailsTimeSeriesPanel = detailsTimeSeriesPanel;
         viewInfo.overviewTimeSeriesPanel = overviewTimeSeriesPanel;
         viewInfo.timeSeriesPanelScrollPane = timeSeriesScrollPane;
@@ -381,6 +413,7 @@ public class SelectionDetailsPanel extends JPanel {
     }
 
     private class ViewInfo {
+        public ArrayList<TimeSeriesRecord> records;
         public TimeSeriesSelection timeSeriesSelection;
         public TimeSeriesPanel detailsTimeSeriesPanel;
         public TimeSeriesPanel overviewTimeSeriesPanel;

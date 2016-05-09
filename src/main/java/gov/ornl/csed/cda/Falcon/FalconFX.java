@@ -174,7 +174,7 @@ public class FalconFX extends Application {
 //        Node multiHistogramNode = createMultiHistogramPanel();
         Node multiViewNode = createMultiViewPanel();
 //        Node selectionViewNode = createMultiHistogramPanel();
-        Node selectionViewNode = createSelectionDetailPanel();
+        Node selectionViewNode = createSelectionDetailPanel(primaryStage);
 
         createDataTreeView();
         createColumnTableView();
@@ -545,10 +545,7 @@ public class FalconFX extends Application {
 
         fileMenu.getItems().addAll(openCSVMI, openPLGMI, new SeparatorMenuItem(), captureScreenMI, new SeparatorMenuItem(), exitMI);
 
-        Menu editMenu = new Menu("Edit");
-        Menu viewMenu = new Menu("View");
-
-        menuBar.getMenus().addAll(fileMenu, editMenu, viewMenu);
+        menuBar.getMenus().addAll(fileMenu);
 
         return menuBar;
     }
@@ -1105,7 +1102,7 @@ public class FalconFX extends Application {
         return borderPane;
     }
 
-    private Node createSelectionDetailPanel() {
+    private Node createSelectionDetailPanel (Stage primaryStage) {
         selectionDetailPanel = new SelectionDetailsPanel(120, 20);
         selectionDetailPanel.setBackground(java.awt.Color.WHITE);
 

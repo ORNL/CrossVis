@@ -256,7 +256,7 @@ public class MultiViewPanel extends JPanel {
 
         
         if (fontAwesomeFont != null) {
-            buttonPanel.setPreferredSize(new Dimension(40, 100));
+            buttonPanel.setPreferredSize(new Dimension(60, 100));
             moveDownButton.setFont(fontAwesomeFont);
             moveDownButton.setText("\uf078");
             moveUpButton.setFont(fontAwesomeFont);

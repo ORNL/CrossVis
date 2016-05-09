@@ -39,13 +39,6 @@
 			<artifactId>fastdtw</artifactId>
 			<version>0.1</version>
 		</dependency>
-		<!--<dependency>-->
-			<!--<groupId>prefuse</groupId>-->
-			<!--<artifactId>prefuse</artifactId>-->
-			<!--<version>1.0</version>-->
-			<!--<scope>system</scope>-->
-			<!--<systemPath>${project.basedir}/lib/prefuse.jar</systemPath>-->
-		<!--</dependency>-->
 	</dependencies>
 
 	<build>
