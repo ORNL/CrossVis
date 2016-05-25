@@ -2,12 +2,12 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>gov.ornl.csed.cda.coalesce</groupId>
-	<artifactId>coalesce</artifactId>
+	<groupId>gov.ornl.csed.cda.falcon</groupId>
+	<artifactId>falcon</artifactId>
 	<packaging>jar</packaging>
-	<version>0.1.9</version>
+	<version>0.2.1</version>
 
-	<name>coalesce</name>
+	<name>falcon</name>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
