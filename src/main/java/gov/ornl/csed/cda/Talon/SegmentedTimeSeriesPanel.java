@@ -1,77 +1,175 @@
+/*
+ *
+ *  Class:  SegmentedTimeSeriesPanel
+ *
+ *      Author:     whw
+ *
+ *      Created:    29 Feb 2016
+ *
+ *      Purpose:    [A description of why this class exists.  For what
+ *                  reason was it written?  Which jobs does it perform?]
+ *
+ *
+ *  Inherits From:  JComponent
+ *
+ *  Interfaces:     MouseListener,
+ *                  TalonDataListener
+ *
+ */
+
 package gov.ornl.csed.cda.Talon;
+
 
 import gov.ornl.csed.cda.timevis.TimeSeries;
 import gov.ornl.csed.cda.timevis.TimeSeriesRecord;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 import java.text.DecimalFormat;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 
-/**
- * Created by whw on 2/29/16.
- * halseywh@ornl.gov
- */
-public class SegmentedTimeSeriesPanel extends JComponent {
-    // ========== CLASS FIELDS ==========
-    private ChronoUnit chronoUnit;      // Unit of time for visualization (currently hard-coded to seconds)
-    private TreeMap<Double, TimeSeries> timeSeriesMap;  // Map that holds the segmented time series
-    private double maxTimeSeriesValue;                  // Max value across all time series segments
-    private double minTimeSeriesValue;                  // Min value across all time series segments
-    private int largestPlotWidth;                       // Longest time series across all time series segments
-    private int plotTimeUnitWidth = 2;                  // A second is represented by two pixels (now has a spinner to adjust this)
-    private Insets margins = new Insets(4, 4, 4, 4);    // Visual buffer surrounding the vis
-    private int timeSeriesLabelWidth = 80;              // Pixel width of the plot labels (now has a spinner to adjust this)
-    private int plotHeight = 60;                        // The total height of a plotted series segment
-    private int plotSpacing = plotHeight + 10;          // Adds buffer to plot height for in between plotted series segments
-    private DecimalFormat df = new DecimalFormat("#,##0.00");       // Decimal formatter for build height
-    private ArrayList<Map.Entry<Double, TimeSeries>> entryList;     // Holds the timeSeriesMap series in reverse order
 
-    // ========== CONSTRUCTOR ==========
-    SegmentedTimeSeriesPanel (ChronoUnit chronoUnit) {
-        this.chronoUnit = chronoUnit;
+public class SegmentedTimeSeriesPanel extends JComponent implements MouseListener, TalonDataListener {
+
+
+
+
+
+    // =-= CLASS FIELDS =-=
+    private final static Logger log = LoggerFactory.getLogger(SegmentedTimeSeriesPanel.class);
+
+
+
+
+
+    // =-= INSTANCE FIELDS =-=
+    private TalonData data = null;
+    private int plotTimeUnitWidth = 2;                                          // A second is represented by two pixels (now has a spinner to adjust this)
+    private Insets margins = new Insets(4, 4, 4, 4);                            // Visual buffer surrounding the vis
+    private int timeSeriesLabelWidth = 80;                                      // Pixel width of the plot labels (now has a spinner to adjust this)
+    private int plotHeight = 60;                                                // The total height of a plotted series segment
+    private int plotSpacing = plotHeight + 10;                                  // Adds buffer to plot height for in between plotted series segments
+    private DecimalFormat df = new DecimalFormat("#,##0.00");                   // Decimal formatter for build height
+    private ArrayList<Rectangle2D.Double> buildHeightLabelRectangles = new ArrayList<>();
+    private Rectangle2D.Double labelsRectangle = new Rectangle.Double();
+    private HashMap<Rectangle2D.Double, Double> labelsMap = new HashMap<>();
+
+
+
+
+
+    // =-= CONSTRUCTOR =-=
+    SegmentedTimeSeriesPanel (TalonData data) {
+
+        this.data = data;
+        data.addTalonDataListener(this);
+
+        addMouseListener(this);
     }
 
-    // ========== METHODS ==========
-    // Getters/Setters
+
+
+
+
+    // =-= METHODS =-=
+
+    // getters/setters
+    public ArrayList<Rectangle2D.Double> getBuildHeightLabelRectangles() {
+        return buildHeightLabelRectangles;
+    }
+
+
+    public Rectangle2D.Double getLabelsRectangle() {
+        return labelsRectangle;
+    }
+
+
+    public HashMap<Rectangle2D.Double, Double> getLabelsMap() {
+        return labelsMap;
+    }
+
+
     public int getPlotTimeUnitWidth() {
         return plotTimeUnitWidth;
     }
 
-    // When changing plotTimeUnitWidth change the preferred size and redraw
-    public void setPlotTimeUnitWidth(int plotTimeUnitWidth) {
-        if (this.plotTimeUnitWidth != plotTimeUnitWidth) {
-            this.plotTimeUnitWidth = plotTimeUnitWidth;
-            setPreferredSize(new Dimension(((largestPlotWidth * plotTimeUnitWidth) + (margins.left + margins.right) + timeSeriesLabelWidth),
-                    (plotHeight + (timeSeriesMap.size() * plotSpacing) + (margins.top + margins.bottom))));
-            repaint();
-        }
-    }
 
     public int getPlotHeight() {
         return plotHeight;
     }
 
-    // When changing plotHeight change the preferred dimensions and redraw
-    public void setPlotHeight(int plotHeight) {
-        if (this.plotHeight != plotHeight) {
-            this.plotHeight = plotHeight;
-            this.plotSpacing = plotHeight + 10;
-            setPreferredSize(new Dimension(((largestPlotWidth * plotTimeUnitWidth) + (margins.left + margins.right) + timeSeriesLabelWidth),
-                    (plotHeight + (timeSeriesMap.size() * plotSpacing) + (margins.top + margins.bottom))));
+
+    //  -> set plotTimeUnitWidth
+    //  -> update preferred size
+    //  -> redraw and revalidate scrollbars
+    public void setPlotTimeUnitWidth(int plotTimeUnitWidth) {
+
+        if (this.plotTimeUnitWidth != plotTimeUnitWidth) {
+
+
+            //  -> set plotTimeUnitWidth
+            this.plotTimeUnitWidth = plotTimeUnitWidth;
+            int largestPlotWidth = data.getLongestPlotDuration();
+            int timeSeriesEntries = data.getSegmentedTimeSeriesMap().size();
+
+
+            //  -> update preferred size
+            int width = (largestPlotWidth * plotTimeUnitWidth) + (margins.left + margins.right) + timeSeriesLabelWidth;
+            int height = plotHeight + (timeSeriesEntries * plotSpacing) + (margins.top + margins.bottom);
+
+            setPreferredSize(new Dimension(width, height));
+
+
+            //  -> redraw and revalidate scrollbars
             repaint();
+            revalidate();
         }
     }
 
-    // Draws everything in the segment panel
-    // Triggered by calling repaint();
+
+    //  -> set plotHeight
+    //  -> update preferred size
+    //  -> redraw and revalidate scrollbars
+    public void setPlotHeight(int plotHeight) {
+
+        if (this.plotHeight != plotHeight) {
+
+
+            //  -> set plotHeight
+            this.plotHeight = plotHeight;
+            this.plotSpacing = plotHeight + 10;
+            int largestPlotWidth = data.getLongestPlotDuration();
+            int timeSeriesEntries = data.getSegmentedTimeSeriesMap().size();
+
+
+            //  -> update preferred size
+            int width = (largestPlotWidth * plotTimeUnitWidth) + (margins.left + margins.right) + timeSeriesLabelWidth;
+            int height = plotHeight + (timeSeriesEntries * plotSpacing) + (margins.top + margins.bottom);
+
+            setPreferredSize(new Dimension(width, height));
+
+
+            //  -> redraw and revalidate scrollbars
+            repaint();
+            revalidate();
+        }
+    }
+
+
+    // other methods
+
+    //  -> Draws everything in the segment panel
+    //  -> Triggered by calling repaint();
     public void paintComponent(Graphics g) {
 
         // You will pretty much always do this for a vis
@@ -80,6 +178,12 @@ public class SegmentedTimeSeriesPanel extends JComponent {
         g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
         g2.setColor(getBackground());
         g2.fillRect(0, 0, getWidth(), getHeight());
+
+        TreeMap<Double, TimeSeries> timeSeriesMap = data.getSegmentedTimeSeriesMap();
+        TimeSeries referenceTimeSeries = data.getReferenceTimeSeries();
+        ArrayList<Map.Entry<Double, TimeSeries>> entryList = new ArrayList<>(timeSeriesMap.entrySet());
+        Collections.reverse(entryList);
+        double referenceHeight = data.getReferenceValue();
 
         // Draw if segmented time series exists
         if (timeSeriesMap != null && !timeSeriesMap.isEmpty()) {
@@ -91,15 +195,18 @@ public class SegmentedTimeSeriesPanel extends JComponent {
             g2.translate(margins.left, margins.top);
             int timeseriesCounter = 0;
 
-//            for (Map.Entry<Double, TimeSeries> entry : timeSeriesMap.entrySet()) {                        // old
+            // set the location of labelsRectangle to the upper left-side corner
+            labelsRectangle.x = margins.left;
+            labelsRectangle.y = 0;
+
+            buildHeightLabelRectangles.clear();
+            labelsMap.clear();
 
             // for every time series in the (reverse order) entry list
             for (Map.Entry<Double, TimeSeries> entry : entryList) {
+
                 // get current build height
                 double buildHeight = entry.getKey();
-//                double normHeight = (buildHeight - minBuildHeight) / (maxBuildHeight - minBuildHeight);   // old
-//                double yOffset = normHeight * getHeight();                                                // old
-//                double plotBaselineY = getHeight() - yOffset;                                             // old
 
                 // Set the base line for the current build height time series
                 double plotBaselineY = plotSpacing * timeseriesCounter;
@@ -109,24 +216,84 @@ public class SegmentedTimeSeriesPanel extends JComponent {
 
                 // Create label for the current build height; Set width for label and draw
                 String label = df.format(buildHeight);
-                int stringWidth = g2.getFontMetrics().stringWidth(label) + 8;
-                g2.drawString(label, timeSeriesLabelWidth - stringWidth, (int) (plotHeight + plotBaselineY - (plotSpacing / 2)));
+                int stringWidth = g2.getFontMetrics().stringWidth(label) + 20;
+
+                if (!Double.isNaN(referenceHeight) && referenceHeight == buildHeight) {
+                    g2.setFont(g2.getFont().deriveFont(Font.BOLD, g2.getFontMetrics().getFont().getSize() + 3));
+                    g2.drawString(label, timeSeriesLabelWidth - stringWidth, (int) (plotHeight + plotBaselineY - (plotSpacing / 2)));
+                    g2.setFont(g2.getFont().deriveFont(Font.PLAIN, g2.getFontMetrics().getFont().getSize() - 3));
+
+                } else {
+                    g2.drawString(label, timeSeriesLabelWidth - stringWidth, (int) (plotHeight + plotBaselineY - (plotSpacing / 2)));
+
+                }
+
+                Double distance = Double.MAX_VALUE;
+
+                if(data.getTimeSeriesDistances().containsKey(entry.getKey())) {
+                    distance = data.getTimeSeriesDistances().get(entry.getKey());
+                }
+
+                if(distance > 1 && !distance.equals(Double.MAX_VALUE)) {
+                    g2.setColor(Color.RED);
+                }
+                g2.draw3DRect(0, (int) (plotHeight + plotBaselineY - (plotSpacing / 2)) + 3, timeSeriesLabelWidth - margins.right, 7, false);
+                g2.setColor(Color.BLACK);
+
+                double tmp = (1 - distance < 0) ? 0 : (1 - distance);
+                g2.setColor(Color.GRAY);
+                g2.fill3DRect(0, (int) (plotHeight + plotBaselineY - (plotSpacing / 2)) + 3, (int) (tmp * (timeSeriesLabelWidth - margins.right)), 7, false);
+                g2.setColor(Color.BLACK);
+
+
+                // create rectangle for current label
+                Rectangle2D.Double labelRect = new Rectangle2D.Double();
+                labelRect.width = timeSeriesLabelWidth;
+                labelRect.height = plotSpacing;
+                labelRect.x = margins.left;
+                labelRect.y = plotSpacing*timeseriesCounter;
+
+                // add the current label to the array list
+                buildHeightLabelRectangles.add(labelRect);
+                labelsMap.put(labelRect, buildHeight);
 
                 // put g2 past the label and at the bottom of the time series baseline and draw time series
                 g2.translate(timeSeriesLabelWidth, plotBaselineY);
+
+                if (referenceTimeSeries != null) {
+                    g2.setColor(Color.LIGHT_GRAY);
+                    drawTimeSeries(referenceTimeSeries, g2);
+                    g2.setColor(Color.BLACK);
+                }
+
                 drawTimeSeries(timeSeries, g2);
                 g2.translate(-timeSeriesLabelWidth, -plotBaselineY);
 
                 timeseriesCounter++;
             }
+
+            // set height of the labelsRectagle
+            labelsRectangle.width = timeSeriesLabelWidth;
+            labelsRectangle.height = plotSpacing * timeseriesCounter;
+
             g2.translate(-margins.left, -margins.top);
+
         }
     }
 
-    // Actually draws the point and lines of the time series for the current build height
+
+    //  -> Actually draws the point and lines of the time series for the current build height
     private void drawTimeSeries (TimeSeries timeSeries, Graphics2D g2) {
+
+        ChronoUnit chronoUnit = data.getChronoUnit();
+        double minTimeSeriesValue = data.getMinTimeSeriesValue().getMinValue();
+        double maxTimeSeriesValue = data.getMaxTimeSeriesValue().getMaxValue();
+
         // find the "time length" of the current time series
-        long totalTimeUnits = chronoUnit.between(timeSeries.getStartInstant(), timeSeries.getEndInstant());
+        long totalTimeUnits = 0;
+        if(!timeSeries.getAllRecords().isEmpty()) {
+            totalTimeUnits = chronoUnit.between(timeSeries.getStartInstant(), timeSeries.getEndInstant());
+        }
 
         // translate the "time length" to physical length of the current timeseries
         int plotWidth = ((int) totalTimeUnits + 1) * plotTimeUnitWidth;
@@ -136,16 +303,17 @@ public class SegmentedTimeSeriesPanel extends JComponent {
 
         Point2D.Double lastPoint = null;
 
-        long totalPlotDeltaTime = ChronoUnit.MILLIS.between(timeSeries.getStartInstant(), timeSeries.getEndInstant());
+        long totalPlotDeltaTime = 0;
+        if(!timeSeries.getAllRecords().isEmpty()) {
+            totalPlotDeltaTime = ChronoUnit.MILLIS.between(timeSeries.getStartInstant(), timeSeries.getEndInstant());
+        }
 
         // for each record in the current time series
         for (TimeSeriesRecord record : timeSeries.getAllRecords()) {
 
             // find amount of time since beginning of time series for current build height and set 'x' coordinate
-//            long deltaTime = chronoUnit.between(timeSeries.getStartInstant(), record.instant);
             long deltaTime = ChronoUnit.MILLIS.between(timeSeries.getStartInstant(), record.instant);
             double normTime = (double) deltaTime / totalPlotDeltaTime;
-//            double x = (double) (deltaTime * plotTimeUnitWidth) + (plotTimeUnitWidth / 2.);         // WHAT DOES THIS DO?
             double x = normTime * plotWidth;
 
             // normalize the start point and set drawing start point and set 'y' coordinate
@@ -158,13 +326,12 @@ public class SegmentedTimeSeriesPanel extends JComponent {
 
             // Draw lines connecting the old and new point
             if (lastPoint != null) {
+
                 // Draws step-wise line
                 Line2D.Double line = new Line2D.Double(lastPoint.x, lastPoint.y, point.x, lastPoint.y);
                 g2.draw(line);
                 line = new Line2D.Double(point.x, lastPoint.y, point.x, point.y);
                 g2.draw(line);
-//                Line2D.Double line = new Line2D.Double(lastPoint, point);                         // old
-//                g2.draw(line);                                                                    // old
             }
 
             // Draw circle at new point
@@ -172,73 +339,149 @@ public class SegmentedTimeSeriesPanel extends JComponent {
             g2.draw(circle);
 
             lastPoint = point;
+
         }
     }
 
-    // sets timeSeriesMap and sets/resets min/maxTimeSeriesValue and largestPlotWidth
-    public void setTimeSeries(TreeMap<Double, TimeSeries> timeSeriesMap) {
-        this.timeSeriesMap = timeSeriesMap;
-        maxTimeSeriesValue = Double.NaN;
-        minTimeSeriesValue = Double.NaN;
-        largestPlotWidth = 0;
 
-        if ((timeSeriesMap != null) && (!timeSeriesMap.isEmpty())) {
-            for (Map.Entry<Double, TimeSeries> timeSeriesEntry : timeSeriesMap.entrySet()) {
-                TimeSeries timeSeries = timeSeriesEntry.getValue();
+    // MouseListener methods
+    @Override
+    public void mouseClicked(MouseEvent e) {
 
-                if (Double.isNaN(maxTimeSeriesValue)) {
-                    maxTimeSeriesValue = timeSeries.getMaxValue();
-                    minTimeSeriesValue = timeSeries.getMinValue();
-                } else {
-                    maxTimeSeriesValue = (timeSeries.getMaxValue() > maxTimeSeriesValue) ? timeSeries.getMaxValue() : maxTimeSeriesValue;
-                    minTimeSeriesValue = (timeSeries.getMinValue() < minTimeSeriesValue) ? timeSeries.getMinValue() : minTimeSeriesValue;
+        if (labelsRectangle.contains(e.getPoint())) {
 
-                    // CONVERTED THESE STATEMENTS INTO THE TERNARY EXPRESSIONS ABOVE
-//                    if (timeSeries.getMaxValue() > maxTimeSeriesValue) {
-//                        maxTimeSeriesValue = timeSeries.getMaxValue();
-//                    }
-//                    if (timeSeries.getMinValue() < minTimeSeriesValue) {
-//                        minTimeSeriesValue = timeSeries.getMinValue();
-//                    }
-                }
+            int spacing = (int) labelsRectangle.height / buildHeightLabelRectangles.size();
 
-                int totalTimeUnits = (int) chronoUnit.between(timeSeries.getStartInstant(), timeSeries.getEndInstant()) + 1;
-//                int totalPlotWidth = ((int)totalTimeUnits + 1) * plotTimeUnitWidth;       // old
-//
-//                if (totalPlotWidth > largestPlotWidth) {                                  // old
-//                    largestPlotWidth = totalPlotWidth;                                    // old
-//                }
+            int bin = e.getY() / spacing;
 
-                largestPlotWidth = (totalTimeUnits > largestPlotWidth) ? totalTimeUnits : largestPlotWidth;
+            Rectangle2D.Double temp = buildHeightLabelRectangles.get(bin);
 
-                // CONVERTED THIS STATEMENT INTO THE TERNARY EXPRESSION ABOVE
-//                if (totalTimeUnits > largestPlotWidth) {
-//                    largestPlotWidth = totalTimeUnits;
-//                }
-            }
+            double height = labelsMap.get(temp);
+            data.setReferenceValue(height);
+        }
+    }
+
+    @Override
+    public void mousePressed(MouseEvent e) {
+
+    }
+
+    @Override
+    public void mouseReleased(MouseEvent e) {
+
+    }
+
+    @Override
+    public void mouseEntered(MouseEvent e) {
+
+    }
+
+    @Override
+    public void mouseExited(MouseEvent e) {
+
+    }
+
+
+    // TalonDataListener methods
+    @Override
+    public void TalonDataPlgFileChange() {
+//        log.debug("PLG File Change");
+        repaint();
+    }
+
+    @Override
+    public void TalonDataSegmentingVariableChange() {
+//        log.debug("Segmenting Variable Change");
+    }
+
+    @Override
+    public void TalonDataSegmentedVariableChange() {
+//        log.debug("Segmented Variable Change");
+
+        int largestPlotWidth = 0;
+        int timeSeriesEntries = data.getSegmentedTimeSeriesMap().size();
+
+        int width = 0;
+        int height = 0;
+
+        if(timeSeriesEntries != 0) {
+            largestPlotWidth = data.getLongestPlotDuration();
+            width = (largestPlotWidth * plotTimeUnitWidth) + (margins.left + margins.right) + timeSeriesLabelWidth;
+            height = plotHeight + (timeSeriesEntries * plotSpacing) + (margins.top + margins.bottom);
         }
 
-        Dimension dim = new Dimension(((largestPlotWidth * plotTimeUnitWidth) + (margins.left + margins.right) + timeSeriesLabelWidth),
-                (plotHeight + (timeSeriesMap.size() * plotSpacing) + (margins.top + margins.bottom)));
-        setPreferredSize(dim);
-
-        // Create arraylist of time series entries and reverse so bottom levels of build are on the bottom
-        entryList = new ArrayList<>(timeSeriesMap.entrySet());
-        Collections.reverse(entryList);
-
-        System.out.println(dim.toString());
-
+        setPreferredSize(new Dimension(width, height));
+        repaint();
         revalidate();
+    }
 
+    @Override
+    public void TalonDataReferenceValueChange() {
+//        log.debug("Reference Value Change");
         repaint();
     }
 
-    // setting timeSeriesMap to null and repainting leaves an empty segment panel
-    public void clearTimeSeries() {
-        timeSeriesMap = null;
-        maxTimeSeriesValue = Double.NaN;
-        minTimeSeriesValue = Double.NaN;
-        largestPlotWidth = 0;
-        repaint();
+    @Override
+    public void TalonDataImageDirectoryChange() {
+//        log.debug("Image Directory Change");
+    }
+
+
+
+
+
+    // =-= MAIN =-=
+    public static void main(String[] args) {
+
+        TalonData data = new TalonData(ChronoUnit.SECONDS);
+        EventQueue.invokeLater(new Runnable() {
+            public void run() {
+
+                // create the panel
+                JFrame frame = new JFrame();
+                frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+                // create the menu bar and items
+                JMenuBar menuBar = new JMenuBar();
+                JMenu file = new JMenu("File");
+                JMenuItem open = new JMenuItem("Open");
+
+                // add them to the panel
+                file.add(open);
+                menuBar.add(file);
+                frame.setJMenuBar(menuBar);
+
+                open.addActionListener(e -> {
+                    JFileChooser fileChooser = new JFileChooser();
+                    fileChooser.setDialogTitle("Select .plg to Open");
+                    fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+                    fileChooser.setMultiSelectionEnabled(false);
+                    fileChooser.addChoosableFileFilter(new FileNameExtensionFilter("PLG File", "plg"));
+                    int retVal = fileChooser.showDialog(frame, "Open File");
+
+                    // Test to see if a file was chosen and opened
+                    if (retVal != JFileChooser.CANCEL_OPTION) {
+                        data.setPlgFile(fileChooser.getSelectedFile());
+                        data.setSegmentedVariableName("OPC.PowerSupply.Beam.BeamCurrent");
+                    }
+                });
+
+                SegmentedTimeSeriesPanel segmentedTimeSeriesPanel = new SegmentedTimeSeriesPanel(data);
+
+                segmentedTimeSeriesPanel.TalonDataPlgFileChange();
+
+                JScrollPane scrollPane = new JScrollPane(segmentedTimeSeriesPanel);
+
+
+                ((JPanel)frame.getContentPane()).setLayout(new BorderLayout());
+                ((JPanel)frame.getContentPane()).add(scrollPane, BorderLayout.CENTER);
+
+                frame.setSize(new Dimension(200, 600));
+                frame.setVisible(true);
+            }
+        });
+
+
+
     }
 }
