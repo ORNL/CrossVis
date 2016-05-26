@@ -138,12 +138,6 @@ public class TimeSeries {
 		}
 
         return recordMap.get(instant);
-//        TimeSeriesBin bin = recordMap.get(instant);
-//        if (recordList != null) {
-//            return bin.records;
-//        }
-//
-//        return null;
 	}
 
 	public ArrayList<TimeSeriesRecord> getRecordsBetween(Instant start, Instant end) {

@@ -8,6 +8,10 @@
 	<version>0.2.1</version>
 
 	<name>falcon</name>
+    <organization>
+        <name>Oak Ridge National Laboratory</name>
+        <url>http://cda.ornl.gov/</url>
+    </organization>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -63,8 +67,14 @@
 					</descriptorRefs>
                     <archive>
                         <manifest>
-                            <mainClass>gov.ornl.csed.cda.Falcon.FalconFX</mainClass>
+                            <mainClass>gov.ornl.csed.cda.Falcon.FalconMain</mainClass>
                         </manifest>
+                        <manifestEntries>
+                            <Title>${project.artifactId}</Title>
+                            <Version>${project.version}</Version>
+                            <Vendor>${project.organization.name}</Vendor>
+                            <SplashScreen-Image>Falcon-SplashScreen.png</SplashScreen-Image>
+                        </manifestEntries>
                     </archive>
 				</configuration>
 				<executions>
@@ -107,17 +117,17 @@
                                 <argument>-outdir</argument>
                                 <argument>./target</argument>
                                 <argument>-srcfiles</argument>
-                                <argument>./target/coalesce-${version}-jar-with-dependencies.jar</argument>
+                                <argument>./target/falcon-${project.version}-jar-with-dependencies.jar</argument>
                                 <argument>-appclass</argument>
-                                <argument>gov.ornl.csed.cda.Falcon.FalconFX</argument>
+                                <argument>gov.ornl.csed.cda.Falcon.FalconMain</argument>
                                 <argument>-outdir</argument>
                                 <argument>./target</argument>
                                 <argument>-outfile</argument>
-                                <argument>Falcon-v${version}</argument>
+                                <argument>Falcon-v${project.version}</argument>
                                 <argument>-BjvmOptions=-Xmx8g</argument>
                                 <argument>-BjvmOptions=-Xms8g</argument>
                                 <argument>-v</argument>
-								<argument>-BappVersion=${version}</argument>
+								<argument>-BappVersion=${project.version}</argument>
                             </arguments>
                         </configuration>
                     </execution>

@@ -11,7 +11,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
-import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.Color;
 import java.awt.event.*;
@@ -40,7 +39,11 @@ public class MultiViewPanel extends JPanel {
     private Box panelBox;
     private Font fontAwesomeFont = null;
 
-    private Color dataColor = new Color(80, 80, 130, 180);
+    private Color timeSeriesPointColor = TimeSeriesPanel.DEFAULT_POINT_COLOR;
+    private Color timeSeriesLineColor = TimeSeriesPanel.DEFAULT_LINE_COLOR;
+    private Color timeSeriesStandardDeviationRangeColor = TimeSeriesPanel.DEFAULT_STANDARD_DEVIATION_RANGE_COLOR;
+    private Color timeSeriesMinMaxRangeColor = TimeSeriesPanel.DEFAULT_MINMAX_RANGE_COLOR;
+
     private ArrayList<ViewInfo> viewInfoList = new ArrayList<>();
     private HashMap<String, GroupInfo> viewGroupMap = new HashMap<>();
 
@@ -48,14 +51,15 @@ public class MultiViewPanel extends JPanel {
     private boolean showOverview = true;
     private boolean showButtonPanels = true;
     private ChronoUnit detailChronoUnit = ChronoUnit.SECONDS;
-    private TimeSeriesPanel.PlotDisplayOption timeSeriesDisplayOption = TimeSeriesPanel.PlotDisplayOption.STEPPED_LINE;
+    private TimeSeriesPanel.PlotDisplayOption plotDisplayOption = TimeSeriesPanel.PlotDisplayOption.STEPPED_LINE;
 
     private int currentSplitDividerPosition = 0;
+    private boolean showMovingRange = false;
 
     public MultiViewPanel (int plotHeight) {
         this.plotHeight = plotHeight;
 
-        InputStream is = FalconFX.class.getResourceAsStream("fontawesome-webfont.ttf");
+        InputStream is = FalconMain.class.getResourceAsStream("fontawesome-webfont.ttf");
         try {
             fontAwesomeFont = Font.createFont(Font.TRUETYPE_FONT, is);
             fontAwesomeFont = fontAwesomeFont.deriveFont(Font.PLAIN, 12F);
@@ -150,14 +154,60 @@ public class MultiViewPanel extends JPanel {
         }
     }
 
-    public void setDataColor(Color color) {
-        if (dataColor != color) {
-            dataColor = color;
+    public void setTimeSeriesPointColor(Color color) {
+        if (!timeSeriesPointColor.equals(color)) {
+            timeSeriesPointColor = new Color(color.getRGB());
             for (ViewInfo viewInfo : viewInfoList) {
-                viewInfo.detailTimeSeriesPanel.setDataColor(dataColor);
-                viewInfo.overviewTimeSeriesPanel.setDataColor(dataColor);
+                viewInfo.detailTimeSeriesPanel.setPointColor(timeSeriesPointColor);
+                viewInfo.overviewTimeSeriesPanel.setPointColor(timeSeriesPointColor);
             }
         }
+    }
+
+    public Color getTimeSeriesPointColor() {
+        return timeSeriesPointColor;
+    }
+
+    public void setTimeSeriesLineColor(Color color) {
+        if (!timeSeriesLineColor.equals(color)) {
+            timeSeriesLineColor = new Color(color.getRGB());
+            for (ViewInfo viewInfo : viewInfoList) {
+                viewInfo.detailTimeSeriesPanel.setLineColor(timeSeriesLineColor);
+                viewInfo.overviewTimeSeriesPanel.setLineColor(timeSeriesLineColor);
+            }
+        }
+    }
+
+    public Color getTimeSeriesLineColor() {
+        return timeSeriesLineColor;
+    }
+
+    public void setTimeSeriesMinMaxRangeColor(Color color) {
+        if (!timeSeriesMinMaxRangeColor.equals(color)) {
+            timeSeriesMinMaxRangeColor = new Color(color.getRGB());
+            for (ViewInfo viewInfo : viewInfoList) {
+                viewInfo.detailTimeSeriesPanel.setMinMaxRangeColor(timeSeriesMinMaxRangeColor);
+                viewInfo.overviewTimeSeriesPanel.setMinMaxRangeColor(timeSeriesMinMaxRangeColor);
+            }
+        }
+    }
+
+    public Color getTimeSeriesMinMaxRangeColor() {
+        return timeSeriesMinMaxRangeColor;
+    }
+
+    public void setTimeSeriesStandardDeviationRangeColor(Color color) {
+        if (!timeSeriesStandardDeviationRangeColor.equals(color)) {
+            timeSeriesStandardDeviationRangeColor = new Color(color.getRGB());
+            for (ViewInfo viewInfo : viewInfoList) {
+                viewInfo.detailTimeSeriesPanel.setStandardDeviationRangeColor(timeSeriesStandardDeviationRangeColor);
+                viewInfo.overviewTimeSeriesPanel.setStandardDeviationRangeColor(timeSeriesStandardDeviationRangeColor);
+            }
+        }
+    }
+
+    public Color getTimeSeriesStandardDeviationRangeColor() {
+        return timeSeriesStandardDeviationRangeColor;
     }
 
     public int getChronoUnitWidth() {
@@ -173,10 +223,6 @@ public class MultiViewPanel extends JPanel {
         }
     }
 
-    public Color getDataColor() {
-        return dataColor;
-    }
-
     public int getPlotHeight() {
         return plotHeight;
     }
@@ -189,6 +235,7 @@ public class MultiViewPanel extends JPanel {
             viewInfo.viewPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, plotHeight));
         }
         revalidate();
+        panelBox.repaint();
     }
 
     private void initialize() {
@@ -287,7 +334,7 @@ public class MultiViewPanel extends JPanel {
     public void addTimeSeries(TimeSeries timeSeries, String groupName) {
         if (viewInfoList.isEmpty()) {
             currentSplitDividerPosition = (int) (getWidth() * .75);
-            log.debug("currentSplitDividerPosition: " + currentSplitDividerPosition);
+//            log.debug("currentSplitDividerPosition: " + currentSplitDividerPosition);
         }
 
         ViewInfo viewInfo = new ViewInfo();
@@ -325,8 +372,13 @@ public class MultiViewPanel extends JPanel {
 
         viewInfo.buttonPanel = createButtonPanel(viewInfo);
 
-        viewInfo.detailTimeSeriesPanel = new TimeSeriesPanel(1, detailChronoUnit, timeSeriesDisplayOption);
-        viewInfo.detailTimeSeriesPanel.setPlotDisplayOption(TimeSeriesPanel.PlotDisplayOption.STEPPED_LINE);
+        viewInfo.detailTimeSeriesPanel = new TimeSeriesPanel(1, detailChronoUnit, plotDisplayOption);
+        viewInfo.detailTimeSeriesPanel.setPointColor(timeSeriesPointColor);
+        viewInfo.detailTimeSeriesPanel.setLineColor(timeSeriesLineColor);
+        viewInfo.detailTimeSeriesPanel.setStandardDeviationRangeColor(timeSeriesStandardDeviationRangeColor);
+        viewInfo.detailTimeSeriesPanel.setMinMaxRangeColor(timeSeriesMinMaxRangeColor);
+        viewInfo.detailTimeSeriesPanel.setPlotDisplayOption(plotDisplayOption);
+        viewInfo.detailTimeSeriesPanel.setMovingRangeModeEnabled(showMovingRange);
         if (groupInfo.useCommonTimeScale) {
             viewInfo.detailTimeSeriesPanel.setTimeSeries(timeSeries, groupInfo.startInstant, groupInfo.endInstant);
         } else {
@@ -339,24 +391,28 @@ public class MultiViewPanel extends JPanel {
 //        viewInfo.detailsTimeSeriesPanelScrollPane.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
 //        viewInfo.detailsTimeSeriesPanelScrollPane.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEtchedBorder(), BorderFactory.createEmptyBorder(4, 4, 4, 4)));
 
-        viewInfo.detailHistogramPanel = new HistogramPanel(HistogramPanel.ORIENTATION.VERTICAL, HistogramPanel.STATISTICS_MODE.MEAN_BASED);
-        viewInfo.detailHistogramPanel.setBinCount(binCount);
-        viewInfo.detailHistogramPanel.setBackground(Color.white);
-        viewInfo.detailHistogramPanel.setPreferredSize(new Dimension(50, 80));
-        viewInfo.detailHistogramPanel.setBorder(BorderFactory.createEmptyBorder(viewInfo.detailTimeSeriesPanel.getTimeBarHeight()+2, 0, viewInfo.detailTimeSeriesPanel.getValueBarHeight()+2, 0));
-        viewInfo.detailHistogramPanel.addHistogramPanelListener(new HistogramPanelListener() {
-            @Override
-            public void histogramPanelLowerLimitChanged(HistogramPanel histogramPanel, double lowerLimitValue) {
-                viewInfo.detailTimeSeriesPanel.setValueAxisMin(lowerLimitValue);
-            }
+//        viewInfo.detailHistogramPanel = new HistogramPanel(HistogramPanel.ORIENTATION.VERTICAL, HistogramPanel.STATISTICS_MODE.MEAN_BASED);
+//        viewInfo.detailHistogramPanel.setBinCount(binCount);
+//        viewInfo.detailHistogramPanel.setBackground(Color.white);
+//        viewInfo.detailHistogramPanel.setPreferredSize(new Dimension(50, 80));
+//        viewInfo.detailHistogramPanel.setBorder(BorderFactory.createEmptyBorder(viewInfo.detailTimeSeriesPanel.getTimeBarHeight()+2, 0, viewInfo.detailTimeSeriesPanel.getValueBarHeight()+2, 0));
+//        viewInfo.detailHistogramPanel.addHistogramPanelListener(new HistogramPanelListener() {
+//            @Override
+//            public void histogramPanelLowerLimitChanged(HistogramPanel histogramPanel, double lowerLimitValue) {
+//                viewInfo.detailTimeSeriesPanel.setValueAxisMin(lowerLimitValue);
+//            }
+//
+//            @Override
+//            public void histogramPanelUpperLimitChanged(HistogramPanel histogramPanel, double upperLimitValue) {
+//                viewInfo.detailTimeSeriesPanel.setValueAxisMax(upperLimitValue);
+//            }
+//        });
 
-            @Override
-            public void histogramPanelUpperLimitChanged(HistogramPanel histogramPanel, double upperLimitValue) {
-                viewInfo.detailTimeSeriesPanel.setValueAxisMax(upperLimitValue);
-            }
-        });
-
-        viewInfo.overviewTimeSeriesPanel = new TimeSeriesPanel(1, timeSeriesDisplayOption);
+        viewInfo.overviewTimeSeriesPanel = new TimeSeriesPanel(1, plotDisplayOption);
+        viewInfo.overviewTimeSeriesPanel.setPointColor(timeSeriesPointColor);
+        viewInfo.overviewTimeSeriesPanel.setLineColor(timeSeriesLineColor);
+        viewInfo.overviewTimeSeriesPanel.setStandardDeviationRangeColor(timeSeriesStandardDeviationRangeColor);
+        viewInfo.overviewTimeSeriesPanel.setMinMaxRangeColor(timeSeriesMinMaxRangeColor);
         viewInfo.overviewTimeSeriesPanel.setShowTimeRangeLabels(false);
         viewInfo.overviewTimeSeriesPanel.setBackground(Color.white);
         viewInfo.overviewTimeSeriesPanel.setPlotDisplayOption(TimeSeriesPanel.PlotDisplayOption.LINE);
@@ -429,7 +485,7 @@ public class MultiViewPanel extends JPanel {
                                 }
                             }
                             Histogram detailHistogram = new Histogram(timeSeries.getName(), values, viewInfo.overviewHistogramPanel.getBinCount());
-                            viewInfo.detailHistogramPanel.setHistogram(detailHistogram);
+//                            viewInfo.detailHistogramPanel.setHistogram(detailHistogram);
                             viewInfo.overviewHistogramPanel.setHighlightValues(values);
                         }
 
@@ -526,11 +582,25 @@ public class MultiViewPanel extends JPanel {
 
     public void setBinCount(int binCount) {
         if (this.binCount != binCount) {
+            this.binCount = binCount;
             for (ViewInfo viewInfo : viewInfoList) {
-                viewInfo.detailHistogramPanel.setBinCount(binCount);
+//                viewInfo.detailHistogramPanel.setBinCount(binCount);
                 viewInfo.overviewHistogramPanel.setBinCount(binCount);
             }
         }
+    }
+
+    public void setDetailTimeSeriesPlotDisplayOption(TimeSeriesPanel.PlotDisplayOption plotDisplayOption) {
+        if (this.plotDisplayOption != plotDisplayOption) {
+            this.plotDisplayOption = plotDisplayOption;
+            for (ViewInfo viewInfo : viewInfoList) {
+                viewInfo.detailTimeSeriesPanel.setPlotDisplayOption(plotDisplayOption);
+            }
+        }
+    }
+
+    public TimeSeriesPanel.PlotDisplayOption getDetailTimeSeriesPlotDisplayOption () {
+        return this.plotDisplayOption;
     }
 
     public void drawToImage(File imageFile) throws IOException {
@@ -623,6 +693,19 @@ public class MultiViewPanel extends JPanel {
 //        multiViewPanel.drawToImage(imageFile);
     }
 
+    public void setShowMovingRange(boolean enabled) {
+        if (showMovingRange != enabled) {
+            showMovingRange = enabled;
+            for (ViewInfo viewInfo : viewInfoList) {
+                viewInfo.detailTimeSeriesPanel.setMovingRangeModeEnabled(showMovingRange);
+            }
+        }
+    }
+
+    public boolean isShowingMovingRange() {
+        return showMovingRange;
+    }
+
     private class ViewInfo {
         public TimeSeries timeSeries;
         public JPanel viewPanel;
@@ -632,7 +715,6 @@ public class MultiViewPanel extends JPanel {
         public TimeSeriesPanel detailTimeSeriesPanel;
         public TimeSeriesPanel overviewTimeSeriesPanel;
         public HistogramPanel overviewHistogramPanel;
-        public HistogramPanel detailHistogramPanel;
         public JSplitPane splitPane;
     }
 

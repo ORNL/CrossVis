@@ -18,6 +18,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.TreeMap;
 
 /**
  * Created by csg on 5/3/16.
@@ -31,7 +32,8 @@ public class DTWTimeSeriesAnalysisPanel extends JPanel {
     private TimeSeriesPanel referenceTimeSeriesPanel;
     private Box segmentTimeSeriesBox;
 
-    private ArrayList<SegmentRecord> segmentRecords = new ArrayList<>();
+//    private ArrayList<SegmentRecord> segmentRecords = new ArrayList<>();
+    private TreeMap<Double, SegmentRecord> segmentDistantMap = new TreeMap<>();
 
     public DTWTimeSeriesAnalysisPanel() {
         initialize();
@@ -60,6 +62,14 @@ public class DTWTimeSeriesAnalysisPanel extends JPanel {
         processSegments();
     }
 
+    private boolean instantIsBetween (Instant instant, Instant startInstant, Instant endInstant) {
+        if (instant.isBefore(startInstant) || instant.isAfter(endInstant)) {
+            return false;
+        }
+
+        return true;
+    }
+
     private void processSegments() {
         segmentTimeSeriesBox.removeAll();
 
@@ -71,6 +81,10 @@ public class DTWTimeSeriesAnalysisPanel extends JPanel {
             referenceTimeSeries.addRecord(record.instant, record.value, Double.NaN, Double.NaN);
         }
         referenceTimeSeriesPanel.setTimeSeries(referenceTimeSeries, referenceTimeSeries.getStartInstant(), referenceTimeSeries.getEndInstant());
+        referenceTimeSeriesPanel.setValueAxisMax(timeSeries.getMaxValue());
+        referenceTimeSeriesPanel.setValueAxisMin(timeSeries.getMinValue());
+        referenceTimeSeriesPanel.setShowTimeRangeLabels(false);
+        referenceTimeSeriesPanel.setBackground(Color.white);
 
         // slide the selection range from the start to the end of the full time series
         // calculate the DTW distance metric at each step and store segment and results
@@ -81,6 +95,17 @@ public class DTWTimeSeriesAnalysisPanel extends JPanel {
         Instant currentSegmentStartInstant = timeSeries.getStartInstant();
         Instant currentSegmentEndInstant = currentSegmentStartInstant.plus(selectionDuration);
         while (!currentSegmentEndInstant.isAfter(timeSeries.getEndInstant())) {
+            if ((instantIsBetween(currentSegmentEndInstant, referenceTimeSeriesSelection.getStartInstant(),
+                    referenceTimeSeriesSelection.getEndInstant())) ||
+                    (instantIsBetween(currentSegmentStartInstant, referenceTimeSeriesSelection.getStartInstant(),
+                    referenceTimeSeriesSelection.getEndInstant()))) {
+                // don't compare reference segment with itself
+
+                currentSegmentStartInstant = currentSegmentStartInstant.plus(1, ChronoUnit.SECONDS);
+                currentSegmentEndInstant = currentSegmentStartInstant.plus(selectionDuration);
+                continue;
+            }
+
             ArrayList<TimeSeriesRecord> segmentRecords = timeSeries.getRecordsBetween(currentSegmentStartInstant,
                     currentSegmentEndInstant);
             TimeSeries segmentTimeSeries = new TimeSeries("Segment");
@@ -106,14 +131,27 @@ public class DTWTimeSeriesAnalysisPanel extends JPanel {
             segmentRecord.segmentTimeSeriesPanel = new TimeSeriesPanel(10, ChronoUnit.SECONDS, TimeSeriesPanel.PlotDisplayOption.LINE);
             segmentRecord.segmentTimeSeriesPanel.setPreferredSize(new Dimension(200, 100));
             segmentPanel.add(segmentRecord.segmentTimeSeriesPanel, BorderLayout.CENTER);
-            segmentTimeSeriesBox.add(segmentPanel);
+            segmentRecord.segmentPanel = segmentPanel;
+//            segmentTimeSeriesBox.add(segmentPanel);
 
             segmentRecord.segmentTimeSeriesPanel.setTimeSeries(segmentTimeSeries, segmentTimeSeries.getStartInstant(), segmentTimeSeries.getEndInstant());
-            revalidate();
+            segmentRecord.segmentTimeSeriesPanel.setValueAxisMax(timeSeries.getMaxValue());
+            segmentRecord.segmentTimeSeriesPanel.setValueAxisMin(timeSeries.getMinValue());
+            segmentRecord.segmentTimeSeriesPanel.setShowTimeRangeLabels(false);
+            segmentRecord.segmentTimeSeriesPanel.setBackground(Color.white);
+//            revalidate();
+
+            segmentDistantMap.put(segmentRecord.distance, segmentRecord);
 
             currentSegmentStartInstant = currentSegmentStartInstant.plus(1, ChronoUnit.SECONDS);
             currentSegmentEndInstant = currentSegmentStartInstant.plus(selectionDuration);
         }
+
+        for (SegmentRecord record : segmentDistantMap.values()) {
+            segmentTimeSeriesBox.add(record.segmentPanel);
+        }
+
+        revalidate();
     }
 
     private double computeDTWDistance (TimeSeries ts1, TimeSeries ts2) {
@@ -189,7 +227,7 @@ public class DTWTimeSeriesAnalysisPanel extends JPanel {
                     for (int i = 0; i < numTimeRecords; i++) {
                         Instant instant = Instant.from(startInstant).plus(i, ChronoUnit.SECONDS);
                         instant = instant.plusMillis(random.nextInt(1000));
-                        value = Math.max(-20., Math.min(10., value + .8 * Math.random() - .4 + .2 * Math.cos(i + .2)));
+                        value = Math.max(-20., Math.min(20., value + .8 * Math.random() - .4 + .5 * Math.cos(i + .2)));
                         double range = Math.abs(value) * .25;
                         double upperRange = value + range;
                         double lowerRange = value - range;
@@ -256,6 +294,7 @@ public class DTWTimeSeriesAnalysisPanel extends JPanel {
     class SegmentRecord {
         TimeSeries segmentTimeSeries;
         TimeSeriesPanel segmentTimeSeriesPanel;
+        JPanel segmentPanel;
         Instant segmentStartInstant;
         Instant segmentEndInstant;
         double distance;

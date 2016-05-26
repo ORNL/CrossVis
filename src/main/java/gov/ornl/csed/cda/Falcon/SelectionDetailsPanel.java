@@ -3,13 +3,11 @@ package gov.ornl.csed.cda.Falcon;
 import gov.ornl.csed.cda.histogram.Histogram;
 import gov.ornl.csed.cda.histogram.HistogramPanel;
 import gov.ornl.csed.cda.timevis.*;
-import javafx.stage.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.Window;
 import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
@@ -41,7 +39,7 @@ public class SelectionDetailsPanel extends JPanel {
         this.plotHeight = plotHeight;
         this.binCount = binCount;
 
-        InputStream is = FalconFX.class.getResourceAsStream("fontawesome-webfont.ttf");
+        InputStream is = FalconMain.class.getResourceAsStream("fontawesome-webfont.ttf");
         try {
             fontAwesomeFont = Font.createFont(Font.TRUETYPE_FONT, is);
             fontAwesomeFont = fontAwesomeFont.deriveFont(Font.PLAIN, 12F);
