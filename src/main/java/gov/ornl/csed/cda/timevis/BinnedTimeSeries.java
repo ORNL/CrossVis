@@ -1,6 +1,7 @@
 package gov.ornl.csed.cda.timevis;
 
-import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -15,6 +16,8 @@ import java.util.*;
  * Created by csg on 4/30/16.
  */
 public class BinnedTimeSeries implements TimeSeriesListener {
+    private final static Logger log = LoggerFactory.getLogger(BinnedTimeSeries.class);
+
     private TimeSeries timeSeries;
     private TreeMap<Instant, TimeSeriesBin> binMap = new TreeMap<>();
     private Duration binDuration;
@@ -141,6 +144,11 @@ public class BinnedTimeSeries implements TimeSeriesListener {
                         maxRangeValue = Math.max(maxRangeValue, currentMaxRangeValue);
                     }
                 }
+
+                // sort bin records
+                for (TimeSeriesBin bin : binMap.values()) {
+                    Collections.sort(bin.getRecords());
+                }
             }
         }
     }
@@ -161,7 +169,7 @@ public class BinnedTimeSeries implements TimeSeriesListener {
     }
 
     public static void main (String args[]) {
-        int numTimeSeriesRecords = 60*12;
+        int numTimeSeriesRecords = 60*24*20;
         double minValue = -10.;
         double maxValue = 10.;
         double valueIncrement = (maxValue - minValue) / numTimeSeriesRecords;
@@ -180,6 +188,14 @@ public class BinnedTimeSeries implements TimeSeriesListener {
         }
 
         System.out.println("there are " + binnedTimeSeries.getBinCount() + " bins");
+
+        System.out.println("Sleeping");
+        try {
+            Thread.sleep(1000*30);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        System.out.println("Making panel");
 
         TimeSeriesPanel overviewTimeSeriesPanel = new TimeSeriesPanel(10, TimeSeriesPanel.PlotDisplayOption.LINE);
         overviewTimeSeriesPanel.setPreferredSize(new Dimension(1000, 100));

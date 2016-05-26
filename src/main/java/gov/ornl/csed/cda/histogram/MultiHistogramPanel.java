@@ -1,7 +1,6 @@
 package gov.ornl.csed.cda.histogram;
 
-import gov.ornl.csed.cda.Falcon.FalconFX;
-import javafx.geometry.Orientation;
+import gov.ornl.csed.cda.Falcon.FalconMain;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import prefuse.data.Table;
@@ -45,7 +44,7 @@ public class MultiHistogramPanel extends JPanel {
     public MultiHistogramPanel(int plotHeight) {
         this.plotHeight = plotHeight;
 
-        InputStream is = FalconFX.class.getResourceAsStream("fontawesome-webfont.ttf");
+        InputStream is = FalconMain.class.getResourceAsStream("fontawesome-webfont.ttf");
         try {
             fontAwesomeFont = Font.createFont(Font.TRUETYPE_FONT, is);
             fontAwesomeFont = fontAwesomeFont.deriveFont(Font.PLAIN, 12F);

@@ -2,6 +2,8 @@ package gov.ornl.csed.cda.experimental;
 
 import gov.ornl.csed.cda.timevis.TimeSeries;
 import gov.ornl.csed.cda.timevis.TimeSeriesPanel;
+import gov.ornl.csed.cda.timevis.TimeSeriesPanelSelectionListener;
+import gov.ornl.csed.cda.timevis.TimeSeriesSelection;
 import prefuse.data.Table;
 import prefuse.data.io.CSVTableReader;
 
@@ -46,6 +48,18 @@ public class OverviewDetailTimeSeriesTest {
                     scroller.setBackground(frame.getBackground());
                     scroller.setBorder(border);
 
+                    JToggleButton button = new JToggleButton("Show Moving Range Plots");
+                    button.addItemListener(new ItemListener() {
+                        @Override
+                        public void itemStateChanged(ItemEvent e) {
+                            if (e.getStateChange() == ItemEvent.SELECTED) {
+                                detailsTimeSeriesPanel.setMovingRangeModeEnabled(true);
+                            } else if (e.getStateChange() == ItemEvent.DESELECTED) {
+                                detailsTimeSeriesPanel.setMovingRangeModeEnabled(false);
+                            }
+                        }
+                    });
+
                     ((JPanel)frame.getContentPane()).setLayout(new BorderLayout());
                     ((JPanel)frame.getContentPane()).add(scroller, BorderLayout.CENTER);
                     ((JPanel)frame.getContentPane()).add(overviewTimeSeriesPanel, BorderLayout.SOUTH);
@@ -53,6 +67,22 @@ public class OverviewDetailTimeSeriesTest {
                     frame.setSize(1000, 400);
                     frame.setVisible(true);
 
+                    detailsTimeSeriesPanel.addTimeSeriesPanelSelectionListener(new TimeSeriesPanelSelectionListener() {
+                        @Override
+                        public void selectionCreated(TimeSeriesPanel timeSeriesPanel, TimeSeriesSelection timeSeriesSelection) {
+                            overviewTimeSeriesPanel.addTimeSeriesSelection(timeSeriesSelection.getStartInstant(), timeSeriesSelection.getEndInstant());
+                        }
+
+                        @Override
+                        public void selectionMoved(TimeSeriesPanel timeSeriesPanel, TimeSeriesSelection timeSeriesSelection, Instant previousStartInstant, Instant previousEndInstant) {
+                            overviewTimeSeriesPanel.updateTimeSeriesSelection(previousStartInstant, previousEndInstant, timeSeriesSelection.getStartInstant(), timeSeriesSelection.getEndInstant());
+                        }
+
+                        @Override
+                        public void selectionDeleted(TimeSeriesPanel timeSeriesPanel, TimeSeriesSelection timeSeriesSelection) {
+                            overviewTimeSeriesPanel.removeTimeSeriesSelection(timeSeriesSelection.getStartInstant(), timeSeriesSelection.getEndInstant());
+                        }
+                    });
 //                    TimeSeries timeSeries = new TimeSeries("Test");
 //
 //                    Instant startInstant = Instant.now().truncatedTo(ChronoUnit.HOURS);
@@ -135,7 +165,8 @@ public class OverviewDetailTimeSeriesTest {
 
     public static TimeSeries getRandomTimeSeries() {
         Random random = new Random(System.currentTimeMillis());
-        int numTimeRecords = 864000;
+//        int numTimeRecords = 864000;
+        int numTimeRecords = 5400;
 
         TimeSeries timeSeries = new TimeSeries("Test");
 

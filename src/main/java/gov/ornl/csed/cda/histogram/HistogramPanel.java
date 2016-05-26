@@ -352,7 +352,7 @@ public class HistogramPanel extends JComponent implements ComponentListener, Mou
         this.histogram = histogram;
         this.histogram.setNumBins(binCount);
         this.countAxisMax = histogram.getMaxBinCount();
-        log.debug("countAxisMax = " + countAxisMax);
+//        log.debug("countAxisMax = " + countAxisMax);
 
 //        maxOverallBinSize = 0.;
 //        for (int i = 0; i < histogram.getNumBins(); i++) {

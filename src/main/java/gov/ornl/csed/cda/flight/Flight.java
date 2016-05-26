@@ -45,7 +45,7 @@ public class Flight {
                 timeSeriesPanel.setTimeSeries(timeSeries, startInstant, endInstant);
                 timeSeriesPanel.setValueAxisMax(11.0);
                 timeSeriesPanel.setValueAxisMin(-11.0);
-                timeSeriesPanel.setDataColor(new Color(80, 80, 130, 100));
+                timeSeriesPanel.setPointColor(new Color(80, 80, 130, 100));
 
                 Border border = BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(10,10,10,10), BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
 //                detailsTimeSeriesPanel.setBorder(border);

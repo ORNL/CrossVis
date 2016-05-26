@@ -1013,7 +1013,7 @@ public class FalconFX extends Application {
             @Override
             public void handle(ActionEvent event) {
                 Color dataColor = multipleViewDataColorPicker.getValue();
-                multiViewPanel.setDataColor(convertToAWTColor(dataColor));
+                multiViewPanel.setTimeSeriesPointColor(convertToAWTColor(dataColor));
             }
         });
         hBox.getChildren().addAll(new Label("Data Color: "), multipleViewDataColorPicker);
@@ -1371,8 +1371,8 @@ public class FalconFX extends Application {
             @Override
             public void handle(ActionEvent event) {
                 Color dataColor = ODTimeSeriesDataColorPicker.getValue();
-                detailsTimeSeriesPanel.setDataColor(convertToAWTColor(dataColor));
-                overviewTimeSeriesPanel.setDataColor(convertToAWTColor(dataColor));
+                detailsTimeSeriesPanel.setPointColor(convertToAWTColor(dataColor));
+                overviewTimeSeriesPanel.setPointColor(convertToAWTColor(dataColor));
             }
         });
         hBox.getChildren().addAll(new Label("Data Color: "), ODTimeSeriesDataColorPicker);
