@@ -33,6 +33,7 @@ import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 import javafx.util.Callback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -87,21 +88,21 @@ public class FalconMain extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-//        primaryStage.setOnShown(new EventHandler<WindowEvent>() {
-//            @Override
-//            public void handle(WindowEvent event) {
-//                FileChooser fileChooser = new FileChooser();
-//                fileChooser.setTitle("Open CSV File");
-//                File csvFile = fileChooser.showOpenDialog(primaryStage);
-//                if (csvFile != null) {
-//                    try {
-//                        openCSVFile(csvFile);
-//                    } catch (DataIOException e) {
-//                        e.printStackTrace();
-//                    }
-//                }
-//            }
-//        });
+        primaryStage.setOnShown(new EventHandler<WindowEvent>() {
+            @Override
+            public void handle(WindowEvent event) {
+                FileChooser fileChooser = new FileChooser();
+                fileChooser.setTitle("Open PLG File");
+                File file = fileChooser.showOpenDialog(primaryStage);
+                if (file != null) {
+                    try {
+                        openPLGFile(file);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
 
         InputStream is = FalconMain.class.getResourceAsStream("fontawesome-webfont.ttf");
         fontAwesomeFont = javafx.scene.text.Font.loadFont(is, 14);

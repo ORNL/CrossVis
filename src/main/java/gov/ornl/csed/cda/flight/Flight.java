@@ -38,7 +38,7 @@ public class Flight {
         EventQueue.invokeLater(new Runnable() {
             public void run() {
 
-                TimeSeriesPanel timeSeriesPanel = new TimeSeriesPanel(10, ChronoUnit.MINUTES, TimeSeriesPanel.PlotDisplayOption.LINE);
+                TimeSeriesPanel timeSeriesPanel = new TimeSeriesPanel(10, ChronoUnit.MINUTES, TimeSeriesPanel.PlotDisplayOption.SPECTRUM);
 //                detailsTimeSeriesPanel.setPreferredSize(new Dimension(1000, 100));
                 timeSeriesPanel.setBackground(Color.white);
 //                detailsTimeSeriesPanel.setDisplayTimeRange(startInstant, endInstant);
