@@ -43,7 +43,7 @@ public class MovingRangeTest {
 
                     TimeSeriesPanel movingRangeTimeSeriesPanel = new TimeSeriesPanel(plotUnitWidth, ChronoUnit.SECONDS, TimeSeriesPanel.PlotDisplayOption.LINE);
                     movingRangeTimeSeriesPanel.setBackground(Color.white);
-                    movingRangeTimeSeriesPanel.setMovingRangeModeEnabled(true);
+                    movingRangeTimeSeriesPanel.setMovingRangeDisplayOption(TimeSeriesPanel.MovingRangeDisplayOption.PLOT_VALUE);
 
                     JScrollPane movingRangeTimeSeriesScroller = new JScrollPane(movingRangeTimeSeriesPanel);
                     movingRangeTimeSeriesScroller.setBackground(frame.getBackground());

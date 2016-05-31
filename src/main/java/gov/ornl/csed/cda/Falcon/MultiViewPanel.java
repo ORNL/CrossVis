@@ -54,7 +54,8 @@ public class MultiViewPanel extends JPanel {
     private TimeSeriesPanel.PlotDisplayOption plotDisplayOption = TimeSeriesPanel.PlotDisplayOption.STEPPED_LINE;
 
     private int currentSplitDividerPosition = 0;
-    private boolean showMovingRange = false;
+//    private boolean showMovingRange = false;
+    private TimeSeriesPanel.MovingRangeDisplayOption movingRangeDisplayOption = TimeSeriesPanel.MovingRangeDisplayOption.NOT_SHOWN;
 
     public MultiViewPanel (int plotHeight) {
         this.plotHeight = plotHeight;
@@ -378,7 +379,7 @@ public class MultiViewPanel extends JPanel {
         viewInfo.detailTimeSeriesPanel.setStandardDeviationRangeColor(timeSeriesStandardDeviationRangeColor);
         viewInfo.detailTimeSeriesPanel.setMinMaxRangeColor(timeSeriesMinMaxRangeColor);
         viewInfo.detailTimeSeriesPanel.setPlotDisplayOption(plotDisplayOption);
-        viewInfo.detailTimeSeriesPanel.setMovingRangeModeEnabled(showMovingRange);
+        viewInfo.detailTimeSeriesPanel.setMovingRangeDisplayOption(movingRangeDisplayOption);
         if (groupInfo.useCommonTimeScale) {
             viewInfo.detailTimeSeriesPanel.setTimeSeries(timeSeries, groupInfo.startInstant, groupInfo.endInstant);
         } else {
@@ -693,17 +694,17 @@ public class MultiViewPanel extends JPanel {
 //        multiViewPanel.drawToImage(imageFile);
     }
 
-    public void setShowMovingRange(boolean enabled) {
-        if (showMovingRange != enabled) {
-            showMovingRange = enabled;
+    public void setMovingRangeDisplayOption(TimeSeriesPanel.MovingRangeDisplayOption movingRangeDisplayOption) {
+        if (this.movingRangeDisplayOption != movingRangeDisplayOption) {
+            this.movingRangeDisplayOption = movingRangeDisplayOption;
             for (ViewInfo viewInfo : viewInfoList) {
-                viewInfo.detailTimeSeriesPanel.setMovingRangeModeEnabled(showMovingRange);
+                viewInfo.detailTimeSeriesPanel.setMovingRangeDisplayOption(movingRangeDisplayOption);
             }
         }
     }
 
-    public boolean isShowingMovingRange() {
-        return showMovingRange;
+    public TimeSeriesPanel.MovingRangeDisplayOption getMovingRangeDisplayOption() {
+        return this.movingRangeDisplayOption;
     }
 
     private class ViewInfo {

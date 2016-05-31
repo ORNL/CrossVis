@@ -53,9 +53,9 @@ public class OverviewDetailTimeSeriesTest {
                         @Override
                         public void itemStateChanged(ItemEvent e) {
                             if (e.getStateChange() == ItemEvent.SELECTED) {
-                                detailsTimeSeriesPanel.setMovingRangeModeEnabled(true);
+                                detailsTimeSeriesPanel.setMovingRangeDisplayOption(TimeSeriesPanel.MovingRangeDisplayOption.PLOT_VALUE);
                             } else if (e.getStateChange() == ItemEvent.DESELECTED) {
-                                detailsTimeSeriesPanel.setMovingRangeModeEnabled(false);
+                                detailsTimeSeriesPanel.setMovingRangeDisplayOption(TimeSeriesPanel.MovingRangeDisplayOption.NOT_SHOWN);
                             }
                         }
                     });

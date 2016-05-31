@@ -1,15 +1,12 @@
 package gov.ornl.csed.cda.timevis;
 
 import java.awt.*;
-import java.awt.geom.Point2D;
 import java.time.Instant;
 
 /**
  * Created by csg on 5/1/16.
  */
 public class TimeSeriesPlotPointRecord {
-    public Instant instant;
-
     public double x;
 
     /* overview y values */
@@ -30,5 +27,6 @@ public class TimeSeriesPlotPointRecord {
     public Color color;
 
     public TimeSeriesBin bin;
-    public TimeSeriesRecord record;
+    public TimeSeriesRecord valueRecord;
+    public TimeSeriesRecord movingRangeRecord;
 }

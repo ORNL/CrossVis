@@ -905,7 +905,7 @@ public class FalconMain extends Application {
                     }
                 }
         );
-        grid.add(new Label("Detail Plot Display Option"), 0, 1);
+        grid.add(new Label("Detail Plot Display Option: "), 0, 1);
         grid.add(plotDisplayOptionChoiceBox, 1, 1);
 
         ChoiceBox<ChronoUnit> chronoUnitChoice = new ChoiceBox<ChronoUnit>();
@@ -923,6 +923,21 @@ public class FalconMain extends Application {
         grid.add(new Label("Plot Chrono Unit: "), 0, 2);
         grid.add(chronoUnitChoice, 1, 2);
 
+        ChoiceBox<TimeSeriesPanel.MovingRangeDisplayOption> movingRangeDisplayOptionChoiceBox = new ChoiceBox<>();
+        movingRangeDisplayOptionChoiceBox.setTooltip(new Tooltip("Choose Moving Range Display Option"));
+        movingRangeDisplayOptionChoiceBox.getItems().addAll(TimeSeriesPanel.MovingRangeDisplayOption.NOT_SHOWN, TimeSeriesPanel.MovingRangeDisplayOption.PLOT_VALUE, TimeSeriesPanel.MovingRangeDisplayOption.OPACITY);
+        movingRangeDisplayOptionChoiceBox.getSelectionModel().select(multiViewPanel.getMovingRangeDisplayOption());
+        movingRangeDisplayOptionChoiceBox.getSelectionModel().selectedItemProperty().addListener(
+                (ObservableValue<? extends TimeSeriesPanel.MovingRangeDisplayOption> ov,
+                 TimeSeriesPanel.MovingRangeDisplayOption oldValue, TimeSeriesPanel.MovingRangeDisplayOption newValue) -> {
+                    if (oldValue != newValue) {
+                        multiViewPanel.setMovingRangeDisplayOption(newValue);
+                    }
+                }
+        );
+        grid.add(new Label("Moving Range Display: "), 0, 3);
+        grid.add(movingRangeDisplayOptionChoiceBox, 1, 3);
+
         ColorPicker pointColorPicker = new ColorPicker(GraphicsUtil.convertToJavaFXColor(multiViewPanel.getTimeSeriesPointColor()));
         pointColorPicker.setTooltip(new Tooltip("Change Time Series Plot Point Color"));
         pointColorPicker.setOnAction(new EventHandler<ActionEvent>() {
@@ -932,8 +947,8 @@ public class FalconMain extends Application {
                 multiViewPanel.setTimeSeriesPointColor(GraphicsUtil.convertToAWTColor(dataColor));
             }
         });
-        grid.add(new Label("Point Color: "), 0, 3);
-        grid.add(pointColorPicker, 1, 3);
+        grid.add(new Label("Point Color: "), 0, 4);
+        grid.add(pointColorPicker, 1, 4);
 
         ColorPicker lineColorPicker = new ColorPicker(GraphicsUtil.convertToJavaFXColor(multiViewPanel.getTimeSeriesLineColor()));
         lineColorPicker.setTooltip(new Tooltip("Change Time Series Plot Line Color"));
@@ -944,8 +959,8 @@ public class FalconMain extends Application {
                 multiViewPanel.setTimeSeriesLineColor(GraphicsUtil.convertToAWTColor(color));
             }
         });
-        grid.add(new Label("Line Color: "), 0, 4);
-        grid.add(lineColorPicker, 1, 4);
+        grid.add(new Label("Line Color: "), 0, 5);
+        grid.add(lineColorPicker, 1, 5);
 
         ColorPicker stdevRangeLineColorPicker = new ColorPicker(GraphicsUtil.convertToJavaFXColor(multiViewPanel.getTimeSeriesStandardDeviationRangeColor()));
         stdevRangeLineColorPicker.setTooltip(new Tooltip("Change Time Series Standard Deviation Range Line Color"));
@@ -956,8 +971,8 @@ public class FalconMain extends Application {
                 multiViewPanel.setTimeSeriesStandardDeviationRangeColor(GraphicsUtil.convertToAWTColor(color));
             }
         });
-        grid.add(new Label("Standard Deviation Range Color: "), 0, 5);
-        grid.add(stdevRangeLineColorPicker, 1, 5);
+        grid.add(new Label("Standard Deviation Range Color: "), 0, 6);
+        grid.add(stdevRangeLineColorPicker, 1, 6);
 
         ColorPicker minmaxRangeLineColorPicker = new ColorPicker(GraphicsUtil.convertToJavaFXColor(multiViewPanel.getTimeSeriesMinMaxRangeColor()));
         minmaxRangeLineColorPicker.setTooltip(new Tooltip("Change Time Series Min/Max Range Line Color"));
@@ -968,14 +983,8 @@ public class FalconMain extends Application {
                 multiViewPanel.setTimeSeriesMinMaxRangeColor(GraphicsUtil.convertToAWTColor(color));
             }
         });
-        grid.add(new Label("Min/Max Range Color: "), 0, 6);
-        grid.add(minmaxRangeLineColorPicker, 1, 6);
-
-        CheckBox movingRangeCheckBox = new CheckBox("Show Moving Range");
-        movingRangeCheckBox.setTooltip(new Tooltip("Plot Moving Range Instead of Data Values in Time Series Visualization"));
-        movingRangeCheckBox.setSelected(multiViewPanel.isShowingMovingRange());
-        movingRangeCheckBox.selectedProperty().addListener((obs, oldValue, newValue) -> multiViewPanel.setShowMovingRange((Boolean)newValue));
-        grid.add(movingRangeCheckBox, 0, 7, 2, 1);
+        grid.add(new Label("Min/Max Range Color: "), 0, 7);
+        grid.add(minmaxRangeLineColorPicker, 1, 7);
 
         CheckBox syncScrollbarsCheckBox = new CheckBox("Sync File TimeSeries Scrollbars");
         syncScrollbarsCheckBox.setTooltip(new Tooltip("Sync Scrollbars for all TimeSeries from the Same File"));

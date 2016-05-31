@@ -28,6 +28,10 @@ public class TimeSeries {
 		this.name = name;
 	}
 
+    public TreeMap<Instant, ArrayList<TimeSeriesRecord>> getRecordMap() {
+        return recordMap;
+    }
+
 	public void clear() {
         recordMap.clear();
         startInstant = null;
