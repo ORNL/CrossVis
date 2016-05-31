@@ -43,6 +43,10 @@ public class TimeSeries {
         }
     }
 
+    public ArrayList<TimeSeriesRecord> getRecordsAt(Instant instant) {
+        return recordMap.get(instant);
+    }
+
     public boolean removeTimeSeriesListener (TimeSeriesListener listener) {
         return listeners.remove(listener);
     }
