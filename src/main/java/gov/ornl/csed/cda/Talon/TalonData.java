@@ -86,7 +86,7 @@ public class TalonData {
             "Builds.State.CurrentBuild.CurrentZLevel",
             "OPC.Table.TargetPosition",
             "Process.ServicePageControl.TotalMachineTime"};
-    private String segmentingVariableName = "Process.TableControl.Position";
+    private String segmentingVariableName = "Builds.State.CurrentBuild.CurrentHeight";
     private TimeSeries segmentingVariableTimeSeries = null;
 
     private Double referenceValue = Double.NaN;

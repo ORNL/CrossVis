@@ -31,6 +31,7 @@ import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.File;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 
@@ -92,6 +93,47 @@ public class Talon implements TalonDataListener {
 
 
 
+    public Talon(File plgFile) {
+
+        //  -> initialize Talon
+        initialize();
+
+        //  -> add TalonDataListener
+        talonData.addTalonDataListener(this);
+
+
+        talonData.setPlgFile(plgFile);
+
+
+        //  -> make the frame visible
+        talonFrame.setVisible(true);
+
+    }
+
+
+
+    public Talon(File plgFile, String segmentedVariableName) {
+
+        //  -> initialize Talon
+        initialize();
+
+        //  -> add TalonDataListener
+        talonData.addTalonDataListener(this);
+
+
+        talonData.setPlgFile(plgFile);
+
+
+        talonData.setSegmentedVariableName(segmentedVariableName);
+
+
+        //  -> make the frame visible
+        talonFrame.setVisible(true);
+
+    }
+
+
+
 
 
     // =-= INSTANCE METHODS =-=
@@ -129,12 +171,15 @@ public class Talon implements TalonDataListener {
 
         //  -> creates menubar and menuitems
         JMenuBar talonMenuBar = new JMenuBar();
+
         JMenu file = new JMenu("File");
+        JMenu tools = new JMenu("Tools");
+
         JMenuItem openPLG = new JMenuItem("Open PLG...", KeyEvent.VK_O); // This menu item will respond to the 'o' key being pressed
         JMenuItem openImages = new JMenuItem("Open Images...");
-        JMenuItem showSummary = new JMenuItem("Show Summary");
         JMenuItem exit = new JMenuItem("Exit");
 
+        JMenuItem showSummary = new JMenuItem("Show Summary");
 
         //  -> add menubar and menuitems to the frame
         talonFrame.setJMenuBar(talonMenuBar);
@@ -142,9 +187,10 @@ public class Talon implements TalonDataListener {
         file.add(openPLG);
         file.add(openImages);
         file.addSeparator();
-        file.add(showSummary);
-        file.addSeparator();
         file.add(exit);
+
+        talonMenuBar.add(tools);
+        tools.add(showSummary);
 
 
         //  -> add the actionListeners to the menuitmes
@@ -462,9 +508,19 @@ public class Talon implements TalonDataListener {
     public static void main (String args[]) {
 
         // Create instance of Talon class
+//        EventQueue.invokeLater(() -> {
+//            Talon app = new Talon();
+//        });
+
+
         EventQueue.invokeLater(() -> {
-            Talon app = new Talon();
+            Talon app = new Talon(new File("/Users/whw/ORNL Internship/Printer Log Files/BuildG/R1057_2014-09-16_9.19_20140916_M1_AIR FORCE _BUILD G.plg"));
         });
+
+
+//        EventQueue.invokeLater(() -> {
+//            Talon app = new Talon(new File("/Users/whw/ORNL Internship/Printer Log Files/BuildG/R1057_2014-09-16_9.19_20140916_M1_AIR FORCE _BUILD G.plg"), "OPC.PowerSupply.Beam.BeamCurrent");
+//        });
 
     }
 }
