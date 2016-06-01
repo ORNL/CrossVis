@@ -67,6 +67,7 @@ public class Talon implements TalonDataListener {
     private int segmentedTimeSeriesPanel_imagePanel_sync = 0;                   // Flag that prevents circular references for scrollActionListeners
     private int segmentedTimeSeriesPanel_timeSeriesOverview_sync = 0;
     private JSpinner referenceValueSpinner;                                     // Spinner to choose build height values
+    private boolean spinnerRespond = true;
 
 
 
@@ -101,7 +102,7 @@ public class Talon implements TalonDataListener {
 
         //  -> create talonFrame
         talonFrame = new JFrame();
-        talonFrame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        talonFrame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         talonFrame.setBounds(50, 50, 1400, 700);
         talonFrame.setTitle(talonVersionString);
 
@@ -285,8 +286,9 @@ public class Talon implements TalonDataListener {
         //  --> set reference value in talonData
         referenceValueSpinner.addChangeListener(e -> {
 //            log.debug("Changing Reference Value");
-            talonData.setReferenceValue((double) referenceValueSpinner.getValue());
-
+            if (spinnerRespond) {
+                talonData.setReferenceValue((double) referenceValueSpinner.getValue());
+            }
         });
 
 
@@ -430,7 +432,9 @@ public class Talon implements TalonDataListener {
 //        log.debug("Reference Value Change");
 
         if(((Double) referenceValueSpinner.getValue()).compareTo(talonData.getReferenceValue()) != 0) {
+            spinnerRespond = false;
             referenceValueSpinner.setValue(talonData.getReferenceValue());
+            spinnerRespond = true;
         }
 
     }
