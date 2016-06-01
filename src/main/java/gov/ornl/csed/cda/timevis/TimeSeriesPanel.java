@@ -30,7 +30,6 @@ public class TimeSeriesPanel extends JComponent implements TimeSeriesListener, C
     public static final Color DEFAULT_MINMAX_RANGE_COLOR = DEFAULT_STANDARD_DEVIATION_RANGE_COLOR.brighter();
     public static final Color DEFAULT_SPECTRUM_NEGATIVE_COLOR = Color.red;
     public static final Color DEFAULT_SPECTRUM_POSITIVE_COLOR = Color.blue;
-    public static final Color DEFAULT_SPECTRUM_ZERO_COLOR = Color.gray;
 
     public static final int HIGHLIGHT_RANGE_MIN_SIZE = 8;
 
@@ -87,7 +86,6 @@ public class TimeSeriesPanel extends JComponent implements TimeSeriesListener, C
     private Color minmaxRangeColor = DEFAULT_MINMAX_RANGE_COLOR;
     private Color spectrumNegativeColor = DEFAULT_SPECTRUM_NEGATIVE_COLOR;
     private Color spectrumPositiveColor = DEFAULT_SPECTRUM_POSITIVE_COLOR;
-    private Color spectrumZeroColor = DEFAULT_SPECTRUM_ZERO_COLOR;
 
     private Instant startHighlightInstant;
     private Instant endHighlightInstant;
@@ -114,6 +112,7 @@ public class TimeSeriesPanel extends JComponent implements TimeSeriesListener, C
     MovingRangeDisplayOption movingRangeDisplayOption = MovingRangeDisplayOption.NOT_SHOWN;
 //    boolean movingRangeModeEnabled = false;
     private TimeSeries movingRangeTimeSeries;
+    private int minMovingRangeAlpha = 80;
 
     // fixed plot width constructor constructor
     public TimeSeriesPanel (int plotUnitWidth, ChronoUnit plotChronoUnit, PlotDisplayOption plotDisplayOption) {
@@ -343,31 +342,31 @@ public class TimeSeriesPanel extends JComponent implements TimeSeriesListener, C
     }
 
     public void setPointColor(Color pointColor) {
-        this.pointColor = pointColor;
-        repaint();
+        if (this.pointColor != pointColor) {
+            this.pointColor = pointColor;
+            calculatePlotPoints();
+            repaint();
+        }
     }
 
     public void setSpectrumPositiveColor (Color spectrumPositiveColor) {
-        this.spectrumPositiveColor = spectrumPositiveColor;
-        repaint();
+        if (this.spectrumPositiveColor != spectrumPositiveColor) {
+            this.spectrumPositiveColor = spectrumPositiveColor;
+            calculatePlotPoints();
+            repaint();
+        }
     }
 
     public Color getSpectrumPositiveColor() {
         return spectrumPositiveColor;
     }
 
-    public void setSpectrumZeroColor (Color spectrumZeroColor) {
-        this.spectrumZeroColor = spectrumZeroColor;
-        repaint();
-    }
-
-    public Color getSpectrumZeroColor() {
-        return spectrumZeroColor;
-    }
-
     public void setSpectrumNegativeColor (Color spectrumNegativeColor) {
-        this.spectrumNegativeColor = spectrumNegativeColor;
-        repaint();
+        if (this.spectrumNegativeColor != spectrumNegativeColor) {
+            this.spectrumNegativeColor = spectrumNegativeColor;
+            calculatePlotPoints();
+            repaint();
+        }
     }
 
     public Color getSpectrumNegativeColor() {
@@ -791,8 +790,19 @@ public class TimeSeriesPanel extends JComponent implements TimeSeriesListener, C
     }
 
     public void setPlotDisplayOption (PlotDisplayOption plotDisplayOption) {
-        this.plotDisplayOption = plotDisplayOption;
-        repaint();
+        if (this.plotDisplayOption != plotDisplayOption) {
+            boolean recalculatePlotPoints = true;
+            if ((plotDisplayOption != PlotDisplayOption.SPECTRUM) && (this.plotDisplayOption != PlotDisplayOption.SPECTRUM)) {
+                recalculatePlotPoints = false;
+            }
+
+            this.plotDisplayOption = plotDisplayOption;
+
+            if (recalculatePlotPoints) {
+                calculatePlotPoints();
+            }
+            repaint();
+        }
     }
 
     public Duration getPlotUnitDuration() {
@@ -1174,7 +1184,7 @@ public class TimeSeriesPanel extends JComponent implements TimeSeriesListener, C
                 plotPointRecord.spectrumTopY = (plotRectangle.height / 2.) - lineHeightHalf;
                 plotPointRecord.spectrumBottomY = (plotRectangle.height / 2.) + lineHeightHalf;
 
-                int alpha = (int)Math.round(GraphicsUtil.mapValue(movingRangeRecord.value, 0., movingRangeTimeSeries.getMaxValue(), 100., 255.));
+                int alpha = (int)Math.round(GraphicsUtil.mapValue(movingRangeRecord.value, 0., movingRangeTimeSeries.getMaxValue(), minMovingRangeAlpha, 255.));
                 if (valueRecord.value < 0.) {
                     plotPointRecord.color = new Color(spectrumNegativeColor.getRed(), spectrumNegativeColor.getGreen(),
                             spectrumNegativeColor.getBlue(), alpha);
@@ -1191,9 +1201,24 @@ public class TimeSeriesPanel extends JComponent implements TimeSeriesListener, C
                 plotPointRecord.color = pointColor;
             }
         } else {
-            double norm = (valueRecord.value - valueAxisMin) / (valueAxisMax - valueAxisMin);
-            double yOffset = norm * (plotRectangle.height);
-            plotPointRecord.valueY = plotRectangle.height - yOffset;
+            if (movingRangeDisplayOption == MovingRangeDisplayOption.NOT_SHOWN) {
+                double norm = (valueRecord.value - valueAxisMin) / (valueAxisMax - valueAxisMin);
+                double yOffset = norm * (plotRectangle.height);
+                plotPointRecord.valueY = plotRectangle.height - yOffset;
+                plotPointRecord.color = pointColor;
+            } else if (movingRangeDisplayOption == MovingRangeDisplayOption.OPACITY) {
+                double norm = (valueRecord.value - valueAxisMin) / (valueAxisMax - valueAxisMin);
+                double yOffset = norm * (plotRectangle.height);
+                plotPointRecord.valueY = plotRectangle.height - yOffset;
+
+                int alpha = (int)Math.round(GraphicsUtil.mapValue(movingRangeRecord.value, 0., movingRangeTimeSeries.getMaxValue(), minMovingRangeAlpha, 255.));
+                plotPointRecord.color = new Color(pointColor.getRed(), pointColor.getGreen(), pointColor.getBlue(), alpha);
+            } else if (movingRangeDisplayOption == MovingRangeDisplayOption.PLOT_VALUE) {
+                double norm = (movingRangeRecord.value - valueAxisMin) / (valueAxisMax - valueAxisMin);
+                double yOffset = norm * (plotRectangle.height);
+                plotPointRecord.valueY = plotRectangle.height - yOffset;
+                plotPointRecord.color = pointColor;
+            }
         }
 
         return plotPointRecord;
@@ -1372,7 +1397,7 @@ public class TimeSeriesPanel extends JComponent implements TimeSeriesListener, C
                             if (plotDisplayOption == TimeSeriesPanel.PlotDisplayOption.POINT) {
                                 Ellipse2D.Double ellipse = new Ellipse2D.Double(plotPointRecord.x - plotUnitWidth / 2.,
                                         plotPointRecord.valueY - plotUnitWidth / 2., plotUnitWidth, plotUnitWidth);
-                                g2.setColor(pointColor);
+                                g2.setColor(plotPointRecord.color);
                                 g2.draw(ellipse);
                             } else if (plotDisplayOption == TimeSeriesPanel.PlotDisplayOption.LINE) {
                                 if (lastDrawnPointRecord != null) {
@@ -1383,7 +1408,7 @@ public class TimeSeriesPanel extends JComponent implements TimeSeriesListener, C
                                 }
                                 Ellipse2D.Double ellipse = new Ellipse2D.Double(plotPointRecord.x - 1,
                                         plotPointRecord.valueY - 1, 2., 2.);
-                                g2.setColor(pointColor);
+                                g2.setColor(plotPointRecord.color);
                                 g2.draw(ellipse);
                             } else if (plotDisplayOption == TimeSeriesPanel.PlotDisplayOption.STEPPED_LINE) {
                                 if (lastDrawnPointRecord != null) {
@@ -1394,7 +1419,7 @@ public class TimeSeriesPanel extends JComponent implements TimeSeriesListener, C
                                     g2.draw(line2);
                                 }
                                 Ellipse2D.Double ellipse = new Ellipse2D.Double(plotPointRecord.x - 1, plotPointRecord.valueY - 1, 2., 2.);
-                                g2.setColor(pointColor);
+                                g2.setColor(plotPointRecord.color);
                                 g2.draw(ellipse);
                             } else if (plotDisplayOption == TimeSeriesPanel.PlotDisplayOption.SPECTRUM) {
 //                                double currentTopY = (plotRectangle.height / 2.) - plotPointRecord.valueY;
@@ -1818,9 +1843,9 @@ public class TimeSeriesPanel extends JComponent implements TimeSeriesListener, C
                     JFrame frame = new JFrame();
                     frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-                    TimeSeriesPanel detailsTimeSeriesPanel = new TimeSeriesPanel(plotUnitWidth, ChronoUnit.SECONDS, PlotDisplayOption.SPECTRUM);
+                    TimeSeriesPanel detailsTimeSeriesPanel = new TimeSeriesPanel(plotUnitWidth, ChronoUnit.SECONDS, PlotDisplayOption.STEPPED_LINE);
                     detailsTimeSeriesPanel.setBackground(Color.white);
-                    detailsTimeSeriesPanel.setMovingRangeDisplayOption(MovingRangeDisplayOption.PLOT_VALUE);
+                    detailsTimeSeriesPanel.setMovingRangeDisplayOption(MovingRangeDisplayOption.OPACITY);
 
                     TimeSeriesPanel overviewTimeSeriesPanel = new TimeSeriesPanel(plotUnitWidth, PlotDisplayOption.LINE);
                     overviewTimeSeriesPanel.setPreferredSize(new Dimension(1000, 100));

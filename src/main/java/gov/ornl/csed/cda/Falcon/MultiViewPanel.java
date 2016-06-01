@@ -43,6 +43,8 @@ public class MultiViewPanel extends JPanel {
     private Color timeSeriesLineColor = TimeSeriesPanel.DEFAULT_LINE_COLOR;
     private Color timeSeriesStandardDeviationRangeColor = TimeSeriesPanel.DEFAULT_STANDARD_DEVIATION_RANGE_COLOR;
     private Color timeSeriesMinMaxRangeColor = TimeSeriesPanel.DEFAULT_MINMAX_RANGE_COLOR;
+    private Color timeSeriesSpectrumPositiveColor = TimeSeriesPanel.DEFAULT_SPECTRUM_POSITIVE_COLOR;
+    private Color timeSeriesSpectrumNegativeColor = TimeSeriesPanel.DEFAULT_SPECTRUM_NEGATIVE_COLOR;
 
     private ArrayList<ViewInfo> viewInfoList = new ArrayList<>();
     private HashMap<String, GroupInfo> viewGroupMap = new HashMap<>();
@@ -153,6 +155,34 @@ public class MultiViewPanel extends JPanel {
                 viewInfo.detailTimeSeriesPanel.setPlotChronoUnit(detailChronoUnit);
             }
         }
+    }
+
+    public void setTimeSeriesSpectrumNegativeColor(Color color) {
+        if (!timeSeriesSpectrumNegativeColor.equals(color)) {
+            timeSeriesSpectrumNegativeColor = new Color(color.getRGB());
+            for (ViewInfo viewInfo : viewInfoList) {
+                viewInfo.detailTimeSeriesPanel.setSpectrumPositiveColor(timeSeriesSpectrumNegativeColor);
+                viewInfo.overviewTimeSeriesPanel.setSpectrumPositiveColor(timeSeriesSpectrumNegativeColor);
+            }
+        }
+    }
+
+    public Color getTimeSeriesSpectrumNegativeColor() {
+        return timeSeriesSpectrumNegativeColor;
+    }
+
+    public void setTimeSeriesSpectrumPositiveColor(Color color) {
+        if (!timeSeriesSpectrumPositiveColor.equals(color)) {
+            timeSeriesSpectrumPositiveColor = new Color(color.getRGB());
+            for (ViewInfo viewInfo : viewInfoList) {
+                viewInfo.detailTimeSeriesPanel.setSpectrumPositiveColor(timeSeriesSpectrumPositiveColor);
+                viewInfo.overviewTimeSeriesPanel.setSpectrumPositiveColor(timeSeriesSpectrumPositiveColor);
+            }
+        }
+    }
+
+    public Color getTimeSeriesSpectrumPositiveColor() {
+        return timeSeriesSpectrumPositiveColor;
     }
 
     public void setTimeSeriesPointColor(Color color) {

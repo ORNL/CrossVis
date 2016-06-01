@@ -895,7 +895,7 @@ public class FalconMain extends Application {
         ChoiceBox<TimeSeriesPanel.PlotDisplayOption> plotDisplayOptionChoiceBox = new ChoiceBox<>();
         plotDisplayOptionChoiceBox.setTooltip(new Tooltip("Change Display Mode for Detail Time Series Plot"));
         plotDisplayOptionChoiceBox.getItems().addAll(TimeSeriesPanel.PlotDisplayOption.POINT, TimeSeriesPanel.PlotDisplayOption.LINE,
-                TimeSeriesPanel.PlotDisplayOption.STEPPED_LINE);
+                TimeSeriesPanel.PlotDisplayOption.STEPPED_LINE, TimeSeriesPanel.PlotDisplayOption.SPECTRUM);
         plotDisplayOptionChoiceBox.getSelectionModel().select(multiViewPanel.getDetailTimeSeriesPlotDisplayOption());
         plotDisplayOptionChoiceBox.getSelectionModel().selectedItemProperty().addListener(
                 (ObservableValue<? extends TimeSeriesPanel.PlotDisplayOption> ov,
@@ -986,11 +986,35 @@ public class FalconMain extends Application {
         grid.add(new Label("Min/Max Range Color: "), 0, 7);
         grid.add(minmaxRangeLineColorPicker, 1, 7);
 
+        ColorPicker spectrumPositiveColorPicker = new ColorPicker(GraphicsUtil.convertToJavaFXColor(multiViewPanel.getTimeSeriesSpectrumPositiveColor()));
+        spectrumPositiveColorPicker.setTooltip(new Tooltip("Change Time Series Spectrum Positive Value Color"));
+        spectrumPositiveColorPicker.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                Color color = spectrumPositiveColorPicker.getValue();
+                multiViewPanel.setTimeSeriesSpectrumPositiveColor(GraphicsUtil.convertToAWTColor(color));
+            }
+        });
+        grid.add(new Label("Spectrum Positive Color: "), 0, 8);
+        grid.add(spectrumPositiveColorPicker, 1, 8);
+
+        ColorPicker spectrumNegativeColorPicker = new ColorPicker(GraphicsUtil.convertToJavaFXColor(multiViewPanel.getTimeSeriesSpectrumNegativeColor()));
+        spectrumNegativeColorPicker.setTooltip(new Tooltip("Change Time Series Spectrum Negative Value Color"));
+        spectrumNegativeColorPicker.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                Color color = spectrumNegativeColorPicker.getValue();
+                multiViewPanel.setTimeSeriesSpectrumNegativeColor(GraphicsUtil.convertToAWTColor(color));
+            }
+        });
+        grid.add(new Label("Spectrum Negative Color: "), 0, 9);
+        grid.add(spectrumNegativeColorPicker, 1, 9);
+
         CheckBox syncScrollbarsCheckBox = new CheckBox("Sync File TimeSeries Scrollbars");
         syncScrollbarsCheckBox.setTooltip(new Tooltip("Sync Scrollbars for all TimeSeries from the Same File"));
         syncScrollbarsCheckBox.setSelected(multiViewPanel.getSyncGroupScrollbarsEnabled());
         syncScrollbarsCheckBox.selectedProperty().addListener((obs, oldValue, newValue) -> multiViewPanel.setSyncGroupScollbarsEnabled((Boolean)newValue));
-        grid.add(syncScrollbarsCheckBox, 0, 8, 2, 1);
+        grid.add(syncScrollbarsCheckBox, 0, 10, 2, 1);
 
         scrollPane = new ScrollPane(grid);
         TitledPane timeSeriesTitledPane = new TitledPane("TimeSeries Display Settings", scrollPane);
