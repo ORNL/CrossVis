@@ -28,6 +28,9 @@ public class TimeSeriesPanel extends JComponent implements TimeSeriesListener, C
     public static final Color DEFAULT_LINE_COLOR = DEFAULT_POINT_COLOR.brighter();
     public static final Color DEFAULT_STANDARD_DEVIATION_RANGE_COLOR = new Color(140, 140, 160, 100);
     public static final Color DEFAULT_MINMAX_RANGE_COLOR = DEFAULT_STANDARD_DEVIATION_RANGE_COLOR.brighter();
+    public static final Color DEFAULT_SPECTRUM_NEGATIVE_COLOR = Color.red;
+    public static final Color DEFAULT_SPECTRUM_POSITIVE_COLOR = Color.blue;
+
     public static final int HIGHLIGHT_RANGE_MIN_SIZE = 8;
 
     private static DateTimeFormatter dtFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.systemDefault());
@@ -69,8 +72,8 @@ public class TimeSeriesPanel extends JComponent implements TimeSeriesListener, C
     private boolean shrinkToFit = false;
     private PlotDisplayOption plotDisplayOption = PlotDisplayOption.POINT;
 
-    private ConcurrentSkipListMap<Instant, ArrayList<Point2D.Double>> plotPointMap = new ConcurrentSkipListMap<>();
-    private ConcurrentSkipListMap<Instant, TimeSeriesPlotPointRecord> plotPointRecordMap = new ConcurrentSkipListMap<>();
+//    private ConcurrentSkipListMap<Instant, ArrayList<Point2D.Double>> plotPointMap = new ConcurrentSkipListMap<>();
+    private ConcurrentSkipListMap<Instant, ArrayList<TimeSeriesPlotPointRecord>> plotPointRecordMap = new ConcurrentSkipListMap<>();
 
     private Color gridLineColor = new Color(230, 230, 230);
     private Color hoverLineColor = new Color(50, 50, 50, 100);
@@ -81,6 +84,8 @@ public class TimeSeriesPanel extends JComponent implements TimeSeriesListener, C
     private Color lineColor = DEFAULT_LINE_COLOR;
     private Color standardDeviationRangeColor = DEFAULT_STANDARD_DEVIATION_RANGE_COLOR;
     private Color minmaxRangeColor = DEFAULT_MINMAX_RANGE_COLOR;
+    private Color spectrumNegativeColor = DEFAULT_SPECTRUM_NEGATIVE_COLOR;
+    private Color spectrumPositiveColor = DEFAULT_SPECTRUM_POSITIVE_COLOR;
 
     private Instant startHighlightInstant;
     private Instant endHighlightInstant;
@@ -104,9 +109,10 @@ public class TimeSeriesPanel extends JComponent implements TimeSeriesListener, C
     private double valueAxisMin;
 
     // moving range mode variables
-    boolean movingRangeModeEnabled = false;
+    MovingRangeDisplayOption movingRangeDisplayOption = MovingRangeDisplayOption.NOT_SHOWN;
+//    boolean movingRangeModeEnabled = false;
     private TimeSeries movingRangeTimeSeries;
-
+    private int minMovingRangeAlpha = 80;
 
     // fixed plot width constructor constructor
     public TimeSeriesPanel (int plotUnitWidth, ChronoUnit plotChronoUnit, PlotDisplayOption plotDisplayOption) {
@@ -130,18 +136,36 @@ public class TimeSeriesPanel extends JComponent implements TimeSeriesListener, C
         addMouseMotionListener(this);
     }
 
-    public boolean isMovingRangeModeEnabled () {
-        return movingRangeModeEnabled;
+    public MovingRangeDisplayOption getMovingRangeDisplayOption () {
+        return movingRangeDisplayOption;
     }
 
-    public void setMovingRangeModeEnabled (boolean enabled) {
-        if (this.movingRangeModeEnabled != enabled) {
-            this.movingRangeModeEnabled = enabled;
-            calculateMovingRangeTimeSeries();
+    public void setMovingRangeDisplayOption (MovingRangeDisplayOption movingRangeDisplayOption) {
+        if (this.movingRangeDisplayOption != movingRangeDisplayOption) {
+            this.movingRangeDisplayOption = movingRangeDisplayOption;
+            if (movingRangeDisplayOption == MovingRangeDisplayOption.NOT_SHOWN) {
+                movingRangeTimeSeries = null;
+            } else if (movingRangeTimeSeries == null) {
+                calculateMovingRangeTimeSeries();
+            }
+
             calculatePlotPoints();
             repaint();
         }
     }
+
+//    public boolean isMovingRangeModeEnabled () {
+//        return movingRangeModeEnabled;
+//    }
+//
+//    public void setMovingRangeModeEnabled (boolean enabled) {
+//        if (this.movingRangeModeEnabled != enabled) {
+//            this.movingRangeModeEnabled = enabled;
+//            calculateMovingRangeTimeSeries();
+//            calculatePlotPoints();
+//            repaint();
+//        }
+//    }
 
     public boolean isInteractiveSelectionsEnabled () {
         return interactiveSelectionEnabled;
@@ -318,8 +342,35 @@ public class TimeSeriesPanel extends JComponent implements TimeSeriesListener, C
     }
 
     public void setPointColor(Color pointColor) {
-        this.pointColor = pointColor;
-        repaint();
+        if (this.pointColor != pointColor) {
+            this.pointColor = pointColor;
+            calculatePlotPoints();
+            repaint();
+        }
+    }
+
+    public void setSpectrumPositiveColor (Color spectrumPositiveColor) {
+        if (this.spectrumPositiveColor != spectrumPositiveColor) {
+            this.spectrumPositiveColor = spectrumPositiveColor;
+            calculatePlotPoints();
+            repaint();
+        }
+    }
+
+    public Color getSpectrumPositiveColor() {
+        return spectrumPositiveColor;
+    }
+
+    public void setSpectrumNegativeColor (Color spectrumNegativeColor) {
+        if (this.spectrumNegativeColor != spectrumNegativeColor) {
+            this.spectrumNegativeColor = spectrumNegativeColor;
+            calculatePlotPoints();
+            repaint();
+        }
+    }
+
+    public Color getSpectrumNegativeColor() {
+        return spectrumNegativeColor;
     }
 
     public void setLineColor(Color lineColor) {
@@ -370,8 +421,10 @@ public class TimeSeriesPanel extends JComponent implements TimeSeriesListener, C
         this.timeSeries = timeSeries;
         timeSeries.addTimeSeriesListener(this);
 
-        if (movingRangeModeEnabled) {
+        if (movingRangeDisplayOption != MovingRangeDisplayOption.NOT_SHOWN) {
             calculateMovingRangeTimeSeries();
+        } else {
+            movingRangeTimeSeries = null;
         }
 
         this.startInstant = startInstant;
@@ -417,14 +470,14 @@ public class TimeSeriesPanel extends JComponent implements TimeSeriesListener, C
             layoutPanel();
         }
 
-        Point2D.Double point = calculatePlotPoint(record);
+        TimeSeriesPlotPointRecord plotPointRecord = calculatePlotPointRecord(record, null);
 
-        ArrayList<Point2D.Double> instantPoints = plotPointMap.get(record.instant);
-        if (instantPoints == null) {
-            instantPoints = new ArrayList<>();
-            plotPointMap.put(record.instant, instantPoints);
+        ArrayList<TimeSeriesPlotPointRecord> instantRecords = plotPointRecordMap.get(record.instant);
+        if (instantRecords == null) {
+            instantRecords = new ArrayList<>();
+            plotPointRecordMap.put(record.instant, instantRecords);
         }
-        instantPoints.add(point);
+        instantRecords.add(plotPointRecord);
         repaint();
     }
 
@@ -657,7 +710,7 @@ public class TimeSeriesPanel extends JComponent implements TimeSeriesListener, C
                 Instant rangeEndInstant = hoverInstant.truncatedTo(plotChronoUnit).plus(1, plotChronoUnit);
 
                 ArrayList<TimeSeriesRecord> records = null;
-                if (movingRangeModeEnabled) {
+                if (movingRangeDisplayOption == MovingRangeDisplayOption.PLOT_VALUE) {
                     records = movingRangeTimeSeries.getRecordsBetween(rangeStartInstant, rangeEndInstant);
                 } else {
                     records = timeSeries.getRecordsBetween(rangeStartInstant, rangeEndInstant);
@@ -737,8 +790,19 @@ public class TimeSeriesPanel extends JComponent implements TimeSeriesListener, C
     }
 
     public void setPlotDisplayOption (PlotDisplayOption plotDisplayOption) {
-        this.plotDisplayOption = plotDisplayOption;
-        repaint();
+        if (this.plotDisplayOption != plotDisplayOption) {
+            boolean recalculatePlotPoints = true;
+            if ((plotDisplayOption != PlotDisplayOption.SPECTRUM) && (this.plotDisplayOption != PlotDisplayOption.SPECTRUM)) {
+                recalculatePlotPoints = false;
+            }
+
+            this.plotDisplayOption = plotDisplayOption;
+
+            if (recalculatePlotPoints) {
+                calculatePlotPoints();
+            }
+            repaint();
+        }
     }
 
     public Duration getPlotUnitDuration() {
@@ -794,64 +858,6 @@ public class TimeSeriesPanel extends JComponent implements TimeSeriesListener, C
             this.endHighlightInstant = end;
 
             calculateHighlightBounds();
-/*
-            if (shrinkToFit) {
-                double leftPosition = GraphicsUtil.mapValue(start.toEpochMilli(), startInstant.toEpochMilli(),
-                        endInstant.toEpochMilli(), plotRectangle.getX(), plotRectangle.getMaxX());
-                double rightPosition = GraphicsUtil.mapValue(end.toEpochMilli(), startInstant.toEpochMilli(),
-                        endInstant.toEpochMilli(), plotRectangle.getX(), plotRectangle.getMaxX());
-
-                double width = rightPosition - leftPosition;
-                if (width < HIGHLIGHT_RANGE_MIN_SIZE) {
-                    double middlePosition = leftPosition + (width / 2.);
-                    leftPosition = middlePosition - HIGHLIGHT_RANGE_MIN_SIZE/2.;
-                    rightPosition = leftPosition + HIGHLIGHT_RANGE_MIN_SIZE;
-
-                    if (leftPosition < plotRectangle.x) {
-                        leftPosition = plotRectangle.x;
-                        rightPosition = leftPosition + HIGHLIGHT_RANGE_MIN_SIZE;
-                    }
-
-                    if (rightPosition > plotRectangle.getMaxX()) {
-                        rightPosition = plotRectangle.getMaxX();
-                        leftPosition = rightPosition - HIGHLIGHT_RANGE_MIN_SIZE;
-                    }
-                }
-//                if (leftPosition > plotRectangle.x) {
-//                    leftPosition -= 1.;
-//                }
-//                if (rightPosition < plotRectangle.getMaxX()) {
-//                    rightPosition += 1.;
-//                }
-
-                highlightRectangle = new Rectangle2D.Double(leftPosition, plotRectangle.y, rightPosition - leftPosition, plotRectangle.height);
-
-//                long totalPlotDeltaTime = ChronoUnit.MILLIS.between(startInstant, endInstant);
-//
-//                long deltaTime = ChronoUnit.MILLIS.between(startInstant, start);
-//                double normTime = (double) deltaTime / totalPlotDeltaTime;
-//                double highlightLeft = plotRectangle.x + ((double) plotRectangle.width * normTime);
-//
-//                deltaTime = ChronoUnit.MILLIS.between(startInstant, end);
-//                normTime = (double) deltaTime / totalPlotDeltaTime;
-//                double highlightRight = plotRectangle.x + ((double) plotRectangle.width * normTime);
-
-
-                //            long deltaTimeMillis = Duration.between(startInstant, start).toMillis();
-                //            int summaryUnitIndex = (int) (deltaTimeMillis / plotUnitDurationMillis);
-                //            int highlightLeft = plotRectangle.x + (summaryUnitIndex * plotUnitWidth);
-                //            deltaTimeMillis = Duration.between(startInstant, end).toMillis();
-                //            summaryUnitIndex = (int) (deltaTimeMillis / plotUnitDurationMillis);
-                //            int highlightRight = plotRectangle.x + (summaryUnitIndex * plotUnitWidth);
-//                if (highlightLeft > plotRectangle.x) {
-//                    highlightLeft = highlightLeft--;
-//                }
-//                if (highlightRight < (plotRectangle.x + plotRectangle.width)) {
-//                    highlightRight++;
-//                }
-//                highlightRectangle = new Rectangle2D.Double(highlightLeft, plotRectangle.y, highlightRight - highlightLeft, plotRectangle.height);
-            }
-*/
             repaint();
         }
     }
@@ -919,6 +925,8 @@ public class TimeSeriesPanel extends JComponent implements TimeSeriesListener, C
                     double value = Math.abs(lastRecord.value - record.value);
                     Instant instant = Instant.from(record.instant);
                     movingRangeTimeSeries.addRecord(instant, value, Double.NaN, Double.NaN);
+                } else {
+                    movingRangeTimeSeries.addRecord(Instant.from(record.instant), 0., Double.NaN, Double.NaN);
                 }
                 lastRecord = record;
             }
@@ -926,42 +934,77 @@ public class TimeSeriesPanel extends JComponent implements TimeSeriesListener, C
     }
 
     private void calculatePlotPoints() {
-//        log.debug("in calculatePlotPoints()");
         if (shrinkToFit) {
             plotPointRecordMap.clear();
             if (timeSeries != null) {
                 if (!timeSeries.isEmpty()) {
                     binnedTimeSeries = new BinnedTimeSeries(timeSeries, Duration.ofMillis(plotUnitDurationMillis));
-
                     Collection<TimeSeriesBin> bins = binnedTimeSeries.getAllBins();
                     for (TimeSeriesBin bin : bins) {
                         TimeSeriesPlotPointRecord plotPointRecord = calculatePlotPointRecord(bin);
-                        plotPointRecordMap.put(bin.getInstant(), plotPointRecord);
+                        ArrayList<TimeSeriesPlotPointRecord> instantRecords = plotPointRecordMap.get(bin.getInstant());
+                        if (instantRecords == null) {
+                            instantRecords = new ArrayList<>();
+                            plotPointRecordMap.put(bin.getInstant(), instantRecords);
+                        }
+                        instantRecords.add(plotPointRecord);
                     }
                 }
             }
         } else {
-            plotPointMap.clear();
+            plotPointRecordMap.clear();
             if (timeSeries != null) {
-                ArrayList<TimeSeriesRecord> records = null;
-                if (movingRangeModeEnabled) {
-                    records = movingRangeTimeSeries.getAllRecords();
-                } else {
-                    records = timeSeries.getAllRecords();
-                }
-
-                if (records != null) {
-                    for (TimeSeriesRecord record : records) {
-                        Point2D.Double point = calculatePlotPoint(record);
-
-                        ArrayList<Point2D.Double> instantPoints = plotPointMap.get(record.instant);
-                        if (instantPoints == null) {
-                            instantPoints = new ArrayList<>();
-                            plotPointMap.put(record.instant, instantPoints);
-                        }
-                        instantPoints.add(point);
+                for (ArrayList<TimeSeriesRecord> valueRecordList : timeSeries.getRecordMap().values()) {
+                    ArrayList<TimeSeriesRecord> movingRangeRecordList = null;
+                    if (movingRangeTimeSeries != null) {
+                        movingRangeRecordList = movingRangeTimeSeries.getRecordMap().get(valueRecordList.get(0).instant);
                     }
+
+                    for (int i = 0; i < valueRecordList.size(); i++) {
+                        TimeSeriesPlotPointRecord plotPointRecord = null;
+                        if (movingRangeRecordList != null) {
+                            plotPointRecord = calculatePlotPointRecord(valueRecordList.get(i), movingRangeRecordList.get(i));
+                        } else {
+                            plotPointRecord = calculatePlotPointRecord(valueRecordList.get(i), null);
+                        }
+
+                        ArrayList<TimeSeriesPlotPointRecord> instantRecords = plotPointRecordMap.get(plotPointRecord.valueRecord.instant);
+                        if (instantRecords == null) {
+                            instantRecords = new ArrayList<>();
+                            plotPointRecordMap.put(plotPointRecord.valueRecord.instant, instantRecords);
+                        }
+
+                        instantRecords.add(plotPointRecord);
+                    }
+
                 }
+//                ArrayList<TimeSeriesRecord> valueRecords = timeSeries.getAllRecords();
+
+//                if (movingRangeModeEnabled) {
+//                    records = movingRangeTimeSeries.getAllRecords();
+//                } else {
+//                    records = timeSeries.getAllRecords();
+//                }
+
+
+//
+//                if (valueRecords != null) {
+//                    for (int i = 0; i < valueRecords.size(); i++) {
+//                        TimeSeriesRecord record = valueRecords.get(i);
+//                        TimeSeriesRecord movingRangeRecord = null;
+//                        if (movingRangeTimeSeries != null) {
+//                            movingRangeRecord = movingRangeTimeSeries.getRecordsAt()
+//                        }
+//                        TimeSeriesPlotPointRecord plotPointRecord = calculatePlotPointRecord(record);
+//
+//                        ArrayList<TimeSeriesPlotPointRecord> instantRecords = plotPointRecordMap.get(record.instant);
+//                        if (instantRecords == null) {
+//                            instantRecords = new ArrayList<>();
+//                            plotPointRecordMap.put(record.instant, instantRecords);
+//                        }
+//                        instantRecords.add(plotPointRecord);
+//                    }
+//                }
             }
         }
     }
@@ -1074,7 +1117,7 @@ public class TimeSeriesPanel extends JComponent implements TimeSeriesListener, C
         }
     }
 */
-    private TimeSeriesPlotPointRecord calculatePlotPointRecord(TimeSeriesBin bin) {
+    private TimeSeriesPlotPointRecord calculatePlotPointRecord (TimeSeriesBin bin) {
         TimeSeriesPlotPointRecord plotPointRecord = new TimeSeriesPlotPointRecord();
         plotPointRecord.bin = bin;
 
@@ -1112,17 +1155,92 @@ public class TimeSeriesPanel extends JComponent implements TimeSeriesListener, C
         return plotPointRecord;
     }
 
-    private Point2D.Double calculatePlotPoint(TimeSeriesRecord record) {
-        long totalPlotDeltaTime = ChronoUnit.MILLIS.between(startInstant, endInstant);
-        long deltaTime = ChronoUnit.MILLIS.between(startInstant, record.instant);
-        double normTime = (double)deltaTime / totalPlotDeltaTime;
-        double x = ((double)plotRectangle.width * normTime);
-        double norm = (record.value - valueAxisMin) / (valueAxisMax - valueAxisMin);
-        double yOffset = norm * (plotRectangle.height);
-        double y = plotRectangle.height - yOffset;
 
-        return new Point2D.Double(x, y);
+    private TimeSeriesPlotPointRecord calculatePlotPointRecord (TimeSeriesRecord valueRecord, TimeSeriesRecord movingRangeRecord) {
+        TimeSeriesPlotPointRecord plotPointRecord = new TimeSeriesPlotPointRecord();
+        plotPointRecord.valueRecord = valueRecord;
+        plotPointRecord.movingRangeRecord = movingRangeRecord;
+
+        long totalPlotDeltaTime = ChronoUnit.MILLIS.between(startInstant, endInstant);
+        long deltaTime = ChronoUnit.MILLIS.between(startInstant, valueRecord.instant);
+        double normTime = (double)deltaTime / totalPlotDeltaTime;
+        plotPointRecord.x = ((double)plotRectangle.width * normTime);
+
+        if (plotDisplayOption == PlotDisplayOption.SPECTRUM) {
+            if (movingRangeDisplayOption == MovingRangeDisplayOption.NOT_SHOWN) {
+                double lineHeightHalf = GraphicsUtil.mapValue(Math.abs(valueRecord.value), 0., Math.max(valueAxisMax,
+                        Math.abs(valueAxisMin)), 0., plotRectangle.getHeight() / 2.);
+                plotPointRecord.spectrumTopY = (plotRectangle.height / 2.) - lineHeightHalf;
+                plotPointRecord.spectrumBottomY = (plotRectangle.height / 2.) + lineHeightHalf;
+
+                if (valueRecord.value < 0.) {
+                    plotPointRecord.color = spectrumNegativeColor;
+                } else {
+                    plotPointRecord.color = spectrumPositiveColor;
+                }
+            } else if (movingRangeDisplayOption == MovingRangeDisplayOption.OPACITY) {
+                double lineHeightHalf = GraphicsUtil.mapValue(Math.abs(valueRecord.value), 0., Math.max(valueAxisMax,
+                        Math.abs(valueAxisMin)), 0., plotRectangle.getHeight() / 2.);
+                plotPointRecord.spectrumTopY = (plotRectangle.height / 2.) - lineHeightHalf;
+                plotPointRecord.spectrumBottomY = (plotRectangle.height / 2.) + lineHeightHalf;
+
+                int alpha = (int)Math.round(GraphicsUtil.mapValue(movingRangeRecord.value, 0., movingRangeTimeSeries.getMaxValue(), minMovingRangeAlpha, 255.));
+                if (valueRecord.value < 0.) {
+                    plotPointRecord.color = new Color(spectrumNegativeColor.getRed(), spectrumNegativeColor.getGreen(),
+                            spectrumNegativeColor.getBlue(), alpha);
+                } else {
+                    plotPointRecord.color = new Color(spectrumPositiveColor.getRed(), spectrumPositiveColor.getGreen(),
+                            spectrumPositiveColor.getBlue(), alpha);
+                }
+            } else if (movingRangeDisplayOption == MovingRangeDisplayOption.PLOT_VALUE) {
+                double lineHeightHalf = GraphicsUtil.mapValue(Math.abs(movingRangeRecord.value), 0., Math.max(valueAxisMax,
+                        Math.abs(valueAxisMin)), 0., plotRectangle.getHeight() / 2.);
+                plotPointRecord.spectrumTopY = (plotRectangle.height / 2.) - lineHeightHalf;
+                plotPointRecord.spectrumBottomY = (plotRectangle.height / 2.) + lineHeightHalf;
+
+                plotPointRecord.color = pointColor;
+            }
+        } else {
+            if (movingRangeDisplayOption == MovingRangeDisplayOption.NOT_SHOWN) {
+                double norm = (valueRecord.value - valueAxisMin) / (valueAxisMax - valueAxisMin);
+                double yOffset = norm * (plotRectangle.height);
+                plotPointRecord.valueY = plotRectangle.height - yOffset;
+                plotPointRecord.color = pointColor;
+            } else if (movingRangeDisplayOption == MovingRangeDisplayOption.OPACITY) {
+                double norm = (valueRecord.value - valueAxisMin) / (valueAxisMax - valueAxisMin);
+                double yOffset = norm * (plotRectangle.height);
+                plotPointRecord.valueY = plotRectangle.height - yOffset;
+
+                int alpha = (int)Math.round(GraphicsUtil.mapValue(movingRangeRecord.value, 0., movingRangeTimeSeries.getMaxValue(), minMovingRangeAlpha, 255.));
+                plotPointRecord.color = new Color(pointColor.getRed(), pointColor.getGreen(), pointColor.getBlue(), alpha);
+            } else if (movingRangeDisplayOption == MovingRangeDisplayOption.PLOT_VALUE) {
+                double norm = (movingRangeRecord.value - valueAxisMin) / (valueAxisMax - valueAxisMin);
+                double yOffset = norm * (plotRectangle.height);
+                plotPointRecord.valueY = plotRectangle.height - yOffset;
+                plotPointRecord.color = pointColor;
+            }
+        }
+
+        return plotPointRecord;
     }
+
+//    private Point2D.Double calculatePlotPoint(TimeSeriesRecord record) {
+//        long totalPlotDeltaTime = ChronoUnit.MILLIS.between(startInstant, endInstant);
+//        long deltaTime = ChronoUnit.MILLIS.between(startInstant, record.instant);
+//        double normTime = (double)deltaTime / totalPlotDeltaTime;
+//        double x = ((double)plotRectangle.width * normTime);
+//
+//        if (plotDisplayOption == PlotDisplayOption.SPECTRUM) {
+//            double y = GraphicsUtil.mapValue(Math.abs(record.value), 0., Math.max(valueAxisMax, Math.abs(valueAxisMin)), 0., plotRectangle.getHeight()/2.);
+//            return new Point2D.Double(x, y);
+//        } else {
+//            double norm = (record.value - valueAxisMin) / (valueAxisMax - valueAxisMin);
+//            double yOffset = norm * (plotRectangle.height);
+//            double y = plotRectangle.height - yOffset;
+//
+//            return new Point2D.Double(x, y);
+//        }
+//    }
 
     public int getXForInstant(Instant instant) {
         long totalPlotDeltaTime = ChronoUnit.MILLIS.between(startInstant, endInstant);
@@ -1146,7 +1264,7 @@ public class TimeSeriesPanel extends JComponent implements TimeSeriesListener, C
 //            if (summaryInfoArray != null) {
             if (!plotPointRecordMap.isEmpty()) {
                 g2.setColor(gridLineColor);
-                drawZeroLine(g2, timeSeries, plotRectangle.width, plotRectangle.height, valueAxisMin, valueAxisMax);
+                drawZeroLine(g2, plotRectangle.width, plotRectangle.height, valueAxisMin, valueAxisMax);
 
                 Path2D.Double maxPath = null;
                 Path2D.Double minPath = null;
@@ -1157,37 +1275,39 @@ public class TimeSeriesPanel extends JComponent implements TimeSeriesListener, C
                 g2.setColor(lineColor);
 //                TimeSeriesSummaryInfo lastSummaryInfo = null;
                 TimeSeriesPlotPointRecord lastPlotPointRecord = null;
-                for (TimeSeriesPlotPointRecord plotPointRecord : plotPointRecordMap.values()) {
-                    if (plotDisplayOption == PlotDisplayOption.POINT) {
-                        Ellipse2D.Double ellipse = new Ellipse2D.Double(plotPointRecord.x, plotPointRecord.meanY,
-                                plotUnitWidth, plotUnitWidth);
-                        g2.draw(ellipse);
-                    } else if (plotDisplayOption == PlotDisplayOption.LINE) {
-                        if (meanPath == null) {
-                            meanPath = new Path2D.Double();
-                            meanPath.moveTo(plotPointRecord.x, plotPointRecord.meanY);
-                            maxPath = new Path2D.Double();
-                            maxPath.moveTo(plotPointRecord.x, plotPointRecord.maxY);
-                            minPath = new Path2D.Double();
-                            minPath.moveTo(plotPointRecord.x, plotPointRecord.minY);
-                            upperStDevRangePath = new Path2D.Double();
-                            upperStDevRangePath.moveTo(plotPointRecord.x, plotPointRecord.upperStdevRangeY);
-                            lowerStDevRangePath = new Path2D.Double();
-                            lowerStDevRangePath.moveTo(plotPointRecord.x, plotPointRecord.lowerStdevRangeY);
-                        } else {
-                            meanPath.lineTo(plotPointRecord.x, plotPointRecord.meanY);
-                            maxPath.lineTo(plotPointRecord.x, plotPointRecord.maxY);
-                            minPath.lineTo(plotPointRecord.x, plotPointRecord.minY);
-                            upperStDevRangePath.lineTo(plotPointRecord.x, plotPointRecord.upperStdevRangeY);
-                            lowerStDevRangePath.lineTo(plotPointRecord.x, plotPointRecord.lowerStdevRangeY);
+                for (ArrayList<TimeSeriesPlotPointRecord> instantRecords : plotPointRecordMap.values()) {
+                    for (TimeSeriesPlotPointRecord plotPointRecord : instantRecords) {
+                        if (plotDisplayOption == PlotDisplayOption.POINT) {
+                            Ellipse2D.Double ellipse = new Ellipse2D.Double(plotPointRecord.x, plotPointRecord.meanY,
+                                    plotUnitWidth, plotUnitWidth);
+                            g2.draw(ellipse);
+                        } else if (plotDisplayOption == PlotDisplayOption.LINE) {
+                            if (meanPath == null) {
+                                meanPath = new Path2D.Double();
+                                meanPath.moveTo(plotPointRecord.x, plotPointRecord.meanY);
+                                maxPath = new Path2D.Double();
+                                maxPath.moveTo(plotPointRecord.x, plotPointRecord.maxY);
+                                minPath = new Path2D.Double();
+                                minPath.moveTo(plotPointRecord.x, plotPointRecord.minY);
+                                upperStDevRangePath = new Path2D.Double();
+                                upperStDevRangePath.moveTo(plotPointRecord.x, plotPointRecord.upperStdevRangeY);
+                                lowerStDevRangePath = new Path2D.Double();
+                                lowerStDevRangePath.moveTo(plotPointRecord.x, plotPointRecord.lowerStdevRangeY);
+                            } else {
+                                meanPath.lineTo(plotPointRecord.x, plotPointRecord.meanY);
+                                maxPath.lineTo(plotPointRecord.x, plotPointRecord.maxY);
+                                minPath.lineTo(plotPointRecord.x, plotPointRecord.minY);
+                                upperStDevRangePath.lineTo(plotPointRecord.x, plotPointRecord.upperStdevRangeY);
+                                lowerStDevRangePath.lineTo(plotPointRecord.x, plotPointRecord.lowerStdevRangeY);
+                            }
+                            g2.setColor(pointColor);
+                            Ellipse2D.Double ellipse = new Ellipse2D.Double(plotPointRecord.x - 1, plotPointRecord.meanY - 1, 2., 2.);
+                            g2.draw(ellipse);
+                        } else if (plotDisplayOption == PlotDisplayOption.STEPPED_LINE) {
+
+                        } else if (plotDisplayOption == PlotDisplayOption.BAR) {
+
                         }
-                        g2.setColor(pointColor);
-                        Ellipse2D.Double ellipse = new Ellipse2D.Double(plotPointRecord.x - 1, plotPointRecord.meanY - 1, 2., 2.);
-                        g2.draw(ellipse);
-                    } else if (plotDisplayOption == PlotDisplayOption.STEPPED_LINE) {
-
-                    } else if (plotDisplayOption == PlotDisplayOption.BAR) {
-
                     }
                 }
 //                for (int i = 0; i < summaryInfoArray.length; i++) {
@@ -1250,58 +1370,81 @@ public class TimeSeriesPanel extends JComponent implements TimeSeriesListener, C
                 }
             }
         } else {
-            if (plotPointMap != null && !plotPointMap.isEmpty()) {
+            if (plotPointRecordMap != null && !plotPointRecordMap.isEmpty()) {
 //                TimeSeriesRenderer.renderAsDetailed(g2, timeSeries, startClipInstant, endClipInstant,
 //                        plotRectangle.width, plotRectangle.height, plotUnitWidth, plotChronoUnit, plotDisplayOption,
 //                        gridLineColor, pointColor, pointColor, rangeColor, plotPointMap,
 //                        valueAxisMin, valueAxisMax);
                 g2.setColor(gridLineColor);
-                drawZeroLine(g2, timeSeries, plotRectangle.width, plotRectangle.height, valueAxisMin, valueAxisMax);
+                drawZeroLine(g2, plotRectangle.width, plotRectangle.height, valueAxisMin, valueAxisMax);
 
-                Instant start = plotPointMap.firstKey();
+                Instant start = plotPointRecordMap.firstKey();
                 if (startClipInstant.isAfter(start)) {
-                    start = plotPointMap.lowerKey(startClipInstant);
+                    start = plotPointRecordMap.lowerKey(startClipInstant);
                 }
-                Instant end = plotPointMap.lastKey();
+                Instant end = plotPointRecordMap.lastKey();
                 if (endClipInstant.isBefore(end)) {
-                    end = plotPointMap.higherKey(endClipInstant);
+                    end = plotPointRecordMap.higherKey(endClipInstant);
                 }
-                NavigableMap<Instant, ArrayList<Point2D.Double>> clipMap = plotPointMap.subMap(start, true, end, true);
+                NavigableMap<Instant, ArrayList<TimeSeriesPlotPointRecord>> clipMap = plotPointRecordMap.subMap(start, true, end, true);
                 if (clipMap.isEmpty()) {
                     log.debug("No records in clip range - nothing to draw");
                 } else {
-                    Point2D.Double lastDrawnPoint = null;
+                    TimeSeriesPlotPointRecord lastDrawnPointRecord = null;
                     int numPointsDrawn = 0;
-                    for (ArrayList<Point2D.Double> instantPoints : clipMap.values()) {
-                        for (Point2D.Double point : instantPoints) {
+                    for (ArrayList<TimeSeriesPlotPointRecord> instantRecords : clipMap.values()) {
+                        for (TimeSeriesPlotPointRecord plotPointRecord : instantRecords) {
                             if (plotDisplayOption == TimeSeriesPanel.PlotDisplayOption.POINT) {
-                                Ellipse2D.Double ellipse = new Ellipse2D.Double(point.x - plotUnitWidth / 2.,
-                                        point.y - plotUnitWidth / 2., plotUnitWidth, plotUnitWidth);
-                                g2.setColor(pointColor);
+                                Ellipse2D.Double ellipse = new Ellipse2D.Double(plotPointRecord.x - plotUnitWidth / 2.,
+                                        plotPointRecord.valueY - plotUnitWidth / 2., plotUnitWidth, plotUnitWidth);
+                                g2.setColor(plotPointRecord.color);
                                 g2.draw(ellipse);
                             } else if (plotDisplayOption == TimeSeriesPanel.PlotDisplayOption.LINE) {
-                                if (lastDrawnPoint != null) {
-                                    Line2D.Double line = new Line2D.Double(lastDrawnPoint.x, lastDrawnPoint.y, point.x, point.y);
+                                if (lastDrawnPointRecord != null) {
+                                    Line2D.Double line = new Line2D.Double(lastDrawnPointRecord.x,
+                                            lastDrawnPointRecord.valueY, plotPointRecord.x, plotPointRecord.valueY);
                                     g2.setColor(lineColor);
                                     g2.draw(line);
                                 }
-                                Ellipse2D.Double ellipse = new Ellipse2D.Double(point.x - 1,
-                                        point.y - 1, 2., 2.);
-                                g2.setColor(pointColor);
+                                Ellipse2D.Double ellipse = new Ellipse2D.Double(plotPointRecord.x - 1,
+                                        plotPointRecord.valueY - 1, 2., 2.);
+                                g2.setColor(plotPointRecord.color);
                                 g2.draw(ellipse);
                             } else if (plotDisplayOption == TimeSeriesPanel.PlotDisplayOption.STEPPED_LINE) {
-                                if (lastDrawnPoint != null) {
-                                    Line2D.Double line1 = new Line2D.Double(lastDrawnPoint.x, lastDrawnPoint.y, point.x, lastDrawnPoint.y);
-                                    Line2D.Double line2 = new Line2D.Double(point.x, lastDrawnPoint.y, point.x, point.y);
+                                if (lastDrawnPointRecord != null) {
+                                    Line2D.Double line1 = new Line2D.Double(lastDrawnPointRecord.x, lastDrawnPointRecord.valueY, plotPointRecord.x, lastDrawnPointRecord.valueY);
+                                    Line2D.Double line2 = new Line2D.Double(plotPointRecord.x, lastDrawnPointRecord.valueY, plotPointRecord.x, plotPointRecord.valueY);
                                     g2.setColor(lineColor);
                                     g2.draw(line1);
                                     g2.draw(line2);
                                 }
-                                Ellipse2D.Double ellipse = new Ellipse2D.Double(point.x - 1, point.y - 1, 2., 2.);
-                                g2.setColor(pointColor);
+                                Ellipse2D.Double ellipse = new Ellipse2D.Double(plotPointRecord.x - 1, plotPointRecord.valueY - 1, 2., 2.);
+                                g2.setColor(plotPointRecord.color);
                                 g2.draw(ellipse);
+                            } else if (plotDisplayOption == TimeSeriesPanel.PlotDisplayOption.SPECTRUM) {
+//                                double currentTopY = (plotRectangle.height / 2.) - plotPointRecord.valueY;
+//                                double currentBottomY = (plotRectangle.height / 2.) + plotPointRecord.valueY;
+//                                if (lastDrawnPoint != null) {
+//                                    g2.setColor(lineColor);
+//
+//                                    double lastTopY = (plotRectangle.height / 2.) - lastDrawnPoint.y;
+//                                    Line2D.Double topLine = new Line2D.Double(lastDrawnPoint.x, lastTopY, point.x, currentTopY);
+//                                    g2.draw(topLine);
+//
+//                                    double lastBottomY = (plotRectangle.height / 2.) + lastDrawnPoint.y;
+//                                    Line2D.Double bottomLine = new Line2D.Double(lastDrawnPoint.x, lastBottomY, point.x, currentBottomY);
+//                                    g2.draw(bottomLine);
+//                                }
+
+                                g2.setColor(plotPointRecord.color);
+                                Line2D.Double line = new Line2D.Double(plotPointRecord.x, plotPointRecord.spectrumTopY, plotPointRecord.x, plotPointRecord.spectrumBottomY);
+                                g2.draw(line);
+//                                Ellipse2D.Double topEllipse = new Ellipse2D.Double(point.x - 1, currentTopY - 1, 2., 2.);
+//                                g2.draw(topEllipse);
+//                                Ellipse2D.Double bottomEllipse = new Ellipse2D.Double(point.x - 1, currentBottomY - 1, 2., 2.);
+//                                g2.draw(bottomEllipse);
                             }
-                            lastDrawnPoint = point;
+                            lastDrawnPointRecord = plotPointRecord;
                             numPointsDrawn++;
                         }
                     }
@@ -1400,21 +1543,16 @@ public class TimeSeriesPanel extends JComponent implements TimeSeriesListener, C
         g2.translate(-plotRectangle.x, -plotRectangle.y);
     }
 
-    private void drawZeroLine(Graphics2D g2, TimeSeries timeSeries, int plotWidth,
-                                     int plotHeight, double valueAxisMin, double valueAxisMax) {
-
-        // draw the zero value line if min < 0 and max > 0
-        if (valueAxisMin < 0. && valueAxisMax > 0.) {
-            double zeroY = GraphicsUtil.mapValue(0., valueAxisMin, valueAxisMax, plotHeight, 0);
-//            double norm = (0. - valueAxisMin) / (valueAxisMax - valueAxisMin);
-//            double yOffset = norm * plotHeight;
-//            double zeroY = plotHeight - yOffset;
+    private void drawZeroLine(Graphics2D g2, int plotWidth, int plotHeight, double valueAxisMin,
+                              double valueAxisMax) {
+        if (plotDisplayOption == PlotDisplayOption.SPECTRUM) {
+            double zeroY = (plotHeight / 2.);
             Line2D.Double line = new Line2D.Double(0, zeroY, plotWidth, zeroY);
             g2.draw(line);
-//            if (!shrinkToFit) {
-//                log.debug("zero line = " + line.toString());
-//                log.debug("plotRectangle.toString() = " + plotRectangle.toString() + "zeroY = " + zeroY + " valueAxisMin = " + valueAxisMin + "valueAxisMax = " + valueAxisMax);
-//            }
+        } else if (valueAxisMin < 0. && valueAxisMax > 0.) {
+            double zeroY = GraphicsUtil.mapValue(0., valueAxisMin, valueAxisMax, plotHeight, 0);
+            Line2D.Double line = new Line2D.Double(0, zeroY, plotWidth, zeroY);
+            g2.draw(line);
         }
     }
 
@@ -1699,14 +1837,15 @@ public class TimeSeriesPanel extends JComponent implements TimeSeriesListener, C
                     Random random = new Random(System.currentTimeMillis());
 
 //                    int numTimeRecords = 50400;
-                    int numTimeRecords = 864000;
+                    int numTimeRecords = 86400;
 //                    int numTimeRecords = 1200;
                     int plotUnitWidth = 10;
                     JFrame frame = new JFrame();
                     frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-                    TimeSeriesPanel detailsTimeSeriesPanel = new TimeSeriesPanel(plotUnitWidth, ChronoUnit.SECONDS, PlotDisplayOption.LINE);
+                    TimeSeriesPanel detailsTimeSeriesPanel = new TimeSeriesPanel(plotUnitWidth, ChronoUnit.SECONDS, PlotDisplayOption.STEPPED_LINE);
                     detailsTimeSeriesPanel.setBackground(Color.white);
+                    detailsTimeSeriesPanel.setMovingRangeDisplayOption(MovingRangeDisplayOption.OPACITY);
 
                     TimeSeriesPanel overviewTimeSeriesPanel = new TimeSeriesPanel(plotUnitWidth, PlotDisplayOption.LINE);
                     overviewTimeSeriesPanel.setPreferredSize(new Dimension(1000, 100));
@@ -1783,6 +1922,10 @@ public class TimeSeriesPanel extends JComponent implements TimeSeriesListener, C
     }
 
     public enum PlotDisplayOption {
-        STEPPED_LINE, LINE, BAR, POINT
+        STEPPED_LINE, LINE, BAR, POINT, SPECTRUM
+    }
+
+    public enum MovingRangeDisplayOption {
+        PLOT_VALUE, OPACITY, NOT_SHOWN
     }
 }

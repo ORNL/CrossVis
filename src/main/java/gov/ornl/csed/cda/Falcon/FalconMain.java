@@ -1,5 +1,6 @@
 package gov.ornl.csed.cda.Falcon;
 
+import gov.ornl.csed.cda.Talon.Talon;
 import gov.ornl.csed.cda.timevis.TimeSeries;
 import gov.ornl.csed.cda.timevis.TimeSeriesPanel;
 import gov.ornl.csed.cda.timevis.TimeSeriesPanelSelectionListener;
@@ -33,6 +34,7 @@ import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 import javafx.util.Callback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -87,21 +89,21 @@ public class FalconMain extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-//        primaryStage.setOnShown(new EventHandler<WindowEvent>() {
-//            @Override
-//            public void handle(WindowEvent event) {
-//                FileChooser fileChooser = new FileChooser();
-//                fileChooser.setTitle("Open CSV File");
-//                File csvFile = fileChooser.showOpenDialog(primaryStage);
-//                if (csvFile != null) {
-//                    try {
-//                        openCSVFile(csvFile);
-//                    } catch (DataIOException e) {
-//                        e.printStackTrace();
-//                    }
-//                }
-//            }
-//        });
+        primaryStage.setOnShown(new EventHandler<WindowEvent>() {
+            @Override
+            public void handle(WindowEvent event) {
+                FileChooser fileChooser = new FileChooser();
+                fileChooser.setTitle("Open PLG File");
+                File file = fileChooser.showOpenDialog(primaryStage);
+                if (file != null) {
+                    try {
+                        openPLGFile(file);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
 
         InputStream is = FalconMain.class.getResourceAsStream("fontawesome-webfont.ttf");
         fontAwesomeFont = javafx.scene.text.Font.loadFont(is, 14);
@@ -482,6 +484,7 @@ public class FalconMain extends Application {
         MenuBar menuBar = new MenuBar();
 
         Menu fileMenu = new Menu("File");
+        Menu viewMenu = new Menu("View");
 
         MenuItem openCSVMI = new MenuItem("Open CSV...");
         openCSVMI.setOnAction(new EventHandler<ActionEvent>() {
@@ -541,9 +544,30 @@ public class FalconMain extends Application {
             }
         });
 
-        fileMenu.getItems().addAll(openCSVMI, openPLGMI, new SeparatorMenuItem(), captureScreenMI, new SeparatorMenuItem(), exitMI);
+        MenuItem talonWindow = new MenuItem("Talon Window");
+        talonWindow.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                if(!fileMetadataMap.isEmpty()) {
 
-        menuBar.getMenus().addAll(fileMenu);
+                    File temp = null;
+
+                    for (File file : fileMetadataMap.keySet()) {
+                        temp = file;
+                        break;
+                    }
+
+                    new Talon(temp);
+                } else {
+                    new Talon();
+                }
+            }
+        });
+
+        fileMenu.getItems().addAll(openCSVMI, openPLGMI, new SeparatorMenuItem(), captureScreenMI, new SeparatorMenuItem(), exitMI);
+        viewMenu.getItems().add(talonWindow);
+
+        menuBar.getMenus().addAll(fileMenu, viewMenu);
 
         return menuBar;
     }
@@ -894,7 +918,7 @@ public class FalconMain extends Application {
         ChoiceBox<TimeSeriesPanel.PlotDisplayOption> plotDisplayOptionChoiceBox = new ChoiceBox<>();
         plotDisplayOptionChoiceBox.setTooltip(new Tooltip("Change Display Mode for Detail Time Series Plot"));
         plotDisplayOptionChoiceBox.getItems().addAll(TimeSeriesPanel.PlotDisplayOption.POINT, TimeSeriesPanel.PlotDisplayOption.LINE,
-                TimeSeriesPanel.PlotDisplayOption.STEPPED_LINE);
+                TimeSeriesPanel.PlotDisplayOption.STEPPED_LINE, TimeSeriesPanel.PlotDisplayOption.SPECTRUM);
         plotDisplayOptionChoiceBox.getSelectionModel().select(multiViewPanel.getDetailTimeSeriesPlotDisplayOption());
         plotDisplayOptionChoiceBox.getSelectionModel().selectedItemProperty().addListener(
                 (ObservableValue<? extends TimeSeriesPanel.PlotDisplayOption> ov,
@@ -904,7 +928,7 @@ public class FalconMain extends Application {
                     }
                 }
         );
-        grid.add(new Label("Detail Plot Display Option"), 0, 1);
+        grid.add(new Label("Detail Plot Display Option: "), 0, 1);
         grid.add(plotDisplayOptionChoiceBox, 1, 1);
 
         ChoiceBox<ChronoUnit> chronoUnitChoice = new ChoiceBox<ChronoUnit>();
@@ -922,6 +946,21 @@ public class FalconMain extends Application {
         grid.add(new Label("Plot Chrono Unit: "), 0, 2);
         grid.add(chronoUnitChoice, 1, 2);
 
+        ChoiceBox<TimeSeriesPanel.MovingRangeDisplayOption> movingRangeDisplayOptionChoiceBox = new ChoiceBox<>();
+        movingRangeDisplayOptionChoiceBox.setTooltip(new Tooltip("Choose Moving Range Display Option"));
+        movingRangeDisplayOptionChoiceBox.getItems().addAll(TimeSeriesPanel.MovingRangeDisplayOption.NOT_SHOWN, TimeSeriesPanel.MovingRangeDisplayOption.PLOT_VALUE, TimeSeriesPanel.MovingRangeDisplayOption.OPACITY);
+        movingRangeDisplayOptionChoiceBox.getSelectionModel().select(multiViewPanel.getMovingRangeDisplayOption());
+        movingRangeDisplayOptionChoiceBox.getSelectionModel().selectedItemProperty().addListener(
+                (ObservableValue<? extends TimeSeriesPanel.MovingRangeDisplayOption> ov,
+                 TimeSeriesPanel.MovingRangeDisplayOption oldValue, TimeSeriesPanel.MovingRangeDisplayOption newValue) -> {
+                    if (oldValue != newValue) {
+                        multiViewPanel.setMovingRangeDisplayOption(newValue);
+                    }
+                }
+        );
+        grid.add(new Label("Moving Range Display: "), 0, 3);
+        grid.add(movingRangeDisplayOptionChoiceBox, 1, 3);
+
         ColorPicker pointColorPicker = new ColorPicker(GraphicsUtil.convertToJavaFXColor(multiViewPanel.getTimeSeriesPointColor()));
         pointColorPicker.setTooltip(new Tooltip("Change Time Series Plot Point Color"));
         pointColorPicker.setOnAction(new EventHandler<ActionEvent>() {
@@ -931,8 +970,8 @@ public class FalconMain extends Application {
                 multiViewPanel.setTimeSeriesPointColor(GraphicsUtil.convertToAWTColor(dataColor));
             }
         });
-        grid.add(new Label("Point Color: "), 0, 3);
-        grid.add(pointColorPicker, 1, 3);
+        grid.add(new Label("Point Color: "), 0, 4);
+        grid.add(pointColorPicker, 1, 4);
 
         ColorPicker lineColorPicker = new ColorPicker(GraphicsUtil.convertToJavaFXColor(multiViewPanel.getTimeSeriesLineColor()));
         lineColorPicker.setTooltip(new Tooltip("Change Time Series Plot Line Color"));
@@ -943,8 +982,8 @@ public class FalconMain extends Application {
                 multiViewPanel.setTimeSeriesLineColor(GraphicsUtil.convertToAWTColor(color));
             }
         });
-        grid.add(new Label("Line Color: "), 0, 4);
-        grid.add(lineColorPicker, 1, 4);
+        grid.add(new Label("Line Color: "), 0, 5);
+        grid.add(lineColorPicker, 1, 5);
 
         ColorPicker stdevRangeLineColorPicker = new ColorPicker(GraphicsUtil.convertToJavaFXColor(multiViewPanel.getTimeSeriesStandardDeviationRangeColor()));
         stdevRangeLineColorPicker.setTooltip(new Tooltip("Change Time Series Standard Deviation Range Line Color"));
@@ -955,8 +994,8 @@ public class FalconMain extends Application {
                 multiViewPanel.setTimeSeriesStandardDeviationRangeColor(GraphicsUtil.convertToAWTColor(color));
             }
         });
-        grid.add(new Label("Standard Deviation Range Color: "), 0, 5);
-        grid.add(stdevRangeLineColorPicker, 1, 5);
+        grid.add(new Label("Standard Deviation Range Color: "), 0, 6);
+        grid.add(stdevRangeLineColorPicker, 1, 6);
 
         ColorPicker minmaxRangeLineColorPicker = new ColorPicker(GraphicsUtil.convertToJavaFXColor(multiViewPanel.getTimeSeriesMinMaxRangeColor()));
         minmaxRangeLineColorPicker.setTooltip(new Tooltip("Change Time Series Min/Max Range Line Color"));
@@ -967,20 +1006,38 @@ public class FalconMain extends Application {
                 multiViewPanel.setTimeSeriesMinMaxRangeColor(GraphicsUtil.convertToAWTColor(color));
             }
         });
-        grid.add(new Label("Min/Max Range Color: "), 0, 6);
-        grid.add(minmaxRangeLineColorPicker, 1, 6);
+        grid.add(new Label("Min/Max Range Color: "), 0, 7);
+        grid.add(minmaxRangeLineColorPicker, 1, 7);
 
-        CheckBox movingRangeCheckBox = new CheckBox("Show Moving Range");
-        movingRangeCheckBox.setTooltip(new Tooltip("Plot Moving Range Instead of Data Values in Time Series Visualization"));
-        movingRangeCheckBox.setSelected(multiViewPanel.isShowingMovingRange());
-        movingRangeCheckBox.selectedProperty().addListener((obs, oldValue, newValue) -> multiViewPanel.setShowMovingRange((Boolean)newValue));
-        grid.add(movingRangeCheckBox, 0, 7, 2, 1);
+        ColorPicker spectrumPositiveColorPicker = new ColorPicker(GraphicsUtil.convertToJavaFXColor(multiViewPanel.getTimeSeriesSpectrumPositiveColor()));
+        spectrumPositiveColorPicker.setTooltip(new Tooltip("Change Time Series Spectrum Positive Value Color"));
+        spectrumPositiveColorPicker.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                Color color = spectrumPositiveColorPicker.getValue();
+                multiViewPanel.setTimeSeriesSpectrumPositiveColor(GraphicsUtil.convertToAWTColor(color));
+            }
+        });
+        grid.add(new Label("Spectrum Positive Color: "), 0, 8);
+        grid.add(spectrumPositiveColorPicker, 1, 8);
+
+        ColorPicker spectrumNegativeColorPicker = new ColorPicker(GraphicsUtil.convertToJavaFXColor(multiViewPanel.getTimeSeriesSpectrumNegativeColor()));
+        spectrumNegativeColorPicker.setTooltip(new Tooltip("Change Time Series Spectrum Negative Value Color"));
+        spectrumNegativeColorPicker.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                Color color = spectrumNegativeColorPicker.getValue();
+                multiViewPanel.setTimeSeriesSpectrumNegativeColor(GraphicsUtil.convertToAWTColor(color));
+            }
+        });
+        grid.add(new Label("Spectrum Negative Color: "), 0, 9);
+        grid.add(spectrumNegativeColorPicker, 1, 9);
 
         CheckBox syncScrollbarsCheckBox = new CheckBox("Sync File TimeSeries Scrollbars");
         syncScrollbarsCheckBox.setTooltip(new Tooltip("Sync Scrollbars for all TimeSeries from the Same File"));
         syncScrollbarsCheckBox.setSelected(multiViewPanel.getSyncGroupScrollbarsEnabled());
         syncScrollbarsCheckBox.selectedProperty().addListener((obs, oldValue, newValue) -> multiViewPanel.setSyncGroupScollbarsEnabled((Boolean)newValue));
-        grid.add(syncScrollbarsCheckBox, 0, 8, 2, 1);
+        grid.add(syncScrollbarsCheckBox, 0, 10, 2, 1);
 
         scrollPane = new ScrollPane(grid);
         TitledPane timeSeriesTitledPane = new TitledPane("TimeSeries Display Settings", scrollPane);

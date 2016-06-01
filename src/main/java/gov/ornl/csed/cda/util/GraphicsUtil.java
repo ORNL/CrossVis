@@ -1,14 +1,24 @@
 package gov.ornl.csed.cda.util;
 
-import javafx.scene.paint.Color;
+
 
 /**
  * Created by csg on 3/10/16.
  */
 public class GraphicsUtil {
+    static public final java.awt.Color lerpColor(java.awt.Color c1, java.awt.Color c2, double amount) {
+        int opacity = (int)Math.round(c1.getAlpha() + (c2.getAlpha() - c1.getAlpha()) * amount);
+        int red = (int)Math.round(c1.getRed() + (c2.getRed() - c1.getRed()) * amount);
+        int green = (int)Math.round(c1.getGreen() + (c2.getGreen() - c1.getGreen()) * amount);
+        int blue = (int)Math.round(c1.getBlue() + (c2.getBlue() - c1.getBlue()) * amount);
+
+        return new java.awt.Color (red, green, blue, opacity);
+    }
+
     public static double mapValue(double value, double currentMin, double currentMax, double newMin, double newMax) {
-        double norm = (value - currentMin) / (currentMax - currentMin);
-        return (norm * (newMax - newMin)) + newMin;
+        return newMin + ((newMax - newMin) * ((value - currentMin) / (currentMax - currentMin)));
+//        double norm = (value - currentMin) / (currentMax - currentMin);
+//        return (norm * (newMax - newMin)) + newMin;
     }
 
     public static java.awt.Color convertToAWTColor(javafx.scene.paint.Color color) {
@@ -25,6 +35,26 @@ public class GraphicsUtil {
         int b = color.getBlue();
         int a = color.getAlpha();
         double opacity = a / 255.;
-        return Color.rgb(r, g, b, opacity);
+        return javafx.scene.paint.Color.rgb(r, g, b, opacity);
+    }
+
+    static public final double lerp(double start, double stop, double amt) {
+        return start + (stop-start) * amt;
+    }
+
+    static public final double norm(double value, double start, double stop) {
+        return (value - start) / (stop - start);
+    }
+
+    static public final double dist(double x1, double y1, double x2, double y2) {
+        return Math.sqrt(((x2-x1)*(x2-x1)) + ((y2-y1)*(y2-y1)));
+    }
+
+    static public final double constrain(double amt, double low, double high) {
+        return (amt < low) ? low : ((amt > high) ? high : amt);
+    }
+
+    static public final int constrain(int amt, int low, int high) {
+        return (amt < low) ? low : ((amt > high) ? high : amt);
     }
 }
