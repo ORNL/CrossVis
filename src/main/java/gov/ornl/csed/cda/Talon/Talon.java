@@ -133,6 +133,7 @@ public class Talon implements TalonDataListener {
         JMenuItem openPLG = new JMenuItem("Open PLG...", KeyEvent.VK_O); // This menu item will respond to the 'o' key being pressed
         JMenuItem openImages = new JMenuItem("Open Images...");
         JMenuItem showSummary = new JMenuItem("Show Summary");
+        JMenuItem exit = new JMenuItem("Exit");
 
 
         //  -> add menubar and menuitems to the frame
@@ -140,7 +141,10 @@ public class Talon implements TalonDataListener {
         talonMenuBar.add(file);
         file.add(openPLG);
         file.add(openImages);
+        file.addSeparator();
         file.add(showSummary);
+        file.addSeparator();
+        file.add(exit);
 
 
         //  -> add the actionListeners to the menuitmes
@@ -186,6 +190,11 @@ public class Talon implements TalonDataListener {
 
         showSummary.addActionListener(e -> {
             new SingleValueSummaryWindow(talonData);
+        });
+
+
+        exit.addActionListener(e -> {
+            talonFrame.dispatchEvent(new WindowEvent(talonFrame, Event.WINDOW_DESTROY));
         });
 
     }
