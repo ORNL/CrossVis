@@ -172,6 +172,9 @@ public class SegmentedTimeSeriesPanel extends JComponent implements MouseListene
     //  -> Triggered by calling repaint();
     public void paintComponent(Graphics g) {
 
+        // TODO: 6/1/16 - clip the drawing to only the viewable area
+        Rectangle2D viewableArea = this.getVisibleRect();
+
         // You will pretty much always do this for a vis
         Graphics2D g2 = (Graphics2D)g;
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -204,70 +207,71 @@ public class SegmentedTimeSeriesPanel extends JComponent implements MouseListene
 
             // for every time series in the (reverse order) entry list
             for (Map.Entry<Double, TimeSeries> entry : entryList) {
-
                 // get current build height
                 double buildHeight = entry.getKey();
 
                 // Set the base line for the current build height time series
                 double plotBaselineY = plotSpacing * timeseriesCounter;
 
-                // Get time series for current build height
-                TimeSeries timeSeries = entry.getValue();
+                if (viewableArea.intersects(0, plotBaselineY + margins.top, data.getLongestPlotDuration() * plotTimeUnitWidth, plotSpacing)) {
 
-                // Create label for the current build height; Set width for label and draw
-                String label = df.format(buildHeight);
-                int stringWidth = g2.getFontMetrics().stringWidth(label) + 20;
+                    // Get time series for current build height
+                    TimeSeries timeSeries = entry.getValue();
 
-                if (!Double.isNaN(referenceHeight) && referenceHeight == buildHeight) {
-                    g2.setFont(g2.getFont().deriveFont(Font.BOLD, g2.getFontMetrics().getFont().getSize() + 3));
-                    g2.drawString(label, timeSeriesLabelWidth - stringWidth, (int) (plotHeight + plotBaselineY - (plotSpacing / 2)));
-                    g2.setFont(g2.getFont().deriveFont(Font.PLAIN, g2.getFontMetrics().getFont().getSize() - 3));
+                    // Create label for the current build height; Set width for label and draw
+                    String label = df.format(buildHeight);
+                    int stringWidth = g2.getFontMetrics().stringWidth(label) + 20;
 
-                } else {
-                    g2.drawString(label, timeSeriesLabelWidth - stringWidth, (int) (plotHeight + plotBaselineY - (plotSpacing / 2)));
+                    if (!Double.isNaN(referenceHeight) && referenceHeight == buildHeight) {
+                        g2.setFont(g2.getFont().deriveFont(Font.BOLD, g2.getFontMetrics().getFont().getSize() + 3));
+                        g2.drawString(label, timeSeriesLabelWidth - stringWidth, (int) (plotHeight + plotBaselineY - (plotSpacing / 2)));
+                        g2.setFont(g2.getFont().deriveFont(Font.PLAIN, g2.getFontMetrics().getFont().getSize() - 3));
 
+                    } else {
+                        g2.drawString(label, timeSeriesLabelWidth - stringWidth, (int) (plotHeight + plotBaselineY - (plotSpacing / 2)));
+
+                    }
+
+                    Double distance = Double.MAX_VALUE;
+
+                    if (data.getTimeSeriesDistances().containsKey(entry.getKey())) {
+                        distance = data.getTimeSeriesDistances().get(entry.getKey());
+                    }
+
+                    if (distance > 1 && !distance.equals(Double.MAX_VALUE)) {
+                        g2.setColor(Color.RED);
+                    }
+                    g2.draw3DRect(0, (int) (plotHeight + plotBaselineY - (plotSpacing / 2)) + 3, timeSeriesLabelWidth - margins.right, 7, false);
+                    g2.setColor(Color.BLACK);
+
+                    double tmp = (1 - distance < 0) ? 0 : (1 - distance);
+                    g2.setColor(Color.GRAY);
+                    g2.fill3DRect(0, (int) (plotHeight + plotBaselineY - (plotSpacing / 2)) + 3, (int) (tmp * (timeSeriesLabelWidth - margins.right)), 7, false);
+                    g2.setColor(Color.BLACK);
+
+                    // put g2 past the label and at the bottom of the time series baseline and draw time series
+                    g2.translate(timeSeriesLabelWidth, plotBaselineY);
+
+                    if (referenceTimeSeries != null) {
+                        g2.setColor(Color.LIGHT_GRAY);
+                        drawTimeSeries(referenceTimeSeries, g2);
+                        g2.setColor(Color.BLACK);
+                    }
+
+                    drawTimeSeries(timeSeries, g2);
+                    g2.translate(-timeSeriesLabelWidth, -plotBaselineY);
                 }
-
-                Double distance = Double.MAX_VALUE;
-
-                if(data.getTimeSeriesDistances().containsKey(entry.getKey())) {
-                    distance = data.getTimeSeriesDistances().get(entry.getKey());
-                }
-
-                if(distance > 1 && !distance.equals(Double.MAX_VALUE)) {
-                    g2.setColor(Color.RED);
-                }
-                g2.draw3DRect(0, (int) (plotHeight + plotBaselineY - (plotSpacing / 2)) + 3, timeSeriesLabelWidth - margins.right, 7, false);
-                g2.setColor(Color.BLACK);
-
-                double tmp = (1 - distance < 0) ? 0 : (1 - distance);
-                g2.setColor(Color.GRAY);
-                g2.fill3DRect(0, (int) (plotHeight + plotBaselineY - (plotSpacing / 2)) + 3, (int) (tmp * (timeSeriesLabelWidth - margins.right)), 7, false);
-                g2.setColor(Color.BLACK);
-
 
                 // create rectangle for current label
                 Rectangle2D.Double labelRect = new Rectangle2D.Double();
                 labelRect.width = timeSeriesLabelWidth;
                 labelRect.height = plotSpacing;
                 labelRect.x = margins.left;
-                labelRect.y = plotSpacing*timeseriesCounter;
+                labelRect.y = plotSpacing * timeseriesCounter;
 
                 // add the current label to the array list
                 buildHeightLabelRectangles.add(labelRect);
                 labelsMap.put(labelRect, buildHeight);
-
-                // put g2 past the label and at the bottom of the time series baseline and draw time series
-                g2.translate(timeSeriesLabelWidth, plotBaselineY);
-
-                if (referenceTimeSeries != null) {
-                    g2.setColor(Color.LIGHT_GRAY);
-                    drawTimeSeries(referenceTimeSeries, g2);
-                    g2.setColor(Color.BLACK);
-                }
-
-                drawTimeSeries(timeSeries, g2);
-                g2.translate(-timeSeriesLabelWidth, -plotBaselineY);
 
                 timeseriesCounter++;
             }
