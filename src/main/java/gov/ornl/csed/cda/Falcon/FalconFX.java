@@ -2,6 +2,7 @@ package gov.ornl.csed.cda.Falcon;/**
  * Created by csg on 12/30/15.
  */
 
+import gov.ornl.csed.cda.Talon.Talon;
 import gov.ornl.csed.cda.histogram.Histogram;
 import gov.ornl.csed.cda.histogram.MultiHistogramPanel;
 import gov.ornl.csed.cda.timevis.*;
@@ -484,6 +485,7 @@ public class FalconFX extends Application {
         MenuBar menuBar = new MenuBar();
 
         Menu fileMenu = new Menu("File");
+        Menu viewMenu = new Menu("View");
 
         MenuItem openCSVMI = new MenuItem("Open CSV...");
         openCSVMI.setOnAction(new EventHandler<ActionEvent>() {
@@ -543,9 +545,21 @@ public class FalconFX extends Application {
             }
         });
 
-        fileMenu.getItems().addAll(openCSVMI, openPLGMI, new SeparatorMenuItem(), captureScreenMI, new SeparatorMenuItem(), exitMI);
+        MenuItem newTalonWindow = new MenuItem("New Talon Window");
+        newTalonWindow.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                // Create instance of Talon class
+                EventQueue.invokeLater(() -> {
+                    Talon app = new Talon();
+                });
+            }
+        });
 
-        menuBar.getMenus().addAll(fileMenu);
+        fileMenu.getItems().addAll(openCSVMI, openPLGMI, new SeparatorMenuItem(), captureScreenMI, new SeparatorMenuItem(), exitMI);
+        viewMenu.getItems().add(newTalonWindow);
+
+        menuBar.getMenus().addAll(fileMenu, viewMenu);
 
         return menuBar;
     }

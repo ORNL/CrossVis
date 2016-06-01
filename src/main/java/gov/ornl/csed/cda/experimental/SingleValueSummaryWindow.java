@@ -31,7 +31,9 @@ import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -103,7 +105,24 @@ public class SingleValueSummaryWindow extends JComponent {
         singleValueSummaryFrame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         singleValueSummaryFrame.setBounds(100, 75, 800, 500);
 
+        initializeMenu();
         initializePanel();
+    }
+
+
+
+    private void initializeMenu() {
+        JMenuBar menuBar = new JMenuBar();
+        JMenu file = new JMenu("File");
+        JMenuItem save = new JMenuItem("Save...");
+
+        file.add(save);
+        menuBar.add(file);
+        singleValueSummaryFrame.setJMenuBar(menuBar);
+
+        save.addActionListener(e -> {
+            writeOutSingleValueVariables();
+        });
     }
 
 
@@ -156,6 +175,34 @@ public class SingleValueSummaryWindow extends JComponent {
 
 
 
+    private void writeOutSingleValueVariables() {
+
+        FileWriter writer = null;
+//        System.
+        int length = talonData.getPlgFile().getName().length();
+        String filename = talonData.getPlgFile().getName().substring(0, length - 4) + ".txt";
+
+//        System.out.println(filename);
+
+        try {
+            writer = new FileWriter(filename);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        if (writer != null) {
+            PrintWriter printer = new PrintWriter(writer);
+
+            for (Map.Entry<String, Double> entry : singleValueVariableValues.entrySet()) {
+                printer.printf("%s%n", entry.getKey() + ":  " + entry.getValue().toString());
+            }
+        }
+
+        System.out.println("DONE");
+    }
+
+
+
 
 
 
@@ -202,7 +249,13 @@ public class SingleValueSummaryWindow extends JComponent {
                 schema.typeString.equals("Single") ||
                 schema.typeString.equals("Int32")) {
 
-                if (schema.numValues == 1) {
+                String[] temp = schema.variableName.split("[.]");
+
+                if (schema.numValues == 1 &&
+                        !temp[0].equals("Themes") &&
+                        !temp[0].equals("Analyse") &&
+                        !temp[0].equals("Process") &&
+                        !temp[0].equals("Measurements")) {
                     singleValueVariables.add(schema.variableName);
                 }
             }

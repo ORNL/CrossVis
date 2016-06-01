@@ -76,9 +76,17 @@ public class TalonData {
     private TimeSeries longestTimeSeries = null;
     private TimeSeries shortestTimeSeries = null;
 
-    private String segmentingVariableName = "Builds.State.CurrentBuild.CurrentHeight";
-//    private String segmentingVariableName = "Analyse.CurrentZLevel";
-//    private String segmentingVariableName = "OPC.Table.CurrentPosition";
+    private String[] segmentingVariableNames = {"Builds.State.CurrentBuild.CurrentHeight",
+            "Analyse.CurrentZLevel",
+            "OPC.Table.CurrentPosition",
+            "Process.TableControl.Position",
+            "Process.TableControl.CalibratedPosition",
+            "Process.TableControl.TargetMotorPosition",
+            "Builds.State.CurrentBuild.LastLayer",
+            "Builds.State.CurrentBuild.CurrentZLevel",
+            "OPC.Table.TargetPosition",
+            "Process.ServicePageControl.TotalMachineTime"};
+    private String segmentingVariableName = "Process.TableControl.Position";
     private TimeSeries segmentingVariableTimeSeries = null;
 
     private Double referenceValue = Double.NaN;
@@ -422,19 +430,26 @@ public class TalonData {
     public void setReferenceValue(Double referenceValue) {
 
         //  -> set the reference value
-        this.referenceValue = referenceValue;
+        if (referenceValue.equals(this.referenceValue)) {
+            this.referenceValue = Double.NaN;
+        } else {
+            this.referenceValue = referenceValue;
+        }
 
 
         //  -> clear distance map
         this.timeSeriesDistances.clear();
+        referenceTimeSeries = new TimeSeries("null");
 
 
-        //  -> calculate distances
-        calculateDistances();
+        if (!this.referenceValue.isNaN()) {
+            //  -> calculate distances
+            calculateDistances();
 
 
-        //  -> set the segmentedTimeSeriesMap
-        referenceTimeSeries = segmentedTimeSeriesMap.get(referenceValue);
+            //  -> set the segmentedTimeSeriesMap
+            referenceTimeSeries = segmentedTimeSeriesMap.get(referenceValue);
+        }
 
 
         //  -> fire listener method
@@ -496,7 +511,8 @@ public class TalonData {
     //  -> build time series from records
     //  -> add to the segmentedTimeSeriesMap
     private void segmentTimeSeries() {
-        TimeSeriesRecord lastSegmentRecord = null;
+        TimeSeriesRecord lastSegmentingRecord = null;
+        TimeSeriesRecord lastSegmentedRecord = null;                            //<------------------------------------------
 
 
         //  -> get previous and current segment record of segmenting time series
@@ -504,26 +520,34 @@ public class TalonData {
 
 
             //  -> get all records of segmented time series between the two
-            if (lastSegmentRecord != null) {
-                ArrayList<TimeSeriesRecord> segmentRecordList = segmentedVariableTimeSeries.getRecordsBetween(lastSegmentRecord.instant, currentSegmentRecord.instant);
+            if (lastSegmentingRecord != null) {
+                ArrayList<TimeSeriesRecord> segmentRecordList = segmentedVariableTimeSeries.getRecordsBetween(lastSegmentingRecord.instant, currentSegmentRecord.instant);
 
 
                 //  -> build time series from records
                 if (segmentRecordList != null && !segmentRecordList.isEmpty()) {
-                    TimeSeries timeSeries = new TimeSeries(String.valueOf(lastSegmentRecord.value));
+                    TimeSeries timeSeries = new TimeSeries(String.valueOf(lastSegmentingRecord.value));
+
+                    if (lastSegmentedRecord != null) {
+                        timeSeries.addRecord(lastSegmentingRecord.instant, lastSegmentedRecord.value, Double.NaN, Double.NaN);
+                    }
+
                     for (TimeSeriesRecord valueRecord : segmentRecordList) {
                         timeSeries.addRecord(valueRecord.instant, valueRecord.value, Double.NaN, Double.NaN);
                     }
 
+                    timeSeries.addRecord(currentSegmentRecord.instant, segmentRecordList.get(segmentRecordList.size()-1).value, Double.NaN, Double.NaN);
+
+                    lastSegmentedRecord = segmentRecordList.get(segmentRecordList.size()-1);
 
                     //  -> add to the segmentedTimeSeriesMap
-                    segmentedTimeSeriesMap.put(lastSegmentRecord.value, timeSeries);
+                    segmentedTimeSeriesMap.put(lastSegmentingRecord.value, timeSeries);
                 } else {
-                    segmentedTimeSeriesMap.put(lastSegmentRecord.value, new TimeSeries(String.valueOf(lastSegmentRecord.value)));
+                    segmentedTimeSeriesMap.put(lastSegmentingRecord.value, new TimeSeries(String.valueOf(lastSegmentingRecord.value)));
                 }
             }
 
-            lastSegmentRecord = currentSegmentRecord;
+            lastSegmentingRecord = currentSegmentRecord;
         }
     }
 
@@ -715,13 +739,13 @@ public class TalonData {
 
     private double findFirstDistance() {
         for (Map.Entry<Double, TimeSeries> entry : segmentedTimeSeriesMap.entrySet()) {
-            if(entry.getValue().getStartInstant() != null && !entry.getKey().equals(0.05D)) {
+            if(entry.getValue().getStartInstant() != null && !entry.getKey().equals(segmentedTimeSeriesMap.firstKey())) {
                 double tmp = entry.getKey();
                 return entry.getKey();
             }
         }
 
-        return 0.05D;
+        return segmentedTimeSeriesMap.firstKey();
     }
 
 

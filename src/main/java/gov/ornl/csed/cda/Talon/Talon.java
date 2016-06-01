@@ -67,6 +67,7 @@ public class Talon implements TalonDataListener {
     private int segmentedTimeSeriesPanel_imagePanel_sync = 0;                   // Flag that prevents circular references for scrollActionListeners
     private int segmentedTimeSeriesPanel_timeSeriesOverview_sync = 0;
     private JSpinner referenceValueSpinner;                                     // Spinner to choose build height values
+    private boolean spinnerRespond = true;
 
 
 
@@ -101,7 +102,7 @@ public class Talon implements TalonDataListener {
 
         //  -> create talonFrame
         talonFrame = new JFrame();
-        talonFrame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        talonFrame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         talonFrame.setBounds(50, 50, 1400, 700);
         talonFrame.setTitle(talonVersionString);
 
@@ -132,6 +133,7 @@ public class Talon implements TalonDataListener {
         JMenuItem openPLG = new JMenuItem("Open PLG...", KeyEvent.VK_O); // This menu item will respond to the 'o' key being pressed
         JMenuItem openImages = new JMenuItem("Open Images...");
         JMenuItem showSummary = new JMenuItem("Show Summary");
+        JMenuItem exit = new JMenuItem("Exit");
 
 
         //  -> add menubar and menuitems to the frame
@@ -139,7 +141,10 @@ public class Talon implements TalonDataListener {
         talonMenuBar.add(file);
         file.add(openPLG);
         file.add(openImages);
+        file.addSeparator();
         file.add(showSummary);
+        file.addSeparator();
+        file.add(exit);
 
 
         //  -> add the actionListeners to the menuitmes
@@ -185,6 +190,11 @@ public class Talon implements TalonDataListener {
 
         showSummary.addActionListener(e -> {
             new SingleValueSummaryWindow(talonData);
+        });
+
+
+        exit.addActionListener(e -> {
+            talonFrame.dispatchEvent(new WindowEvent(talonFrame, Event.WINDOW_DESTROY));
         });
 
     }
@@ -262,7 +272,9 @@ public class Talon implements TalonDataListener {
         //  --> set segmented variable name in talonData
         segmentedVariableComboBox.addActionListener(e -> {
 //            log.debug("Changing Segmented Variable");
-            talonData.setSegmentedVariableName((String) segmentedVariableComboBox.getSelectedItem());
+            if (segmentedVariableComboBox.getSelectedItem() != null) {
+                talonData.setSegmentedVariableName((String) segmentedVariableComboBox.getSelectedItem());
+            }
         });
 
 
@@ -283,8 +295,9 @@ public class Talon implements TalonDataListener {
         //  --> set reference value in talonData
         referenceValueSpinner.addChangeListener(e -> {
 //            log.debug("Changing Reference Value");
-            talonData.setReferenceValue((double) referenceValueSpinner.getValue());
-
+            if (spinnerRespond) {
+                talonData.setReferenceValue((double) referenceValueSpinner.getValue());
+            }
         });
 
 
@@ -428,7 +441,9 @@ public class Talon implements TalonDataListener {
 //        log.debug("Reference Value Change");
 
         if(((Double) referenceValueSpinner.getValue()).compareTo(talonData.getReferenceValue()) != 0) {
+            spinnerRespond = false;
             referenceValueSpinner.setValue(talonData.getReferenceValue());
+            spinnerRespond = true;
         }
 
     }
