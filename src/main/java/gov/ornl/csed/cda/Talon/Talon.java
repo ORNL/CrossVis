@@ -262,7 +262,9 @@ public class Talon implements TalonDataListener {
         //  --> set segmented variable name in talonData
         segmentedVariableComboBox.addActionListener(e -> {
 //            log.debug("Changing Segmented Variable");
-            talonData.setSegmentedVariableName((String) segmentedVariableComboBox.getSelectedItem());
+            if (segmentedVariableComboBox.getSelectedItem() != null) {
+                talonData.setSegmentedVariableName((String) segmentedVariableComboBox.getSelectedItem());
+            }
         });
 
 

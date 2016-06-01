@@ -76,9 +76,17 @@ public class TalonData {
     private TimeSeries longestTimeSeries = null;
     private TimeSeries shortestTimeSeries = null;
 
+    private String[] segmentingVariableNames = {"Builds.State.CurrentBuild.CurrentHeight",
+            "Analyse.CurrentZLevel",
+            "OPC.Table.CurrentPosition",
+            "Process.TableControl.Position",
+            "Process.TableControl.CalibratedPosition",
+            "Process.TableControl.TargetMotorPosition",
+            "Builds.State.CurrentBuild.LastLayer",
+            "Builds.State.CurrentBuild.CurrentZLevel",
+            "OPC.Table.TargetPosition",
+            "Process.ServicePageControl.TotalMachineTime"};
     private String segmentingVariableName = "Builds.State.CurrentBuild.CurrentHeight";
-//    private String segmentingVariableName = "Analyse.CurrentZLevel";
-//    private String segmentingVariableName = "OPC.Table.CurrentPosition";
     private TimeSeries segmentingVariableTimeSeries = null;
 
     private Double referenceValue = Double.NaN;
@@ -715,13 +723,13 @@ public class TalonData {
 
     private double findFirstDistance() {
         for (Map.Entry<Double, TimeSeries> entry : segmentedTimeSeriesMap.entrySet()) {
-            if(entry.getValue().getStartInstant() != null && !entry.getKey().equals(0.05D)) {
+            if(entry.getValue().getStartInstant() != null && !entry.getKey().equals(segmentedTimeSeriesMap.firstKey())) {
                 double tmp = entry.getKey();
                 return entry.getKey();
             }
         }
 
-        return 0.05D;
+        return segmentedTimeSeriesMap.firstKey();
     }
 
 
