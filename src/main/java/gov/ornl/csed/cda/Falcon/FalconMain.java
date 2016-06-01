@@ -1,5 +1,6 @@
 package gov.ornl.csed.cda.Falcon;
 
+import gov.ornl.csed.cda.Talon.Talon;
 import gov.ornl.csed.cda.timevis.TimeSeries;
 import gov.ornl.csed.cda.timevis.TimeSeriesPanel;
 import gov.ornl.csed.cda.timevis.TimeSeriesPanelSelectionListener;
@@ -483,6 +484,7 @@ public class FalconMain extends Application {
         MenuBar menuBar = new MenuBar();
 
         Menu fileMenu = new Menu("File");
+        Menu viewMenu = new Menu("View");
 
         MenuItem openCSVMI = new MenuItem("Open CSV...");
         openCSVMI.setOnAction(new EventHandler<ActionEvent>() {
@@ -542,9 +544,30 @@ public class FalconMain extends Application {
             }
         });
 
-        fileMenu.getItems().addAll(openCSVMI, openPLGMI, new SeparatorMenuItem(), captureScreenMI, new SeparatorMenuItem(), exitMI);
+        MenuItem talonWindow = new MenuItem("Talon Window");
+        talonWindow.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                if(!fileMetadataMap.isEmpty()) {
 
-        menuBar.getMenus().addAll(fileMenu);
+                    File temp = null;
+
+                    for (File file : fileMetadataMap.keySet()) {
+                        temp = file;
+                        break;
+                    }
+
+                    new Talon(temp);
+                } else {
+                    new Talon();
+                }
+            }
+        });
+
+        fileMenu.getItems().addAll(openCSVMI, openPLGMI, new SeparatorMenuItem(), captureScreenMI, new SeparatorMenuItem(), exitMI);
+        viewMenu.getItems().add(talonWindow);
+
+        menuBar.getMenus().addAll(fileMenu, viewMenu);
 
         return menuBar;
     }
