@@ -7,6 +7,7 @@ import gov.ornl.csed.cda.timevis.TimeSeriesPanelSelectionListener;
 import gov.ornl.csed.cda.timevis.TimeSeriesSelection;
 import gov.ornl.csed.cda.util.GraphicsUtil;
 import javafx.application.Application;
+import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.embed.swing.SwingNode;
@@ -53,6 +54,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.prefs.Preferences;
 
 public class FalconMain extends Application {
     private final static Logger log = LoggerFactory.getLogger(FalconMain.class);
@@ -60,8 +62,8 @@ public class FalconMain extends Application {
     // used for drag and drop interface
     private final DataFormat objectDataFormat = new DataFormat("application/x-java-serialized-object");
 
-    // Data table
-//    private Table dataTable;
+    // user preferences class
+    private Preferences preferences;
 
     // Multi View Panel Objects
     private MultiViewPanel multiViewPanel;
@@ -77,8 +79,6 @@ public class FalconMain extends Application {
     private HashMap<File, FileMetadata> fileMetadataMap = new HashMap<>();
     private HashMap<TreeItem<String>, FileMetadata> fileTreeItemMetadataMap = new HashMap<>();
 
-//    private String timeColumnName;
-
     private HashMap<TimeSeriesSelection, SelectionViewInfo> selectionViewInfoMap = new HashMap<>();
 
     private SelectionDetailsPanel selectionDetailPanel;
@@ -87,12 +87,22 @@ public class FalconMain extends Application {
         launch(args);
     }
 
+    public void init() {
+        preferences = Preferences.userNodeForPackage(this.getClass());
+    }
+
     @Override
     public void start(Stage primaryStage) {
         primaryStage.setOnShown(new EventHandler<WindowEvent>() {
             @Override
             public void handle(WindowEvent event) {
                 FileChooser fileChooser = new FileChooser();
+
+                String lastPLGReadDirectory = preferences.get("LAST_PLG_READ_DIRECTORY", "");
+                if (!lastPLGReadDirectory.isEmpty()) {
+                    log.debug("LAST_PLG_READ_DIRECTORY is " + lastPLGReadDirectory);
+                    fileChooser.setInitialDirectory(new File(lastPLGReadDirectory));
+                }
                 fileChooser.setTitle("Open PLG File");
                 File file = fileChooser.showOpenDialog(primaryStage);
                 if (file != null) {
@@ -230,6 +240,8 @@ public class FalconMain extends Application {
         }
 
         dataTreeRoot.getChildren().addAll(fileTreeItem);
+
+        preferences.put("LAST_PLG_READ_DIRECTORY", plgFile.getParentFile().getAbsolutePath());
     }
 
     private void openCSVFile(File csvFile) throws IOException {
@@ -360,7 +372,9 @@ public class FalconMain extends Application {
                 }
             }
         }
+
         dataTreeRoot.getChildren().addAll(fileTreeItem);
+        preferences.put("LAST_CSV_READ_DIRECTORY", csvFile.getParentFile().getAbsolutePath());
     }
     /*
     private void openCSVFile(File csvFile) throws IOException {
@@ -491,6 +505,10 @@ public class FalconMain extends Application {
             @Override
             public void handle(ActionEvent event) {
                 FileChooser fileChooser = new FileChooser();
+                String lastCSVDirectoryPath = preferences.get("LAST_CSV_READ_DIRECTORY", "");
+                if (!lastCSVDirectoryPath.isEmpty()) {
+                    fileChooser.setInitialDirectory(new File(lastCSVDirectoryPath));
+                }
                 fileChooser.setTitle("Open CSV File");
                 File csvFile = fileChooser.showOpenDialog(primaryStage);
                 if (csvFile != null) {
@@ -508,6 +526,11 @@ public class FalconMain extends Application {
             @Override
             public void handle(ActionEvent event) {
                 FileChooser fileChooser = new FileChooser();
+                String lastPLGDirectoryPath = preferences.get("LAST_PLG_READ_DIRECTORY", "");
+                if (!lastPLGDirectoryPath.isEmpty()) {
+                    fileChooser.setInitialDirectory(new File(lastPLGDirectoryPath));
+                }
+
                 fileChooser.setTitle("Open PLG File");
                 File plgFile = fileChooser.showOpenDialog(primaryStage);
                 if (plgFile != null) {
@@ -879,10 +902,17 @@ public class FalconMain extends Application {
         grid.setVgap(4);
         grid.setPadding(new javafx.geometry.Insets(4, 4, 4, 4));
 
-        Spinner multipleViewHistogramBinSizeSpinner = new Spinner(2, 400, multiViewPanel.getBinCount());
+        int initialBinCount = preferences.getInt("MULTI_VIEW_HISTOGRAM_BIN_SIZE", multiViewPanel.getBinCount());
+        Spinner multipleViewHistogramBinSizeSpinner = new Spinner(2, 400, initialBinCount);
         multipleViewHistogramBinSizeSpinner.setEditable(true);
         multipleViewHistogramBinSizeSpinner.setTooltip(new Tooltip("Change Bin Count for Overview Histogram"));
-        multipleViewHistogramBinSizeSpinner.valueProperty().addListener((obs, oldValue, newValue) -> multiViewPanel.setBinCount((Integer)newValue));
+        multipleViewHistogramBinSizeSpinner.valueProperty().addListener(new ChangeListener() {
+            @Override
+            public void changed(ObservableValue observable, Object oldValue, Object newValue) {
+                multiViewPanel.setBinCount((Integer)newValue);
+                preferences.putInt("MULTI_VIEW_HISTOGRAM_BIN_SIZE", (Integer)newValue);
+            }
+        });
         grid.add(new Label("Histogram Bin Count: "), 0, 0);
         grid.add(multipleViewHistogramBinSizeSpinner, 1, 0);
 
