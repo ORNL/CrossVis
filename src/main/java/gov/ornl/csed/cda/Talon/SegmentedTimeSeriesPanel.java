@@ -396,6 +396,22 @@ public class SegmentedTimeSeriesPanel extends JComponent implements MouseListene
     @Override
     public void TalonDataSegmentingVariableChange() {
 //        log.debug("Segmenting Variable Change");
+
+        int largestPlotWidth = 0;
+        int timeSeriesEntries = data.getSegmentedTimeSeriesMap().size();
+
+        int width = 0;
+        int height = 0;
+
+        if(timeSeriesEntries != 0) {
+            largestPlotWidth = data.getLongestPlotDuration();
+            width = (largestPlotWidth * plotTimeUnitWidth) + (margins.left + margins.right) + timeSeriesLabelWidth;
+            height = plotHeight + (timeSeriesEntries * plotSpacing) + (margins.top + margins.bottom);
+        }
+
+        setPreferredSize(new Dimension(width, height));
+        repaint();
+        revalidate();
     }
 
     @Override

@@ -95,6 +95,7 @@ public class DistanceIndicatorPanel extends JComponent implements TalonDataListe
     @Override
     public void TalonDataSegmentingVariableChange() {
 //        log.debug("Segmenting Variable Change");
+        resetDisplay();
     }
 
     @Override

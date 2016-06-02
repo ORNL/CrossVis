@@ -37,6 +37,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
@@ -229,6 +230,17 @@ public class TalonData {
     }
 
 
+    public ArrayList<String> getSegmentingVariableNames() {
+        ArrayList<String> tmp = new ArrayList<>();
+        for (String str : segmentingVariableNames) {
+            tmp.add(str);
+        }
+
+        Collections.sort(tmp);
+        return tmp;
+    }
+
+
     public TreeMap<String, Double> getSingleValueVariableValues() {
         return singleValueVariableValues;
     }
@@ -418,6 +430,47 @@ public class TalonData {
         if (!segmentedVariableName.equals("")) {
             fireTalonDataReferenceValueChange();
         }
+    }
+
+
+
+    //  ->
+    public void setSegmentingVariableName(String segmentingVariableName) {
+
+        this.segmentingVariableName = segmentingVariableName;
+
+        try {
+            //  --> load the time series of the segmenting variable
+            ArrayList<String> segmentingVariableNames = new ArrayList<>();
+            segmentingVariableNames.add(this.segmentingVariableName);
+            HashMap<String, TimeSeries> segmentingVariableTimeSeries = PLGFileReader.readPLGFileAsTimeSeries(plgFile, segmentingVariableNames);
+
+            if (!segmentingVariableNames.isEmpty()) {
+                this.segmentingVariableTimeSeries = segmentingVariableTimeSeries.get(this.segmentingVariableName);
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        if (segmentedVariableTimeSeries != null && segmentingVariableTimeSeries != null) {
+            segmentTimeSeries();
+
+
+            //  -> calculate stats from segmented time series
+            calculateTimeSeriesStats();
+
+
+            referenceValue = findFirstDistance();
+
+
+            //  -> clear distances and calculate distance for time series segments
+            this.timeSeriesDistances.clear();
+            calculateDistances();
+
+            fireTalonDataSegmentingVariableChange();
+        }
+
     }
 
 
