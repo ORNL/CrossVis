@@ -34,6 +34,7 @@ public class FalconPreferenceKeys {
     public static final String LAST_MOVING_RANGE_DISPLAY_OPTION = "LAST_MOVING_RANGE_DISPLAY_OPTION";
 
     // COLOR PREFERENCES
+    public static final String LAST_POINT_COLOR = "LAST_POINT_COLOR";
 
     public static final String LAST_SYNC_SCROLL_BARS = "LAST_SYNC_SCROLL_BARS";
     public static final String LAST_PLOT_HEIGHT = "LAST_PLOT_HEIGHT";
