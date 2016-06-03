@@ -51,7 +51,7 @@ public class DistanceIndicatorPanel extends JComponent implements TalonDataListe
 
     // =-= INSTANCE FIELDS =-=
     private TalonData data = null;
-    private int tickMarksize = 7;
+    private int tickMarksize = 5;
     private int tickMarkSpacing;
     private int displayMode = 1;
     private DistancePanel minPanel = new DistancePanel(2);
@@ -183,7 +183,6 @@ public class DistanceIndicatorPanel extends JComponent implements TalonDataListe
                 displayedDistances.clear();
             }
 
-            tickMarksize = 5;
 
             TreeMap<Double, Double> segmentDistanceMap = data.getTimeSeriesDistances();
 

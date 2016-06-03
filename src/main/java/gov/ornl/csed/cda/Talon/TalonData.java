@@ -749,8 +749,11 @@ public class TalonData {
                     minTimeSeriesValue = timeSeries;
                     longestTimeSeries = timeSeries;
                     shortestTimeSeries = timeSeries;
-                    totalTimeUnitsLong = (int) chronoUnit.between(timeSeries.getStartInstant(), timeSeries.getEndInstant()) + 1;
-                    totalTimeUnitsShort = (int) chronoUnit.between(timeSeries.getStartInstant(), timeSeries.getEndInstant()) + 1;
+
+                    if(timeSeries.getStartInstant() != null) {
+                        totalTimeUnitsLong = (int) chronoUnit.between(timeSeries.getStartInstant(), timeSeries.getEndInstant()) + 1;
+                        totalTimeUnitsShort = (int) chronoUnit.between(timeSeries.getStartInstant(), timeSeries.getEndInstant()) + 1;
+                    }
 
                 } else {
 
@@ -785,7 +788,11 @@ public class TalonData {
 
     //  -> returns the number of chrono units in the longest segmented time series
     public int getLongestPlotDuration() {
-        return (int) chronoUnit.between(longestTimeSeries.getStartInstant(), longestTimeSeries.getEndInstant()) + 1;
+        if(longestTimeSeries.getStartInstant() != null) {
+            return (int) chronoUnit.between(longestTimeSeries.getStartInstant(), longestTimeSeries.getEndInstant()) + 1;
+        } else {
+            return 0;
+        }
     }
 
 
