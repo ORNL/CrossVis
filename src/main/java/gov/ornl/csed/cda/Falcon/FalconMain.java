@@ -551,6 +551,9 @@ public class FalconMain extends Application {
                 FileChooser fileChooser = new FileChooser();
                 fileChooser.setTitle("Select File for Screen Capture");
                 File imageFile = fileChooser.showSaveDialog(primaryStage);
+                if(!imageFile.getName().endsWith(".png")) {
+                    imageFile = new File(imageFile.getName() + ".png");
+                }
                 if (imageFile != null) {
                     try{
                         captureVisualizationImage(imageFile);
