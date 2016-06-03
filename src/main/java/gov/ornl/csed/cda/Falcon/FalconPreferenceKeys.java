@@ -35,6 +35,11 @@ public class FalconPreferenceKeys {
 
     // COLOR PREFERENCES
     public static final String LAST_POINT_COLOR = "LAST_POINT_COLOR";
+    public static final String LAST_LINE_COLOR = "LAST_LINE_COLOR";
+    public static final String LAST_STDDEV_COLOR = "LAST_STDDEV_COLOR";
+    public static final String LAST_MINMAX_COLOR = "LAST_MINMAX_COLOR";
+    public static final String LAST_SPECTRUM_POSITIVE_COLOR = "LAST_SPECTRUM_POSITIVE_COLOR";
+    public static final String LAST_SPECTRUM_NEGATIVE_COLOR = "LAST_SPECTRUM_NEGATIVE_COLOR";
 
     public static final String LAST_SYNC_SCROLL_BARS = "LAST_SYNC_SCROLL_BARS";
     public static final String LAST_PLOT_HEIGHT = "LAST_PLOT_HEIGHT";

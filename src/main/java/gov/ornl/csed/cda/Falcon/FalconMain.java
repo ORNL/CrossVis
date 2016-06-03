@@ -1010,86 +1010,85 @@ public class FalconMain extends Application {
         grid.add(new Label("Moving Range Display: "), 0, 3);
         grid.add(movingRangeDisplayOptionChoiceBox, 1, 3);
 
-        // TODO: 6/2/16
-//        java.awt.Color tt = multiViewPanel.getTimeSeriesPointColor();
-//        java.awt.Color tt2 = java.awt.Color.getColor( ((Integer) tt.getRGB()).toString() );
-//        System.out.println(tt);
-//        System.out.println(((Integer) tt.getRGB()));
-//        System.out.println(tt2);
-        java.awt.Color lastPointColor = java.awt.Color.getColor( preferences.get(FalconPreferenceKeys.LAST_POINT_COLOR, multiViewPanel.getTimeSeriesPointColor().toString()) );
-        ColorPicker pointColorPicker = new ColorPicker(GraphicsUtil.convertToJavaFXColor(multiViewPanel.getTimeSeriesPointColor()));
+        java.awt.Color lastPointColor = new java.awt.Color( preferences.getInt(FalconPreferenceKeys.LAST_POINT_COLOR, multiViewPanel.getTimeSeriesPointColor().getRGB() ) );
+        ColorPicker pointColorPicker = new ColorPicker(GraphicsUtil.convertToJavaFXColor(lastPointColor));
         pointColorPicker.setTooltip(new Tooltip("Change Time Series Plot Point Color"));
         pointColorPicker.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
                 Color dataColor = pointColorPicker.getValue();
                 multiViewPanel.setTimeSeriesPointColor(GraphicsUtil.convertToAWTColor(dataColor));
-//                preferences.put(FalconPreferenceKeys.LAST_POINT_COLOR, GraphicsUtil.convertToAWTColor(dataColor).toString());
+                preferences.putInt(FalconPreferenceKeys.LAST_POINT_COLOR, GraphicsUtil.convertToAWTColor(dataColor).getRGB());
             }
         });
         grid.add(new Label("Point Color: "), 0, 4);
         grid.add(pointColorPicker, 1, 4);
 
-        // TODO: 6/2/16
-        ColorPicker lineColorPicker = new ColorPicker(GraphicsUtil.convertToJavaFXColor(multiViewPanel.getTimeSeriesLineColor()));
+        java.awt.Color lastLineColor = new java.awt.Color( preferences.getInt(FalconPreferenceKeys.LAST_LINE_COLOR, multiViewPanel.getTimeSeriesLineColor().getRGB()) );
+        ColorPicker lineColorPicker = new ColorPicker(GraphicsUtil.convertToJavaFXColor(lastLineColor));
         lineColorPicker.setTooltip(new Tooltip("Change Time Series Plot Line Color"));
         lineColorPicker.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
                 Color color = lineColorPicker.getValue();
                 multiViewPanel.setTimeSeriesLineColor(GraphicsUtil.convertToAWTColor(color));
+                preferences.putInt(FalconPreferenceKeys.LAST_LINE_COLOR, GraphicsUtil.convertToAWTColor(color).getRGB());
             }
         });
         grid.add(new Label("Line Color: "), 0, 5);
         grid.add(lineColorPicker, 1, 5);
 
-        // TODO: 6/2/16
-        ColorPicker stdevRangeLineColorPicker = new ColorPicker(GraphicsUtil.convertToJavaFXColor(multiViewPanel.getTimeSeriesStandardDeviationRangeColor()));
+        java.awt.Color lastStdDevColor = new java.awt.Color( preferences.getInt(FalconPreferenceKeys.LAST_STDDEV_COLOR, multiViewPanel.getTimeSeriesStandardDeviationRangeColor().getRGB()) );
+        ColorPicker stdevRangeLineColorPicker = new ColorPicker(GraphicsUtil.convertToJavaFXColor(lastStdDevColor));
         stdevRangeLineColorPicker.setTooltip(new Tooltip("Change Time Series Standard Deviation Range Line Color"));
         stdevRangeLineColorPicker.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
                 Color color = stdevRangeLineColorPicker.getValue();
                 multiViewPanel.setTimeSeriesStandardDeviationRangeColor(GraphicsUtil.convertToAWTColor(color));
+                preferences.putInt(FalconPreferenceKeys.LAST_STDDEV_COLOR, GraphicsUtil.convertToAWTColor(color).getRGB());
             }
         });
         grid.add(new Label("Standard Deviation Range Color: "), 0, 6);
         grid.add(stdevRangeLineColorPicker, 1, 6);
 
-        // TODO: 6/2/16
-        ColorPicker minmaxRangeLineColorPicker = new ColorPicker(GraphicsUtil.convertToJavaFXColor(multiViewPanel.getTimeSeriesMinMaxRangeColor()));
+        java.awt.Color lastMinMaxColor = new java.awt.Color( preferences.getInt(FalconPreferenceKeys.LAST_MINMAX_COLOR, multiViewPanel.getTimeSeriesMinMaxRangeColor().getRGB()) );
+        ColorPicker minmaxRangeLineColorPicker = new ColorPicker(GraphicsUtil.convertToJavaFXColor(lastMinMaxColor));
         minmaxRangeLineColorPicker.setTooltip(new Tooltip("Change Time Series Min/Max Range Line Color"));
         minmaxRangeLineColorPicker.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
                 Color color = minmaxRangeLineColorPicker.getValue();
                 multiViewPanel.setTimeSeriesMinMaxRangeColor(GraphicsUtil.convertToAWTColor(color));
+                preferences.putInt(FalconPreferenceKeys.LAST_MINMAX_COLOR, GraphicsUtil.convertToAWTColor(color).getRGB());
             }
         });
         grid.add(new Label("Min/Max Range Color: "), 0, 7);
         grid.add(minmaxRangeLineColorPicker, 1, 7);
 
-        // TODO: 6/2/16
-        ColorPicker spectrumPositiveColorPicker = new ColorPicker(GraphicsUtil.convertToJavaFXColor(multiViewPanel.getTimeSeriesSpectrumPositiveColor()));
+        java.awt.Color lastSpectrumPositiveColor = new java.awt.Color( preferences.getInt(FalconPreferenceKeys.LAST_SPECTRUM_POSITIVE_COLOR, multiViewPanel.getTimeSeriesSpectrumPositiveColor().getRGB()) );
+        ColorPicker spectrumPositiveColorPicker = new ColorPicker(GraphicsUtil.convertToJavaFXColor(lastSpectrumPositiveColor));
         spectrumPositiveColorPicker.setTooltip(new Tooltip("Change Time Series Spectrum Positive Value Color"));
         spectrumPositiveColorPicker.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
                 Color color = spectrumPositiveColorPicker.getValue();
                 multiViewPanel.setTimeSeriesSpectrumPositiveColor(GraphicsUtil.convertToAWTColor(color));
+                preferences.putInt(FalconPreferenceKeys.LAST_SPECTRUM_POSITIVE_COLOR, GraphicsUtil.convertToAWTColor(color).getRGB());
             }
         });
         grid.add(new Label("Spectrum Positive Color: "), 0, 8);
         grid.add(spectrumPositiveColorPicker, 1, 8);
 
-        // TODO: 6/2/16
-        ColorPicker spectrumNegativeColorPicker = new ColorPicker(GraphicsUtil.convertToJavaFXColor(multiViewPanel.getTimeSeriesSpectrumNegativeColor()));
+        java.awt.Color lastSpectrumNegativeColor = new java.awt.Color( preferences.getInt(FalconPreferenceKeys.LAST_SPECTRUM_NEGATIVE_COLOR, multiViewPanel.getTimeSeriesSpectrumNegativeColor().getRGB()) );
+        ColorPicker spectrumNegativeColorPicker = new ColorPicker(GraphicsUtil.convertToJavaFXColor(lastSpectrumNegativeColor));
         spectrumNegativeColorPicker.setTooltip(new Tooltip("Change Time Series Spectrum Negative Value Color"));
         spectrumNegativeColorPicker.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
                 Color color = spectrumNegativeColorPicker.getValue();
                 multiViewPanel.setTimeSeriesSpectrumNegativeColor(GraphicsUtil.convertToAWTColor(color));
+                preferences.putInt(FalconPreferenceKeys.LAST_SPECTRUM_NEGATIVE_COLOR, GraphicsUtil.convertToAWTColor(color).getRGB());
             }
         });
         grid.add(new Label("Spectrum Negative Color: "), 0, 9);
