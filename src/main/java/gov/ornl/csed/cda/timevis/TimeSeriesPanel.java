@@ -1834,6 +1834,7 @@ public class TimeSeriesPanel extends JComponent implements TimeSeriesListener, C
         EventQueue.invokeLater(new Runnable() {
             public void run() {
                 try {
+
                     Random random = new Random(System.currentTimeMillis());
 
 //                    int numTimeRecords = 50400;
@@ -1843,7 +1844,7 @@ public class TimeSeriesPanel extends JComponent implements TimeSeriesListener, C
                     JFrame frame = new JFrame();
                     frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-                    TimeSeriesPanel detailsTimeSeriesPanel = new TimeSeriesPanel(plotUnitWidth, ChronoUnit.SECONDS, PlotDisplayOption.STEPPED_LINE);
+                    TimeSeriesPanel detailsTimeSeriesPanel = new TimeSeriesPanel(plotUnitWidth, ChronoUnit.SECONDS, PlotDisplayOption.SPECTRUM);
                     detailsTimeSeriesPanel.setBackground(Color.white);
                     detailsTimeSeriesPanel.setMovingRangeDisplayOption(MovingRangeDisplayOption.OPACITY);
 
