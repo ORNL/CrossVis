@@ -65,6 +65,7 @@ public class Talon implements TalonDataListener {
 
     // helper variables
     private JComboBox<String> segmentedVariableComboBox = null;                 // Combobox of variable names from plgFile in settingsPanel
+    private JComboBox<String> segmentingVariableComboBox = null;
     private int segmentedTimeSeriesPanel_imagePanel_sync = 0;                   // Flag that prevents circular references for scrollActionListeners
     private int segmentedTimeSeriesPanel_timeSeriesOverview_sync = 0;
     private JSpinner referenceValueSpinner;                                     // Spinner to choose build height values
@@ -180,6 +181,7 @@ public class Talon implements TalonDataListener {
         JMenuItem exit = new JMenuItem("Exit");
 
         JMenuItem showSummary = new JMenuItem("Show Summary");
+//        JMenuItem changeSegmentingVariable = new JMenuItem("Change Segmenting Variable");
 
         //  -> add menubar and menuitems to the frame
         talonFrame.setJMenuBar(talonMenuBar);
@@ -191,6 +193,7 @@ public class Talon implements TalonDataListener {
 
         talonMenuBar.add(tools);
         tools.add(showSummary);
+//        tools.add(changeSegmentingVariable);
 
 
         //  -> add the actionListeners to the menuitmes
@@ -265,7 +268,7 @@ public class Talon implements TalonDataListener {
 
 
         //  -> add scrollbars/other panel settings
-        settingsPanel.setLayout(new BoxLayout(settingsPanel, BoxLayout.LINE_AXIS));
+        settingsPanel.setLayout(new BoxLayout(settingsPanel, BoxLayout.Y_AXIS));
         settingsPanel.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
 
         JScrollPane segmentmentedTimeSeriesPanelScroller = new JScrollPane(segmentedTimeSeriesPanel);
@@ -286,6 +289,9 @@ public class Talon implements TalonDataListener {
         JLabel segmentedVariableComboBoxLabel = new JLabel("Choose Variable: ");
         segmentedVariableComboBox = new JComboBox<>();
 
+        JLabel segmentingVariableComboBoxLabel = new JLabel("Segmenting Variable: ");
+        segmentingVariableComboBox = new JComboBox<>();
+
         JLabel plotWidthLabel = new JLabel("Plot Unit Width");
         SpinnerNumberModel plotWidthModel = new SpinnerNumberModel(segmentedTimeSeriesPanel.getPlotTimeUnitWidth(), 1, 20, 1);
         JSpinner plotWidthSpinner = new JSpinner(plotWidthModel);
@@ -298,19 +304,31 @@ public class Talon implements TalonDataListener {
         SpinnerNumberModel referenceModel = new SpinnerNumberModel(0.1, 0.01, 1000, 0.01);
         referenceValueSpinner = new JSpinner(referenceModel);
 
+        JPanel settingsTop = new JPanel();
+        settingsTop.setLayout(new BoxLayout(settingsTop, BoxLayout.X_AXIS));
+        JPanel settingsBottom = new JPanel();
+        settingsBottom.setLayout(new BoxLayout(settingsBottom, BoxLayout.X_AXIS));
 
         //  -> populate the settings panel
-        settingsPanel.add(segmentedVariableComboBoxLabel);
-        settingsPanel.add(segmentedVariableComboBox);
+        settingsBottom.add(segmentedVariableComboBoxLabel);
+        settingsBottom.add(segmentedVariableComboBox);
 
-        settingsPanel.add(plotWidthLabel);
-        settingsPanel.add(plotWidthSpinner);
+        settingsTop.add(plotWidthLabel);
+        settingsTop.add(plotWidthSpinner);
 
-        settingsPanel.add(heightLabel);
-        settingsPanel.add(plotHeightSpinner);
+        settingsTop.add(heightLabel);
+        settingsTop.add(plotHeightSpinner);
 
-        settingsPanel.add(referenceLabel);
-        settingsPanel.add(referenceValueSpinner);
+        settingsTop.add(referenceLabel);
+        settingsTop.add(referenceValueSpinner);
+
+        settingsBottom.add(segmentingVariableComboBoxLabel);
+        settingsBottom.add(segmentingVariableComboBox);
+
+        settingsPanel.add(settingsTop);
+        settingsPanel.add(settingsBottom);
+
+
 
 
         //  -> add actionListeners to settings panel elements
@@ -320,6 +338,13 @@ public class Talon implements TalonDataListener {
 //            log.debug("Changing Segmented Variable");
             if (segmentedVariableComboBox.getSelectedItem() != null) {
                 talonData.setSegmentedVariableName((String) segmentedVariableComboBox.getSelectedItem());
+            }
+        });
+
+
+        segmentingVariableComboBox.addActionListener(e -> {
+            if (segmentingVariableComboBox.getSelectedItem() != null) {
+                talonData.setSegmentingVariableName((String) segmentingVariableComboBox.getSelectedItem());
             }
         });
 
@@ -446,6 +471,11 @@ public class Talon implements TalonDataListener {
         //  -> add new list of variables
         for (String str : talonData.getListOfVariables()) {
             segmentedVariableComboBox.addItem(str);
+        }
+
+        //  -> add list of segmenting variables
+        for (String str : talonData.getSegmentingVariableNames()) {
+            segmentingVariableComboBox.addItem(str);
         }
 
         //  -> reset the frame title
