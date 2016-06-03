@@ -945,16 +945,18 @@ public class FalconMain extends Application {
         grid.add(new Label("Plot Unit Width: "), 0, 0);
         grid.add(plotChronoUnitWidthSpinner, 1, 0);
 
+        TimeSeriesPanel.PlotDisplayOption displayOption = TimeSeriesPanel.PlotDisplayOption.valueOf(preferences.get("DISPLAY_OPTION", multiViewPanel.getDetailTimeSeriesPlotDisplayOption().toString()));
         ChoiceBox<TimeSeriesPanel.PlotDisplayOption> plotDisplayOptionChoiceBox = new ChoiceBox<>();
         plotDisplayOptionChoiceBox.setTooltip(new Tooltip("Change Display Mode for Detail Time Series Plot"));
         plotDisplayOptionChoiceBox.getItems().addAll(TimeSeriesPanel.PlotDisplayOption.POINT, TimeSeriesPanel.PlotDisplayOption.LINE,
                 TimeSeriesPanel.PlotDisplayOption.STEPPED_LINE, TimeSeriesPanel.PlotDisplayOption.SPECTRUM);
-        plotDisplayOptionChoiceBox.getSelectionModel().select(multiViewPanel.getDetailTimeSeriesPlotDisplayOption());
+        plotDisplayOptionChoiceBox.getSelectionModel().select(displayOption);
         plotDisplayOptionChoiceBox.getSelectionModel().selectedItemProperty().addListener(
                 (ObservableValue<? extends TimeSeriesPanel.PlotDisplayOption> ov,
                  TimeSeriesPanel.PlotDisplayOption oldValue, TimeSeriesPanel.PlotDisplayOption newValue) -> {
                     if (oldValue != newValue) {
                         multiViewPanel.setDetailTimeSeriesPlotDisplayOption(newValue);
+                        preferences.put("DISPLAY_OPTION", newValue.toString());
                     }
                 }
         );
