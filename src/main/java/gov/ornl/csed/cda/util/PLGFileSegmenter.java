@@ -23,7 +23,9 @@ public class PLGFileSegmenter {
     private static DateTimeFormatter dtFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.systemDefault());
 
     public static void main (String args[]) throws IOException {
-        File plgFile = new File("/Users/csg/Desktop/AM_data/LongBuild/R1119_2016-04-15_12.43_20160415_Q10_BOEING_TENSILE_V2.plg");
+//        File plgFile = new File("/Users/csg/Desktop/AM_data/LongBuild/R1119_2016-04-15_12.43_20160415_Q10_BOEING_TENSILE_V2.plg");
+//        File plgFile = new File("/Users/csg/Desktop/AM_data/2016-Boeing-GoodBad-Builds/Bad/R1119_2016-03-28_11.58_20160328_Q10_BOEING_TENSILE_BUILD_V1/Bad.plg");
+        File plgFile = new File("/Users/csg/Desktop/AM_data/2016-Boeing-GoodBad-Builds/Good/R1119_2016-04-07_13.28_20160406_Q10_BOEING_TENSILE_V1/Good.plg");
         ArrayList<String> varNames = new ArrayList<>();
         varNames.add("OPC.PowerSupply.Beam.BeamCurrent");
         varNames.add("OPC.Table.CurrentPosition");
@@ -60,7 +62,7 @@ public class PLGFileSegmenter {
         }
 
         // write to text file
-        File outputFile = new File("segmentedData.csv");
+        File outputFile = new File("BOEING_GOOD.csv");
         BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile));
 
         double prevLayerLastValue = Double.NaN;
