@@ -192,9 +192,8 @@ public class HistogramPanel extends JComponent implements ComponentListener, Mou
     public void mouseClicked(MouseEvent e) {
         if (mouseOverMinValueLabel) {
             String minValueString = DECIMAL_FORMATTER.format(histogram.getMinValue());
-            String newValue = JOptionPane.showInputDialog(null,
-                    "Enter Minimum Histogram Value:",
-                    minValueString);
+            String newValue = JOptionPane.showInputDialog(SwingUtilities.windowForComponent(this),
+                    "Enter Minimum Histogram Value:", minValueString);
             if (newValue != null && !newValue.equals(minValueString)) {
                 double value = Double.parseDouble(newValue);
                 histogram.setMinValue(value);
@@ -207,9 +206,8 @@ public class HistogramPanel extends JComponent implements ComponentListener, Mou
             }
         } else if (mouseOverMaxValueLabel) {
             String maxValueString = DECIMAL_FORMATTER.format(histogram.getMaxValue());
-            String newValue = JOptionPane.showInputDialog(null,
-                    "Enter Maximum Histogram Value:",
-                    maxValueString);
+            String newValue = JOptionPane.showInputDialog(SwingUtilities.windowForComponent(this),
+                    "Enter Maximum Histogram Value:", maxValueString);
             if (newValue != null && !newValue.equals(maxValueString)) {
                 double value = Double.parseDouble(newValue);
                 histogram.setMaxValue(value);
@@ -222,16 +220,13 @@ public class HistogramPanel extends JComponent implements ComponentListener, Mou
             }
         } else if (mouseOverMaxCountLabel) {
             String maxCountString = String.valueOf(countAxisMax);
-            String newValue = JOptionPane.showInputDialog(null,
-                    "Enter New Histogram Bin Count Upper Limit:",
-                    maxCountString);
+            String newValue = JOptionPane.showInputDialog(SwingUtilities.windowForComponent(this),
+                    "Enter New Histogram Bin Count Upper Limit:", maxCountString);
             if (newValue != null && !newValue.equals(maxCountString)) {
                 countAxisMax = Integer.parseInt(newValue);
                 layoutPanel();
 //                fireHistogramPanelUpperLimitChanged();
             }
-        } else if (mouseOverMinCountLabel) {
-
         }
     }
 

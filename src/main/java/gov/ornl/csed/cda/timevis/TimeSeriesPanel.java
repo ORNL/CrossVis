@@ -427,9 +427,18 @@ public class TimeSeriesPanel extends JComponent implements TimeSeriesListener, C
             movingRangeTimeSeries = null;
         }
 
-        this.startInstant = startInstant;
-        this.endInstant = endInstant;
-        totalDuration = Duration.between(startInstant, endInstant);
+        // computer a time buffer to add to start and end of given start and end instants that ensures all values
+        // will be visible
+        long timeBufferMillis = (long) (Duration.between(startInstant, endInstant).toMillis() * 0.0001);
+//        log.debug("timeBufferMillis is " + timeBufferMillis);
+        timeBufferMillis = Math.max(timeBufferMillis, 100l);
+
+//        log.debug("startInstant: " + startInstant.toString() + "  startInstant (width buffer): " + startInstant.minusMillis(timeBufferMillis));
+        this.startInstant = startInstant.minusMillis(timeBufferMillis);
+        this.endInstant = endInstant.plusMillis(timeBufferMillis);
+//        this.startInstant = Instant.from(startInstant);
+//        this.endInstant = Instant.from(endInstant);
+        totalDuration = Duration.between(this.startInstant, this.endInstant);
 
         // Apply a small buffer to expand the min / max value range to prevent extreme points
         // from being drawn on the plot boundaries
@@ -1123,10 +1132,13 @@ public class TimeSeriesPanel extends JComponent implements TimeSeriesListener, C
         plotPointRecord.bin = bin;
 
         // calculate x position
-        long totalPlotDeltaTime = ChronoUnit.MILLIS.between(startInstant, endInstant);
-        long deltaTime = ChronoUnit.MILLIS.between(startInstant, bin.getInstant());
-        double normTime = (double)deltaTime / totalPlotDeltaTime;
-        plotPointRecord.x = ((double)plotRectangle.width * normTime) + (plotUnitWidth / 2.);
+        plotPointRecord.x = GraphicsUtil.mapValue(Duration.between(startInstant, bin.getInstant()).toMillis(),
+                0, Duration.between(startInstant, endInstant).toMillis(),
+                0, plotRectangle.width);
+//        long totalPlotDeltaTime = ChronoUnit.MILLIS.between(startInstant, endInstant);
+//        long deltaTime = ChronoUnit.MILLIS.between(startInstant, bin.getInstant());
+//        double normTime = (double)deltaTime / totalPlotDeltaTime;
+//        plotPointRecord.x = ((double)plotRectangle.width * normTime) + (plotUnitWidth / 2.);
 
         // calculate mean y
         plotPointRecord.meanY = GraphicsUtil.mapValue(bin.getStatistics().getMean(),
@@ -1872,13 +1884,13 @@ public class TimeSeriesPanel extends JComponent implements TimeSeriesListener, C
 
                     Instant startInstant = Instant.now().truncatedTo(ChronoUnit.HOURS);
 //                    Instant startInstant = Instant.now();
-                    Instant endInstant = Instant.from(startInstant).plus(numTimeRecords+120, ChronoUnit.SECONDS);
+//                    Instant endInstant = Instant.from(startInstant).plus(numTimeRecords+120, ChronoUnit.SECONDS);
 
                     double value = 0.;
 
                     for (int i = 120; i < numTimeRecords; i++) {
                         Instant instant = Instant.from(startInstant).plus(i, ChronoUnit.SECONDS);
-                        instant = instant.plusMillis(random.nextInt(1000));
+//                        instant = instant.plusMillis(random.nextInt(1000));
                         value = Math.max(-20., Math.min(10., value + .8 * Math.random() - .4 + .2 * Math.cos(i + .2)));
                         double range = Math.abs(value) * .25;
                         double upperRange = value + range;
@@ -1886,8 +1898,8 @@ public class TimeSeriesPanel extends JComponent implements TimeSeriesListener, C
                         timeSeries.addRecord(instant, value, upperRange, lowerRange);
                     }
 
-                    overviewTimeSeriesPanel.setTimeSeries(timeSeries, startInstant, endInstant);
-                    detailsTimeSeriesPanel.setTimeSeries(timeSeries, startInstant, endInstant);
+                    overviewTimeSeriesPanel.setTimeSeries(timeSeries, timeSeries.getStartInstant(), timeSeries.getEndInstant());
+                    detailsTimeSeriesPanel.setTimeSeries(timeSeries, timeSeries.getStartInstant(), timeSeries.getEndInstant());
 
                     scroller.getHorizontalScrollBar().addAdjustmentListener(new AdjustmentListener() {
                         @Override
