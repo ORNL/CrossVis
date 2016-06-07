@@ -34,9 +34,11 @@ import java.awt.event.*;
 import java.io.File;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.TreeMap;
 
 
-public class Talon implements TalonDataListener {
+public class Talon implements TalonDataListener, DistanceIndicatorPanelListener {
 
 
 
@@ -70,6 +72,7 @@ public class Talon implements TalonDataListener {
     private int segmentedTimeSeriesPanel_timeSeriesOverview_sync = 0;
     private JSpinner referenceValueSpinner;                                     // Spinner to choose build height values
     private boolean spinnerRespond = true;
+    JScrollPane segmentmentedTimeSeriesPanelScroller;
 
 
 
@@ -263,6 +266,8 @@ public class Talon implements TalonDataListener {
         settingsPanel = new JPanel();
         segmentedTimeSeriesPanel = new SegmentedTimeSeriesPanel(talonData);
         distanceIndicatorPanel = new DistanceIndicatorPanel(talonData);
+        distanceIndicatorPanel.addDistanceIndicatorPanelListener(this);
+
         imagePanel = new MultiImagePanel(Orientation.VERTICAL, talonData);
         timeSeriesOverviewPanel = new TimeSeriesPanel(2, ChronoUnit.SECONDS, TimeSeriesPanel.PlotDisplayOption.STEPPED_LINE);
 
@@ -271,7 +276,7 @@ public class Talon implements TalonDataListener {
         settingsPanel.setLayout(new BoxLayout(settingsPanel, BoxLayout.Y_AXIS));
         settingsPanel.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
 
-        JScrollPane segmentmentedTimeSeriesPanelScroller = new JScrollPane(segmentedTimeSeriesPanel);
+        segmentmentedTimeSeriesPanelScroller = new JScrollPane(segmentedTimeSeriesPanel);
         segmentmentedTimeSeriesPanelScroller.getVerticalScrollBar().setUnitIncrement(10);
         segmentmentedTimeSeriesPanelScroller.getHorizontalScrollBar().setUnitIncrement(10);
 
@@ -551,6 +556,21 @@ public class Talon implements TalonDataListener {
 //        EventQueue.invokeLater(() -> {
 //            Talon app = new Talon(new File("/Users/whw/ORNL Internship/Printer Log Files/BuildG/R1057_2014-09-16_9.19_20140916_M1_AIR FORCE _BUILD G.plg"), "OPC.PowerSupply.Beam.BeamCurrent");
 //        });
+
+    }
+
+    @Override
+    public void distanceIndicatorClicked(double key) {
+        TreeMap<Double, TimeSeries> temp = talonData.getSegmentedTimeSeriesMap();
+        ArrayList<Double> temp2 = new ArrayList<>();
+
+        for (Double k : temp.keySet()) {
+            temp2.add(k);
+        }
+
+        double percentage = 1 - (temp2.indexOf(key) / (double)temp2.size());
+
+        segmentmentedTimeSeriesPanelScroller.getVerticalScrollBar().setValue( (int)(segmentedTimeSeriesPanel.getHeight() * percentage) - (int)(0.5*segmentmentedTimeSeriesPanelScroller.getVerticalScrollBar().getModel().getExtent()) );
 
     }
 }

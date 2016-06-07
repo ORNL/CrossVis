@@ -26,7 +26,9 @@ import org.slf4j.LoggerFactory;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -49,11 +51,12 @@ public class DistanceIndicatorPanel extends JComponent implements TalonDataListe
 
     // =-= INSTANCE FIELDS =-=
     private TalonData data = null;
-    private int tickMarksize = 7;
+    private int tickMarksize = 5;
     private int tickMarkSpacing;
     private int displayMode = 1;
     private DistancePanel minPanel = new DistancePanel(2);
     private DistancePanel maxPanel = new DistancePanel(1);
+    private ArrayList<DistanceIndicatorPanelListener> listeners = new ArrayList<>();
 
 
 
@@ -83,6 +86,20 @@ public class DistanceIndicatorPanel extends JComponent implements TalonDataListe
         maxPanel.setPreferredSize(new Dimension(this.getWidth()/2, this.getHeight()));
         minPanel.repaint();
         maxPanel.repaint();
+    }
+
+
+    public void addDistanceIndicatorPanelListener(DistanceIndicatorPanelListener o) {
+        if(!listeners.contains(o)) {
+            listeners.add(o);
+        }
+    }
+
+
+    private void fireDistanceIndicatorClicked(double value) {
+        for(DistanceIndicatorPanelListener object : listeners) {
+            object.distanceIndicatorClicked(value);
+        }
     }
 
 
@@ -120,7 +137,7 @@ public class DistanceIndicatorPanel extends JComponent implements TalonDataListe
 
 
     // =-= NESTED CLASS =-=
-    private class DistancePanel extends JComponent implements MouseMotionListener {
+    private class DistancePanel extends JComponent implements MouseMotionListener, MouseListener {
 
 
 
@@ -138,12 +155,14 @@ public class DistanceIndicatorPanel extends JComponent implements TalonDataListe
         public DistancePanel() {
             this.option = 0;
             addMouseMotionListener(this);
+            addMouseListener(this);
         }
 
 
         public DistancePanel(int option) {
             this.option = option;
             addMouseMotionListener(this);
+            addMouseListener(this);
         }
 
 
@@ -164,7 +183,6 @@ public class DistanceIndicatorPanel extends JComponent implements TalonDataListe
                 displayedDistances.clear();
             }
 
-            tickMarksize = 5;
 
             TreeMap<Double, Double> segmentDistanceMap = data.getTimeSeriesDistances();
 
@@ -401,6 +419,36 @@ public class DistanceIndicatorPanel extends JComponent implements TalonDataListe
             if (displayedDistances.floorEntry(location) != null) {
                 setToolTipText("Build Height: " + displayedDistances.floorEntry(location).getValue().getKey() + "\nDistance: " + displayedDistances.floorEntry(location).getValue().getValue());
             }
+        }
+
+        @Override
+        public void mouseClicked(MouseEvent e) {
+            int location = e.getY();
+
+            if (displayedDistances.floorEntry(location) != null) {
+
+                fireDistanceIndicatorClicked(displayedDistances.floorEntry(location).getValue().getKey());
+            }
+        }
+
+        @Override
+        public void mousePressed(MouseEvent e) {
+
+        }
+
+        @Override
+        public void mouseReleased(MouseEvent e) {
+
+        }
+
+        @Override
+        public void mouseEntered(MouseEvent e) {
+
+        }
+
+        @Override
+        public void mouseExited(MouseEvent e) {
+
         }
     }
 

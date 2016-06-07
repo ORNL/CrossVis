@@ -39,7 +39,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 
-public class SegmentedTimeSeriesPanel extends JComponent implements MouseListener, TalonDataListener {
+public class SegmentedTimeSeriesPanel extends JComponent implements MouseListener, TalonDataListener, DistanceIndicatorPanelListener {
 
 
 
@@ -502,6 +502,11 @@ public class SegmentedTimeSeriesPanel extends JComponent implements MouseListene
         });
 
 
+
+    }
+
+    @Override
+    public void distanceIndicatorClicked(double percentage) {
 
     }
 }
