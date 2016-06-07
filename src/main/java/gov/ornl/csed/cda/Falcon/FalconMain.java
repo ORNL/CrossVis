@@ -934,11 +934,12 @@ public class FalconMain extends Application {
         grid.add(new Label("Variable Panel Height: "), 0, 1);
         grid.add(plotHeightSpinner, 1, 1);
 
-        boolean initialSelection = preferences.getBoolean(FalconPreferenceKeys.LAST_SHOW_BUTTONS_CHECKBOX, multiViewPanel.getShowButtonPanelsEnabled());
-        multiViewPanel.setShowButtonPanelsEnabled(initialSelection);
+//        boolean initialSelection = preferences.getBoolean(FalconPreferenceKeys.LAST_SHOW_BUTTONS_CHECKBOX, multiViewPanel.getShowButtonPanelsEnabled());
+//        multiViewPanel.setShowButtonPanelsEnabled(initialSelection);
         CheckBox showButtonsCheckBox = new CheckBox("Show Button Panel");
         showButtonsCheckBox.setTooltip(new Tooltip("Enable or Disable Side Button Panel"));
-        showButtonsCheckBox.setSelected(initialSelection);
+//        showButtonsCheckBox.setSelected(initialSelection);
+        showButtonsCheckBox.setSelected(multiViewPanel.getShowButtonPanelsEnabled());
         showButtonsCheckBox.selectedProperty().addListener((obs, oldValue, newValue) -> {
             multiViewPanel.setShowButtonPanelsEnabled((Boolean)newValue);
             preferences.putBoolean(FalconPreferenceKeys.LAST_SHOW_BUTTONS_CHECKBOX, (Boolean) newValue);
