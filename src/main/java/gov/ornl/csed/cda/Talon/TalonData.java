@@ -454,6 +454,8 @@ public class TalonData {
         }
 
         if (segmentedVariableTimeSeries != null && segmentingVariableTimeSeries != null) {
+
+            this.segmentedTimeSeriesMap.clear();
             segmentTimeSeries();
 
 

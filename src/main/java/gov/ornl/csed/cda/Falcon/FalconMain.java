@@ -907,6 +907,7 @@ public class FalconMain extends Application {
         grid.setPadding(new javafx.geometry.Insets(4, 4, 4, 4));
 
         int initialBinCount = preferences.getInt(FalconPreferenceKeys.MULTI_VIEW_HISTOGRAM_BIN_SIZE, multiViewPanel.getBinCount());
+        multiViewPanel.setBinCount(initialBinCount);
         Spinner multipleViewHistogramBinSizeSpinner = new Spinner(2, 400, initialBinCount);
         multipleViewHistogramBinSizeSpinner.setEditable(true);
         multipleViewHistogramBinSizeSpinner.setTooltip(new Tooltip("Change Bin Count for Overview Histogram"));
@@ -921,6 +922,7 @@ public class FalconMain extends Application {
         grid.add(multipleViewHistogramBinSizeSpinner, 1, 0);
 
         int initialPlotHeight = preferences.getInt(FalconPreferenceKeys.LAST_VARIABLE_PANEL_HEIGHT, multiViewPanel.getPlotHeight());
+        multiViewPanel.setPlotHeight(initialPlotHeight);
         Spinner plotHeightSpinner = new Spinner(40, 400, initialPlotHeight);
         plotHeightSpinner.setEditable(true);
         plotHeightSpinner.setTooltip(new Tooltip("Change Height of Variable Panels"));
@@ -933,6 +935,7 @@ public class FalconMain extends Application {
         grid.add(plotHeightSpinner, 1, 1);
 
         boolean initialSelection = preferences.getBoolean(FalconPreferenceKeys.LAST_SHOW_BUTTONS_CHECKBOX, multiViewPanel.getShowButtonPanelsEnabled());
+        multiViewPanel.setShowButtonPanelsEnabled(initialSelection);
         CheckBox showButtonsCheckBox = new CheckBox("Show Button Panel");
         showButtonsCheckBox.setTooltip(new Tooltip("Enable or Disable Side Button Panel"));
         showButtonsCheckBox.setSelected(initialSelection);
@@ -951,6 +954,7 @@ public class FalconMain extends Application {
         grid.setPadding(new javafx.geometry.Insets(4, 4, 4, 4));
 
         int lastChronoUnitWidth = preferences.getInt(FalconPreferenceKeys.LAST_CHRONO_UNIT_WIDTH, multiViewPanel.getChronoUnitWidth());
+        multiViewPanel.setChronoUnitWidth(lastChronoUnitWidth);
         Spinner plotChronoUnitWidthSpinner = new Spinner(1, 400, lastChronoUnitWidth);
         plotChronoUnitWidthSpinner.setEditable(true);
         plotChronoUnitWidthSpinner.setTooltip(new Tooltip("Change ChronoUnit Width in Detail Time Series Plot"));
@@ -966,6 +970,7 @@ public class FalconMain extends Application {
         plotDisplayOptionChoiceBox.getItems().addAll(TimeSeriesPanel.PlotDisplayOption.POINT, TimeSeriesPanel.PlotDisplayOption.LINE,
                 TimeSeriesPanel.PlotDisplayOption.STEPPED_LINE, TimeSeriesPanel.PlotDisplayOption.SPECTRUM);
         TimeSeriesPanel.PlotDisplayOption lastPlotDisplayOption = TimeSeriesPanel.PlotDisplayOption.valueOf( preferences.get(FalconPreferenceKeys.LAST_PLOT_DISPLAY_OPTION, multiViewPanel.getDetailTimeSeriesPlotDisplayOption().toString()) );
+        multiViewPanel.setDetailTimeSeriesPlotDisplayOption(lastPlotDisplayOption);
         plotDisplayOptionChoiceBox.getSelectionModel().select(lastPlotDisplayOption);
         plotDisplayOptionChoiceBox.getSelectionModel().selectedItemProperty().addListener(
                 (ObservableValue<? extends TimeSeriesPanel.PlotDisplayOption> ov,
@@ -983,6 +988,7 @@ public class FalconMain extends Application {
         chronoUnitChoice.setTooltip(new Tooltip("Change ChronoUnit for Detail Time Series Plot"));
         chronoUnitChoice.getItems().addAll(ChronoUnit.SECONDS, ChronoUnit.MINUTES, ChronoUnit.HOURS, ChronoUnit.HALF_DAYS, ChronoUnit.DAYS);
         ChronoUnit lastChronoUnit = ChronoUnit.valueOf( preferences.get(FalconPreferenceKeys.LAST_CHRONO_UNIT, multiViewPanel.getDetailChronoUnit().toString()).toUpperCase() );
+        multiViewPanel.setDetailChronoUnit(lastChronoUnit);
         chronoUnitChoice.getSelectionModel().select(lastChronoUnit);
         chronoUnitChoice.getSelectionModel().selectedItemProperty().addListener(
             (ObservableValue<? extends ChronoUnit> ov,
@@ -1000,6 +1006,7 @@ public class FalconMain extends Application {
         movingRangeDisplayOptionChoiceBox.setTooltip(new Tooltip("Choose Moving Range Display Option"));
         movingRangeDisplayOptionChoiceBox.getItems().addAll(TimeSeriesPanel.MovingRangeDisplayOption.NOT_SHOWN, TimeSeriesPanel.MovingRangeDisplayOption.PLOT_VALUE, TimeSeriesPanel.MovingRangeDisplayOption.OPACITY);
         TimeSeriesPanel.MovingRangeDisplayOption lastMovingRangeDisplayOption = TimeSeriesPanel.MovingRangeDisplayOption.valueOf( preferences.get(FalconPreferenceKeys.LAST_MOVING_RANGE_DISPLAY_OPTION, multiViewPanel.getMovingRangeDisplayOption().toString()) );
+        multiViewPanel.setMovingRangeDisplayOption(lastMovingRangeDisplayOption);
         movingRangeDisplayOptionChoiceBox.getSelectionModel().select(lastMovingRangeDisplayOption);
         movingRangeDisplayOptionChoiceBox.getSelectionModel().selectedItemProperty().addListener(
                 (ObservableValue<? extends TimeSeriesPanel.MovingRangeDisplayOption> ov,
@@ -1014,6 +1021,7 @@ public class FalconMain extends Application {
         grid.add(movingRangeDisplayOptionChoiceBox, 1, 3);
 
         java.awt.Color lastPointColor = new java.awt.Color( preferences.getInt(FalconPreferenceKeys.LAST_POINT_COLOR, multiViewPanel.getTimeSeriesPointColor().getRGB() ) );
+        multiViewPanel.setTimeSeriesPointColor(lastPointColor);
         ColorPicker pointColorPicker = new ColorPicker(GraphicsUtil.convertToJavaFXColor(lastPointColor));
         pointColorPicker.setTooltip(new Tooltip("Change Time Series Plot Point Color"));
         pointColorPicker.setOnAction(new EventHandler<ActionEvent>() {
@@ -1028,6 +1036,7 @@ public class FalconMain extends Application {
         grid.add(pointColorPicker, 1, 4);
 
         java.awt.Color lastLineColor = new java.awt.Color( preferences.getInt(FalconPreferenceKeys.LAST_LINE_COLOR, multiViewPanel.getTimeSeriesLineColor().getRGB()) );
+        multiViewPanel.setTimeSeriesLineColor(lastLineColor);
         ColorPicker lineColorPicker = new ColorPicker(GraphicsUtil.convertToJavaFXColor(lastLineColor));
         lineColorPicker.setTooltip(new Tooltip("Change Time Series Plot Line Color"));
         lineColorPicker.setOnAction(new EventHandler<ActionEvent>() {
@@ -1042,6 +1051,7 @@ public class FalconMain extends Application {
         grid.add(lineColorPicker, 1, 5);
 
         java.awt.Color lastStdDevColor = new java.awt.Color( preferences.getInt(FalconPreferenceKeys.LAST_STDDEV_COLOR, multiViewPanel.getTimeSeriesStandardDeviationRangeColor().getRGB()) );
+        multiViewPanel.setTimeSeriesStandardDeviationRangeColor(lastStdDevColor);
         ColorPicker stdevRangeLineColorPicker = new ColorPicker(GraphicsUtil.convertToJavaFXColor(lastStdDevColor));
         stdevRangeLineColorPicker.setTooltip(new Tooltip("Change Time Series Standard Deviation Range Line Color"));
         stdevRangeLineColorPicker.setOnAction(new EventHandler<ActionEvent>() {
@@ -1056,6 +1066,7 @@ public class FalconMain extends Application {
         grid.add(stdevRangeLineColorPicker, 1, 6);
 
         java.awt.Color lastMinMaxColor = new java.awt.Color( preferences.getInt(FalconPreferenceKeys.LAST_MINMAX_COLOR, multiViewPanel.getTimeSeriesMinMaxRangeColor().getRGB()) );
+        multiViewPanel.setTimeSeriesMinMaxRangeColor(lastMinMaxColor);
         ColorPicker minmaxRangeLineColorPicker = new ColorPicker(GraphicsUtil.convertToJavaFXColor(lastMinMaxColor));
         minmaxRangeLineColorPicker.setTooltip(new Tooltip("Change Time Series Min/Max Range Line Color"));
         minmaxRangeLineColorPicker.setOnAction(new EventHandler<ActionEvent>() {
@@ -1070,6 +1081,7 @@ public class FalconMain extends Application {
         grid.add(minmaxRangeLineColorPicker, 1, 7);
 
         java.awt.Color lastSpectrumPositiveColor = new java.awt.Color( preferences.getInt(FalconPreferenceKeys.LAST_SPECTRUM_POSITIVE_COLOR, multiViewPanel.getTimeSeriesSpectrumPositiveColor().getRGB()) );
+        multiViewPanel.setTimeSeriesSpectrumPositiveColor(lastSpectrumPositiveColor);
         ColorPicker spectrumPositiveColorPicker = new ColorPicker(GraphicsUtil.convertToJavaFXColor(lastSpectrumPositiveColor));
         spectrumPositiveColorPicker.setTooltip(new Tooltip("Change Time Series Spectrum Positive Value Color"));
         spectrumPositiveColorPicker.setOnAction(new EventHandler<ActionEvent>() {
@@ -1084,6 +1096,7 @@ public class FalconMain extends Application {
         grid.add(spectrumPositiveColorPicker, 1, 8);
 
         java.awt.Color lastSpectrumNegativeColor = new java.awt.Color( preferences.getInt(FalconPreferenceKeys.LAST_SPECTRUM_NEGATIVE_COLOR, multiViewPanel.getTimeSeriesSpectrumNegativeColor().getRGB()) );
+        multiViewPanel.setTimeSeriesSpectrumNegativeColor(lastSpectrumNegativeColor);
         ColorPicker spectrumNegativeColorPicker = new ColorPicker(GraphicsUtil.convertToJavaFXColor(lastSpectrumNegativeColor));
         spectrumNegativeColorPicker.setTooltip(new Tooltip("Change Time Series Spectrum Negative Value Color"));
         spectrumNegativeColorPicker.setOnAction(new EventHandler<ActionEvent>() {
@@ -1098,6 +1111,7 @@ public class FalconMain extends Application {
         grid.add(spectrumNegativeColorPicker, 1, 9);
 
         boolean lastSyncScrollBars = preferences.getBoolean(FalconPreferenceKeys.LAST_SYNC_SCROLL_BARS, multiViewPanel.getSyncGroupScrollbarsEnabled());
+        multiViewPanel.setSyncGroupScollbarsEnabled(lastSyncScrollBars);
         CheckBox syncScrollbarsCheckBox = new CheckBox("Sync File TimeSeries Scrollbars");
         syncScrollbarsCheckBox.setTooltip(new Tooltip("Sync Scrollbars for all TimeSeries from the Same File"));
         syncScrollbarsCheckBox.setSelected(lastSyncScrollBars);
@@ -1117,6 +1131,7 @@ public class FalconMain extends Application {
 
         grid.add(new Label("Plot Height: "), 0, 0);
         int lastPlotHeight = preferences.getInt(FalconPreferenceKeys.LAST_PLOT_HEIGHT, selectionDetailPanel.getPlotHeight());
+        selectionDetailPanel.setPlotHeight(lastPlotHeight);
         Spinner selectionPlotHeightSpinner = new Spinner(40, 400, lastPlotHeight);
         selectionPlotHeightSpinner.setTooltip(new Tooltip("Change Selection Details Panel Height"));
         selectionPlotHeightSpinner.setEditable(true);
@@ -1128,6 +1143,7 @@ public class FalconMain extends Application {
 
         grid.add(new Label("Bin Count: "), 0, 1);
         int lastBinCount = preferences.getInt(FalconPreferenceKeys.LAST_BIN_COUNT, selectionDetailPanel.getBinCount());
+        selectionDetailPanel.setBinCount(lastBinCount);
         Spinner selectionBinSizeSpinner = new Spinner(2, 400, lastBinCount);
         selectionBinSizeSpinner.setEditable(true);
         selectionBinSizeSpinner.setTooltip(new Tooltip("Change Selection Details Bin Count"));
