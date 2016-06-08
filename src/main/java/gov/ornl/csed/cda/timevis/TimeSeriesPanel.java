@@ -932,6 +932,7 @@ public class TimeSeriesPanel extends JComponent implements TimeSeriesListener, C
             for (TimeSeriesRecord record : records) {
                 if (lastRecord != null) {
                     double value = Math.abs(lastRecord.value - record.value);
+//                    double value = lastRecord.value - record.value;
                     Instant instant = Instant.from(record.instant);
                     movingRangeTimeSeries.addRecord(instant, value, Double.NaN, Double.NaN);
                 } else {

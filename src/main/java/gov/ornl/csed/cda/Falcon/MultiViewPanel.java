@@ -402,6 +402,7 @@ public class MultiViewPanel extends JPanel {
         groupInfo.viewInfoList.add(viewInfo);
 
         viewInfo.buttonPanel = createButtonPanel(viewInfo);
+        viewInfo.buttonPanel.setVisible(showButtonPanels);
 
         viewInfo.detailTimeSeriesPanel = new TimeSeriesPanel(1, detailChronoUnit, plotDisplayOption);
         viewInfo.detailTimeSeriesPanel.setPointColor(timeSeriesPointColor);
