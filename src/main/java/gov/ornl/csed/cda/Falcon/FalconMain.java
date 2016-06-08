@@ -50,10 +50,7 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.prefs.Preferences;
 
 
@@ -185,7 +182,13 @@ public class FalconMain extends Application {
     }
 
     private void openPLGFile(File plgFile) throws IOException {
-        HashMap<String, PLGVariableSchema> variableSchemaMap = PLGFileReader.readVariableSchemas(plgFile);
+        HashMap<String, PLGVariableSchema> tmp = PLGFileReader.readVariableSchemas(plgFile);
+
+        TreeMap<String, PLGVariableSchema> variableSchemaMap = new TreeMap<>();
+
+        for (Map.Entry<String, PLGVariableSchema> entry : tmp.entrySet()) {
+            variableSchemaMap.put(entry.getKey(), entry.getValue());
+        }
 
         // populate data tree view
         Text itemIcon = new Text("\uf1c0");
@@ -211,6 +214,8 @@ public class FalconMain extends Application {
                 if (schema.numValues > 0) {
                     fileMetadata.variableList.add(schema.variableName);
                     fileMetadata.variableValueCountList.add(schema.numValues);
+
+
 
                     String tokens[] = schema.variableName.split("[.]");
 
