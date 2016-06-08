@@ -39,6 +39,7 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalUnit;
 import java.util.*;
 
 
@@ -565,6 +566,7 @@ public class TalonData {
     //  -> get all records of segmented time series between the two
     //  -> build time series from records
     //  -> add to the segmentedTimeSeriesMap
+    //  -> grab any remaining points at the end of the build
     private void segmentTimeSeries() {
         TimeSeriesRecord lastSegmentingRecord = null;
         TimeSeriesRecord lastSegmentedRecord = null;                            //<------------------------------------------
@@ -603,6 +605,24 @@ public class TalonData {
             }
 
             lastSegmentingRecord = currentSegmentRecord;
+        }
+
+        ArrayList<TimeSeriesRecord> segmentRecordList = segmentedVariableTimeSeries.getRecordsBetween(lastSegmentingRecord.instant, segmentedVariableTimeSeries.getEndInstant().plus(1, chronoUnit));
+
+        if (segmentRecordList != null && !segmentRecordList.isEmpty()) {
+            TimeSeries timeSeries = new TimeSeries(String.valueOf(lastSegmentingRecord.value));
+
+            if (lastSegmentedRecord != null) {
+                timeSeries.addRecord(lastSegmentingRecord.instant, lastSegmentedRecord.value, Double.NaN, Double.NaN);
+            }
+
+            for (TimeSeriesRecord valueRecord : segmentRecordList) {
+                timeSeries.addRecord(valueRecord.instant, valueRecord.value, Double.NaN, Double.NaN);
+            }
+
+            timeSeries.addRecord(segmentingVariableTimeSeries.getEndInstant(), segmentRecordList.get(segmentRecordList.size() - 1).value, Double.NaN, Double.NaN);
+
+            segmentedTimeSeriesMap.put(lastSegmentingRecord.value, timeSeries);
         }
     }
 
