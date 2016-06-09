@@ -99,7 +99,9 @@ public class FalconMain extends Application {
                 String lastPLGReadDirectory = preferences.get(FalconPreferenceKeys.LAST_PLG_READ_DIRECTORY, "");
                 if (!lastPLGReadDirectory.isEmpty()) {
                     log.debug("LAST_PLG_READ_DIRECTORY is " + lastPLGReadDirectory);
-                    fileChooser.setInitialDirectory(new File(lastPLGReadDirectory));
+                    if(new File(lastPLGReadDirectory).exists()) {
+                        fileChooser.setInitialDirectory(new File(lastPLGReadDirectory));
+                    }
                 }
                 fileChooser.setTitle("Open PLG File");
                 File file = fileChooser.showOpenDialog(primaryStage);
