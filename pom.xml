@@ -5,7 +5,7 @@
 	<groupId>gov.ornl.csed.cda.falcon</groupId>
 	<artifactId>falcon</artifactId>
 	<packaging>jar</packaging>
-	<version>0.2.1</version>
+	<version>0.2.2</version>
 
 	<name>falcon</name>
     <organization>
@@ -135,5 +135,4 @@
             </plugin>
 		</plugins>
 	</build>
-
 </project>
