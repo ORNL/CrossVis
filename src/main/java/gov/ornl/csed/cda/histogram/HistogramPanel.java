@@ -498,12 +498,12 @@ public class HistogramPanel extends JComponent implements ComponentListener, Mou
 
                 // calculate standard deviation range
                 double stdevRangeLeft = GraphicsUtil.mapValue(histogram.getMean() - histogram.getStDev(),
-                        histogram.getMinValue(), histogram.getMaxValue(), histogramPlotRectangle.getMinX(), histogramPlotRectangle.width);
+                        histogram.getMinValue(), histogram.getMaxValue(), histogramPlotRectangle.getMinX(), histogramPlotRectangle.getMinX()+histogramPlotRectangle.width); // FIXME: 6/10/16 
                 if (stdevRangeLeft < histogramPlotRectangle.x) {
                     stdevRangeLeft = histogramPlotRectangle.x;
                 }
                 double stdevRangeRight = GraphicsUtil.mapValue(histogram.getMean() + histogram.getStDev(),
-                        histogram.getMinValue(), histogram.getMaxValue(), histogramPlotRectangle.getMinX(), histogramPlotRectangle.width);
+                        histogram.getMinValue(), histogram.getMaxValue(), histogramPlotRectangle.getMinX(), histogramPlotRectangle.getMinX()+histogramPlotRectangle.width); // FIXME: 6/10/16 
                 if (stdevRangeRight > histogramPlotRectangle.getMaxX()) {
                     stdevRangeRight = histogramPlotRectangle.getMaxX();
                 }
@@ -539,13 +539,13 @@ public class HistogramPanel extends JComponent implements ComponentListener, Mou
                     // calculate standard deviation range
                     double highlightStdevRangeLeft = GraphicsUtil.mapValue(highlightHistogram.getMean() - highlightHistogram.getStDev(),
                             histogram.getMinValue(), histogram.getMaxValue(), histogramPlotRectangle.getMinX(),
-                            histogramPlotRectangle.width);
+                            histogramPlotRectangle.getMinX()+histogramPlotRectangle.width); // FIXME: 6/10/16 
                     if (highlightStdevRangeLeft < histogramPlotRectangle.x) {
                         highlightStdevRangeLeft = histogramPlotRectangle.x;
                     }
                     double highlightStdevRangeRight = GraphicsUtil.mapValue(highlightHistogram.getMean() + highlightHistogram.getStDev(),
                             histogram.getMinValue(), histogram.getMaxValue(), histogramPlotRectangle.getMinX(),
-                            histogramPlotRectangle.width);
+                            histogramPlotRectangle.getMinX()+histogramPlotRectangle.width); // FIXME: 6/10/16 
                     if (highlightStdevRangeRight > histogramPlotRectangle.getMaxX()) {
                         highlightStdevRangeRight = histogramPlotRectangle.getMaxX();
                     }
