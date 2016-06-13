@@ -56,7 +56,7 @@ import java.util.prefs.Preferences;
 
 public class FalconMain extends Application {
     private final static Logger log = LoggerFactory.getLogger(FalconMain.class);
-    private final static String version = "v0.2.2";
+    private final static String version = "v0.2.3_dev";
 
     // used for drag and drop interface
     private final DataFormat objectDataFormat = new DataFormat("application/x-java-serialized-object");
@@ -506,6 +506,7 @@ public class FalconMain extends Application {
     private MenuBar createMenuBar(Stage primaryStage) {
         MenuBar menuBar = new MenuBar();
 
+        Menu falcon = new Menu("Falcon");
         Menu fileMenu = new Menu("File");
         Menu viewMenu = new Menu("View");
 
@@ -579,7 +580,7 @@ public class FalconMain extends Application {
                 Alert alert = new Alert(Alert.AlertType.INFORMATION);
                 alert.setTitle("About");
                 alert.setHeaderText("About Falcon " + version);
-                String s = "Falcon is developed and maintained by the Oak Ridge National Laboratory.\n\nThe lead developer is Dr. Chad A. Steed.\n\n\u00a9 2015 - 2016";
+                String s = "Falcon is developed and maintained by the Computational Data Analytics Group \nat Oak Ridge National Laboratory.\n\nThe lead developer is Dr. Chad Steed\nOther developers:\tWilliam Halsey\n\n\u00a9 2015 - 2016";
                 alert.setContentText(s);
                 alert.show();
 
@@ -613,10 +614,11 @@ public class FalconMain extends Application {
             }
         });
 
-        fileMenu.getItems().addAll(openCSVMI, openPLGMI, new SeparatorMenuItem(), captureScreenMI, new SeparatorMenuItem(), aboutFalcon, exitMI);
+        falcon.getItems().addAll(aboutFalcon);
+        fileMenu.getItems().addAll(openCSVMI, openPLGMI, new SeparatorMenuItem(), captureScreenMI, new SeparatorMenuItem(), exitMI);
         viewMenu.getItems().add(talonWindow);
 
-        menuBar.getMenus().addAll(fileMenu, viewMenu);
+        menuBar.getMenus().addAll(falcon, fileMenu, viewMenu);
 
         return menuBar;
     }
