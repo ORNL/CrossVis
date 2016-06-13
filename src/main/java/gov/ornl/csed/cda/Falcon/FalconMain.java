@@ -56,6 +56,7 @@ import java.util.prefs.Preferences;
 
 public class FalconMain extends Application {
     private final static Logger log = LoggerFactory.getLogger(FalconMain.class);
+    private final static String version = "v0.2.2";
 
     // used for drag and drop interface
     private final DataFormat objectDataFormat = new DataFormat("application/x-java-serialized-object");
@@ -571,6 +572,20 @@ public class FalconMain extends Application {
             }
         });
 
+        MenuItem aboutFalcon = new MenuItem("About Falcon");
+        aboutFalcon.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                alert.setTitle("About");
+                alert.setHeaderText("About Falcon " + version);
+                String s = "Falcon is developed and maintained by the Oak Ridge National Laboratory.\n\nThe lead developer is Dr. Chad A. Steed.\n\n\u00a9 2015 - 2016";
+                alert.setContentText(s);
+                alert.show();
+
+            }
+        });
+
         MenuItem exitMI = new MenuItem("Exit");
         exitMI.setOnAction(new EventHandler<ActionEvent>() {
             public void handle(ActionEvent event) {
@@ -598,7 +613,7 @@ public class FalconMain extends Application {
             }
         });
 
-        fileMenu.getItems().addAll(openCSVMI, openPLGMI, new SeparatorMenuItem(), captureScreenMI, new SeparatorMenuItem(), exitMI);
+        fileMenu.getItems().addAll(openCSVMI, openPLGMI, new SeparatorMenuItem(), captureScreenMI, new SeparatorMenuItem(), aboutFalcon, exitMI);
         viewMenu.getItems().add(talonWindow);
 
         menuBar.getMenus().addAll(fileMenu, viewMenu);
