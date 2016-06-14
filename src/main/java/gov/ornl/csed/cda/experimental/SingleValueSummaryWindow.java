@@ -179,10 +179,10 @@ public class SingleValueSummaryWindow extends JComponent {
 
         FileWriter writer = null;
 //        System.
-        int length = talonData.getPlgFile().getName().length();
-        String filename = talonData.getPlgFile().getName().substring(0, length - 4) + ".txt";
+        int length = talonData.getPlgFile().getAbsolutePath().length();
+        String filename = talonData.getPlgFile().getAbsolutePath().substring(0, length - 4) + ".txt";
 
-//        System.out.println(filename);
+        System.out.println(filename);
 
         try {
             writer = new FileWriter(filename);

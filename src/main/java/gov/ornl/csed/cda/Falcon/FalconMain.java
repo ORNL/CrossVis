@@ -56,6 +56,7 @@ import java.util.prefs.Preferences;
 
 public class FalconMain extends Application {
     private final static Logger log = LoggerFactory.getLogger(FalconMain.class);
+    private final static String version = "v0.2.2_1";
 
     // used for drag and drop interface
     private final DataFormat objectDataFormat = new DataFormat("application/x-java-serialized-object");
@@ -99,7 +100,9 @@ public class FalconMain extends Application {
                 String lastPLGReadDirectory = preferences.get(FalconPreferenceKeys.LAST_PLG_READ_DIRECTORY, "");
                 if (!lastPLGReadDirectory.isEmpty()) {
                     log.debug("LAST_PLG_READ_DIRECTORY is " + lastPLGReadDirectory);
-                    fileChooser.setInitialDirectory(new File(lastPLGReadDirectory));
+                    if(new File(lastPLGReadDirectory).exists()) {
+                        fileChooser.setInitialDirectory(new File(lastPLGReadDirectory));
+                    }
                 }
                 fileChooser.setTitle("Open PLG File");
                 File file = fileChooser.showOpenDialog(primaryStage);
@@ -503,6 +506,7 @@ public class FalconMain extends Application {
     private MenuBar createMenuBar(Stage primaryStage) {
         MenuBar menuBar = new MenuBar();
 
+        Menu falcon = new Menu("Falcon");
         Menu fileMenu = new Menu("File");
         Menu viewMenu = new Menu("View");
 
@@ -557,7 +561,7 @@ public class FalconMain extends Application {
                 fileChooser.setTitle("Select File for Screen Capture");
                 File imageFile = fileChooser.showSaveDialog(primaryStage);
                 if(!imageFile.getName().endsWith(".png")) {
-                    imageFile = new File(imageFile.getName() + ".png");
+                    imageFile = new File(imageFile.getAbsolutePath() + ".png");
                 }
                 if (imageFile != null) {
                     try{
@@ -566,6 +570,20 @@ public class FalconMain extends Application {
                         e.printStackTrace();
                     }
                 }
+            }
+        });
+
+        MenuItem aboutFalcon = new MenuItem("About Falcon");
+        aboutFalcon.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                alert.setTitle("About");
+                alert.setHeaderText("About Falcon " + version);
+                String s = "Falcon is developed and maintained by the Computational Data Analytics Group \nat Oak Ridge National Laboratory.\n\nThe lead developer is Dr. Chad Steed\nOther developers:\tWilliam Halsey\n\n\u00a9 2015 - 2016";
+                alert.setContentText(s);
+                alert.show();
+
             }
         });
 
@@ -596,10 +614,11 @@ public class FalconMain extends Application {
             }
         });
 
+        falcon.getItems().addAll(aboutFalcon);
         fileMenu.getItems().addAll(openCSVMI, openPLGMI, new SeparatorMenuItem(), captureScreenMI, new SeparatorMenuItem(), exitMI);
         viewMenu.getItems().add(talonWindow);
 
-        menuBar.getMenus().addAll(fileMenu, viewMenu);
+        menuBar.getMenus().addAll(falcon, fileMenu, viewMenu);
 
         return menuBar;
     }
