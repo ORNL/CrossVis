@@ -56,7 +56,7 @@ import java.util.prefs.Preferences;
 
 public class FalconMain extends Application {
     private final static Logger log = LoggerFactory.getLogger(FalconMain.class);
-    private final static String version = "v0.2.3_dev";
+    private final static String version = "v0.2.2_1";
 
     // used for drag and drop interface
     private final DataFormat objectDataFormat = new DataFormat("application/x-java-serialized-object");
