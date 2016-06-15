@@ -51,9 +51,33 @@ public class BinnedTimeSeries implements TimeSeriesListener {
         return minRangeValue;
     }
 
-    public TimeSeriesBin getBin (Instant instant) {
-        Instant binInstant = binMap.floorKey(instant);
-        return binMap.get(binInstant);
+    public TimeSeriesBin getNearestBin (Instant instant) {
+        Instant rangeStartInstant = instant.minusMillis(binDuration.toMillis());
+        Instant rangeEndInstant = instant.plusMillis(binDuration.toMillis());
+        Collection<TimeSeriesBin> bins = getBinsBetween(rangeStartInstant, rangeEndInstant);
+
+        if (bins != null && !bins.isEmpty()) {
+            TimeSeriesBin nearestBin = null;
+            Duration nearestBinDuration = null;
+            for (TimeSeriesBin bin : bins) {
+                Duration currentBinDuration = Duration.between(instant, bin.getInstant());
+                if (nearestBin == null) {
+                    nearestBin = bin;
+                    nearestBinDuration = currentBinDuration;
+                } else {
+                    if (currentBinDuration.abs().toMillis() < nearestBinDuration.abs().toMillis()) {
+                        nearestBin = bin;
+                        nearestBinDuration = currentBinDuration;
+                    }
+                }
+            }
+
+            return nearestBin;
+        }
+
+        return null;
+//        Instant binInstant = binMap.floorKey(instant);
+//        return binMap.get(binInstant);
     }
 
     public Collection<TimeSeriesBin> getBinsBetween (Instant startInstant, Instant endInstant) {

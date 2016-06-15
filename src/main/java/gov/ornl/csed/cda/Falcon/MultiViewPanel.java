@@ -56,7 +56,6 @@ public class MultiViewPanel extends JPanel {
     private TimeSeriesPanel.PlotDisplayOption plotDisplayOption = TimeSeriesPanel.PlotDisplayOption.STEPPED_LINE;
 
     private int currentSplitDividerPosition = 0;
-//    private boolean showMovingRange = false;
     private TimeSeriesPanel.MovingRangeDisplayOption movingRangeDisplayOption = TimeSeriesPanel.MovingRangeDisplayOption.NOT_SHOWN;
 
     public MultiViewPanel (int plotHeight) {
@@ -365,7 +364,6 @@ public class MultiViewPanel extends JPanel {
     public void addTimeSeries(TimeSeries timeSeries, String groupName) {
         if (viewInfoList.isEmpty()) {
             currentSplitDividerPosition = (int) (getWidth() * .75);
-//            log.debug("currentSplitDividerPosition: " + currentSplitDividerPosition);
         }
 
         ViewInfo viewInfo = new ViewInfo();
@@ -420,25 +418,6 @@ public class MultiViewPanel extends JPanel {
         viewInfo.detailsTimeSeriesPanelScrollPane = new JScrollPane(viewInfo.detailTimeSeriesPanel);
         viewInfo.detailsTimeSeriesPanelScrollPane.setPreferredSize(new Dimension(400, 100));
         viewInfo.detailsTimeSeriesPanelScrollPane.setMinimumSize(new Dimension(200, 40));
-//        viewInfo.detailsTimeSeriesPanelScrollPane.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
-//        viewInfo.detailsTimeSeriesPanelScrollPane.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEtchedBorder(), BorderFactory.createEmptyBorder(4, 4, 4, 4)));
-
-//        viewInfo.detailHistogramPanel = new HistogramPanel(HistogramPanel.ORIENTATION.VERTICAL, HistogramPanel.STATISTICS_MODE.MEAN_BASED);
-//        viewInfo.detailHistogramPanel.setBinCount(binCount);
-//        viewInfo.detailHistogramPanel.setBackground(Color.white);
-//        viewInfo.detailHistogramPanel.setPreferredSize(new Dimension(50, 80));
-//        viewInfo.detailHistogramPanel.setBorder(BorderFactory.createEmptyBorder(viewInfo.detailTimeSeriesPanel.getTimeBarHeight()+2, 0, viewInfo.detailTimeSeriesPanel.getValueBarHeight()+2, 0));
-//        viewInfo.detailHistogramPanel.addHistogramPanelListener(new HistogramPanelListener() {
-//            @Override
-//            public void histogramPanelLowerLimitChanged(HistogramPanel histogramPanel, double lowerLimitValue) {
-//                viewInfo.detailTimeSeriesPanel.setValueAxisMin(lowerLimitValue);
-//            }
-//
-//            @Override
-//            public void histogramPanelUpperLimitChanged(HistogramPanel histogramPanel, double upperLimitValue) {
-//                viewInfo.detailTimeSeriesPanel.setValueAxisMax(upperLimitValue);
-//            }
-//        });
 
         viewInfo.overviewTimeSeriesPanel = new TimeSeriesPanel(1, plotDisplayOption);
         viewInfo.overviewTimeSeriesPanel.setPointColor(timeSeriesPointColor);
@@ -462,27 +441,6 @@ public class MultiViewPanel extends JPanel {
                 JScrollBar scrollBar = (JScrollBar)e.getSource();
                 double scrollBarModelWidth = scrollBar.getModel().getMaximum() - scrollBar.getModel().getMinimum();
                 double norm = (double)scrollBar.getModel().getValue() / scrollBarModelWidth;
-//                double deltaTime = norm * Duration.between(timeSeries.getStartInstant(), timeSeries.getEndInstant()).toMillis();
-//                Instant startHighlightInstant = timeSeries.getStartInstant().plusMillis((long)deltaTime);
-//                int scrollBarRight = scrollBar.getModel().getValue() + scrollBar.getModel().getExtent();
-//                norm = 1. - (double) scrollBarRight / (double) scrollBarModelWidth;
-//                deltaTime = norm * Duration.between(timeSeries.getStartInstant(), timeSeries.getEndInstant()).toMillis();
-//                Instant endHighlightInstant = timeSeries.getEndInstant().minusMillis((long) deltaTime);
-//                viewInfo.overviewTimeSeriesPanel.setHighlightRange(startHighlightInstant, endHighlightInstant);
-
-//                ArrayList<TimeSeriesRecord> recordList = timeSeries.getRecordsBetween(startHighlightInstant, endHighlightInstant);
-//                if (recordList != null && !recordList.isEmpty()) {
-//                    double values[] = new double[recordList.size()];
-//                    for (int i = 0; i < recordList.size(); i++) {
-//                        double value = recordList.get(i).value;
-//                        if (!Double.isNaN(value)) {
-//                            values[i] = value;
-//                        }
-//                    }
-//                    Histogram detailHistogram = new Histogram(timeSeries.getName(), values, viewInfo.overviewHistogramPanel.getBinCount());
-//                    viewInfo.detailHistogramPanel.setHistogram(detailHistogram);
-//                    viewInfo.overviewHistogramPanel.setHighlightValues(values);
-//                }
 
                 //TODO: Need to make a map to quickly get the group for a timeview;  This needs to be cleaned up
                 // if the view is in a group with more than one view and the group is set to sync scrolling, sync those suckers here
@@ -564,11 +522,6 @@ public class MultiViewPanel extends JPanel {
         viewInfo.sidePanel.setBorder(BorderFactory.createTitledBorder("Overview"));
         viewInfo.sidePanel.setVisible(showOverview);
 
-//        JPanel detailsPanel = new JPanel();
-//        detailsPanel.setLayout(new BorderLayout());
-//        detailsPanel.add(viewInfo.detailsTimeSeriesPanelScrollPane, BorderLayout.CENTER);
-//        detailsPanel.add(viewInfo.detailHistogramPanel, BorderLayout.EAST);
-
         viewInfo.viewPanel = new JPanel();
         viewInfo.viewPanel.setPreferredSize(new Dimension(100, plotHeight));
         viewInfo.viewPanel.setMinimumSize(new Dimension(100, plotHeight));
@@ -599,10 +552,6 @@ public class MultiViewPanel extends JPanel {
         viewInfo.viewPanel.add(viewInfo.splitPane, BorderLayout.CENTER);
         viewInfo.viewPanel.add(viewInfo.buttonPanel, BorderLayout.WEST);
 
-//        viewInfo.viewPanel.add(detailsPanel, BorderLayout.CENTER);
-//        viewInfo.viewPanel.add(viewInfo.sidePanel, BorderLayout.EAST);
-//        viewInfo.viewPanel.add(viewInfo.buttonPanel, BorderLayout.WEST);
-
         viewInfoList.add(viewInfo);
         panelBox.add(viewInfo.viewPanel);
         revalidate();
@@ -616,7 +565,6 @@ public class MultiViewPanel extends JPanel {
         if (this.binCount != binCount) {
             this.binCount = binCount;
             for (ViewInfo viewInfo : viewInfoList) {
-//                viewInfo.detailHistogramPanel.setBinCount(binCount);
                 viewInfo.overviewHistogramPanel.setBinCount(binCount);
             }
         }
@@ -694,7 +642,7 @@ public class MultiViewPanel extends JPanel {
 
 //        ((JPanel)frame.getContentPane()).add(scroller, BorderLayout.CENTER);
         ((JPanel)frame.getContentPane()).add(scroller, BorderLayout.CENTER);
-        frame.setSize(600, 300);
+        frame.setSize(1800, 600);
         frame.setVisible(true);
 
         for (int i = 0; i < 3; i++) {

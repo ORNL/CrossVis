@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 
 import java.awt.*;
 import java.awt.geom.Point2D;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -45,10 +46,6 @@ public class TimeSeries {
         if (!listeners.contains(listener)) {
             listeners.add(listener);
         }
-    }
-
-    public ArrayList<TimeSeriesRecord> getRecordsAt(Instant instant) {
-        return recordMap.get(instant);
     }
 
     public boolean removeTimeSeriesListener (TimeSeriesListener listener) {
@@ -135,8 +132,40 @@ public class TimeSeries {
 
         fireDataRecordAdded(record);
     }
+
+    public ArrayList<TimeSeriesRecord> getNearestRecordsFor(Instant instant, Duration searchRangeDuration) {
+        Instant searchRangeStart = instant.minus(searchRangeDuration.abs());
+        Instant searchRangeEnd = instant.plus(searchRangeDuration.abs());
+
+        ArrayList<TimeSeriesRecord> records = getRecordsBetween(searchRangeStart, searchRangeEnd);
+
+        if (records != null && !records.isEmpty()) {
+            ArrayList<TimeSeriesRecord> nearestRecords = new ArrayList<>();
+            Duration nearestRecordDuration = null;
+            for (TimeSeriesRecord record : records) {
+                Duration duration = Duration.between(instant, record.instant);
+                if (nearestRecordDuration == null) {
+                    nearestRecords.add(record);
+                    nearestRecordDuration = duration;
+                } else if (duration.abs().toMillis() < nearestRecordDuration.abs().toMillis()) {
+                    nearestRecords.clear();
+                    nearestRecords.add(record);
+                    nearestRecordDuration = duration;
+                } else if (duration.abs().toMillis() == nearestRecordDuration.abs().toMillis()) {
+                    nearestRecords.add(record);
+                    nearestRecordDuration = duration;
+                }
+            }
+
+            if (!nearestRecords.isEmpty()) {
+                return nearestRecords;
+            }
+        }
+
+        return null;
+    }
 	
-	public ArrayList<TimeSeriesRecord> recordsAt(Instant instant) {
+	public ArrayList<TimeSeriesRecord> getRecordsAt(Instant instant) {
 		if (recordMap.isEmpty()) {
 			return null;
 		}
