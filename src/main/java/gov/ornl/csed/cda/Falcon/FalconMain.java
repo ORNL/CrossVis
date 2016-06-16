@@ -10,24 +10,23 @@ import javafx.application.Application;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.embed.swing.SwingNode;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
-import javafx.geometry.Orientation;
-import javafx.geometry.Pos;
+import javafx.geometry.*;
+import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.input.*;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.StackPane;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontSmoothingType;
@@ -601,13 +600,51 @@ public class FalconMain extends Application {
                 if(!fileMetadataMap.isEmpty()) {
 
                     File temp = null;
+                    TreeMap<String, File> files = new TreeMap<>();
 
                     for (File file : fileMetadataMap.keySet()) {
-                        temp = file;
-                        break;
+                        files.put(file.getName(), file);
                     }
 
-                    new Talon(temp);
+//                    log.debug(files.toString());
+
+                    ListView<String> listView = new ListView<String>();
+                    ObservableList<String> observableList = FXCollections.observableArrayList(files.keySet());
+                    listView.setItems(observableList);
+
+                    VBox box = new VBox();
+                    box.setAlignment(Pos.CENTER);
+                    box.setPadding(new Insets(1, 1, 1, 1));
+                    box.setSpacing(3);
+                    box.getChildren().add(listView);
+
+                    Button select = new Button("Select");
+                    box.getChildren().add(select);
+
+                    Stage stage = new Stage();
+                    Scene scene = new Scene(box);
+
+                    select.setOnAction(new EventHandler<ActionEvent>() {
+                        @Override
+                        public void handle(ActionEvent event) {
+
+                            String selection = listView.getSelectionModel().getSelectedItem();
+
+                            if (selection != null && !selection.isEmpty()) {
+                                new Talon(files.get(selection));
+                            } else {
+                                new Talon();
+                            }
+
+                            stage.close();
+                        }
+                    });
+
+                    stage.setScene(scene);
+
+//                    stage.
+                    stage.show();
+
                 } else {
                     new Talon();
                 }
