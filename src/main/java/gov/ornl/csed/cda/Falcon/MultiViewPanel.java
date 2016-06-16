@@ -1,5 +1,6 @@
 package gov.ornl.csed.cda.Falcon;
 
+import gov.ornl.csed.cda.Talon.Talon;
 import gov.ornl.csed.cda.histogram.Histogram;
 import gov.ornl.csed.cda.histogram.HistogramPanel;
 import gov.ornl.csed.cda.histogram.HistogramPanelListener;
@@ -324,12 +325,20 @@ public class MultiViewPanel extends JPanel {
             }
         });
 
+        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+        JButton talonButton = new JButton();
+        talonButton.addActionListener(e -> {
+            new Talon();
+        });
+        // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
         JPanel buttonPanel = new JPanel();
         buttonPanel.setBackground(Color.WHITE);
         buttonPanel.setLayout(new GridLayout(4, 0, 0, 0));
         buttonPanel.add(moveUpButton);
         buttonPanel.add(removeButton);
         buttonPanel.add(moveDownButton);
+        buttonPanel.add(talonButton);
 
         
         if (fontAwesomeFont != null) {
@@ -342,11 +351,14 @@ public class MultiViewPanel extends JPanel {
             removeButton.setText("\uf1f8");
 //            settingsButton.setFont(fontAwesomeFont);
 //            settingsButton.setText("\uf085");
+            talonButton.setFont(fontAwesomeFont);
+            talonButton.setText("\uf0ae");
         } else {
             moveUpButton.setText("Move Up");
             moveDownButton.setText("Move Down");
             removeButton.setText("Remove");
 //            settingsButton.setText("Settings");
+            talonButton.setText("Talon");
         }
 
         return buttonPanel;

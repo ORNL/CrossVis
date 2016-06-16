@@ -642,7 +642,6 @@ public class FalconMain extends Application {
 
                     stage.setScene(scene);
 
-//                    stage.
                     stage.show();
 
                 } else {
@@ -653,7 +652,7 @@ public class FalconMain extends Application {
 
         falcon.getItems().addAll(aboutFalcon);
         fileMenu.getItems().addAll(openCSVMI, openPLGMI, new SeparatorMenuItem(), captureScreenMI, new SeparatorMenuItem(), exitMI);
-        viewMenu.getItems().add(talonWindow);
+        viewMenu.getItems().addAll(talonWindow);
 
         menuBar.getMenus().addAll(falcon, fileMenu, viewMenu);
 
