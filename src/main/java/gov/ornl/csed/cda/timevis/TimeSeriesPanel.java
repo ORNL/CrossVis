@@ -60,6 +60,7 @@ public class TimeSeriesPanel extends JComponent implements TimeSeriesListener, C
     private int hoverX;
     private Instant hoverInstant;
     private double hoverValue = Double.NaN;
+    private double hoverMRValue = Double.NaN;
     private TimeSeriesSelection hoverTimeSeriesSelection = null;
     private boolean mouseOverPlot = false;
     private boolean mouseOverTimeBar = false;
@@ -690,6 +691,7 @@ public class TimeSeriesPanel extends JComponent implements TimeSeriesListener, C
         hoverInstant = null;
         hoverX = -1;
         hoverValue = Double.NaN;
+        hoverMRValue = Double.NaN;
         hoverTimeSeriesSelection = null;
 
         if ((plotRectangle != null)/* && ((e.getX() >= plotRectangle.x) && e.getX() <= (plotRectangle.x + plotRectangle.width))*/ ) {
@@ -709,40 +711,55 @@ public class TimeSeriesPanel extends JComponent implements TimeSeriesListener, C
             }
 
             if (shrinkToFit) {
-                // TODO: Fix mouse hover for overview mode
-                TimeSeriesBin bin = binnedTimeSeries.getBin(hoverInstant);
+                TimeSeriesBin bin = binnedTimeSeries.getNearestBin(hoverInstant);
                 if (bin != null) {
                     hoverValue = bin.getStatistics().getMean();
                 }
             } else {
-                Instant rangeStartInstant = hoverInstant.truncatedTo(plotChronoUnit).minus(1, plotChronoUnit);
-                Instant rangeEndInstant = hoverInstant.truncatedTo(plotChronoUnit).plus(1, plotChronoUnit);
-
-                ArrayList<TimeSeriesRecord> records = null;
-                if (movingRangeDisplayOption == MovingRangeDisplayOption.PLOT_VALUE) {
-                    records = movingRangeTimeSeries.getRecordsBetween(rangeStartInstant, rangeEndInstant);
+                if (movingRangeDisplayOption == MovingRangeDisplayOption.NOT_SHOWN) {
+                    ArrayList<TimeSeriesRecord> nearRecords = timeSeries.getNearestRecordsFor(hoverInstant, Duration.of(2, plotChronoUnit));
+                    if (nearRecords != null && !nearRecords.isEmpty()) {
+                        hoverValue = nearRecords.get(0).value;
+                    }
                 } else {
-                    records = timeSeries.getRecordsBetween(rangeStartInstant, rangeEndInstant);
-                }
-
-                if (records != null && !records.isEmpty()) {
-                    TimeSeriesRecord nearestRecord = null;
-                    Duration nearestRecordDuration = null;
-                    // find nearest record to time instant
-                    for (TimeSeriesRecord record : records) {
-                        Duration duration = Duration.between(hoverInstant, record.instant);
-                        if (nearestRecord == null) {
-                            nearestRecord = record;
-                            nearestRecordDuration = duration;
-                        } else if (duration.abs().toMillis() < nearestRecordDuration.abs().toMillis()) {
-                            nearestRecord = record;
-                            nearestRecordDuration = duration;
-                        }
+                    // TODO: Should probably indicate here if more than one record is nearest
+                    ArrayList<TimeSeriesRecord> nearRecords = timeSeries.getNearestRecordsFor(hoverInstant, Duration.of(2, plotChronoUnit));
+                    ArrayList<TimeSeriesRecord> nearMRRecords = movingRangeTimeSeries.getNearestRecordsFor(hoverInstant, Duration.of(2, plotChronoUnit));
+                    if (nearRecords != null && !nearRecords.isEmpty()) {
+                        hoverValue = nearRecords.get(0).value;
                     }
-                    if (nearestRecord != null) {
-                        hoverValue = nearestRecord.value;
+                    if (nearMRRecords != null && !nearMRRecords.isEmpty()) {
+                        hoverMRValue = nearMRRecords.get(0).value;
                     }
                 }
+//                Instant rangeStartInstant = hoverInstant.truncatedTo(plotChronoUnit).minus(2, plotChronoUnit);
+//                Instant rangeEndInstant = hoverInstant.truncatedTo(plotChronoUnit).plus(2, plotChronoUnit);
+//
+//                ArrayList<TimeSeriesRecord> records = null;
+//                if (movingRangeDisplayOption == MovingRangeDisplayOption.PLOT_VALUE) {
+//                    records = movingRangeTimeSeries.getRecordsBetween(rangeStartInstant, rangeEndInstant);
+//                } else {
+//                    records = timeSeries.getRecordsBetween(rangeStartInstant, rangeEndInstant);
+//                }
+//
+//                if (records != null && !records.isEmpty()) {
+//                    TimeSeriesRecord nearestRecord = null;
+//                    Duration nearestRecordDuration = null;
+//                    // find nearest record to time instant
+//                    for (TimeSeriesRecord record : records) {
+//                        Duration duration = Duration.between(hoverInstant, record.instant);
+//                        if (nearestRecord == null) {
+//                            nearestRecord = record;
+//                            nearestRecordDuration = duration;
+//                        } else if (duration.abs().toMillis() < nearestRecordDuration.abs().toMillis()) {
+//                            nearestRecord = record;
+//                            nearestRecordDuration = duration;
+//                        }
+//                    }
+//                    if (nearestRecord != null) {
+//                        hoverValue = nearestRecord.value;
+//                    }
+//                }
             }
 
             // check to see which region of the plot the mouse is hovering over
@@ -1606,19 +1623,43 @@ public class TimeSeriesPanel extends JComponent implements TimeSeriesListener, C
                 }
             }
 
+            String valueString = null;
             if (!Double.isNaN(hoverValue)) {
+                if (!Double.isNaN(hoverMRValue)) {
+                    valueString = "V: " + String.valueOf(hoverValue) + ", MR: " + String.valueOf(hoverMRValue);
+                } else {
+                    valueString = "V: " + String.valueOf(hoverValue);
+                }
+            } else if (!Double.isNaN(hoverMRValue)) {
+                valueString = "MR: " + String.valueOf(hoverMRValue);
+            }
+
+            if (valueString != null) {
                 g2.setColor(Color.black);
-                String strValue = String.valueOf(hoverValue);
-                int strWidth = g2.getFontMetrics().stringWidth(strValue);
-                int strX = hoverX - strWidth/2;
+                int strWidth = g2.getFontMetrics().stringWidth(valueString);
+                int strX = hoverX - (strWidth / 2);
                 if ((strX + strWidth) > (plotRectangle.x + plotRectangle.width)) {
                     strX -= (strX + strWidth) - (plotRectangle.x + plotRectangle.width);
                 }
                 if (strX < plotRectangle.x) {
                     strX += (plotRectangle.x - strX);
                 }
-                g2.drawString(strValue, strX, valueInfoBarBottom - 2);
+                g2.drawString(valueString, strX, valueInfoBarBottom - 2);
             }
+
+//            if (!Double.isNaN(hoverValue)) {
+//                g2.setColor(Color.black);
+//                String strValue = String.valueOf(hoverValue);
+//                int strWidth = g2.getFontMetrics().stringWidth(strValue);
+//                int strX = hoverX - strWidth/2;
+//                if ((strX + strWidth) > (plotRectangle.x + plotRectangle.width)) {
+//                    strX -= (strX + strWidth) - (plotRectangle.x + plotRectangle.width);
+//                }
+//                if (strX < plotRectangle.x) {
+//                    strX += (plotRectangle.x - strX);
+//                }
+//                g2.drawString(strValue, strX, valueInfoBarBottom - 2);
+//            }
 
             if (!pinMarkerList.isEmpty()) {
                 g2.setColor(Color.gray);
@@ -1703,11 +1744,21 @@ public class TimeSeriesPanel extends JComponent implements TimeSeriesListener, C
                 }
             }
 
+            String valueString = null;
             if (!Double.isNaN(hoverValue)) {
+                if (!Double.isNaN(hoverMRValue)) {
+                    valueString = "V: " + String.valueOf(hoverValue) + ", MR: " + String.valueOf(hoverMRValue);
+                } else {
+                    valueString = "V: " + String.valueOf(hoverValue);
+                }
+            } else if (!Double.isNaN(hoverMRValue)) {
+                valueString = "MR: " + String.valueOf(hoverMRValue);
+            }
+
+            if (valueString != null) {
                 g2.setColor(Color.black);
-                String strValue = String.valueOf(hoverValue);
-                int strWidth = g2.getFontMetrics().stringWidth(strValue);
-                int strX = hoverX - strWidth/2;
+                int strWidth = g2.getFontMetrics().stringWidth(valueString);
+                int strX = hoverX - (strWidth / 2);
                 if ((strX + strWidth) > (clipBounds.x + clipBounds.width)) {
                     strX -= (strX+strWidth) - (clipBounds.x + clipBounds.width);
                 }
@@ -1720,8 +1771,27 @@ public class TimeSeriesPanel extends JComponent implements TimeSeriesListener, C
                 if (strX < plotRectangle.x) {
                     strX += (plotRectangle.x - strX);
                 }
-                g2.drawString(strValue, strX, valueInfoBarBottom - 2);
+                g2.drawString(valueString, strX, valueInfoBarBottom - 2);
             }
+//            if (!Double.isNaN(hoverValue)) {
+//                g2.setColor(Color.black);
+//                String strValue = String.valueOf(hoverValue);
+//                int strWidth = g2.getFontMetrics().stringWidth(strValue);
+//                int strX = hoverX - strWidth/2;
+//                if ((strX + strWidth) > (clipBounds.x + clipBounds.width)) {
+//                    strX -= (strX+strWidth) - (clipBounds.x + clipBounds.width);
+//                }
+//                if ((strX + strWidth) > (plotRectangle.x + plotRectangle.width)) {
+//                    strX -= (strX + strWidth) - (plotRectangle.x + plotRectangle.width);
+//                }
+//                if (strX < clipBounds.x) {
+//                    strX += (clipBounds.x - strX);
+//                }
+//                if (strX < plotRectangle.x) {
+//                    strX += (plotRectangle.x - strX);
+//                }
+//                g2.drawString(strValue, strX, valueInfoBarBottom - 2);
+//            }
 
             if (!pinMarkerList.isEmpty()) {
                 g2.setColor(Color.gray);
