@@ -328,7 +328,9 @@ public class MultiViewPanel extends JPanel {
         // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
         JButton talonButton = new JButton();
         talonButton.addActionListener(e -> {
-            new Talon();
+            log.debug(viewInfo.timeSeries.getName());
+
+            new Talon(new File(viewInfo.filePath), viewInfo.timeSeries.getName().split(":")[1]);
         });
         // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -379,6 +381,7 @@ public class MultiViewPanel extends JPanel {
         }
 
         ViewInfo viewInfo = new ViewInfo();
+        viewInfo.filePath = groupName;
         viewInfo.timeSeries = timeSeries;
 
         // assign view to a group (create new one if necessary)
@@ -699,6 +702,7 @@ public class MultiViewPanel extends JPanel {
     }
 
     private class ViewInfo {
+        public String filePath;
         public TimeSeries timeSeries;
         public JPanel viewPanel;
         public JPanel sidePanel;

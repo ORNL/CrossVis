@@ -732,6 +732,7 @@ public class FalconMain extends Application {
             currentTreeItem = currentTreeItem.getParent();
             if (fileTreeItemMetadataMap.containsKey(currentTreeItem)) {
                 FileMetadata fileMetadata = fileTreeItemMetadataMap.get(currentTreeItem);
+
                 VariableClipboardData variableClipboardData = new VariableClipboardData(fileMetadata.file, fileMetadata.fileType,
                         variableName);
                 return variableClipboardData;
@@ -787,7 +788,9 @@ public class FalconMain extends Application {
                         if (treeItem.isLeaf()) {
                             VariableClipboardData variableClipboardData = treeItemToVariableClipboardData(treeItem);
 
-//                            log.debug("clipboard data is " + variableClipboardData.toString());
+//                            log.debug("clipboard data is " + variableClipboardData.toString()); // <--------------------
+                            log.debug("clipboard data is " + variableClipboardData.getFile().getAbsolutePath()); // <--------------------
+
                             Dragboard db = treeCell.startDragAndDrop(TransferMode.COPY);
                             ClipboardContent content = new ClipboardContent();
                             content.put(objectDataFormat, variableClipboardData);
@@ -930,7 +933,7 @@ public class FalconMain extends Application {
                 Map<String, TimeSeries> PLGTimeSeriesMap = PLGFileReader.readPLGFileAsTimeSeries(fileMetadata.file, variableList);
                 for (TimeSeries timeSeries : PLGTimeSeriesMap.values()) {
                     timeSeries.setName(fileMetadata.file.getName() + ":" + timeSeries.getName());
-                    multiViewPanel.addTimeSeries(timeSeries, fileMetadata.file.getName());
+                    multiViewPanel.addTimeSeries(timeSeries, fileMetadata.file.getAbsolutePath()); // <***************************************************************
 
                     TimeSeriesPanel overviewTSPanel = multiViewPanel.getOverviewTimeSeriesPanel(timeSeries);
                     TimeSeriesPanel detailsTimeSeries = multiViewPanel.getDetailTimeSeriesPanel(timeSeries);
