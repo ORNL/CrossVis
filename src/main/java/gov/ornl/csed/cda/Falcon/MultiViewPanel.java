@@ -337,6 +337,12 @@ public class MultiViewPanel extends JPanel {
         JPanel buttonPanel = new JPanel();
         buttonPanel.setBackground(Color.WHITE);
         buttonPanel.setLayout(new GridLayout(4, 0, 0, 0));
+
+        moveUpButton.setToolTipText("Move Up");
+        removeButton.setToolTipText("Remove");
+        moveDownButton.setToolTipText("Move Down");
+        talonButton.setToolTipText("Talon");
+
         buttonPanel.add(moveUpButton);
         buttonPanel.add(removeButton);
         buttonPanel.add(moveDownButton);
