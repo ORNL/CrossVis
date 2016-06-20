@@ -21,6 +21,7 @@ package gov.ornl.csed.cda.Talon;
 
 
 import com.fastdtw.dtw.FastDTW;
+import com.fastdtw.dtw.WarpPath;
 import com.fastdtw.timeseries.TimeSeriesBase;
 import com.fastdtw.util.Distances;
 import gov.ornl.csed.cda.Falcon.PLGFileReader;
@@ -654,7 +655,7 @@ public class TalonData {
             for (Map.Entry<Double, TimeSeries> segment : segmentedTimeSeriesMap.entrySet()) {
 
                 if (segment.getValue().getAllRecords().isEmpty()) {
-                    timeSeriesDistances.put(segment.getKey(), Double.NaN);      // <---------------------------------------------------------------
+                    timeSeriesDistances.put(segment.getKey(), Double.NaN);
                     continue;
                 }
 
@@ -670,7 +671,11 @@ public class TalonData {
 
                 //  -> add distances to timeSeriesDistances
                 if (!(referenceDTWtimeSeries.size() == 1 && ts2.size() == 1)) {
-                    double distance = FastDTW.compare(referenceDTWtimeSeries, ts2, 10, Distances.EUCLIDEAN_DISTANCE).getDistance();
+                    double distance = FastDTW.compare(referenceDTWtimeSeries, ts2, FastDTW.DEFAULT_SEARCH_RADIUS, Distances.EUCLIDEAN_DISTANCE).getDistance();
+                    WarpPath path = FastDTW.compare(referenceDTWtimeSeries, ts2, FastDTW.DEFAULT_SEARCH_RADIUS, Distances.EUCLIDEAN_DISTANCE).getPath();
+
+                    log.debug(path.toString());
+
                     timeSeriesDistances.put(segment.getKey(), distance);
                 }
             }
