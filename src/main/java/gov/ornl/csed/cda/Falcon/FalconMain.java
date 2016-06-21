@@ -933,7 +933,7 @@ public class FalconMain extends Application {
                 Map<String, TimeSeries> PLGTimeSeriesMap = PLGFileReader.readPLGFileAsTimeSeries(fileMetadata.file, variableList);
                 for (TimeSeries timeSeries : PLGTimeSeriesMap.values()) {
                     timeSeries.setName(fileMetadata.file.getName() + ":" + timeSeries.getName());
-                    multiViewPanel.addTimeSeries(timeSeries, fileMetadata.file.getAbsolutePath()); // <***************************************************************
+                    multiViewPanel.addTimeSeries(timeSeries, fileMetadata.file.getAbsolutePath());
 
                     TimeSeriesPanel overviewTSPanel = multiViewPanel.getOverviewTimeSeriesPanel(timeSeries);
                     TimeSeriesPanel detailsTimeSeries = multiViewPanel.getDetailTimeSeriesPanel(timeSeries);

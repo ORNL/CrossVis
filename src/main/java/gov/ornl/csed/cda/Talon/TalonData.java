@@ -314,13 +314,36 @@ public class TalonData {
 
                     String[] temp = variableSchema.variableName.split("[.]");
 
-                    if (variableSchema.numValues == 1 &&
-                            !temp[0].equals("Themes") &&
-                            !temp[0].equals("Analyse") &&
-                            !temp[0].equals("Process") &&
-                            !temp[0].equals("Measurements")) {
-                        singleValueVariables.add(variableSchema.variableName);
+                    // logic to specify which single value variables to add to the list for inspection
+                    boolean valid = (variableSchema.numValues == 1);
+                    if (valid) {
+                        valid = (!temp[0].equals("Analyse") && !temp[0].equals("Process") && !temp[0].equals("Measurements"));
+
+                        if (valid) {
+
+                            if (temp[0].equals("OPC")) {
+                                if (temp[1].equals("Rake") || temp[1].equals("Temperature") || temp[1].equals("Vaccuum") || temp[1].equals("Table") || temp[1].equals("Camera") || temp[1].equals("InternalCooling") || temp[1].equals("PowerSupply") || temp[1].equals("RakeSensor") || temp[1].equals("Security") || temp[1].equals("StartConditions")) {
+                                    singleValueVariables.add(variableSchema.variableName);
+
+                                }
+
+                            } else if (temp[0].equals("Themes")) {
+                                if (temp[1].equals("System")) {
+                                    singleValueVariables.add(variableSchema.variableName);
+
+                                } else if (temp[1].equals("Simulation")) {
+                                    singleValueVariables.add(variableSchema.variableName);
+
+                                }
+
+                            } else {
+                                singleValueVariables.add(variableSchema.variableName);
+
+                            }
+                        }
                     }
+
+
                 }
             }
 
