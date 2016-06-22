@@ -1,5 +1,6 @@
 package gov.ornl.csed.cda.Falcon;
 
+import gov.ornl.csed.cda.Talon.Talon;
 import gov.ornl.csed.cda.histogram.Histogram;
 import gov.ornl.csed.cda.histogram.HistogramPanel;
 import gov.ornl.csed.cda.histogram.HistogramPanelListener;
@@ -324,12 +325,28 @@ public class MultiViewPanel extends JPanel {
             }
         });
 
+        // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+        JButton talonButton = new JButton();
+        talonButton.addActionListener(e -> {
+            log.debug(viewInfo.timeSeries.getName());
+
+            new Talon(new File(viewInfo.filePath), viewInfo.timeSeries.getName().split(":")[1]);
+        });
+        // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
         JPanel buttonPanel = new JPanel();
         buttonPanel.setBackground(Color.WHITE);
         buttonPanel.setLayout(new GridLayout(4, 0, 0, 0));
+
+        moveUpButton.setToolTipText("Move Up");
+        removeButton.setToolTipText("Remove");
+        moveDownButton.setToolTipText("Move Down");
+        talonButton.setToolTipText("Talon");
+
         buttonPanel.add(moveUpButton);
         buttonPanel.add(removeButton);
         buttonPanel.add(moveDownButton);
+        buttonPanel.add(talonButton);
 
         
         if (fontAwesomeFont != null) {
@@ -342,11 +359,14 @@ public class MultiViewPanel extends JPanel {
             removeButton.setText("\uf1f8");
 //            settingsButton.setFont(fontAwesomeFont);
 //            settingsButton.setText("\uf085");
+            talonButton.setFont(fontAwesomeFont);
+            talonButton.setText("\uf0ae");
         } else {
             moveUpButton.setText("Move Up");
             moveDownButton.setText("Move Down");
             removeButton.setText("Remove");
 //            settingsButton.setText("Settings");
+            talonButton.setText("Talon");
         }
 
         return buttonPanel;
@@ -367,6 +387,7 @@ public class MultiViewPanel extends JPanel {
         }
 
         ViewInfo viewInfo = new ViewInfo();
+        viewInfo.filePath = groupName;
         viewInfo.timeSeries = timeSeries;
 
         // assign view to a group (create new one if necessary)
@@ -687,6 +708,7 @@ public class MultiViewPanel extends JPanel {
     }
 
     private class ViewInfo {
+        public String filePath;
         public TimeSeries timeSeries;
         public JPanel viewPanel;
         public JPanel sidePanel;
