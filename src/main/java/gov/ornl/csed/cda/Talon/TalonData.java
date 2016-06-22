@@ -35,9 +35,7 @@ import org.slf4j.LoggerFactory;
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.FilenameFilter;
-import java.io.IOException;
+import java.io.*;
 import java.lang.reflect.Array;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalUnit;
@@ -108,6 +106,7 @@ public class TalonData {
     private ChronoUnit chronoUnit = null;
 
     private TreeMap<String, Double> singleValueVariableValues = new TreeMap<>();
+    private File singleValueVariablesFilter = null;
 
 
 
@@ -255,6 +254,14 @@ public class TalonData {
         //  -> set plgFile and clear all other fields
         this.plgFile = plgFile;
 
+        if (System.getProperty("os.name").toLowerCase().contains("mac") || false) { // may need to handle cases for other OS's and those will be added here
+            singleValueVariablesFilter = new File(plgFile.getParentFile().toString() + "/singleValueFilter.txt");
+
+        } else {
+            singleValueVariablesFilter = new File(plgFile.getParentFile().toString() + "\\singleValueFilter.txt");
+
+        }
+
         listOfVariables.clear();
         variableSchemaMap.clear();
 
@@ -298,6 +305,26 @@ public class TalonData {
             ArrayList<String> singleValueVariables = new ArrayList<>();
             HashMap<String, TimeSeries> singleValueVariablesSeries = new HashMap<>();
 
+            boolean filter = singleValueVariablesFilter.exists();
+            ArrayList<String> singleValueVariablesFilterList = new ArrayList<>();
+
+
+            //  -> read in the list of desired singleValueVariables from the list into a hash map
+            if (filter) {
+                BufferedReader bufferedReader = new BufferedReader(new FileReader(singleValueVariablesFilter));
+
+                String line = bufferedReader.readLine();
+
+                while (line != null) {
+
+                    if (!singleValueVariablesFilterList.contains(line)) {
+                        singleValueVariablesFilterList.add(line);
+                    }
+
+                    line = bufferedReader.readLine();
+                }
+            }
+
 
             //  --> compile list of variable names of interest
             for (PLGVariableSchema variableSchema : variableSchemaMap.values()) {
@@ -316,7 +343,17 @@ public class TalonData {
 
                     // logic to specify which single value variables to add to the list for inspection
                     boolean valid = (variableSchema.numValues == 1);
-                    if (valid) {
+
+                    //  --> if a singleValueFilter.txt file exists
+                    if (valid && filter) {
+                        if (singleValueVariablesFilterList.contains(variableSchema.variableName)) {
+                            if (!singleValueVariables.contains(variableSchema.variableName)) {
+                                singleValueVariables.add(variableSchema.variableName);
+                            }
+                        }
+
+                    //  --> otherwise construct the best list you can
+                    } else if (valid) {
                         valid = (!temp[0].equals("Analyse") && !temp[0].equals("Process") && !temp[0].equals("Measurements"));
 
                         if (valid) {
