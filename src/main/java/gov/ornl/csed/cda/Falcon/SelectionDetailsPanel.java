@@ -372,15 +372,14 @@ public class SelectionDetailsPanel extends JPanel {
                 selectionDetailsPanel.setPreferredSize(new Dimension(200, 140));
                 selectionDetailsPanel.setBackground(Color.white);
 
-
-                TimeSeriesPanel timeSeriesPanel = new TimeSeriesPanel(2, ChronoUnit.SECONDS, TimeSeriesPanel.PlotDisplayOption.LINE);
-                timeSeriesPanel.setBackground(Color.white);
-                timeSeriesPanel.setTimeSeries(timeSeries, startInstant, endInstant);
-                JScrollPane scroller = new JScrollPane(timeSeriesPanel);
-                timeSeriesPanel.addTimeSeriesPanelSelectionListener(new TimeSeriesPanelSelectionListener() {
+                NumericTimeSeriesPanel numericTimeSeriesPanel = new NumericTimeSeriesPanel(2, ChronoUnit.SECONDS, NumericTimeSeriesPanel.PlotDisplayOption.LINE);
+                numericTimeSeriesPanel.setBackground(Color.white);
+                numericTimeSeriesPanel.setTimeSeries(timeSeries, startInstant, endInstant);
+                JScrollPane scroller = new JScrollPane(numericTimeSeriesPanel);
+                numericTimeSeriesPanel.addTimeSeriesPanelSelectionListener(new TimeSeriesPanelSelectionListener() {
                     @Override
                     public void selectionCreated(TimeSeriesPanel timeSeriesPanel, TimeSeriesSelection timeSeriesSelection) {
-                        selectionDetailsPanel.addSelection(timeSeriesPanel, timeSeriesPanel, scroller, timeSeriesSelection);
+                        selectionDetailsPanel.addSelection(timeSeriesPanel, numericTimeSeriesPanel, scroller, timeSeriesSelection);
                     }
 
                     @Override

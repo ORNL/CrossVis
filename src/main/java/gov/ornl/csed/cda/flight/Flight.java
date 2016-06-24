@@ -1,7 +1,7 @@
 package gov.ornl.csed.cda.flight;
 
 import gov.ornl.csed.cda.timevis.TimeSeries;
-import gov.ornl.csed.cda.timevis.TimeSeriesPanel;
+import gov.ornl.csed.cda.timevis.NumericTimeSeriesPanel;
 
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -17,12 +17,12 @@ import java.time.temporal.ChronoUnit;
  */
 public class Flight {
     // TODO: Make TimeSeriesListener for listening to changes in the underlying data
-    // TODO: Make TimeSeriesPanel listen for changes and repaint/regenerate as necessary
+    // TODO: Make NumericTimeSeriesPanel listen for changes and repaint/regenerate as necessary
     // TODO: Make main loop use a timer to incrementally add new values to the time series
     // TODO: Make artistic / expressive representations
-    // TODO: Implement fade algorithm in the TimeSeriesPanel
+    // TODO: Implement fade algorithm in the NumericTimeSeriesPanel
     // TODO: Output individual images for each rendering step for creating a high resolution movie
-    // TODO: Instead of overview, create a detail view that scrolls, add capability to set TimeSeriesPanel
+    // TODO: Instead of overview, create a detail view that scrolls, add capability to set NumericTimeSeriesPanel
     //       to use an overview / summary rendering using a specified chronounit.  This would work like
     //       the overview but at a fixed time interval size instead of fitting the time series to the
     //       current width of the panel.
@@ -38,21 +38,21 @@ public class Flight {
         EventQueue.invokeLater(new Runnable() {
             public void run() {
 
-                TimeSeriesPanel timeSeriesPanel = new TimeSeriesPanel(10, ChronoUnit.MINUTES, TimeSeriesPanel.PlotDisplayOption.SPECTRUM);
-//                detailsTimeSeriesPanel.setPreferredSize(new Dimension(1000, 100));
-                timeSeriesPanel.setBackground(Color.white);
-//                detailsTimeSeriesPanel.setDisplayTimeRange(startInstant, endInstant);
-                timeSeriesPanel.setTimeSeries(timeSeries, startInstant, endInstant);
-                timeSeriesPanel.setValueAxisMax(11.0);
-                timeSeriesPanel.setValueAxisMin(-11.0);
-                timeSeriesPanel.setPointColor(new Color(80, 80, 130, 100));
+                NumericTimeSeriesPanel numericTimeSeriesPanel = new NumericTimeSeriesPanel(10, ChronoUnit.MINUTES, NumericTimeSeriesPanel.PlotDisplayOption.SPECTRUM);
+//                detailsNumericTimeSeriesPanel.setPreferredSize(new Dimension(1000, 100));
+                numericTimeSeriesPanel.setBackground(Color.white);
+//                detailsNumericTimeSeriesPanel.setDisplayTimeRange(startInstant, endInstant);
+                numericTimeSeriesPanel.setTimeSeries(timeSeries, startInstant, endInstant);
+                numericTimeSeriesPanel.setValueAxisMax(11.0);
+                numericTimeSeriesPanel.setValueAxisMin(-11.0);
+                numericTimeSeriesPanel.setPointColor(new Color(80, 80, 130, 100));
 
                 Border border = BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(10,10,10,10), BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
-//                detailsTimeSeriesPanel.setBorder(border);
+//                detailsNumericTimeSeriesPanel.setBorder(border);
 
-//                detailsTimeSeriesPanel.setTimeSeries(timeSeries, timeSeries.getStartInstant(), timeSeries.getEndInstant());
+//                detailsNumericTimeSeriesPanel.setTimeSeries(timeSeries, timeSeries.getStartInstant(), timeSeries.getEndInstant());
 
-                JScrollPane scrollPane = new JScrollPane(timeSeriesPanel);
+                JScrollPane scrollPane = new JScrollPane(numericTimeSeriesPanel);
 
                 JButton makeDataButton = new JButton("Generate Data");
                 makeDataButton.addActionListener(new ActionListener() {

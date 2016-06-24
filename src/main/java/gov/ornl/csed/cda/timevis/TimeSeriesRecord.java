@@ -12,9 +12,8 @@ public class TimeSeriesRecord implements Comparable<TimeSeriesRecord> {
 	public double x;
 	public double y;
 	public double value;
-    public double uncertainty = Double.NaN;
-	public double upperRange = Double.NaN;
-	public double lowerRange = Double.NaN;
+	public double movingRangeValue;
+    public boolean boolValue;
 
 	@Override
 	public int compareTo(TimeSeriesRecord otherRecord) {
