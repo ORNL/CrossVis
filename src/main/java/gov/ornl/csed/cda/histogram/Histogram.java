@@ -1,15 +1,12 @@
 package gov.ornl.csed.cda.histogram;
 
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import java.util.Arrays;
 
 /**
  * Created by csg on 1/5/16.
  */
 public class Histogram {
-    private final static Logger log = LoggerFactory.getLogger(Histogram.class);
 
     private static double EPSILON = 0.000001;
     private String name;
@@ -175,7 +172,7 @@ public class Histogram {
                 184, 165, 173, 179, 166, 168, 165, 140, 190};
         Histogram histogram = new Histogram("Test", values, 5, 140, 190);
         for (int i = 0; i < histogram.getNumBins(); i++) {
-            log.debug(i + ": " + histogram.getBinCount(i) + " [" + histogram.getBinLowerBound(i) +
+            System.out.println(i + ": " + histogram.getBinCount(i) + " [" + histogram.getBinLowerBound(i) +
             ", " + histogram.getBinUpperBound(i) + "]");
         }
     }

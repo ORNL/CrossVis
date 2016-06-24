@@ -20,8 +20,8 @@ package gov.ornl.csed.cda.Talon;
 
 
 import gov.ornl.csed.cda.experimental.SingleValueSummaryWindow;
+import gov.ornl.csed.cda.timevis.NumericTimeSeriesPanel;
 import gov.ornl.csed.cda.timevis.TimeSeries;
-import gov.ornl.csed.cda.timevis.TimeSeriesPanel;
 import gov.ornl.csed.cda.util.GraphicsUtil;
 import javafx.geometry.Orientation;
 import org.slf4j.Logger;
@@ -63,7 +63,7 @@ public class Talon implements TalonDataListener, DistanceIndicatorPanelListener 
     private SegmentedTimeSeriesPanel segmentedTimeSeriesPanel = null;           // Panel for segmented series plot
     private MultiImagePanel imagePanel = null;                                  // Panel for displaying build height images
     private DistanceIndicatorPanel distanceIndicatorPanel = null;               // Panel for distance indicator tick marks
-    private TimeSeriesPanel timeSeriesOverviewPanel = null;
+    private NumericTimeSeriesPanel timeSeriesOverviewPanel = null;
 
     // helper variables
     private JComboBox<String> segmentedVariableComboBox = null;                 // Combobox of variable names from plgFile in settingsPanel
@@ -269,7 +269,7 @@ public class Talon implements TalonDataListener, DistanceIndicatorPanelListener 
         distanceIndicatorPanel.addDistanceIndicatorPanelListener(this);
 
         imagePanel = new MultiImagePanel(Orientation.VERTICAL, talonData);
-        timeSeriesOverviewPanel = new TimeSeriesPanel(2, ChronoUnit.SECONDS, TimeSeriesPanel.PlotDisplayOption.STEPPED_LINE);
+        timeSeriesOverviewPanel = new NumericTimeSeriesPanel(2, ChronoUnit.SECONDS, NumericTimeSeriesPanel.PlotDisplayOption.STEPPED_LINE);
 
 
         //  -> add scrollbars/other panel settings
