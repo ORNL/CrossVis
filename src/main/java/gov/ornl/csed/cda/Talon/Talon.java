@@ -52,7 +52,7 @@ public class Talon implements TalonDataListener, DistanceIndicatorPanelListener 
 
 
     // =-= INSTANCE FIELDS =-=
-    private String talonVersionString = "Talon v0.2.2";
+    private String talonVersionString = "v0.2.3";
     private JFrame talonFrame = null;                                           // Frame for Talon instance
 
     // talonData class for the viz
