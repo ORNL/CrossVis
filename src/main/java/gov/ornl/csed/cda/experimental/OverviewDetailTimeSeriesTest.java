@@ -1,21 +1,15 @@
 package gov.ornl.csed.cda.experimental;
 
-import gov.ornl.csed.cda.timevis.TimeSeries;
-import gov.ornl.csed.cda.timevis.TimeSeriesPanel;
-import gov.ornl.csed.cda.timevis.TimeSeriesPanelSelectionListener;
-import gov.ornl.csed.cda.timevis.TimeSeriesSelection;
+import gov.ornl.csed.cda.timevis.*;
 import prefuse.data.Table;
 import prefuse.data.io.CSVTableReader;
 
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.EtchedBorder;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
-import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -33,16 +27,17 @@ public class OverviewDetailTimeSeriesTest {
                     JFrame frame = new JFrame();
                     frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-                    TimeSeriesPanel detailsTimeSeriesPanel = new TimeSeriesPanel(plotUnitWidth, ChronoUnit.SECONDS, TimeSeriesPanel.PlotDisplayOption.LINE);
-                    detailsTimeSeriesPanel.setBackground(Color.white);
 
-                    TimeSeriesPanel overviewTimeSeriesPanel = new TimeSeriesPanel(plotUnitWidth, TimeSeriesPanel.PlotDisplayOption.LINE);
-                    overviewTimeSeriesPanel.setPreferredSize(new Dimension(1000, 100));
-                    overviewTimeSeriesPanel.setBackground(Color.white);
+                    NumericTimeSeriesPanel detailsNumericTimeSeriesPanel = new NumericTimeSeriesPanel(plotUnitWidth, ChronoUnit.SECONDS, NumericTimeSeriesPanel.PlotDisplayOption.LINE);
+                    detailsNumericTimeSeriesPanel.setBackground(Color.white);
+
+                    NumericTimeSeriesPanel overviewNumericTimeSeriesPanel = new NumericTimeSeriesPanel(plotUnitWidth, NumericTimeSeriesPanel.PlotDisplayOption.LINE);
+                    overviewNumericTimeSeriesPanel.setPreferredSize(new Dimension(1000, 100));
+                    overviewNumericTimeSeriesPanel.setBackground(Color.white);
                     Border border = BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(10,10,10,10), BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
-                    overviewTimeSeriesPanel.setBorder(border);
+                    overviewNumericTimeSeriesPanel.setBorder(border);
 
-                    JScrollPane scroller = new JScrollPane(detailsTimeSeriesPanel);
+                    JScrollPane scroller = new JScrollPane(detailsNumericTimeSeriesPanel);
                     scroller.getVerticalScrollBar().setUnitIncrement(10);
                     scroller.getHorizontalScrollBar().setUnitIncrement(10);
                     scroller.setBackground(frame.getBackground());
@@ -53,34 +48,34 @@ public class OverviewDetailTimeSeriesTest {
                         @Override
                         public void itemStateChanged(ItemEvent e) {
                             if (e.getStateChange() == ItemEvent.SELECTED) {
-                                detailsTimeSeriesPanel.setMovingRangeDisplayOption(TimeSeriesPanel.MovingRangeDisplayOption.PLOT_VALUE);
+                                detailsNumericTimeSeriesPanel.setMovingRangeDisplayOption(NumericTimeSeriesPanel.MovingRangeDisplayOption.PLOT_VALUE);
                             } else if (e.getStateChange() == ItemEvent.DESELECTED) {
-                                detailsTimeSeriesPanel.setMovingRangeDisplayOption(TimeSeriesPanel.MovingRangeDisplayOption.NOT_SHOWN);
+                                detailsNumericTimeSeriesPanel.setMovingRangeDisplayOption(NumericTimeSeriesPanel.MovingRangeDisplayOption.NOT_SHOWN);
                             }
                         }
                     });
 
                     ((JPanel)frame.getContentPane()).setLayout(new BorderLayout());
                     ((JPanel)frame.getContentPane()).add(scroller, BorderLayout.CENTER);
-                    ((JPanel)frame.getContentPane()).add(overviewTimeSeriesPanel, BorderLayout.SOUTH);
+                    ((JPanel)frame.getContentPane()).add(overviewNumericTimeSeriesPanel, BorderLayout.SOUTH);
 
                     frame.setSize(1000, 400);
                     frame.setVisible(true);
 
-                    detailsTimeSeriesPanel.addTimeSeriesPanelSelectionListener(new TimeSeriesPanelSelectionListener() {
+                    detailsNumericTimeSeriesPanel.addTimeSeriesPanelSelectionListener(new TimeSeriesPanelSelectionListener() {
                         @Override
                         public void selectionCreated(TimeSeriesPanel timeSeriesPanel, TimeSeriesSelection timeSeriesSelection) {
-                            overviewTimeSeriesPanel.addTimeSeriesSelection(timeSeriesSelection.getStartInstant(), timeSeriesSelection.getEndInstant());
+                            overviewNumericTimeSeriesPanel.addTimeSeriesSelection(timeSeriesSelection.getStartInstant(), timeSeriesSelection.getEndInstant());
                         }
 
                         @Override
                         public void selectionMoved(TimeSeriesPanel timeSeriesPanel, TimeSeriesSelection timeSeriesSelection, Instant previousStartInstant, Instant previousEndInstant) {
-                            overviewTimeSeriesPanel.updateTimeSeriesSelection(previousStartInstant, previousEndInstant, timeSeriesSelection.getStartInstant(), timeSeriesSelection.getEndInstant());
+                            overviewNumericTimeSeriesPanel.updateTimeSeriesSelection(previousStartInstant, previousEndInstant, timeSeriesSelection.getStartInstant(), timeSeriesSelection.getEndInstant());
                         }
 
                         @Override
                         public void selectionDeleted(TimeSeriesPanel timeSeriesPanel, TimeSeriesSelection timeSeriesSelection) {
-                            overviewTimeSeriesPanel.removeTimeSeriesSelection(timeSeriesSelection.getStartInstant(), timeSeriesSelection.getEndInstant());
+                            overviewNumericTimeSeriesPanel.removeTimeSeriesSelection(timeSeriesSelection.getStartInstant(), timeSeriesSelection.getEndInstant());
                         }
                     });
 //                    TimeSeries timeSeries = new TimeSeries("Test");
@@ -132,8 +127,8 @@ public class OverviewDetailTimeSeriesTest {
 //                    System.out.println("Press Enter key to continue...");
 //                    System.in.read();
 
-                    overviewTimeSeriesPanel.setTimeSeries(timeSeries, timeSeries.getStartInstant(), timeSeries.getEndInstant());
-                    detailsTimeSeriesPanel.setTimeSeries(timeSeries, timeSeries.getStartInstant(), timeSeries.getEndInstant());
+                    overviewNumericTimeSeriesPanel.setTimeSeries(timeSeries, timeSeries.getStartInstant(), timeSeries.getEndInstant());
+                    detailsNumericTimeSeriesPanel.setTimeSeries(timeSeries, timeSeries.getStartInstant(), timeSeries.getEndInstant());
 
                     scroller.getHorizontalScrollBar().addAdjustmentListener(new AdjustmentListener() {
                         @Override
@@ -142,20 +137,20 @@ public class OverviewDetailTimeSeriesTest {
                             double scrollBarModelWidth = scrollBar.getModel().getMaximum() - scrollBar.getModel().getMinimum();
 
                             double norm = (double)scrollBar.getModel().getValue() / scrollBarModelWidth;
-                            double deltaTime = norm * Duration.between(overviewTimeSeriesPanel.getStartInstant(), overviewTimeSeriesPanel.getEndInstant()).toMillis();
-                            Instant startHighlightInstant = overviewTimeSeriesPanel.getStartInstant().plusMillis((long)deltaTime);
+                            double deltaTime = norm * Duration.between(overviewNumericTimeSeriesPanel.getStartInstant(), overviewNumericTimeSeriesPanel.getEndInstant()).toMillis();
+                            Instant startHighlightInstant = overviewNumericTimeSeriesPanel.getStartInstant().plusMillis((long)deltaTime);
 
                             int scrollBarRight = scrollBar.getModel().getValue() + scrollBar.getModel().getExtent();
                             norm = 1. - (double) scrollBarRight / (double) scrollBarModelWidth;
-                            deltaTime = norm * Duration.between(overviewTimeSeriesPanel.getStartInstant(), overviewTimeSeriesPanel.getEndInstant()).toMillis();
-                            Instant endHighlightInstant = overviewTimeSeriesPanel.getEndInstant().minusMillis((long) deltaTime);
+                            deltaTime = norm * Duration.between(overviewNumericTimeSeriesPanel.getStartInstant(), overviewNumericTimeSeriesPanel.getEndInstant()).toMillis();
+                            Instant endHighlightInstant = overviewNumericTimeSeriesPanel.getEndInstant().minusMillis((long) deltaTime);
 
-                            overviewTimeSeriesPanel.setHighlightRange(startHighlightInstant, endHighlightInstant);
+                            overviewNumericTimeSeriesPanel.setHighlightRange(startHighlightInstant, endHighlightInstant);
                         }
                     });
 
-                    overviewTimeSeriesPanel.setPinningEnabled(false);
-                    overviewTimeSeriesPanel.setInteractiveSelectionEnabled(false);
+                    overviewNumericTimeSeriesPanel.setPinningEnabled(false);
+                    overviewNumericTimeSeriesPanel.setInteractiveSelectionEnabled(false);
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
@@ -172,7 +167,8 @@ public class OverviewDetailTimeSeriesTest {
 
         Instant startInstant = Instant.now().truncatedTo(ChronoUnit.HOURS);
         Instant endInstant = Instant.from(startInstant).plus(numTimeRecords+120, ChronoUnit.SECONDS);
-
+        Duration duration = Duration.of(1, ChronoUnit.SECONDS);
+        startInstant.plus(duration);
         double value = 0.;
 
         for (int i = 120; i < numTimeRecords; i++) {

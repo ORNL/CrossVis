@@ -1,11 +1,8 @@
 package gov.ornl.csed.cda.experimental;
 
-import gov.ornl.csed.cda.overviewbar.OverviewBar;
-import gov.ornl.csed.cda.overviewbar.OverviewBarListener;
-import gov.ornl.csed.cda.overviewbar.OverviewBarMarker;
 import gov.ornl.csed.cda.overviewbar.ScrollBarOverviewPanel;
+import gov.ornl.csed.cda.timevis.NumericTimeSeriesPanel;
 import gov.ornl.csed.cda.timevis.TimeSeries;
-import gov.ornl.csed.cda.timevis.TimeSeriesPanel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,15 +38,15 @@ public class TimeSeriesOverviewBarTest {
                 }
                 log.debug("timeseries.getEndInstant(): " + timeSeries.getEndInstant().toString());
 
-                TimeSeriesPanel timeSeriesPanel = new TimeSeriesPanel(10, ChronoUnit.MINUTES, TimeSeriesPanel.PlotDisplayOption.LINE);
-                timeSeriesPanel.setPreferredSize(new Dimension(1000, 100));
-                timeSeriesPanel.setBackground(Color.white);
+                NumericTimeSeriesPanel numericTimeSeriesPanel = new NumericTimeSeriesPanel(10, ChronoUnit.MINUTES, NumericTimeSeriesPanel.PlotDisplayOption.LINE);
+                numericTimeSeriesPanel.setPreferredSize(new Dimension(1000, 100));
+                numericTimeSeriesPanel.setBackground(Color.white);
                 Border border = BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(10,10,10,10), BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
-                timeSeriesPanel.setBorder(border);
+                numericTimeSeriesPanel.setBorder(border);
 
-                timeSeriesPanel.setTimeSeries(timeSeries, timeSeries.getStartInstant().minus(1, ChronoUnit.MINUTES), timeSeries.getEndInstant().plus(1, ChronoUnit.MINUTES));
+                numericTimeSeriesPanel.setTimeSeries(timeSeries, timeSeries.getStartInstant().minus(1, ChronoUnit.MINUTES), timeSeries.getEndInstant().plus(1, ChronoUnit.MINUTES));
 
-                JScrollPane scrollPane = new JScrollPane(timeSeriesPanel);
+                JScrollPane scrollPane = new JScrollPane(numericTimeSeriesPanel);
 
                 ScrollBarOverviewPanel overviewBar = new ScrollBarOverviewPanel(scrollPane.getHorizontalScrollBar());
                 overviewBar.setBackground(Color.white);

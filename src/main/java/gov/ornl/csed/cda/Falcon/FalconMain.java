@@ -1,10 +1,7 @@
 package gov.ornl.csed.cda.Falcon;
 
 import gov.ornl.csed.cda.Talon.Talon;
-import gov.ornl.csed.cda.timevis.TimeSeries;
-import gov.ornl.csed.cda.timevis.TimeSeriesPanel;
-import gov.ornl.csed.cda.timevis.TimeSeriesPanelSelectionListener;
-import gov.ornl.csed.cda.timevis.TimeSeriesSelection;
+import gov.ornl.csed.cda.timevis.*;
 import gov.ornl.csed.cda.util.GraphicsUtil;
 import javafx.application.Application;
 import javafx.beans.value.ChangeListener;
@@ -216,8 +213,6 @@ public class FalconMain extends Application {
                 if (schema.numValues > 0) {
                     fileMetadata.variableList.add(schema.variableName);
                     fileMetadata.variableValueCountList.add(schema.numValues);
-
-
 
                     String tokens[] = schema.variableName.split("[.]");
 
@@ -821,23 +816,23 @@ public class FalconMain extends Application {
         columnTableView = new TableView();
     }
 
-    private void addSelectionView(TimeSeriesPanel detailTimeSeriesPanel, TimeSeriesPanel overviewTimeSeriesPanel,
+    private void addSelectionView(NumericTimeSeriesPanel detailNumericTimeSeriesPanel, NumericTimeSeriesPanel overviewNumericTimeSeriesPanel,
                                   JScrollPane detailTimeSeriesPanelScrollPane, TimeSeriesSelection timeSeriesSelection) {
-        overviewTimeSeriesPanel.addTimeSeriesSelection(timeSeriesSelection.getStartInstant(), timeSeriesSelection.getEndInstant());
-        selectionDetailPanel.addSelection(detailTimeSeriesPanel, overviewTimeSeriesPanel, detailTimeSeriesPanelScrollPane, timeSeriesSelection);
+        overviewNumericTimeSeriesPanel.addTimeSeriesSelection(timeSeriesSelection.getStartInstant(), timeSeriesSelection.getEndInstant());
+        selectionDetailPanel.addSelection(detailNumericTimeSeriesPanel, overviewNumericTimeSeriesPanel, detailTimeSeriesPanelScrollPane, timeSeriesSelection);
     }
 
-    private void updateSelectionView(TimeSeriesPanel detailTimeSeriesPanel, TimeSeriesPanel overviewTimeSeriesPanel,
+    private void updateSelectionView(NumericTimeSeriesPanel detailNumericTimeSeriesPanel, NumericTimeSeriesPanel overviewNumericTimeSeriesPanel,
                                      TimeSeriesSelection timeSeriesSelection, Instant previousStartInstant, Instant previousEndInstant) {
-        overviewTimeSeriesPanel.updateTimeSeriesSelection(previousStartInstant, previousEndInstant, timeSeriesSelection.getStartInstant(),
+        overviewNumericTimeSeriesPanel.updateTimeSeriesSelection(previousStartInstant, previousEndInstant, timeSeriesSelection.getStartInstant(),
                 timeSeriesSelection.getEndInstant());
         selectionDetailPanel.updateSelection(timeSeriesSelection);
     }
 
-    private void deleteSelectionView(TimeSeriesPanel detailTimeSeriesPanel, TimeSeriesPanel overviewTimeSeriesPanel,
+    private void deleteSelectionView(NumericTimeSeriesPanel detailNumericTimeSeriesPanel, NumericTimeSeriesPanel overviewNumericTimeSeriesPanel,
                                      TimeSeriesSelection timeSeriesSelection) {
 //        log.debug("TimeSeries selection deleted");
-        overviewTimeSeriesPanel.removeTimeSeriesSelection(timeSeriesSelection.getStartInstant(), timeSeriesSelection.getEndInstant());
+        overviewNumericTimeSeriesPanel.removeTimeSeriesSelection(timeSeriesSelection.getStartInstant(), timeSeriesSelection.getEndInstant());
         selectionDetailPanel.deleteSelection(timeSeriesSelection);
     }
 
@@ -905,25 +900,25 @@ public class FalconMain extends Application {
 
             multiViewPanel.addTimeSeries(timeSeries, fileMetadata.file.getName());
 
-            TimeSeriesPanel overviewTSPanel = multiViewPanel.getOverviewTimeSeriesPanel(timeSeries);
-            TimeSeriesPanel detailsTSPanel = multiViewPanel.getDetailTimeSeriesPanel(timeSeries);
+            NumericTimeSeriesPanel overviewTSPanel = multiViewPanel.getOverviewTimeSeriesPanel(timeSeries);
+            NumericTimeSeriesPanel detailsTSPanel = multiViewPanel.getDetailTimeSeriesPanel(timeSeries);
             JScrollPane detailsTimeSeriesPanelScrollPanel = multiViewPanel.getDetailsTimeSeriesScrollPane(timeSeries);
 
             detailsTSPanel.addTimeSeriesPanelSelectionListener(new TimeSeriesPanelSelectionListener() {
                 @Override
                 public void selectionCreated(TimeSeriesPanel timeSeriesPanel, TimeSeriesSelection timeSeriesSelection) {
-                    addSelectionView(timeSeriesPanel, overviewTSPanel, detailsTimeSeriesPanelScrollPanel, timeSeriesSelection);
+                    addSelectionView(detailsTSPanel, overviewTSPanel, detailsTimeSeriesPanelScrollPanel, timeSeriesSelection);
                 }
 
                 @Override
                 public void selectionMoved(TimeSeriesPanel timeSeriesPanel, TimeSeriesSelection timeSeriesSelection,
                                            Instant previousStartInstant, Instant previousEndInstant) {
-                    updateSelectionView(timeSeriesPanel, overviewTSPanel, timeSeriesSelection, previousStartInstant, previousEndInstant);
+                    updateSelectionView(detailsTSPanel, overviewTSPanel, timeSeriesSelection, previousStartInstant, previousEndInstant);
                 }
 
                 @Override
                 public void selectionDeleted(TimeSeriesPanel timeSeriesPanel, TimeSeriesSelection timeSeriesSelection) {
-                    deleteSelectionView(timeSeriesPanel, overviewTSPanel, timeSeriesSelection);
+                    deleteSelectionView(detailsTSPanel, overviewTSPanel, timeSeriesSelection);
                 }
             });
         } else if (fileMetadata.fileType == FileMetadata.FileType.PLG) {
@@ -935,26 +930,26 @@ public class FalconMain extends Application {
                     timeSeries.setName(fileMetadata.file.getName() + ":" + timeSeries.getName());
                     multiViewPanel.addTimeSeries(timeSeries, fileMetadata.file.getAbsolutePath());
 
-                    TimeSeriesPanel overviewTSPanel = multiViewPanel.getOverviewTimeSeriesPanel(timeSeries);
-                    TimeSeriesPanel detailsTimeSeries = multiViewPanel.getDetailTimeSeriesPanel(timeSeries);
+                    NumericTimeSeriesPanel overviewTSPanel = multiViewPanel.getOverviewTimeSeriesPanel(timeSeries);
+                    NumericTimeSeriesPanel detailsTimeSeries = multiViewPanel.getDetailTimeSeriesPanel(timeSeries);
                     JScrollPane detailsTimeSeriesPanelScrollPanel = multiViewPanel.getDetailsTimeSeriesScrollPane(timeSeries);
 
                     detailsTimeSeries.addTimeSeriesPanelSelectionListener(new TimeSeriesPanelSelectionListener() {
                         @Override
                         public void selectionCreated(TimeSeriesPanel timeSeriesPanel, TimeSeriesSelection timeSeriesSelection) {
-                            addSelectionView(timeSeriesPanel, overviewTSPanel, detailsTimeSeriesPanelScrollPanel, timeSeriesSelection);
+                            addSelectionView(detailsTimeSeries, overviewTSPanel, detailsTimeSeriesPanelScrollPanel, timeSeriesSelection);
                         }
 
                         @Override
                         public void selectionMoved(TimeSeriesPanel timeSeriesPanel, TimeSeriesSelection timeSeriesSelection,
                                                    Instant previousStartInstant, Instant previousEndInstant) {
-                            updateSelectionView(timeSeriesPanel, overviewTSPanel, timeSeriesSelection, previousStartInstant,
+                            updateSelectionView(detailsTimeSeries, overviewTSPanel, timeSeriesSelection, previousStartInstant,
                                     previousEndInstant);
                         }
 
                         @Override
                         public void selectionDeleted(TimeSeriesPanel timeSeriesPanel, TimeSeriesSelection timeSeriesSelection) {
-                            deleteSelectionView(timeSeriesPanel, overviewTSPanel, timeSeriesSelection);
+                            deleteSelectionView(detailsTimeSeries, overviewTSPanel, timeSeriesSelection);
                         }
                     });
                 }
@@ -1029,16 +1024,16 @@ public class FalconMain extends Application {
         grid.add(new Label("Plot Unit Width: "), 0, 0);
         grid.add(plotChronoUnitWidthSpinner, 1, 0);
 
-        ChoiceBox<TimeSeriesPanel.PlotDisplayOption> plotDisplayOptionChoiceBox = new ChoiceBox<>();
+        ChoiceBox<NumericTimeSeriesPanel.PlotDisplayOption> plotDisplayOptionChoiceBox = new ChoiceBox<>();
         plotDisplayOptionChoiceBox.setTooltip(new Tooltip("Change Display Mode for Detail Time Series Plot"));
-        plotDisplayOptionChoiceBox.getItems().addAll(TimeSeriesPanel.PlotDisplayOption.POINT, TimeSeriesPanel.PlotDisplayOption.LINE,
-                TimeSeriesPanel.PlotDisplayOption.STEPPED_LINE, TimeSeriesPanel.PlotDisplayOption.SPECTRUM);
-        TimeSeriesPanel.PlotDisplayOption lastPlotDisplayOption = TimeSeriesPanel.PlotDisplayOption.valueOf( preferences.get(FalconPreferenceKeys.LAST_PLOT_DISPLAY_OPTION, multiViewPanel.getDetailTimeSeriesPlotDisplayOption().toString()) );
+        plotDisplayOptionChoiceBox.getItems().addAll(NumericTimeSeriesPanel.PlotDisplayOption.POINT, NumericTimeSeriesPanel.PlotDisplayOption.LINE,
+                NumericTimeSeriesPanel.PlotDisplayOption.STEPPED_LINE, NumericTimeSeriesPanel.PlotDisplayOption.SPECTRUM);
+        NumericTimeSeriesPanel.PlotDisplayOption lastPlotDisplayOption = NumericTimeSeriesPanel.PlotDisplayOption.valueOf( preferences.get(FalconPreferenceKeys.LAST_PLOT_DISPLAY_OPTION, multiViewPanel.getDetailTimeSeriesPlotDisplayOption().toString()) );
         multiViewPanel.setDetailTimeSeriesPlotDisplayOption(lastPlotDisplayOption);
         plotDisplayOptionChoiceBox.getSelectionModel().select(lastPlotDisplayOption);
         plotDisplayOptionChoiceBox.getSelectionModel().selectedItemProperty().addListener(
-                (ObservableValue<? extends TimeSeriesPanel.PlotDisplayOption> ov,
-                 TimeSeriesPanel.PlotDisplayOption oldValue, TimeSeriesPanel.PlotDisplayOption newValue) -> {
+                (ObservableValue<? extends NumericTimeSeriesPanel.PlotDisplayOption> ov,
+                 NumericTimeSeriesPanel.PlotDisplayOption oldValue, NumericTimeSeriesPanel.PlotDisplayOption newValue) -> {
                     if (oldValue != newValue) {
                         multiViewPanel.setDetailTimeSeriesPlotDisplayOption(newValue);
                         preferences.put(FalconPreferenceKeys.LAST_PLOT_DISPLAY_OPTION, newValue.toString());
@@ -1066,15 +1061,15 @@ public class FalconMain extends Application {
         grid.add(new Label("Plot Chrono Unit: "), 0, 2);
         grid.add(chronoUnitChoice, 1, 2);
 
-        ChoiceBox<TimeSeriesPanel.MovingRangeDisplayOption> movingRangeDisplayOptionChoiceBox = new ChoiceBox<>();
+        ChoiceBox<NumericTimeSeriesPanel.MovingRangeDisplayOption> movingRangeDisplayOptionChoiceBox = new ChoiceBox<>();
         movingRangeDisplayOptionChoiceBox.setTooltip(new Tooltip("Choose Moving Range Display Option"));
-        movingRangeDisplayOptionChoiceBox.getItems().addAll(TimeSeriesPanel.MovingRangeDisplayOption.NOT_SHOWN, TimeSeriesPanel.MovingRangeDisplayOption.PLOT_VALUE, TimeSeriesPanel.MovingRangeDisplayOption.OPACITY);
-        TimeSeriesPanel.MovingRangeDisplayOption lastMovingRangeDisplayOption = TimeSeriesPanel.MovingRangeDisplayOption.valueOf( preferences.get(FalconPreferenceKeys.LAST_MOVING_RANGE_DISPLAY_OPTION, multiViewPanel.getMovingRangeDisplayOption().toString()) );
+        movingRangeDisplayOptionChoiceBox.getItems().addAll(NumericTimeSeriesPanel.MovingRangeDisplayOption.NOT_SHOWN, NumericTimeSeriesPanel.MovingRangeDisplayOption.PLOT_VALUE, NumericTimeSeriesPanel.MovingRangeDisplayOption.OPACITY);
+        NumericTimeSeriesPanel.MovingRangeDisplayOption lastMovingRangeDisplayOption = NumericTimeSeriesPanel.MovingRangeDisplayOption.valueOf( preferences.get(FalconPreferenceKeys.LAST_MOVING_RANGE_DISPLAY_OPTION, multiViewPanel.getMovingRangeDisplayOption().toString()) );
         multiViewPanel.setMovingRangeDisplayOption(lastMovingRangeDisplayOption);
         movingRangeDisplayOptionChoiceBox.getSelectionModel().select(lastMovingRangeDisplayOption);
         movingRangeDisplayOptionChoiceBox.getSelectionModel().selectedItemProperty().addListener(
-                (ObservableValue<? extends TimeSeriesPanel.MovingRangeDisplayOption> ov,
-                 TimeSeriesPanel.MovingRangeDisplayOption oldValue, TimeSeriesPanel.MovingRangeDisplayOption newValue) -> {
+                (ObservableValue<? extends NumericTimeSeriesPanel.MovingRangeDisplayOption> ov,
+                 NumericTimeSeriesPanel.MovingRangeDisplayOption oldValue, NumericTimeSeriesPanel.MovingRangeDisplayOption newValue) -> {
                     if (oldValue != newValue) {
                         multiViewPanel.setMovingRangeDisplayOption(newValue);
                         preferences.put(FalconPreferenceKeys.LAST_MOVING_RANGE_DISPLAY_OPTION, newValue.toString());
@@ -1293,7 +1288,7 @@ public class FalconMain extends Application {
     }
 
     private class SelectionViewInfo {
-        public TimeSeriesPanel detailTimeSeriesPanel;
+        public NumericTimeSeriesPanel detailNumericTimeSeriesPanel;
         public JScrollPane detailsTimeSeriesPanelScrollPane;
         public TimeSeriesSelection selection;
     }

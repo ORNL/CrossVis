@@ -1,13 +1,10 @@
 package gov.ornl.csed.cda.experimental;
 
+import gov.ornl.csed.cda.timevis.NumericTimeSeriesPanel;
 import gov.ornl.csed.cda.timevis.TimeSeries;
-import gov.ornl.csed.cda.timevis.TimeSeriesPanel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import prefuse.data.Table;
-import prefuse.data.Tuple;
-import prefuse.data.column.Column;
-import prefuse.data.column.ColumnMetadata;
 import prefuse.data.io.CSVTableReader;
 import prefuse.data.io.DataIOException;
 
@@ -20,7 +17,6 @@ import java.awt.event.AdjustmentListener;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Date;
 
 /**
  * Created by csg on 12/29/15.
@@ -45,16 +41,16 @@ public class PrefuseTimeTest {
                 JFrame frame = new JFrame();
                 frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-                TimeSeriesPanel detailsTimeSeriesPanel = new TimeSeriesPanel(2, ChronoUnit.SECONDS, TimeSeriesPanel.PlotDisplayOption.STEPPED_LINE);
-                detailsTimeSeriesPanel.setBackground(Color.white);
+                NumericTimeSeriesPanel detailsNumericTimeSeriesPanel = new NumericTimeSeriesPanel(2, ChronoUnit.SECONDS, NumericTimeSeriesPanel.PlotDisplayOption.STEPPED_LINE);
+                detailsNumericTimeSeriesPanel.setBackground(Color.white);
 
-                TimeSeriesPanel overviewTimeSeriesPanel = new TimeSeriesPanel(2, TimeSeriesPanel.PlotDisplayOption.STEPPED_LINE);
-                overviewTimeSeriesPanel.setPreferredSize(new Dimension(1000, 100));
-                overviewTimeSeriesPanel.setBackground(Color.white);
+                NumericTimeSeriesPanel overviewNumericTimeSeriesPanel = new NumericTimeSeriesPanel(2, NumericTimeSeriesPanel.PlotDisplayOption.STEPPED_LINE);
+                overviewNumericTimeSeriesPanel.setPreferredSize(new Dimension(1000, 100));
+                overviewNumericTimeSeriesPanel.setBackground(Color.white);
                 Border border = BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(10,10,10,10), BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
-                overviewTimeSeriesPanel.setBorder(border);
+                overviewNumericTimeSeriesPanel.setBorder(border);
 
-                JScrollPane scroller = new JScrollPane(detailsTimeSeriesPanel);
+                JScrollPane scroller = new JScrollPane(detailsNumericTimeSeriesPanel);
                 scroller.getVerticalScrollBar().setUnitIncrement(10);
                 scroller.getHorizontalScrollBar().setUnitIncrement(10);
                 scroller.setBackground(frame.getBackground());
@@ -62,7 +58,7 @@ public class PrefuseTimeTest {
 
                 ((JPanel)frame.getContentPane()).setLayout(new BorderLayout());
                 ((JPanel)frame.getContentPane()).add(scroller, BorderLayout.CENTER);
-                ((JPanel)frame.getContentPane()).add(overviewTimeSeriesPanel, BorderLayout.SOUTH);
+                ((JPanel)frame.getContentPane()).add(overviewNumericTimeSeriesPanel, BorderLayout.SOUTH);
 
                 frame.setSize(1000, 300);
                 frame.setVisible(true);
@@ -76,8 +72,8 @@ public class PrefuseTimeTest {
                     timeSeries.addRecord(instant, beamCurrentValue, Double.NaN, Double.NaN);
                 }
 
-                overviewTimeSeriesPanel.setTimeSeries(timeSeries, timeSeries.getStartInstant(), timeSeries.getEndInstant());
-                detailsTimeSeriesPanel.setTimeSeries(timeSeries, timeSeries.getStartInstant(), timeSeries.getEndInstant());
+                overviewNumericTimeSeriesPanel.setTimeSeries(timeSeries, timeSeries.getStartInstant(), timeSeries.getEndInstant());
+                detailsNumericTimeSeriesPanel.setTimeSeries(timeSeries, timeSeries.getStartInstant(), timeSeries.getEndInstant());
 
                 scroller.getHorizontalScrollBar().addAdjustmentListener(new AdjustmentListener() {
                     @Override
@@ -91,7 +87,7 @@ public class PrefuseTimeTest {
                         norm = 1. - (double) scrollBarRight / (double) scrollBarModelWidth;
                         deltaTime = norm * Duration.between(timeSeries.getStartInstant(), timeSeries.getEndInstant()).toMillis();
                         Instant endHighlightInstant = timeSeries.getEndInstant().minusMillis((long) deltaTime);
-                        overviewTimeSeriesPanel.setHighlightRange(startHighlightInstant, endHighlightInstant);
+                        overviewNumericTimeSeriesPanel.setHighlightRange(startHighlightInstant, endHighlightInstant);
 //                            log.debug("scrollBarRight = " + scrollBarRight + " norm=" + norm);
 //                            log.debug("scrollbar value=" + scrollBar.getModel().getValue() + " extent=" + scrollBar.getModel().getExtent() + " min=" + scrollBar.getModel().getMinimum() + " max=" + scrollBar.getModel().getMaximum());
 //                            log.debug("highlight end instant = " + endHighlightInstant);

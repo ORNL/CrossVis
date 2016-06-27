@@ -1,7 +1,7 @@
 package gov.ornl.csed.cda.experimental;
 
+import gov.ornl.csed.cda.timevis.NumericTimeSeriesPanel;
 import gov.ornl.csed.cda.timevis.TimeSeries;
-import gov.ornl.csed.cda.timevis.TimeSeriesPanel;
 import prefuse.data.Table;
 import prefuse.data.io.CSVTableReader;
 
@@ -11,10 +11,7 @@ import javax.swing.border.EtchedBorder;
 import java.awt.*;
 import java.awt.event.AdjustmentEvent;
 import java.awt.event.AdjustmentListener;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 import java.io.File;
-import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Random;
@@ -34,18 +31,18 @@ public class MovingRangeTest {
 
                     Border border = BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(10,10,10,10), BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
 
-                    TimeSeriesPanel normalTimeSeriesPanel = new TimeSeriesPanel(plotUnitWidth, ChronoUnit.SECONDS, TimeSeriesPanel.PlotDisplayOption.LINE);
-                    normalTimeSeriesPanel.setBackground(Color.white);
+                    NumericTimeSeriesPanel normalNumericTimeSeriesPanel = new NumericTimeSeriesPanel(plotUnitWidth, ChronoUnit.SECONDS, NumericTimeSeriesPanel.PlotDisplayOption.LINE);
+                    normalNumericTimeSeriesPanel.setBackground(Color.white);
 
-                    JScrollPane normalTimeSeriesScroller = new JScrollPane(normalTimeSeriesPanel);
+                    JScrollPane normalTimeSeriesScroller = new JScrollPane(normalNumericTimeSeriesPanel);
                     normalTimeSeriesScroller.setBackground(frame.getBackground());
                     normalTimeSeriesScroller.setBorder(BorderFactory.createTitledBorder("Normal Data Value Mode"));
 
-                    TimeSeriesPanel movingRangeTimeSeriesPanel = new TimeSeriesPanel(plotUnitWidth, ChronoUnit.SECONDS, TimeSeriesPanel.PlotDisplayOption.LINE);
-                    movingRangeTimeSeriesPanel.setBackground(Color.white);
-                    movingRangeTimeSeriesPanel.setMovingRangeDisplayOption(TimeSeriesPanel.MovingRangeDisplayOption.PLOT_VALUE);
+                    NumericTimeSeriesPanel movingRangeNumericTimeSeriesPanel = new NumericTimeSeriesPanel(plotUnitWidth, ChronoUnit.SECONDS, NumericTimeSeriesPanel.PlotDisplayOption.LINE);
+                    movingRangeNumericTimeSeriesPanel.setBackground(Color.white);
+                    movingRangeNumericTimeSeriesPanel.setMovingRangeDisplayOption(NumericTimeSeriesPanel.MovingRangeDisplayOption.PLOT_VALUE);
 
-                    JScrollPane movingRangeTimeSeriesScroller = new JScrollPane(movingRangeTimeSeriesPanel);
+                    JScrollPane movingRangeTimeSeriesScroller = new JScrollPane(movingRangeNumericTimeSeriesPanel);
                     movingRangeTimeSeriesScroller.setBackground(frame.getBackground());
                     movingRangeTimeSeriesScroller.getHorizontalScrollBar().setEnabled(false);
                     movingRangeTimeSeriesScroller.setBorder(BorderFactory.createTitledBorder("Moving Range Mode"));
@@ -62,9 +59,9 @@ public class MovingRangeTest {
 //                        @Override
 //                        public void itemStateChanged(ItemEvent e) {
 //                            if (e.getStateChange() == ItemEvent.SELECTED) {
-//                                detailsTimeSeriesPanel.setMovingRangeModeEnabled(true);
+//                                detailsNumericTimeSeriesPanel.setMovingRangeModeEnabled(true);
 //                            } else if (e.getStateChange() == ItemEvent.DESELECTED) {
-//                                detailsTimeSeriesPanel.setMovingRangeModeEnabled(false);
+//                                detailsNumericTimeSeriesPanel.setMovingRangeModeEnabled(false);
 //                            }
 //                        }
 //                    });
@@ -82,8 +79,8 @@ public class MovingRangeTest {
 //                    System.out.println("Press Enter key to continue...");
 //                    System.in.read();
 
-                    normalTimeSeriesPanel.setTimeSeries(timeSeries, timeSeries.getStartInstant(), timeSeries.getEndInstant());
-                    movingRangeTimeSeriesPanel.setTimeSeries(timeSeries, timeSeries.getStartInstant(), timeSeries.getEndInstant());
+                    normalNumericTimeSeriesPanel.setTimeSeries(timeSeries, timeSeries.getStartInstant(), timeSeries.getEndInstant());
+                    movingRangeNumericTimeSeriesPanel.setTimeSeries(timeSeries, timeSeries.getStartInstant(), timeSeries.getEndInstant());
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }

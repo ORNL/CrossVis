@@ -1,7 +1,7 @@
 package gov.ornl.csed.cda.experimental;
 
+import gov.ornl.csed.cda.timevis.NumericTimeSeriesPanel;
 import gov.ornl.csed.cda.timevis.TimeSeries;
-import gov.ornl.csed.cda.timevis.TimeSeriesPanel;
 
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -33,17 +33,17 @@ public class OverviewTimeSeriesTest {
                     timeSeries.addRecord(instant, value, Double.NaN, Double.NaN);
                 }
 
-                TimeSeriesPanel overviewTimeSeriesPanel = new TimeSeriesPanel(10, TimeSeriesPanel.PlotDisplayOption.LINE);
-                overviewTimeSeriesPanel.setPreferredSize(new Dimension(1000, 100));
-                overviewTimeSeriesPanel.setBackground(Color.white);
+                NumericTimeSeriesPanel overviewNumericTimeSeriesPanel = new NumericTimeSeriesPanel(10, NumericTimeSeriesPanel.PlotDisplayOption.LINE);
+                overviewNumericTimeSeriesPanel.setPreferredSize(new Dimension(1000, 100));
+                overviewNumericTimeSeriesPanel.setBackground(Color.white);
                 Border border = BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(10,10,10,10), BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
-                overviewTimeSeriesPanel.setBorder(border);
+                overviewNumericTimeSeriesPanel.setBorder(border);
 
-                overviewTimeSeriesPanel.setTimeSeries(timeSeries, timeSeries.getStartInstant(), timeSeries.getEndInstant());
+                overviewNumericTimeSeriesPanel.setTimeSeries(timeSeries, timeSeries.getStartInstant(), timeSeries.getEndInstant());
 
                 JFrame frame = new JFrame();
                 frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-                ((JPanel)frame.getContentPane()).add(overviewTimeSeriesPanel, BorderLayout.CENTER);
+                ((JPanel)frame.getContentPane()).add(overviewNumericTimeSeriesPanel, BorderLayout.CENTER);
                 frame.setSize(1000, 300);
                 frame.setVisible(true);
             }

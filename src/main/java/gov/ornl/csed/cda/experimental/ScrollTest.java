@@ -1,12 +1,11 @@
 package gov.ornl.csed.cda.experimental;
 
+import gov.ornl.csed.cda.timevis.NumericTimeSeriesPanel;
 import gov.ornl.csed.cda.timevis.TimeSeries;
-import gov.ornl.csed.cda.timevis.TimeSeriesPanel;
 
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.EtchedBorder;
-import javax.swing.plaf.basic.BasicScrollBarUI;
 import java.awt.*;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -33,15 +32,15 @@ public class ScrollTest {
                     timeSeries.addRecord(instant, value, Double.NaN, Double.NaN);
                 }
 
-                TimeSeriesPanel timeSeriesPanel = new TimeSeriesPanel(10, ChronoUnit.MINUTES, TimeSeriesPanel.PlotDisplayOption.LINE);
-                timeSeriesPanel.setPreferredSize(new Dimension(1000, 100));
-                timeSeriesPanel.setBackground(Color.white);
+                NumericTimeSeriesPanel numericTimeSeriesPanel = new NumericTimeSeriesPanel(10, ChronoUnit.MINUTES, NumericTimeSeriesPanel.PlotDisplayOption.LINE);
+                numericTimeSeriesPanel.setPreferredSize(new Dimension(1000, 100));
+                numericTimeSeriesPanel.setBackground(Color.white);
                 Border border = BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(5,5,5,5), BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
-                timeSeriesPanel.setBorder(border);
+                numericTimeSeriesPanel.setBorder(border);
 
-                timeSeriesPanel.setTimeSeries(timeSeries, timeSeries.getStartInstant(), timeSeries.getEndInstant());
+                numericTimeSeriesPanel.setTimeSeries(timeSeries, timeSeries.getStartInstant(), timeSeries.getEndInstant());
 //
-//                JScrollPane scrollPane = new JScrollPane(detailsTimeSeriesPanel) {
+//                JScrollPane scrollPane = new JScrollPane(detailsNumericTimeSeriesPanel) {
 //                    public void paintComponent(Graphics g) {
 //                        Graphics2D g2 = (Graphics2D)g;
 //
@@ -58,7 +57,7 @@ public class ScrollTest {
 //                    }
 //                };
 //                scrollPane.getHorizontalScrollBar().setOpaque(false);
-////                JScrollPane scrollPane = new JScrollPane(detailsTimeSeriesPanel);
+////                JScrollPane scrollPane = new JScrollPane(detailsNumericTimeSeriesPanel);
 
 //                scrollPane.getViewport()
 //                scrollPane.getHorizontalScrollBar().setUI(new MyScrollBarUI());
@@ -80,7 +79,7 @@ public class ScrollTest {
 
 //                scrollPane.setHorizontalScrollBar(scrollBar);
 
-                LightScrollPane scrollPane = new LightScrollPane(timeSeriesPanel);
+                LightScrollPane scrollPane = new LightScrollPane(numericTimeSeriesPanel);
 
 
 //                ScrollBarLayerUI scrollBarLayerUI = new ScrollBarLayerUI();

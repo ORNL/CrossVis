@@ -12,7 +12,6 @@ import java.awt.geom.Point2D;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.NavigableMap;
 import java.util.TreeMap;
 
@@ -23,7 +22,7 @@ public class TimeSeriesRenderer {
     private final static Logger log = LoggerFactory.getLogger(TimeSeriesRenderer.class);
 
     public static void renderAsOverview(Graphics2D g2, TimeSeries timeSeries, int plotWidth, int plotHeight,
-                                        int plotUnitWidth, ChronoUnit plotChronoUnit, TimeSeriesPanel.PlotDisplayOption plotDisplayOption,
+                                        int plotUnitWidth, ChronoUnit plotChronoUnit, NumericTimeSeriesPanel.PlotDisplayOption plotDisplayOption,
                                         Color gridColor, Color lineColor, Color pointColor, Color rangeColor, Color stdevRangeColor,
                                         TimeSeriesSummaryInfo summaryInfoArray[],
                                         double valueAxisMin, double valueAxisMax) {
@@ -45,10 +44,10 @@ public class TimeSeriesRenderer {
 
 
                 if (summaryInfo != null) {
-                    if (plotDisplayOption == TimeSeriesPanel.PlotDisplayOption.POINT) {
+                    if (plotDisplayOption == NumericTimeSeriesPanel.PlotDisplayOption.POINT) {
                         Ellipse2D.Double ellipse = new Ellipse2D.Double(summaryInfo.meanPoint.getX() - plotUnitWidth / 2., summaryInfo.meanPoint.getY() - plotUnitWidth / 2., plotUnitWidth, plotUnitWidth);
                         g2.draw(ellipse);
-                    } else if (plotDisplayOption == TimeSeriesPanel.PlotDisplayOption.LINE) {
+                    } else if (plotDisplayOption == NumericTimeSeriesPanel.PlotDisplayOption.LINE) {
                         if (meanPath == null) {
                             meanPath = new Path2D.Double();
                             meanPath.moveTo(summaryInfo.meanPoint.getX(), summaryInfo.meanPoint.getY());
@@ -74,7 +73,7 @@ public class TimeSeriesRenderer {
                         g2.setColor(pointColor);
                         Ellipse2D.Double ellipse = new Ellipse2D.Double(summaryInfo.meanPoint.getX() - 1, summaryInfo.meanPoint.getY() - 1, 2., 2.);
                         g2.draw(ellipse);
-                    } else if (plotDisplayOption == TimeSeriesPanel.PlotDisplayOption.STEPPED_LINE) {
+                    } else if (plotDisplayOption == NumericTimeSeriesPanel.PlotDisplayOption.STEPPED_LINE) {
 //                        if (meanPath.getCurrentPoint() == null) {
 //                            meanPath.moveTo(summaryInfo.meanPoint.getX(), summaryInfo.meanPoint.getY());
 //                            maxPath.moveTo(summaryInfo.maxPoint.getX(), summaryInfo.maxPoint.getY());
@@ -139,7 +138,7 @@ public class TimeSeriesRenderer {
                         g2.setColor(pointColor);
                         Ellipse2D.Double ellipse = new Ellipse2D.Double(summaryInfo.meanPoint.getX() - 1, summaryInfo.meanPoint.getY() - 1, 2., 2.);
                         g2.draw(ellipse);
-                    } else if (plotDisplayOption == TimeSeriesPanel.PlotDisplayOption.BAR) {
+                    } else if (plotDisplayOption == NumericTimeSeriesPanel.PlotDisplayOption.BAR) {
 
                     }
 
@@ -175,7 +174,7 @@ public class TimeSeriesRenderer {
                                         Instant clipEndInstant,
                                         int plotWidth, int plotHeight, int plotUnitWidth,
                                         ChronoUnit plotChronoUnit,
-                                        TimeSeriesPanel.PlotDisplayOption plotDisplayOption, Color gridColor,
+                                        NumericTimeSeriesPanel.PlotDisplayOption plotDisplayOption, Color gridColor,
                                         Color lineColor, Color pointColor, Color rangeColor,
                                         TreeMap<Instant, ArrayList<Point2D.Double>> plotPointMap,
                                         double valueAxisMin, double valueAxisMax) {
@@ -199,12 +198,12 @@ public class TimeSeriesRenderer {
             int numPointsDrawn = 0;
             for (ArrayList<Point2D.Double> instantPoints : clipMap.values()) {
                 for (Point2D.Double point : instantPoints) {
-                    if (plotDisplayOption == TimeSeriesPanel.PlotDisplayOption.POINT) {
+                    if (plotDisplayOption == NumericTimeSeriesPanel.PlotDisplayOption.POINT) {
                         Ellipse2D.Double ellipse = new Ellipse2D.Double(point.x - plotUnitWidth / 2.,
                                 point.y - plotUnitWidth / 2., plotUnitWidth, plotUnitWidth);
                         g2.setColor(pointColor);
                         g2.draw(ellipse);
-                    } else if (plotDisplayOption == TimeSeriesPanel.PlotDisplayOption.LINE) {
+                    } else if (plotDisplayOption == NumericTimeSeriesPanel.PlotDisplayOption.LINE) {
                         if (lastDrawnPoint != null) {
                             Line2D.Double line = new Line2D.Double(lastDrawnPoint.x, lastDrawnPoint.y, point.x, point.y);
                             g2.setColor(lineColor);
@@ -214,7 +213,7 @@ public class TimeSeriesRenderer {
                                 point.y - 1, 2., 2.);
                         g2.setColor(pointColor);
                         g2.draw(ellipse);
-                    } else if (plotDisplayOption == TimeSeriesPanel.PlotDisplayOption.STEPPED_LINE) {
+                    } else if (plotDisplayOption == NumericTimeSeriesPanel.PlotDisplayOption.STEPPED_LINE) {
                         if (lastDrawnPoint != null) {
                             Line2D.Double line1 = new Line2D.Double(lastDrawnPoint.x, lastDrawnPoint.y, point.x, lastDrawnPoint.y);
                             Line2D.Double line2 = new Line2D.Double(point.x, lastDrawnPoint.y, point.x, point.y);

@@ -36,8 +36,8 @@ import javax.swing.border.Border;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
+import gov.ornl.csed.cda.timevis.NumericTimeSeriesPanel;
 import gov.ornl.csed.cda.timevis.TimeSeries;
-import gov.ornl.csed.cda.timevis.TimeSeriesPanel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,8 +65,8 @@ public class EDENx implements OverviewBarListener, ActionListener, DataModelList
     private NumberFormat percentDF = new DecimalFormat("###.##%");
 
     private TimeSeries timeSeries;
-    private TimeSeriesPanel overviewTimeSeriesPanel;
-    private TimeSeriesPanel detailsTimeSeriesPanel;
+    private NumericTimeSeriesPanel overviewNumericTimeSeriesPanel;
+    private NumericTimeSeriesPanel detailsNumericTimeSeriesPanel;
 
     private JTextArea queryTextArea;
     private JMenuItem removeSelectedDataMenuItem;
@@ -265,15 +265,15 @@ public class EDENx implements OverviewBarListener, ActionListener, DataModelList
         summaryVisPanel.add(hyperPCPanelScroller, BorderLayout.CENTER);
         summaryVisPanel.add(overviewBar, BorderLayout.EAST);
 
-        overviewTimeSeriesPanel = new TimeSeriesPanel(1, TimeSeriesPanel.PlotDisplayOption.STEPPED_LINE);
-        overviewTimeSeriesPanel.setBackground(Color.white);
-        overviewTimeSeriesPanel.setPreferredSize(new Dimension(1000, 80));
+        overviewNumericTimeSeriesPanel = new NumericTimeSeriesPanel(1, NumericTimeSeriesPanel.PlotDisplayOption.STEPPED_LINE);
+        overviewNumericTimeSeriesPanel.setBackground(Color.white);
+        overviewNumericTimeSeriesPanel.setPreferredSize(new Dimension(1000, 80));
         Border overviewTimeSeriesBorder = BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(2,2,2,2), BorderFactory.createEtchedBorder());
-        overviewTimeSeriesPanel.setBorder(overviewTimeSeriesBorder);
-        detailsTimeSeriesPanel = new TimeSeriesPanel(1, ChronoUnit.SECONDS, TimeSeriesPanel.PlotDisplayOption.STEPPED_LINE);
-        detailsTimeSeriesPanel.setBackground(Color.white);
-        detailsTimeSeriesPanel.setBorder(BorderFactory.createEmptyBorder(2,2,2,2));
-        JScrollPane detailsTimeSeriesScroller = new JScrollPane(detailsTimeSeriesPanel);
+        overviewNumericTimeSeriesPanel.setBorder(overviewTimeSeriesBorder);
+        detailsNumericTimeSeriesPanel = new NumericTimeSeriesPanel(1, ChronoUnit.SECONDS, NumericTimeSeriesPanel.PlotDisplayOption.STEPPED_LINE);
+        detailsNumericTimeSeriesPanel.setBackground(Color.white);
+        detailsNumericTimeSeriesPanel.setBorder(BorderFactory.createEmptyBorder(2,2,2,2));
+        JScrollPane detailsTimeSeriesScroller = new JScrollPane(detailsNumericTimeSeriesPanel);
         detailsTimeSeriesScroller.getVerticalScrollBar().setUnitIncrement(4);
 
         detailsTimeSeriesScroller.getHorizontalScrollBar().addAdjustmentListener(new AdjustmentListener() {
@@ -289,7 +289,7 @@ public class EDENx implements OverviewBarListener, ActionListener, DataModelList
                     norm = 1. - (double) scrollBarRight / (double) scrollBarModelWidth;
                     deltaTime = norm * Duration.between(timeSeries.getStartInstant(), timeSeries.getEndInstant()).toMillis();
                     Instant endHighlightInstant = timeSeries.getEndInstant().minusMillis((long) deltaTime);
-                    overviewTimeSeriesPanel.setHighlightRange(startHighlightInstant, endHighlightInstant);
+                    overviewNumericTimeSeriesPanel.setHighlightRange(startHighlightInstant, endHighlightInstant);
                 }
             }
         });
@@ -299,7 +299,7 @@ public class EDENx implements OverviewBarListener, ActionListener, DataModelList
 
         timeSeriesPanel.setLayout(new BorderLayout());
         timeSeriesPanel.add(detailsTimeSeriesScroller, BorderLayout.CENTER);
-        timeSeriesPanel.add(overviewTimeSeriesPanel, BorderLayout.SOUTH);
+        timeSeriesPanel.add(overviewNumericTimeSeriesPanel, BorderLayout.SOUTH);
 
         JSplitPane visSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT, timeSeriesPanel, summaryVisPanel);
         visSplit.setDividerLocation(250);
@@ -643,8 +643,8 @@ public class EDENx implements OverviewBarListener, ActionListener, DataModelList
                 }
             }
 
-            overviewTimeSeriesPanel.setTimeSeries(timeSeries, timeSeries.getStartInstant(), timeSeries.getEndInstant());
-            detailsTimeSeriesPanel.setTimeSeries(timeSeries, timeSeries.getStartInstant(), timeSeries.getEndInstant());
+            overviewNumericTimeSeriesPanel.setTimeSeries(timeSeries, timeSeries.getStartInstant(), timeSeries.getEndInstant());
+            detailsNumericTimeSeriesPanel.setTimeSeries(timeSeries, timeSeries.getStartInstant(), timeSeries.getEndInstant());
         }
     }
 

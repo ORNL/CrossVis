@@ -1,6 +1,5 @@
 package gov.ornl.csed.cda.experimental;
 
-import gov.ornl.csed.cda.timevis.TimeSeriesPanel;
 import javafx.geometry.Orientation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -8,20 +7,15 @@ import org.slf4j.LoggerFactory;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
-import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
-import java.nio.Buffer;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.PriorityQueue;
 import java.util.TreeMap;
-import java.util.concurrent.ArrayBlockingQueue;
 
 /**
  * Created by csg on 4/5/16.
