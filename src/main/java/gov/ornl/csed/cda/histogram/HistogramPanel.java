@@ -330,6 +330,9 @@ public class HistogramPanel extends JComponent implements ComponentListener, Mou
 
         if (histogram != null) {
             histogram.setNumBins(binCount);
+            if (histogram.getMaxBinCount() > this.countAxisMax) {
+                this.countAxisMax = histogram.getMaxBinCount();
+            }
         }
 
         if (highlightHistogram != null) {
