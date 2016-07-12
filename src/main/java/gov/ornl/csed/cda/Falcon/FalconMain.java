@@ -133,7 +133,7 @@ public class FalconMain extends Application {
         leftSplit.setOrientation(Orientation.VERTICAL);
         leftSplit.getItems().addAll(dataTreeView, sideSettingsNode);
         leftSplit.setResizableWithParent(sideSettingsNode, false);
-        leftSplit.setMaxWidth(350.);
+        leftSplit.setMaxWidth(400.);
 
         // right panel (selection view)
         StackPane rightStackPane = new StackPane();
@@ -976,6 +976,7 @@ public class FalconMain extends Application {
                 preferences.putInt(FalconPreferenceKeys.MULTI_VIEW_HISTOGRAM_BIN_SIZE, (Integer)newValue);
             }
         });
+        multipleViewHistogramBinSizeSpinner.setPrefWidth(100.);
         grid.add(new Label("Histogram Bin Count: "), 0, 0);
         grid.add(multipleViewHistogramBinSizeSpinner, 1, 0);
 
@@ -988,7 +989,7 @@ public class FalconMain extends Application {
             multiViewPanel.setPlotHeight((Integer)newValue);
             preferences.putInt(FalconPreferenceKeys.LAST_VARIABLE_PANEL_HEIGHT, (Integer) newValue);
         });
-        plotHeightSpinner.setPrefWidth(80.);
+        plotHeightSpinner.setPrefWidth(100.);
         grid.add(new Label("Variable Panel Height: "), 0, 1);
         grid.add(plotHeightSpinner, 1, 1);
 
@@ -1021,6 +1022,7 @@ public class FalconMain extends Application {
             multiViewPanel.setChronoUnitWidth((Integer)newValue);
             preferences.putInt(FalconPreferenceKeys.LAST_CHRONO_UNIT_WIDTH, (Integer) newValue);
         });
+        plotChronoUnitWidthSpinner.setPrefWidth(100.);
         grid.add(new Label("Plot Unit Width: "), 0, 0);
         grid.add(plotChronoUnitWidthSpinner, 1, 0);
 
@@ -1198,6 +1200,7 @@ public class FalconMain extends Application {
             selectionDetailPanel.setPlotHeight((Integer)newValue);
             preferences.putInt(FalconPreferenceKeys.LAST_PLOT_HEIGHT, (Integer) newValue);
         });
+        selectionPlotHeightSpinner.setPrefWidth(100.);
         grid.add(selectionPlotHeightSpinner, 1, 0);
 
         grid.add(new Label("Bin Count: "), 0, 1);
@@ -1210,6 +1213,7 @@ public class FalconMain extends Application {
             selectionDetailPanel.setBinCount((Integer)newValue);
             preferences.putInt(FalconPreferenceKeys.LAST_BIN_COUNT, (Integer) newValue);
         });
+        selectionBinSizeSpinner.setPrefWidth(100.);
         grid.add(selectionBinSizeSpinner, 1, 1);
 
         scrollPane = new ScrollPane(grid);

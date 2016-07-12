@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -17,6 +18,7 @@ import java.util.*;
 public class PLGFileReader {
     private static final Logger log = LoggerFactory.getLogger(PLGFileReader.class);
     private static DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
+
 
     public static double[] readPLGFileAsDoubleArray(File plgFile, String variableName) throws IOException {
         BufferedReader plgFileReader = new BufferedReader(new FileReader(plgFile));
@@ -55,6 +57,7 @@ public class PLGFileReader {
         }
         return data;
     }
+
 
     public static HashMap<String, TimeSeries> readPLGFileAsTimeSeries(File plgFile, Collection<String> variables) throws IOException {
         HashMap<String, TimeSeries> variableTimeSeriesMap = new HashMap<>();
@@ -95,16 +98,9 @@ public class PLGFileReader {
         }
         plgFileReader.close();
 
-//        log.debug("Read time series for " + variableTimeSeriesMap.size() + " variables");
-//        log.debug("Time Series: ");
-//        for (TimeSeries timeSeries : variableTimeSeriesMap.values()) {
-//            if (timeSeries.getRecordCount() > 1) {
-//                log.debug(timeSeries.getName() + " - " + timeSeries.getRecordCount() + " records");
-//            }
-//        }
-
         return variableTimeSeriesMap;
     }
+
 
     public static HashMap<String, PLGVariableSchema> readVariableSchemas(File plgFile) throws IOException {
         HashMap<String, PLGVariableSchema> variableSchemaMap = new HashMap<>();
@@ -141,6 +137,7 @@ public class PLGFileReader {
         log.debug("PLG file " + plgFile.getName() + " has " + variableSchemaMap.size() + " variables");
         return variableSchemaMap;
     }
+
 
     public static void main (String args[]) throws IOException {
         File plgFile = new File("/Users/csg/Desktop/AM_data/R1140_2015-01-30_15.06/R1140_2015-01-30_15.06/R1140_2015-01-30_15.06.plg");

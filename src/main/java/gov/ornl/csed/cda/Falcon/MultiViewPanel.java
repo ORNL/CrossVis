@@ -461,7 +461,7 @@ public class MultiViewPanel extends JPanel {
             public void adjustmentValueChanged(AdjustmentEvent e) {
                 JScrollBar scrollBar = (JScrollBar)e.getSource();
                 double scrollBarModelWidth = scrollBar.getModel().getMaximum() - scrollBar.getModel().getMinimum();
-                double norm = (double)scrollBar.getModel().getValue() / scrollBarModelWidth;
+
 
                 //TODO: Need to make a map to quickly get the group for a timeview;  This needs to be cleaned up
                 // if the view is in a group with more than one view and the group is set to sync scrolling, sync those suckers here
@@ -478,6 +478,7 @@ public class MultiViewPanel extends JPanel {
                         }
 
                         // set highlight range based on the group start / end time range
+                        double norm = (double)scrollBar.getModel().getValue() / scrollBarModelWidth;
                         double deltaTime = norm * Duration.between(group.startInstant, group.endInstant).toMillis();
                         Instant startHighlightInstant = group.startInstant.plusMillis((long)deltaTime);
                         int scrollBarRight = scrollBar.getModel().getValue() + scrollBar.getModel().getExtent();

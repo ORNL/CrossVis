@@ -236,7 +236,29 @@ public class TimeSeries {
 	public ArrayList<TimeSeriesRecord> getRecordsBetween(Instant start, Instant end) {
 		ArrayList<TimeSeriesRecord> records = null;
 
-		NavigableMap<Instant, ArrayList<TimeSeriesRecord>> subRecordMap = recordMap.subMap(start, true, end, true);
+//        log.debug("start: " + start + " end: " + end + " recordMap.firstKey(): " + recordMap.firstKey() + " recordMap.lastKey(): " + recordMap.lastKey());
+
+        if (start.isAfter(end)) {
+            log.debug("The start instant is after the end instant!");
+        }
+
+        if (start.isAfter(recordMap.lastKey()) || end.isBefore(recordMap.firstKey())) {
+            // The requested range is outside the range of values for this time series (nothing to return);
+            return records;
+        }
+
+        // Make sure the requested start and end instants are not beyond the range of this time series record map
+        Instant searchStart = start;
+        if (searchStart.isBefore(recordMap.firstKey())) {
+            searchStart = recordMap.firstKey();
+        }
+        Instant searchEnd = end;
+        if (searchEnd.isAfter(recordMap.lastKey())) {
+            searchEnd = recordMap.lastKey();
+        }
+
+
+		NavigableMap<Instant, ArrayList<TimeSeriesRecord>> subRecordMap = recordMap.subMap(searchStart, true, searchEnd, true);
 		if (!subRecordMap.isEmpty()) {
 			records = new ArrayList<>();
 			for (ArrayList<TimeSeriesRecord> instantRecordList : subRecordMap.values()) {
