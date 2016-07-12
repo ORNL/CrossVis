@@ -1,4 +1,6 @@
-package gov.ornl.csed.cda.util;/*
+package gov.ornl.csed.cda.util;
+
+/*
  *
  *  Class:  [CLASS NAME]
  *
@@ -17,7 +19,7 @@ package gov.ornl.csed.cda.util;/*
  */
 
 
-/*
+/*  PROBLEM DESCRIPTION
 making a consistent set of time series records for multiple variables sampled at different instants
 
 - get all time series for all variables from file. no sampling, just using data as recorded in the file
@@ -27,5 +29,49 @@ making a consistent set of time series records for multiple variables sampled at
  */
 
 
+/*  WHAT I'LL NEED
+
+FOR SAMPLED FILE
+- time resolution; sample rate; sample period
+- struct to hold the sampled time series
+
+FOR PER LAYER FILE
+- time series for the segmenting variable
+
+FOR BOTH
+- list of names of variables to pull out of the plg file
+- struct to hold the raw time series of all of the desired time series
+- a .plg filename
+- a .csv filename
+-
+
+ */
+
+
+/*  WHAT I'LL DO
+
+
+ */
+
+import java.io.File;
+import java.util.ArrayList;
+
 public class plgTOcsvParser {
+
+    String plgFilename = "";
+    String csvFilename = "";
+
+    File plgFile = new File(plgFilename);
+    File csvFile = new File(csvFilename);
+
+    ArrayList<String> plgDesiredVarNames = new ArrayList<>();
+    String plgSegmentingVarName = "";
+
+    public void parsePerSampledData() {
+
+    }
+
+    public void parsePerLayerData() {
+
+    }
 }
