@@ -56,7 +56,7 @@ FOR BOTH
 import java.io.File;
 import java.util.ArrayList;
 
-public class plgTOcsvParser {
+public class PlgTOcsvParser {
 
     String plgFilename = "";
     String csvFilename = "";
