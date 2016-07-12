@@ -172,7 +172,6 @@ public class SegmentedTimeSeriesPanel extends JComponent implements MouseListene
     //  -> Triggered by calling repaint();
     public void paintComponent(Graphics g) {
 
-        // TODO: 6/1/16 - clip the drawing to only the viewable area
         Rectangle2D viewableArea = this.getVisibleRect();
 
         // You will pretty much always do this for a vis
