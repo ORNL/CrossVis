@@ -319,6 +319,7 @@ public class FalconMain extends Application {
         FileMetadata fileMetadata = new FileMetadata(csvFile);
         fileMetadata.fileType = FileMetadata.FileType.CSV;
         fileMetadata.timeColumnIndex = timeColumnIndex;
+        fileMetadata.timeChronoUnit = timeChronoUnit;
         fileTreeItemMetadataMap.put(fileTreeItem, fileMetadata);
         fileMetadataMap.put(csvFile, fileMetadata);
 
@@ -858,6 +859,8 @@ public class FalconMain extends Application {
                 if (fileMetadata.timeChronoUnit == ChronoUnit.MILLIS) {
                     long timeMillis = Long.parseLong(tokens[fileMetadata.timeColumnIndex]);
                     instant = Instant.ofEpochMilli(timeMillis);
+
+                    System.out.println(instant);
                 } else {
                     double seconds = Double.parseDouble(tokens[fileMetadata.timeColumnIndex]);
                     long timeMillis = (long) (seconds * 1000.);
