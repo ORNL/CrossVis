@@ -27,7 +27,8 @@ public class PLGFileSegmenter {
 //        File plgFile = new File("/Users/csg/Desktop/AM_data/2016-Boeing-GoodBad-Builds/Bad/R1119_2016-03-28_11.58_20160328_Q10_BOEING_TENSILE_BUILD_V1/Bad.plg");
 //        File plgFile = new File("/Users/csg/Desktop/AM_data/2016-Boeing-GoodBad-Builds/Good/R1119_2016-04-07_13.28_20160406_Q10_BOEING_TENSILE_V1/Good.plg");
 //        File plgFile = new File("/Users/csg/Desktop/AM_data/Publishable/R1119_2016-06-14_19.09_20160614_Q10_DEHOFF_ORNL TEST ARTICACT 1 LogFiles/R1119_2016-06-14_19.09_20160614_Q10.plg");
-        File plgFile = new File("/Users/csg/Desktop/AM_data/Publishable/R1119_2016-06-20_16.39_20160619_Q10_DEHOFF_ORNL TEST ARTIFACT 2 LogFiles/R1119_2016-06-20_16.39_20160619_Q10.plg");
+//        File plgFile = new File("/Users/csg/Desktop/AM_data/Publishable/R1119_2016-06-20_16.39_20160619_Q10_DEHOFF_ORNL TEST ARTIFACT 2 LogFiles/R1119_2016-06-20_16.39_20160619_Q10.plg");
+        File plgFile = new File("/Users/csg/Desktop/AM_data/Publishable/R1119_2016-06-17_16.06_20160617_Q10_DEHOFF_ARCAM TEST ARTIFACT 1 LogFiles/R1119_2016-06-17_16.06_20160617_Q10.plg");
         ArrayList<String> varNames = new ArrayList<>();
         varNames.add("OPC.PowerSupply.Beam.BeamCurrent");
         varNames.add("OPC.Table.CurrentPosition");
@@ -64,7 +65,7 @@ public class PLGFileSegmenter {
         }
 
         // write to text file
-        File outputFile = new File("2016-06-20.csv");
+        File outputFile = new File("2016-06-17 ARCAM Test.csv");
         BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile));
 
         double prevLayerLastValue = Double.NaN;
@@ -86,7 +87,7 @@ public class PLGFileSegmenter {
 
             // write last record using last record value in this layer and layer end instant
             if (!layerRecords[layerRecords.length - 1].instant.equals(layerInfo.end)) {
-                lineBuffer.append("," + layerInfo.end.toEpochMilli() + "," + layerRecords[layerRecords.length-1].value);
+                lineBuffer.append("," + layerInfo.end.toEpochMilli() + "," + layerRecords[layerRecords.length - 1].value);
             }
             writer.write(lineBuffer.toString() + "\n");
 
