@@ -53,11 +53,9 @@ FOR BOTH
 import gov.ornl.csed.cda.Falcon.PLGFileReader;
 import gov.ornl.csed.cda.timevis.TimeSeries;
 import gov.ornl.csed.cda.timevis.TimeSeriesRecord;
-import prefuse.data.Tree;
 
 import java.io.*;
-import java.lang.reflect.Array;
-import java.sql.Time;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 
@@ -82,6 +80,32 @@ public class PlgToCsvParser {
     private Long sampleDuration = 10L;
 
 
+    public PlgToCsvParser(String plgFilename, String csvFilename, String variablesFileName, Long sampleDuration, String plgSegmentingVarName) throws IOException {
+        this.plgFilename = plgFilename;
+        this.csvFilename = csvFilename;
+        this.plgSegmentingVarName = plgSegmentingVarName;
+
+        plgFile = new File(plgFilename);
+        csvFile = new File(csvFilename);
+
+        this.sampleDuration = sampleDuration;
+
+        BufferedReader bufferedReader = new BufferedReader(new FileReader(new File(variablesFileName)));
+
+        String line = bufferedReader.readLine();
+
+        while (line != null) {
+
+            if (!plgDesiredVarNames.contains(line)) {
+                plgDesiredVarNames.add(line);
+            }
+
+            line = bufferedReader.readLine();
+            plgDesiredVarNames.add(line.trim());
+        }
+    }
+
+
     public PlgToCsvParser(String plgFilename, String csvFilename, String variablesFileName, Long sampleDuration) throws IOException {
         this.plgFilename = plgFilename;
         this.csvFilename = csvFilename;
@@ -102,12 +126,30 @@ public class PlgToCsvParser {
             }
 
             line = bufferedReader.readLine();
+            if (line != null) {
+                plgDesiredVarNames.add(line.trim());
+
+            }
         }
     }
 
     public PlgToCsvParser(String plgFilename, String csvFilename, Long sampleDuration) {
         this.plgFilename = plgFilename;
         this.csvFilename = csvFilename;
+
+        plgFile = new File(plgFilename);
+        csvFile = new File(csvFilename);
+
+        this.sampleDuration = sampleDuration;
+
+        plgDesiredVarNames.add("OPC.PowerSupply.Beam.BeamCurrent");
+        plgDesiredVarNames.add("OPC.PowerSupply.HighVoltage.Grid");
+    }
+
+    public PlgToCsvParser(String plgFilename, String csvFilename, String plgSegmentingVarName) {
+        this.plgFilename = plgFilename;
+        this.csvFilename = csvFilename;
+        this.plgSegmentingVarName = plgSegmentingVarName;
 
         plgFile = new File(plgFilename);
         csvFile = new File(csvFilename);
@@ -187,11 +229,30 @@ public class PlgToCsvParser {
     }
 
     public void parsePerLayerData() {
+
         try {
             rawTimeSeries = PLGFileReader.readPLGFileAsTimeSeries(plgFile, plgDesiredVarNames);
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        ArrayList<String> dummy = new ArrayList<>();
+        dummy.add(plgSegmentingVarName);
+        HashMap<String, TimeSeries> segmentingTimeSeries = null;
+        try {
+            segmentingTimeSeries = PLGFileReader.readPLGFileAsTimeSeries(plgFile, dummy);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        newTimeSeries = convertRawToPerLayerData(rawTimeSeries, segmentingTimeSeries);
+
+        try {
+            writeSampledTimeSeriesToCsv(newTimeSeries, csvFile);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 
     public TreeMap<String, TimeSeries> convertRawToSampledTimeSeries(HashMap<String, TimeSeries> rawTimeSeries, Long sampleDuration) {
@@ -230,6 +291,7 @@ public class PlgToCsvParser {
         System.out.println(comparison);
 
         System.out.println(Instant.ofEpochMilli(comparison));
+
         // - iterate over all elements in the set. for each instant get a value for each variable. if variable has recorded value(s) use it/them; if variable doesn't have a value at current instant get value with greatest instant that is less than current value (floor record). store values.
         for (Map.Entry<String, TreeMap<Instant, Double>> entry : seriesTreeSet.entrySet()) {
             String key = entry.getKey();
@@ -348,7 +410,70 @@ public class PlgToCsvParser {
         return timeSeries;
     }
 
-    // TODO: 7/13/16 - do this
+
+    public TreeMap<String,TimeSeries> convertRawToPerLayerData(HashMap<String, TimeSeries> rawTimeSeries, HashMap<String, TimeSeries> segmentingTimeSeriesHashMap) {
+        TreeMap<String, TimeSeries> timeSeries = new TreeMap<>();
+
+        TimeSeries segmentingTimeSeries = segmentingTimeSeriesHashMap.get(plgSegmentingVarName);
+
+        Instant nextInstant = null;
+        Instant currentInstant = null;
+
+        // iterate through all of the records of the segmenting time series
+        for (TimeSeriesRecord segmentingRecord : segmentingTimeSeries.getAllRecords()) {
+
+            nextInstant = segmentingRecord.instant;
+            Long buildHeightTime;
+
+            // Once we have a current and next instant
+            if (currentInstant != null) {
+
+                // cycle through all of the desired variables
+                ArrayList<TimeSeriesRecord> temp;
+
+                buildHeightTime = nextInstant.toEpochMilli() - currentInstant.toEpochMilli();
+
+                for (Map.Entry<String, TimeSeries> entry : rawTimeSeries.entrySet()) {
+                    temp = entry.getValue().getRecordsBetween(currentInstant, nextInstant);
+
+                    if (temp == null) {
+                        // TODO: 7/26/16 - add an empty entry?
+                        // or have to find the last available value and set that
+                        continue;
+                    }
+
+                    Long recordDuration;
+                    Double average = 0.;
+                    Instant lastRecord = currentInstant;
+
+                    // iterate through all of the records and calculate weighted average
+                    for (int i = 0; i < temp.size(); i++) {
+                        TimeSeriesRecord record = temp.get(i);
+                        recordDuration = lastRecord.toEpochMilli() - record.instant.toEpochMilli();
+
+                        average += record.value * recordDuration / buildHeightTime;
+
+                        lastRecord = record.instant;
+                    }
+
+                    // add the average to the correct time series
+                    if (!timeSeries.containsKey(entry.getKey())) {
+                        timeSeries.put(entry.getKey(), new TimeSeries(entry.getKey()));
+                    }
+
+                    timeSeries.get(entry.getKey()).addRecord(currentInstant, average, Double.NaN, Double.NaN);
+                }
+            }
+
+            currentInstant = nextInstant;
+        }
+
+        // catch the trailing end of the series if any
+
+        return timeSeries;
+    }
+
+
     public void writeSampledTimeSeriesToCsv(TreeMap<String, TimeSeries> sampledTimeSeries, File csvFile) throws IOException {
 
         String rowBuffer = "Time";
@@ -361,7 +486,6 @@ public class PlgToCsvParser {
             rowBuffer += "," + entry.getKey();
         }
 
-        // TODO: 7/13/16 - IO
 //        System.out.println(rowBuffer);
         csvWriter.write(rowBuffer.trim() + "\n");
 
@@ -380,7 +504,6 @@ public class PlgToCsvParser {
                 rowBuffer += "," + series.getRecordsAt(record.instant).get(0).value;
             }
 
-            // TODO: 7/13/16 - IO
 //            System.out.println(rowBuffer);
             csvWriter.write(rowBuffer.trim() + "\n");
         }
@@ -391,14 +514,29 @@ public class PlgToCsvParser {
     public static void main(String[] args) {
 
         // default values if
+        // TODO: 7/14/16 - fix this message
+        String usage =  "PlgToCsvParser Usage\n" +
+                        "====================\n" +
+                        "\n" +
+                        "PlgToCsvParser  [Parser Type]  {PLG file path}.plg  {CSV file path}.csv  {Variables names file path}.txt  [Sample Duration in ms]\n\n" +
+                        "Parser Type - 1: Features constructed by regularly sampling PLG values, 2: Features constructed every time a value is updated\n" +
+                        "PLG file path - Full path to the desired PLG input file\n" +
+                        "CSV file path - Full path to the desired CSV output file\n" +
+                        "Variables name file path - Full path to text file containing desired variable names; one variable name per line\n" +
+                        "Sample Duration in ms - Duration in between regular sampling. Must be a whole number. This value is disregarded for Parser Type 2\n";
+
+        Integer parserOption;
         String plgFileName = "/Users/whw/ORNL Internship/New Build Data/29-6-2016/For William/R1119_2016-06-14_19.09_20160614_Q10_DEHOFF_ORNL TEST ARTICACT 1 LogFiles/R1119_2016-06-14_19.09_20160614_Q10_DEHOFF_ORNL TEST ARTICACT 1.plg";
-        String csvFileName = "/Users/whw/ORNL Internship/test2.csv";
+//        String csvFileName = "/Users/whw/ORNL Internship/test_perSample.csv";
+//        String csvFileName = "/Users/whw/ORNL Internship/test_lossless.csv";
+        String csvFileName = "/Users/whw/ORNL Internship/test_perLayer.csv";
         String variablesFileName = "";
         Long sampleDuration = 1000L;
 
         PlgToCsvParser parser = null;
 
         if (args.length == 5) {
+            parserOption = Integer.parseInt(args[0]);
             plgFileName = args[1];
             csvFileName = args[2];
             variablesFileName = args[3];
@@ -409,19 +547,24 @@ public class PlgToCsvParser {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        } else if (args.length > 1) {
-            // TODO: 7/14/16 - fix this message
-            System.out.println("Error");
+        } else {
+            System.out.println(usage);
             return;
 
-        } else {
-
-            parser = new PlgToCsvParser(plgFileName, csvFileName, sampleDuration);
         }
 
         if (parser != null) {
-            parser.parsePerSampleData();
-//            parser.parseLosslessData();
+//            parser.parsePerSampleData();
+            if (parserOption == 1) {
+                parser.parsePerSampleData();
+            } else if (parserOption == 2) {
+                parser.parseLosslessData();
+            } else {
+                parser.parsePerLayerData();
+            }
+
         }
+
+        return;
     }
 }
