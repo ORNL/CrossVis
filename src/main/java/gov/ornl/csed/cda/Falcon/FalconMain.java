@@ -1082,6 +1082,7 @@ public class FalconMain extends Application {
         grid.add(movingRangeDisplayOptionChoiceBox, 1, 3);
 
         java.awt.Color lastPointColor = new java.awt.Color( preferences.getInt(FalconPreferenceKeys.LAST_POINT_COLOR, multiViewPanel.getTimeSeriesPointColor().getRGB() ) );
+//        java.awt.Color lastPointColor = multiViewPanel.getTimeSeriesPointColor();
         multiViewPanel.setTimeSeriesPointColor(lastPointColor);
         ColorPicker pointColorPicker = new ColorPicker(GraphicsUtil.convertToJavaFXColor(lastPointColor));
         pointColorPicker.setTooltip(new Tooltip("Change Time Series Plot Point Color"));
@@ -1097,6 +1098,7 @@ public class FalconMain extends Application {
         grid.add(pointColorPicker, 1, 4);
 
         java.awt.Color lastLineColor = new java.awt.Color( preferences.getInt(FalconPreferenceKeys.LAST_LINE_COLOR, multiViewPanel.getTimeSeriesLineColor().getRGB()) );
+//        java.awt.Color lastLineColor = multiViewPanel.getTimeSeriesLineColor();
         multiViewPanel.setTimeSeriesLineColor(lastLineColor);
         ColorPicker lineColorPicker = new ColorPicker(GraphicsUtil.convertToJavaFXColor(lastLineColor));
         lineColorPicker.setTooltip(new Tooltip("Change Time Series Plot Line Color"));
