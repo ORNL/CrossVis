@@ -59,7 +59,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 
-public class PlgToCsvParser {
+public class plgTOcsvParser {
 
     private String plgFilename = "";
     private String csvFilename = "";
@@ -80,7 +80,7 @@ public class PlgToCsvParser {
     private Long sampleDuration = 10L;
 
 
-    public PlgToCsvParser(String plgFilename, String csvFilename, String variablesFileName, Long sampleDuration, String plgSegmentingVarName) throws IOException {
+    public plgTOcsvParser(String plgFilename, String csvFilename, String variablesFileName, Long sampleDuration, String plgSegmentingVarName) throws IOException {
         this.plgFilename = plgFilename;
         this.csvFilename = csvFilename;
         this.plgSegmentingVarName = plgSegmentingVarName;
@@ -106,7 +106,7 @@ public class PlgToCsvParser {
     }
 
 
-    public PlgToCsvParser(String plgFilename, String csvFilename, String variablesFileName, Long sampleDuration) throws IOException {
+    public plgTOcsvParser(String plgFilename, String csvFilename, String variablesFileName, Long sampleDuration) throws IOException {
         this.plgFilename = plgFilename;
         this.csvFilename = csvFilename;
 
@@ -133,7 +133,7 @@ public class PlgToCsvParser {
         }
     }
 
-    public PlgToCsvParser(String plgFilename, String csvFilename, Long sampleDuration) {
+    public plgTOcsvParser(String plgFilename, String csvFilename, Long sampleDuration) {
         this.plgFilename = plgFilename;
         this.csvFilename = csvFilename;
 
@@ -146,7 +146,7 @@ public class PlgToCsvParser {
         plgDesiredVarNames.add("OPC.PowerSupply.HighVoltage.Grid");
     }
 
-    public PlgToCsvParser(String plgFilename, String csvFilename, String plgSegmentingVarName) {
+    public plgTOcsvParser(String plgFilename, String csvFilename, String plgSegmentingVarName) {
         this.plgFilename = plgFilename;
         this.csvFilename = csvFilename;
         this.plgSegmentingVarName = plgSegmentingVarName;
@@ -533,7 +533,7 @@ public class PlgToCsvParser {
         String variablesFileName = "";
         Long sampleDuration = 1000L;
 
-        PlgToCsvParser parser = null;
+        plgTOcsvParser parser = null;
 
         if (args.length == 5) {
             parserOption = Integer.parseInt(args[0]);
@@ -543,7 +543,7 @@ public class PlgToCsvParser {
             sampleDuration = Long.valueOf(args[4]);
 
             try {
-                parser = new PlgToCsvParser(plgFileName, csvFileName, variablesFileName, sampleDuration);
+                parser = new plgTOcsvParser(plgFileName, csvFileName, variablesFileName, sampleDuration);
             } catch (IOException e) {
                 e.printStackTrace();
             }
