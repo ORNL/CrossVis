@@ -401,9 +401,12 @@ public class NumericTimeSeriesPanel extends TimeSeriesPanel {
                 for (ArrayList<TimeSeriesPlotPointRecord> instantRecords : getPointRecordMap().values()) {
                     for (TimeSeriesPlotPointRecord plotPointRecord : instantRecords) {
                         if (plotDisplayOption == PlotDisplayOption.POINT) {
-                            Ellipse2D.Double ellipse = new Ellipse2D.Double(plotPointRecord.x, plotPointRecord.meanY,
-                                    plotUnitWidth, plotUnitWidth);
+                            g2.setColor(pointColor);
+                            Ellipse2D.Double ellipse = new Ellipse2D.Double(plotPointRecord.x - 1, plotPointRecord.meanY - 1, 2., 2.);
                             g2.draw(ellipse);
+//                            Ellipse2D.Double ellipse = new Ellipse2D.Double(plotPointRecord.x, plotPointRecord.meanY,
+//                                    plotUnitWidth, plotUnitWidth);
+//                            g2.draw(ellipse);
                         } else if (plotDisplayOption == PlotDisplayOption.LINE) {
                             if (meanPath == null) {
                                 meanPath = new Path2D.Double();
@@ -467,10 +470,14 @@ public class NumericTimeSeriesPanel extends TimeSeriesPanel {
                     for (ArrayList<TimeSeriesPlotPointRecord> instantRecords : clipMap.values()) {
                         for (TimeSeriesPlotPointRecord plotPointRecord : instantRecords) {
                             if (plotDisplayOption == NumericTimeSeriesPanel.PlotDisplayOption.POINT) {
-                                Ellipse2D.Double ellipse = new Ellipse2D.Double(plotPointRecord.x - plotUnitWidth / 2.,
-                                        plotPointRecord.valueY - plotUnitWidth / 2., plotUnitWidth, plotUnitWidth);
+                                Ellipse2D.Double ellipse = new Ellipse2D.Double(plotPointRecord.x - 1,
+                                        plotPointRecord.valueY - 1, 2., 2.);
                                 g2.setColor(plotPointRecord.color);
                                 g2.draw(ellipse);
+//                                Ellipse2D.Double ellipse = new Ellipse2D.Double(plotPointRecord.x - plotUnitWidth / 2.,
+//                                        plotPointRecord.valueY - plotUnitWidth / 2., plotUnitWidth, plotUnitWidth);
+//                                g2.setColor(plotPointRecord.color);
+//                                g2.draw(ellipse);
                             } else if (plotDisplayOption == NumericTimeSeriesPanel.PlotDisplayOption.LINE) {
                                 if (lastDrawnPointRecord != null) {
                                     Line2D.Double line = new Line2D.Double(lastDrawnPointRecord.x,
@@ -555,7 +562,7 @@ public class NumericTimeSeriesPanel extends TimeSeriesPanel {
                     JFrame frame = new JFrame();
                     frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-                    NumericTimeSeriesPanel detailsNumericTimeSeriesPanel = new NumericTimeSeriesPanel(plotUnitWidth, ChronoUnit.SECONDS, PlotDisplayOption.LINE);
+                    NumericTimeSeriesPanel detailsNumericTimeSeriesPanel = new NumericTimeSeriesPanel(plotUnitWidth, ChronoUnit.SECONDS, PlotDisplayOption.POINT);
                     detailsNumericTimeSeriesPanel.setBackground(Color.white);
                     detailsNumericTimeSeriesPanel.setMovingRangeDisplayOption(MovingRangeDisplayOption.OPACITY);
 
