@@ -285,11 +285,11 @@ public class PlgToCsvParser {
         }
 
         Long comparison = endInstant.toEpochMilli() - startInstant.toEpochMilli();
-        System.out.println(startInstant);
-        System.out.println(endInstant);
-        System.out.println(comparison);
-
-        System.out.println(Instant.ofEpochMilli(comparison));
+//        System.out.println(startInstant);
+//        System.out.println(endInstant);
+//        System.out.println(comparison);
+//
+//        System.out.println(Instant.ofEpochMilli(comparison));
 
         // - iterate over all elements in the set. for each instant get a value for each variable. if variable has recorded value(s) use it/them; if variable doesn't have a value at current instant get value with greatest instant that is less than current value (floor record). store values.
         for (Map.Entry<String, TreeMap<Instant, Double>> entry : seriesTreeSet.entrySet()) {
@@ -349,7 +349,7 @@ public class PlgToCsvParser {
                 Instant instant = instants.get(i);
 
                 temp.addRecord(instant, varValues.get(entry.getKey()).floorEntry(instant).getValue(), Double.NaN, Double.NaN);
-                System.out.println(instant.toEpochMilli() + " : " + varValues.get("OPC.PowerSupply.Beam.BeamCurrent").floorEntry(instant).getValue());
+//                System.out.println(instant.toEpochMilli() + " : " + varValues.get("OPC.PowerSupply.Beam.BeamCurrent").floorEntry(instant).getValue());
             }
 
             timeSeries.put(entry.getKey(), temp);

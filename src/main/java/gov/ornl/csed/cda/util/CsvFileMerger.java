@@ -1,4 +1,6 @@
-package gov.ornl.csed.cda.util;/*
+package gov.ornl.csed.cda.util;
+
+/*
  *
  *  Class:  [CLASS NAME]
  *
@@ -45,9 +47,9 @@ import java.util.TreeMap;
 
 public class CsvFileMerger {
 
-    private static String usage = "mess up";
+    private static String usage = "read the documentation";
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
 
         File file1 = null;
         File file2 = null;
@@ -69,6 +71,7 @@ public class CsvFileMerger {
 
             // appender
             file2 = new File(args[1]);
+
             outputFile = new File(args[2]);
 
             appenderKeyCol = Integer.parseInt(args[4]) - 1;
@@ -82,15 +85,8 @@ public class CsvFileMerger {
 
 //            BufferedWriter csvWriter = new BufferedWriter(new FileWriter(dstCSVFile));
 
-            CSVParser file1Parser = null;
-            CSVParser file2Parser = null;
-
-            try {
-                file1Parser = new CSVParser(new FileReader(file1), CSVFormat.DEFAULT);
-                file2Parser = new CSVParser(new FileReader(file2), CSVFormat.DEFAULT);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            CSVParser file1Parser = new CSVParser(new FileReader(file1), CSVFormat.DEFAULT);
+            CSVParser file2Parser = new CSVParser(new FileReader(file2), CSVFormat.DEFAULT);
 
             CSVRecord file1HeaderRecord = file1Parser.iterator().next();
             CSVRecord file2HeaderRecord = file2Parser.iterator().next();
@@ -101,20 +97,13 @@ public class CsvFileMerger {
                 appendeeEntries.add(record);
             }
 
-            System.out.println();
-            System.out.println();
-
             for (CSVRecord record : file2Parser) {
 
                 appenderEntries.put(Double.valueOf(record.get(appenderKeyCol)), record);
             }
 
             BufferedWriter csvWriter = null;
-            try {
-                csvWriter = new BufferedWriter(new FileWriter(outputFile));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            csvWriter = new BufferedWriter(new FileWriter(outputFile));
 
             StringBuffer buffer = new StringBuffer();
 
@@ -123,7 +112,7 @@ public class CsvFileMerger {
                 buffer.append(file1HeaderRecord.get(j) + ",");
 
             }
-            buffer.deleteCharAt(buffer.length() - 1);
+//            buffer.deleteCharAt(buffer.length() - 1);
 
             for (int j = 0; j < file2HeaderRecord.size(); j++) {
                 if (j == appenderKeyCol) {
@@ -135,12 +124,7 @@ public class CsvFileMerger {
             }
             buffer.deleteCharAt(buffer.length() - 1);
 
-            try {
-                csvWriter.write(buffer.toString().trim() + "\n");
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
+            csvWriter.write(buffer.toString().trim() + "\n");
 
             // - for each line in the appendee file
             for (int i = 0; i < appendeeEntries.size(); i++) {
@@ -158,7 +142,7 @@ public class CsvFileMerger {
                     buffer.append(temp.get(j) + ",");
 
                 }
-                buffer.deleteCharAt(buffer.length() - 1);
+//                buffer.deleteCharAt(buffer.length() - 1);
 
                 for (int j = 0; j < appender.size(); j++) {
                     if (j == appenderKeyCol) {
@@ -170,13 +154,14 @@ public class CsvFileMerger {
                 buffer.deleteCharAt(buffer.length() - 1);
 
                 // - write out the new table to a new csv file
-                try {
-                    csvWriter.write(buffer.toString().trim() + "\n");
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                csvWriter.write(buffer.toString().trim() + "\n");
 
             }
+
+            file1Parser.close();
+            file2Parser.close();
+            csvWriter.flush();
+            csvWriter.close();
         }
 
         return;
