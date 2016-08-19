@@ -37,17 +37,144 @@ WHAT I'M GOING TO DO
  */
 
 
+import javafx.application.Application;
+import javafx.stage.FileChooser;
+import javafx.stage.Stage;
+import javafx.stage.Window;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 
+import javax.swing.*;
+import java.awt.*;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.TreeMap;
 
 public class CsvFileMerger {
 
+    // the necessaries
     private static String usage = "read the documentation";
+
+    // the other
+    private static JFrame frame = null;
+
+    public static void merge(File appendeeFile, File appenderFile, File outputFile, Integer appendeeKeyCol, Integer appenderKeyCol) throws IOException {
+        ArrayList<CSVRecord> appendeeEntries = new ArrayList<>();
+        TreeMap<Double, CSVRecord> appenderEntries = new TreeMap<>();
+
+
+        // - read in the two csv files
+        CSVParser file1Parser = new CSVParser(new FileReader(appendeeFile), CSVFormat.DEFAULT);
+        CSVParser file2Parser = new CSVParser(new FileReader(appenderFile), CSVFormat.DEFAULT);
+
+        CSVRecord file1HeaderRecord = file1Parser.iterator().next();
+        CSVRecord file2HeaderRecord = file2Parser.iterator().next();
+
+
+        for (CSVRecord record : file1Parser) {
+            appendeeEntries.add(record);
+        }
+
+        for (CSVRecord record : file2Parser) {
+
+            appenderEntries.put(Double.valueOf(record.get(appenderKeyCol)), record);
+        }
+
+        BufferedWriter csvWriter = null;
+        csvWriter = new BufferedWriter(new FileWriter(outputFile));
+
+        StringBuffer buffer = new StringBuffer();
+
+        // - write out the headers
+        for (int j = 0; j < file1HeaderRecord.size(); j++) {
+            buffer.append(file1HeaderRecord.get(j) + ",");
+
+        }
+
+        for (int j = 0; j < file2HeaderRecord.size(); j++) {
+            if (j == appenderKeyCol) {
+                continue;
+            }
+
+            buffer.append(file2HeaderRecord.get(j) + ",");
+
+        }
+        buffer.deleteCharAt(buffer.length() - 1);
+
+        csvWriter.write(buffer.toString().trim() + "\n");
+
+        // - for each line in the appendee file
+        for (int i = 0; i < appendeeEntries.size(); i++) {
+            CSVRecord temp = appendeeEntries.get(i);
+            buffer = new StringBuffer();
+
+            // - check the value of the key column
+            Double appendeeKeyValue = Double.valueOf(temp.get(appendeeKeyCol));
+
+            // - pull the corresponding row from the appender file
+            CSVRecord appender = appenderEntries.get(appendeeKeyValue);
+
+            // - concatenate the appender features to the appendee vector
+            for (int j = 0; j < temp.size(); j++) {
+                buffer.append(temp.get(j) + ",");
+
+            }
+
+            for (int j = 0; j < appender.size(); j++) {
+                if (j == appenderKeyCol) {
+                    continue;
+                }
+                buffer.append(appender.get(j) + ",");
+
+            }
+            buffer.deleteCharAt(buffer.length() - 1);
+
+            // - write out the new table to a new csv file
+            csvWriter.write(buffer.toString().trim() + "\n");
+
+        }
+
+        file1Parser.close();
+        file2Parser.close();
+        csvWriter.flush();
+        csvWriter.close();
+
+        return;
+    }
+
+    public static void gui() {
+
+        File file1;
+        File file2;
+        File outputFile;
+
+        initialize();
+
+        JFileChooser fileChooser = new JFileChooser();
+        if (fileChooser.showDialog(frame, "Open Log CSV file") != JFileChooser.CANCEL_OPTION) {
+            file1 = fileChooser.getSelectedFile();
+        } else {
+            System.exit(-1);
+        }
+
+        fileChooser = new JFileChooser();
+        if (fileChooser.showDialog(frame, "Open Porosity CSV file") != JFileChooser.CANCEL_OPTION) {
+            file2 = fileChooser.getSelectedFile();
+        } else {
+            System.exit(-1);
+        }
+
+        return;
+    }
+
+    private static void initialize() {
+        frame = new JFrame();
+        frame.setTitle("CSV File Merger");
+        frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+
+        return;
+    }
 
     public static void main(String[] args) throws IOException {
 
@@ -58,11 +185,14 @@ public class CsvFileMerger {
         Integer appenderKeyCol;
         Integer appendeeKeyCol;
 
-        // √ check to see if the appropriate number of CLA
+        // √ check to see if the appropriate number of CLA for comman line or not
         if (args.length != 5) {
-            System.out.println(args.length);
+            // launch the GUI
+//            System.out.println(args.length);
+            CsvFileMerger.gui();
 
         } else {
+            // run from commandLine
 
             // - read in CLA
 
@@ -77,91 +207,7 @@ public class CsvFileMerger {
             appenderKeyCol = Integer.parseInt(args[4]) - 1;
             appendeeKeyCol = Integer.parseInt(args[3]) - 1;
 
-            ArrayList<CSVRecord> appendeeEntries = new ArrayList<>();
-            TreeMap<Double, CSVRecord> appenderEntries = new TreeMap<>();
-
-
-            // - read in the two csv files
-
-//            BufferedWriter csvWriter = new BufferedWriter(new FileWriter(dstCSVFile));
-
-            CSVParser file1Parser = new CSVParser(new FileReader(file1), CSVFormat.DEFAULT);
-            CSVParser file2Parser = new CSVParser(new FileReader(file2), CSVFormat.DEFAULT);
-
-            CSVRecord file1HeaderRecord = file1Parser.iterator().next();
-            CSVRecord file2HeaderRecord = file2Parser.iterator().next();
-
-//            StringBuffer buffer = new StringBuffer();
-
-            for (CSVRecord record : file1Parser) {
-                appendeeEntries.add(record);
-            }
-
-            for (CSVRecord record : file2Parser) {
-
-                appenderEntries.put(Double.valueOf(record.get(appenderKeyCol)), record);
-            }
-
-            BufferedWriter csvWriter = null;
-            csvWriter = new BufferedWriter(new FileWriter(outputFile));
-
-            StringBuffer buffer = new StringBuffer();
-
-            // - write out the headers
-            for (int j = 0; j < file1HeaderRecord.size(); j++) {
-                buffer.append(file1HeaderRecord.get(j) + ",");
-
-            }
-//            buffer.deleteCharAt(buffer.length() - 1);
-
-            for (int j = 0; j < file2HeaderRecord.size(); j++) {
-                if (j == appenderKeyCol) {
-                    continue;
-                }
-
-                buffer.append(file2HeaderRecord.get(j) + ",");
-
-            }
-            buffer.deleteCharAt(buffer.length() - 1);
-
-            csvWriter.write(buffer.toString().trim() + "\n");
-
-            // - for each line in the appendee file
-            for (int i = 0; i < appendeeEntries.size(); i++) {
-                CSVRecord temp = appendeeEntries.get(i);
-                buffer = new StringBuffer();
-
-                // - check the value of the key column
-                Double appendeeKeyValue = Double.valueOf(temp.get(appendeeKeyCol));
-
-                // - pull the corresponding row from the appender file
-                CSVRecord appender = appenderEntries.get(appendeeKeyValue);
-
-                // - concatenate the appender features to the appendee vector
-                for (int j = 0; j < temp.size(); j++) {
-                    buffer.append(temp.get(j) + ",");
-
-                }
-//                buffer.deleteCharAt(buffer.length() - 1);
-
-                for (int j = 0; j < appender.size(); j++) {
-                    if (j == appenderKeyCol) {
-                        continue;
-                    }
-                    buffer.append(appender.get(j) + ",");
-
-                }
-                buffer.deleteCharAt(buffer.length() - 1);
-
-                // - write out the new table to a new csv file
-                csvWriter.write(buffer.toString().trim() + "\n");
-
-            }
-
-            file1Parser.close();
-            file2Parser.close();
-            csvWriter.flush();
-            csvWriter.close();
+            CsvFileMerger.merge(file1, file2, outputFile, appendeeKeyCol, appenderKeyCol);
         }
 
         return;
