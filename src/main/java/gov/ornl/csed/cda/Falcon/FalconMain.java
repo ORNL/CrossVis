@@ -808,7 +808,7 @@ public class FalconMain extends Application {
             // prompt user to specify which of the opened files to apply the template settings to
             Dialog<ObservableList<File>> filesDialog = new Dialog<>();
             filesDialog.setHeaderText("Template Target Selection");
-            filesDialog.setContentText("Choose Open File(s) to Apply Template");
+//            filesDialog.setContentText("Choose Open File(s) to Apply Template");
 
             // Set the button types
             filesDialog.getDialogPane().getButtonTypes().addAll(ButtonType.APPLY, ButtonType.CANCEL);
@@ -823,8 +823,15 @@ public class FalconMain extends Application {
             ListView<File> fileListView = new ListView<>(filenames);
             fileListView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
             borderPane.setCenter(fileListView);
+            borderPane.setMaxHeight(200);
+            borderPane.setMinWidth(400);
 
+            filesDialog.getDialogPane().setContentText("Choose Open File(s) to Apply Template");
+//            filesDialog.getDialogPane().setExpandableContent(borderPane);
             filesDialog.getDialogPane().setContent(borderPane);
+//            filesDialog.getDialogPane().getScene().getWindow().sizeToScene();
+//            filesDialog.getDialogPane().setMinWidth(500);
+//            filesDialog.getDialogPane().setMaxHeight(200);
 
             // Request focus on the username field by default.
             Platform.runLater(() -> fileListView.requestFocus());
@@ -837,6 +844,7 @@ public class FalconMain extends Application {
                 return null;
             });
 
+            filesDialog.setResizable(true);
             Optional<ObservableList<File>> result = filesDialog.showAndWait();
 
             if (result.isPresent()) {
@@ -1217,6 +1225,15 @@ public class FalconMain extends Application {
                 return;
             }
 
+            if (timeSeries == null) {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Variable Read Error");
+                alert.setHeaderText("Variable not found in file");
+                alert.setContentText("The variable '" + variableName + "' was not found in the file '" + fileMetadata.file.getName() + "'");
+                alert.showAndWait();
+                return;
+            }
+
             multiViewPanel.addTimeSeries(timeSeries, fileMetadata.file.getName());
 
             NumericTimeSeriesPanel overviewTSPanel = multiViewPanel.getOverviewTimeSeriesPanel(timeSeries);
@@ -1245,6 +1262,15 @@ public class FalconMain extends Application {
                 ArrayList<String> variableList = new ArrayList<>();
                 variableList.add(variableName);
                 Map<String, TimeSeries> PLGTimeSeriesMap = PLGFileReader.readPLGFileAsTimeSeries(fileMetadata.file, variableList);
+
+                if (PLGTimeSeriesMap == null || PLGTimeSeriesMap.isEmpty()) {
+                    Alert alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setTitle("Variable Read Error");
+                    alert.setHeaderText("Variable not found in file");
+                    alert.setContentText("The variable '" + variableName + "' was not found in the file '" + fileMetadata.file.getName() + "'");
+                    alert.showAndWait();
+                    return;
+                }
                 for (TimeSeries timeSeries : PLGTimeSeriesMap.values()) {
                     timeSeries.setName(fileMetadata.file.getName() + ":" + timeSeries.getName());
                     multiViewPanel.addTimeSeries(timeSeries, fileMetadata.file.getAbsolutePath());
