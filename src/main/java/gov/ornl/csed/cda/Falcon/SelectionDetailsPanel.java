@@ -243,6 +243,11 @@ public class SelectionDetailsPanel extends JPanel {
         return buttonPanel;
     }
 
+    public void removeAllSelections() {
+        viewInfoList.clear();
+        rebuildBoxPanel();
+    }
+
     public void addSelection(TimeSeriesPanel detailsTimeSeriesPanel, TimeSeriesPanel overviewTimeSeriesPanel, JScrollPane timeSeriesScrollPane, TimeSeriesSelection timeSeriesSelection) {
         // get the data in the selection range
         ArrayList<TimeSeriesRecord> records = detailsTimeSeriesPanel.getTimeSeries().getRecordsBetween(timeSeriesSelection.getStartInstant(), timeSeriesSelection.getEndInstant());

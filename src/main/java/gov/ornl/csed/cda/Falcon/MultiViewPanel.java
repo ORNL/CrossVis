@@ -287,6 +287,15 @@ public class MultiViewPanel extends JPanel {
         panelBox.repaint();
     }
 
+    public void removeAllTimeSeries() {
+        viewInfoList.clear();
+        rebuildBoxPanel();
+    }
+
+    public boolean isEmpty() {
+        return viewInfoList.isEmpty();
+    }
+
     private JPanel createButtonPanel (ViewInfo viewInfo) {
         JButton moveUpButton = new JButton();
         moveUpButton.addActionListener(new ActionListener() {
@@ -379,6 +388,16 @@ public class MultiViewPanel extends JPanel {
                 viewInfo.sidePanel.setVisible(showOverview);
             }
         }
+    }
+
+    public ArrayList<String> getTimeSeriesNames() {
+        ArrayList<String> names = new ArrayList<>();
+
+        for (ViewInfo viewInfo : viewInfoList) {
+            names.add(viewInfo.timeSeries.getName());
+        }
+
+        return names;
     }
 
     public void addTimeSeries(TimeSeries timeSeries, String groupName) {
