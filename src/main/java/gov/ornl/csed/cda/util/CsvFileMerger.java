@@ -36,22 +36,25 @@ WHAT I'M GOING TO DO
 
  */
 
-
 import javafx.application.Application;
-import javafx.stage.FileChooser;
+
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
-import javafx.stage.Window;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 
 import javax.swing.*;
-import java.awt.*;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.TreeMap;
 
-public class CsvFileMerger {
+public class CsvFileMerger extends Application {
 
     // the necessaries
     private static String usage = "read the documentation";
@@ -151,29 +154,11 @@ public class CsvFileMerger {
 
         initialize();
 
-        JFileChooser fileChooser = new JFileChooser();
-        if (fileChooser.showDialog(frame, "Open Log CSV file") != JFileChooser.CANCEL_OPTION) {
-            file1 = fileChooser.getSelectedFile();
-        } else {
-            System.exit(-1);
-        }
-
-        fileChooser = new JFileChooser();
-        if (fileChooser.showDialog(frame, "Open Porosity CSV file") != JFileChooser.CANCEL_OPTION) {
-            file2 = fileChooser.getSelectedFile();
-        } else {
-            System.exit(-1);
-        }
-
         return;
     }
 
     private static void initialize() {
-        frame = new JFrame();
-        frame.setTitle("CSV File Merger");
-        frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 
-        return;
     }
 
     public static void main(String[] args) throws IOException {
@@ -211,5 +196,19 @@ public class CsvFileMerger {
         }
 
         return;
+    }
+
+    @Override
+    public void start(Stage primaryStage) throws Exception {
+        Pane root = new StackPane();
+
+        Region region = new Region();
+
+        Scene scene = new Scene(root);
+
+        primaryStage.setScene(scene);
+
+        primaryStage.show();
+
     }
 }
