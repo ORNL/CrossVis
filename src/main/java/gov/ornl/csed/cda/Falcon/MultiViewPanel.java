@@ -34,6 +34,12 @@ import java.util.HashMap;
 public class MultiViewPanel extends JPanel {
     private final static Logger log = LoggerFactory.getLogger(MultiViewPanel.class);
 
+    public final static int DEFAULT_PLOT_HEIGHT = 150;
+    public final static int DEFAULT_PLOT_UNIT_WIDTH = 1;
+    public final static int DEFAULT_HISTOGRAM_BIN_COUNT = 20;
+    public final static boolean DEFAULT_SYNC_GROUP_SCROLLBARS_ENABLED = true;
+    public final static boolean DEFAULT_SHOW_BUTTONS_ENABLED = true;
+
     private int plotHeight;
     private int plotUnitWidth = 1;
     private int binCount = 20;
@@ -442,10 +448,12 @@ public class MultiViewPanel extends JPanel {
         viewInfo.buttonPanel = createButtonPanel(viewInfo);
         viewInfo.buttonPanel.setVisible(showButtonPanels);
 
-        viewInfo.detailNumericTimeSeriesPanel = new NumericTimeSeriesPanel(1, detailChronoUnit, plotDisplayOption);
+        viewInfo.detailNumericTimeSeriesPanel = new NumericTimeSeriesPanel(plotUnitWidth, detailChronoUnit, plotDisplayOption);
         viewInfo.detailNumericTimeSeriesPanel.setPointColor(timeSeriesPointColor);
         viewInfo.detailNumericTimeSeriesPanel.setLineColor(timeSeriesLineColor);
         viewInfo.detailNumericTimeSeriesPanel.setStandardDeviationRangeColor(timeSeriesStandardDeviationRangeColor);
+        viewInfo.detailNumericTimeSeriesPanel.setSpectrumNegativeColor(timeSeriesSpectrumNegativeColor);
+        viewInfo.detailNumericTimeSeriesPanel.setSpectrumPositiveColor(timeSeriesSpectrumPositiveColor);
         viewInfo.detailNumericTimeSeriesPanel.setMinMaxRangeColor(timeSeriesMinMaxRangeColor);
         viewInfo.detailNumericTimeSeriesPanel.setPlotDisplayOption(plotDisplayOption);
         viewInfo.detailNumericTimeSeriesPanel.setMovingRangeDisplayOption(movingRangeDisplayOption);

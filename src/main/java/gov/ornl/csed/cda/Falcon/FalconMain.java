@@ -99,6 +99,8 @@ public class FalconMain extends Application {
     private ColorPicker multiViewSpectrumPositiveColorPicker;
     private ColorPicker multiViewSpectrumNegativeColorPicker;
     private CheckBox multiViewSyncScrollbarsCheckBox;
+    private Spinner selectionDetailPlotHeightSpinner;
+    private Spinner selectionDetailBinSizeSpinner;
 
     public static void main(String[] args) {
         launch(args);
@@ -520,6 +522,8 @@ public class FalconMain extends Application {
     }
 */
 
+
+
     private MenuBar createMenuBar(Stage primaryStage) {
         MenuBar menuBar = new MenuBar();
 
@@ -528,6 +532,7 @@ public class FalconMain extends Application {
         Menu viewMenu = new Menu("View");
 
         MenuItem openCSVMI = new MenuItem("Open CSV...");
+        openCSVMI.setAccelerator(new KeyCodeCombination(KeyCode.C, KeyCombination.META_DOWN));
         openCSVMI.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
@@ -549,6 +554,7 @@ public class FalconMain extends Application {
         });
 
         MenuItem openPLGMI = new MenuItem("Open PLG...");
+        openPLGMI.setAccelerator(new KeyCodeCombination(KeyCode.P, KeyCombination.META_DOWN));
         openPLGMI.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
@@ -627,6 +633,7 @@ public class FalconMain extends Application {
         });
 
         MenuItem captureScreenMI = new MenuItem("Screen Capture...");
+        captureScreenMI.setAccelerator(new KeyCodeCombination(KeyCode.S, KeyCombination.META_DOWN));
         captureScreenMI.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
@@ -660,14 +667,15 @@ public class FalconMain extends Application {
             }
         });
 
-        MenuItem exitMI = new MenuItem("Exit");
+        MenuItem exitMI = new MenuItem("Quit Falcon");
+        exitMI.setAccelerator(new KeyCodeCombination(KeyCode.Q, KeyCombination.META_DOWN));
         exitMI.setOnAction(new EventHandler<ActionEvent>() {
             public void handle(ActionEvent event) {
                 primaryStage.close();
             }
         });
 
-        MenuItem clearVisualizationsMI = new MenuItem("Remove All Time Series Visualzations");
+        MenuItem clearVisualizationsMI = new MenuItem("Remove All Time Series Visualizations");
         clearVisualizationsMI.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
@@ -681,7 +689,8 @@ public class FalconMain extends Application {
             @Override
             public void handle(ActionEvent event) {
                 // for each display preference get default value and set UI component (this will
-                // also cause the preferences to be updated
+                // also cause the preferences to be updated) as well as the view properties
+                resetDisplayPreferencesToDefaultValues();
             }
         });
 
@@ -742,9 +751,9 @@ public class FalconMain extends Application {
             }
         });
 
-        falcon.getItems().addAll(aboutFalcon);
-        fileMenu.getItems().addAll(openCSVMI, openPLGMI, new SeparatorMenuItem(), saveTemplateMI, loadTemplateMI, new SeparatorMenuItem(), captureScreenMI, new SeparatorMenuItem(), exitMI);
-        viewMenu.getItems().addAll(talonWindow, clearVisualizationsMI);
+        falcon.getItems().addAll(aboutFalcon, new SeparatorMenuItem(), exitMI);
+        fileMenu.getItems().addAll(openCSVMI, openPLGMI, new SeparatorMenuItem(), saveTemplateMI, loadTemplateMI, new SeparatorMenuItem(), captureScreenMI);
+        viewMenu.getItems().addAll(talonWindow, resetDisplayPreferencesMI, clearVisualizationsMI);
 
         menuBar.getMenus().addAll(falcon, fileMenu, viewMenu);
 
@@ -984,6 +993,46 @@ public class FalconMain extends Application {
                 }
             }
         }
+    }
+
+    private void resetDisplayPreferencesToDefaultValues() {
+        multipleViewHistogramBinSizeSpinner.getValueFactory().setValue(MultiViewPanel.DEFAULT_HISTOGRAM_BIN_COUNT);
+        multiViewPlotHeightSpinner.getValueFactory().setValue(MultiViewPanel.DEFAULT_PLOT_HEIGHT);
+        multiViewShowButtonsCheckBox.setSelected(MultiViewPanel.DEFAULT_SHOW_BUTTONS_ENABLED);
+        multiViewPlotChronoUnitWidthSpinner.getValueFactory().setValue(2);
+        multiViewPlotDisplayOptionChoiceBox.setValue(NumericTimeSeriesPanel.PlotDisplayOption.STEPPED_LINE);
+        multiViewChronoUnitChoice.setValue(ChronoUnit.MINUTES);
+        multiViewMovingRangeDisplayOptionChoiceBox.setValue(NumericTimeSeriesPanel.DEFAULT_MOVING_RANGE_DISPLAY_OPTION);
+
+        // For some reason, setting the color picker value doesn't fire the onAction event, so for all color
+        // preferences we will have to update the view property and set the preferences manually
+        multiViewPointColorPicker.setValue(GraphicsUtil.convertToJavaFXColor(NumericTimeSeriesPanel.DEFAULT_POINT_COLOR));
+        multiViewPanel.setTimeSeriesPointColor(NumericTimeSeriesPanel.DEFAULT_POINT_COLOR);
+        preferences.putInt(FalconPreferenceKeys.LAST_POINT_COLOR, NumericTimeSeriesPanel.DEFAULT_POINT_COLOR.getRGB());
+
+        multiViewLineColorPicker.setValue(GraphicsUtil.convertToJavaFXColor(NumericTimeSeriesPanel.DEFAULT_LINE_COLOR));
+        multiViewPanel.setTimeSeriesLineColor(NumericTimeSeriesPanel.DEFAULT_LINE_COLOR);
+        preferences.putInt(FalconPreferenceKeys.LAST_LINE_COLOR, NumericTimeSeriesPanel.DEFAULT_LINE_COLOR.getRGB());
+
+        multiViewStdevRangeLineColorPicker.setValue(GraphicsUtil.convertToJavaFXColor(NumericTimeSeriesPanel.DEFAULT_STANDARD_DEVIATION_RANGE_COLOR));
+        multiViewPanel.setTimeSeriesStandardDeviationRangeColor(NumericTimeSeriesPanel.DEFAULT_STANDARD_DEVIATION_RANGE_COLOR);
+        preferences.putInt(FalconPreferenceKeys.LAST_STDDEV_COLOR, NumericTimeSeriesPanel.DEFAULT_STANDARD_DEVIATION_RANGE_COLOR.getRGB());
+
+        multiViewMinMaxRangeLineColorPicker.setValue(GraphicsUtil.convertToJavaFXColor(NumericTimeSeriesPanel.DEFAULT_MINMAX_RANGE_COLOR));
+        multiViewPanel.setTimeSeriesMinMaxRangeColor(NumericTimeSeriesPanel.DEFAULT_MINMAX_RANGE_COLOR);
+        preferences.putInt(FalconPreferenceKeys.LAST_MINMAX_COLOR, NumericTimeSeriesPanel.DEFAULT_MINMAX_RANGE_COLOR.getRGB());
+
+        multiViewSpectrumPositiveColorPicker.setValue(GraphicsUtil.convertToJavaFXColor(NumericTimeSeriesPanel.DEFAULT_SPECTRUM_POSITIVE_COLOR));
+        multiViewPanel.setTimeSeriesSpectrumPositiveColor(NumericTimeSeriesPanel.DEFAULT_SPECTRUM_POSITIVE_COLOR);
+        preferences.putInt(FalconPreferenceKeys.LAST_SPECTRUM_POSITIVE_COLOR, NumericTimeSeriesPanel.DEFAULT_SPECTRUM_POSITIVE_COLOR.getRGB());
+
+        multiViewSpectrumNegativeColorPicker.setValue(GraphicsUtil.convertToJavaFXColor(NumericTimeSeriesPanel.DEFAULT_SPECTRUM_NEGATIVE_COLOR));
+        multiViewPanel.setTimeSeriesSpectrumNegativeColor(NumericTimeSeriesPanel.DEFAULT_SPECTRUM_NEGATIVE_COLOR);
+        preferences.putInt(FalconPreferenceKeys.LAST_SPECTRUM_NEGATIVE_COLOR, NumericTimeSeriesPanel.DEFAULT_SPECTRUM_NEGATIVE_COLOR.getRGB());
+
+        multiViewSyncScrollbarsCheckBox.setSelected(MultiViewPanel.DEFAULT_SYNC_GROUP_SCROLLBARS_ENABLED);
+        selectionDetailBinSizeSpinner.getValueFactory().setValue(SelectionDetailsPanel.DEFAULT_BIN_COUNT);
+        selectionDetailPlotHeightSpinner.getValueFactory().setValue(SelectionDetailsPanel.DEFAULT_PLOT_HEIGHT);
     }
 
 
@@ -1439,6 +1488,7 @@ public class FalconMain extends Application {
             @Override
             public void handle(ActionEvent event) {
                 Color dataColor = multiViewPointColorPicker.getValue();
+                log.debug("Setting color to " + dataColor.toString());
                 multiViewPanel.setTimeSeriesPointColor(GraphicsUtil.convertToAWTColor(dataColor));
                 preferences.putInt(FalconPreferenceKeys.LAST_POINT_COLOR, GraphicsUtil.convertToAWTColor(dataColor).getRGB());
             }
@@ -1550,28 +1600,28 @@ public class FalconMain extends Application {
         grid.add(new Label("Plot Height: "), 0, 0);
         int lastPlotHeight = preferences.getInt(FalconPreferenceKeys.LAST_PLOT_HEIGHT, selectionDetailPanel.getPlotHeight());
         selectionDetailPanel.setPlotHeight(lastPlotHeight);
-        Spinner selectionPlotHeightSpinner = new Spinner(40, 400, lastPlotHeight);
-        selectionPlotHeightSpinner.setTooltip(new Tooltip("Change Selection Details Panel Height"));
-        selectionPlotHeightSpinner.setEditable(true);
-        selectionPlotHeightSpinner.valueProperty().addListener((obs, oldValue, newValue) -> {
+        selectionDetailPlotHeightSpinner = new Spinner(40, 400, lastPlotHeight);
+        selectionDetailPlotHeightSpinner.setTooltip(new Tooltip("Change Selection Details Panel Height"));
+        selectionDetailPlotHeightSpinner.setEditable(true);
+        selectionDetailPlotHeightSpinner.valueProperty().addListener((obs, oldValue, newValue) -> {
             selectionDetailPanel.setPlotHeight((Integer)newValue);
             preferences.putInt(FalconPreferenceKeys.LAST_PLOT_HEIGHT, (Integer) newValue);
         });
-        selectionPlotHeightSpinner.setPrefWidth(100.);
-        grid.add(selectionPlotHeightSpinner, 1, 0);
+        selectionDetailPlotHeightSpinner.setPrefWidth(100.);
+        grid.add(selectionDetailPlotHeightSpinner, 1, 0);
 
         grid.add(new Label("Bin Count: "), 0, 1);
         int lastBinCount = preferences.getInt(FalconPreferenceKeys.LAST_BIN_COUNT, selectionDetailPanel.getBinCount());
         selectionDetailPanel.setBinCount(lastBinCount);
-        Spinner selectionBinSizeSpinner = new Spinner(2, 400, lastBinCount);
-        selectionBinSizeSpinner.setEditable(true);
-        selectionBinSizeSpinner.setTooltip(new Tooltip("Change Selection Details Bin Count"));
-        selectionBinSizeSpinner.valueProperty().addListener((obs, oldValue, newValue) -> {
+        selectionDetailBinSizeSpinner = new Spinner(2, 400, lastBinCount);
+        selectionDetailBinSizeSpinner.setEditable(true);
+        selectionDetailBinSizeSpinner.setTooltip(new Tooltip("Change Selection Details Bin Count"));
+        selectionDetailBinSizeSpinner.valueProperty().addListener((obs, oldValue, newValue) -> {
             selectionDetailPanel.setBinCount((Integer)newValue);
             preferences.putInt(FalconPreferenceKeys.LAST_BIN_COUNT, (Integer) newValue);
         });
-        selectionBinSizeSpinner.setPrefWidth(100.);
-        grid.add(selectionBinSizeSpinner, 1, 1);
+        selectionDetailBinSizeSpinner.setPrefWidth(100.);
+        grid.add(selectionDetailBinSizeSpinner, 1, 1);
 
         scrollPane = new ScrollPane(grid);
         TitledPane selectionSettingsTitledPane = new TitledPane("Selection Details Display Settings", scrollPane);

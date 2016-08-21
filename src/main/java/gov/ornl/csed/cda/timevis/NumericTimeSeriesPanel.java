@@ -31,6 +31,7 @@ public class NumericTimeSeriesPanel extends TimeSeriesPanel {
     public static final Color DEFAULT_MINMAX_RANGE_COLOR = DEFAULT_STANDARD_DEVIATION_RANGE_COLOR.brighter();
     public static final Color DEFAULT_SPECTRUM_NEGATIVE_COLOR = Color.red;
     public static final Color DEFAULT_SPECTRUM_POSITIVE_COLOR = Color.blue;
+    public static final MovingRangeDisplayOption DEFAULT_MOVING_RANGE_DISPLAY_OPTION = MovingRangeDisplayOption.NOT_SHOWN;
 
 //    private ConcurrentSkipListMap<Instant, ArrayList<Point2D.Double>> plotPointMap = new ConcurrentSkipListMap<>();
 
