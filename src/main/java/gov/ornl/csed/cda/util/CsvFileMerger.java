@@ -40,14 +40,14 @@ import javafx.application.Application;
 
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.io.*;
@@ -58,6 +58,7 @@ public class CsvFileMerger extends Application {
 
     // the necessaries
     private static String usage = "read the documentation";
+    private final static Logger log = LoggerFactory.getLogger(CsvFileMerger.class);
 
     // the other
     private static JFrame frame = null;
@@ -175,6 +176,7 @@ public class CsvFileMerger extends Application {
             // launch the GUI
 //            System.out.println(args.length);
             CsvFileMerger.gui();
+            launch(args);
 
         } else {
             // run from commandLine
@@ -200,9 +202,20 @@ public class CsvFileMerger extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        Pane root = new StackPane();
 
-        Region region = new Region();
+        primaryStage.setOnShown(e -> {
+            FileChooser filechooser1 = new FileChooser();
+            filechooser1.setTitle("Choose the Appendee CSV File");
+            File file1 = filechooser1.showOpenDialog(primaryStage);
+            log.debug(String.valueOf(file1));
+
+            FileChooser fileChooser2 = new FileChooser();
+            fileChooser2.setTitle("Choose the Appender CSV File");
+            File file2 = fileChooser2.showOpenDialog(primaryStage);
+            log.debug(String.valueOf(file2));
+        });
+
+        Parent root = new StackPane();
 
         Scene scene = new Scene(root);
 
