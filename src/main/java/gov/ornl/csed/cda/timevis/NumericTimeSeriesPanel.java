@@ -475,10 +475,6 @@ public class NumericTimeSeriesPanel extends TimeSeriesPanel {
                                         plotPointRecord.valueY - 1, 2., 2.);
                                 g2.setColor(plotPointRecord.color);
                                 g2.draw(ellipse);
-//                                Ellipse2D.Double ellipse = new Ellipse2D.Double(plotPointRecord.x - plotUnitWidth / 2.,
-//                                        plotPointRecord.valueY - plotUnitWidth / 2., plotUnitWidth, plotUnitWidth);
-//                                g2.setColor(plotPointRecord.color);
-//                                g2.draw(ellipse);
                             } else if (plotDisplayOption == NumericTimeSeriesPanel.PlotDisplayOption.LINE) {
                                 if (lastDrawnPointRecord != null) {
                                     Line2D.Double line = new Line2D.Double(lastDrawnPointRecord.x,
