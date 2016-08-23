@@ -404,6 +404,7 @@ public class FalconMain extends Application {
         dataTreeRoot.getChildren().addAll(fileTreeItem);
         preferences.put(FalconPreferenceKeys.LAST_CSV_READ_DIRECTORY, csvFile.getParentFile().getAbsolutePath());
     }
+
     /*
     private void openCSVFile(File csvFile) throws IOException {
         dataTable = new CSVTableReader().readTable(csvFile);
