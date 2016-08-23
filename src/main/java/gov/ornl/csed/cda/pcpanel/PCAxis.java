@@ -52,7 +52,6 @@ public class PCAxis {
 	public int scatterplot_x0;
 	public int scatterplot_y0;
 
-
 	public DescriptiveStatistics statistics;
     public EmpiricalDistribution histogram;
 

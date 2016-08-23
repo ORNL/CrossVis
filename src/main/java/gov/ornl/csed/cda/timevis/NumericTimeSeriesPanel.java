@@ -31,6 +31,7 @@ public class NumericTimeSeriesPanel extends TimeSeriesPanel {
     public static final Color DEFAULT_MINMAX_RANGE_COLOR = DEFAULT_STANDARD_DEVIATION_RANGE_COLOR.brighter();
     public static final Color DEFAULT_SPECTRUM_NEGATIVE_COLOR = Color.red;
     public static final Color DEFAULT_SPECTRUM_POSITIVE_COLOR = Color.blue;
+    public static final MovingRangeDisplayOption DEFAULT_MOVING_RANGE_DISPLAY_OPTION = MovingRangeDisplayOption.NOT_SHOWN;
 
 //    private ConcurrentSkipListMap<Instant, ArrayList<Point2D.Double>> plotPointMap = new ConcurrentSkipListMap<>();
 
@@ -474,10 +475,6 @@ public class NumericTimeSeriesPanel extends TimeSeriesPanel {
                                         plotPointRecord.valueY - 1, 2., 2.);
                                 g2.setColor(plotPointRecord.color);
                                 g2.draw(ellipse);
-//                                Ellipse2D.Double ellipse = new Ellipse2D.Double(plotPointRecord.x - plotUnitWidth / 2.,
-//                                        plotPointRecord.valueY - plotUnitWidth / 2., plotUnitWidth, plotUnitWidth);
-//                                g2.setColor(plotPointRecord.color);
-//                                g2.draw(ellipse);
                             } else if (plotDisplayOption == NumericTimeSeriesPanel.PlotDisplayOption.LINE) {
                                 if (lastDrawnPointRecord != null) {
                                     Line2D.Double line = new Line2D.Double(lastDrawnPointRecord.x,

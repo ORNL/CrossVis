@@ -175,8 +175,6 @@ public abstract class TimeSeriesPanel extends JComponent
         g2.fillRect(getInsets().left, getInsets().top, getWidth()-(getInsets().left+getInsets().right), getHeight()-(getInsets().top+getInsets().bottom));
 
         if (timeSeries != null) {
-            g2.setColor(gridLineColor);
-            g2.draw(plotRectangle);
 
             Rectangle clipBounds = g2.getClipBounds();
 
@@ -190,6 +188,16 @@ public abstract class TimeSeriesPanel extends JComponent
             g2.setFont(g2.getFont().deriveFont(12.f));
 
             drawTimeSeries(g2, clipStartInstant, clipEndInstant);
+
+            // the code below hides points that are scaled outside the drawing bounds of the plot in case any are
+            // not hidden in the drawing code itself
+            g2.setColor(getBackground());
+            g2.fillRect(0, 0, getWidth(), timeInfoBarBottom);
+            g2.fillRect(0, valueInfoBarTop, getWidth(), getHeight() - valueInfoBarTop);
+
+            g2.setColor(gridLineColor);
+            g2.draw(plotRectangle);
+
             drawTimeInfoBar(g2);
             drawTimeSelections(g2);
 

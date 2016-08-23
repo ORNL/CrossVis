@@ -15,7 +15,6 @@ public class DataModel {
     private final static Logger log = LoggerFactory.getLogger(DataModel.class);
 
 	protected ArrayList<Tuple> tuples = new ArrayList<Tuple>();
-//	protected ArrayList<Tuple> queriedTuples = new ArrayList<Tuple>();
 	protected ArrayList<Column> columns = new ArrayList<Column>();
 	protected ArrayList<Column> disabledColumns = new ArrayList<Column>();
     protected ArrayList<Tuple> disabledColumnTuples = new ArrayList<Tuple>();

@@ -25,6 +25,9 @@ import java.util.Random;
 public class SelectionDetailsPanel extends JPanel {
     private final static Logger log = LoggerFactory.getLogger(SelectionDetailsPanel.class);
 
+    public final static int DEFAULT_BIN_COUNT = 20;
+    public final static int DEFAULT_PLOT_HEIGHT = 120;
+
     private int plotHeight;
     private int binCount;
     private Box panelBox;
@@ -241,6 +244,11 @@ public class SelectionDetailsPanel extends JPanel {
         }
 
         return buttonPanel;
+    }
+
+    public void removeAllSelections() {
+        viewInfoList.clear();
+        rebuildBoxPanel();
     }
 
     public void addSelection(TimeSeriesPanel detailsTimeSeriesPanel, TimeSeriesPanel overviewTimeSeriesPanel, JScrollPane timeSeriesScrollPane, TimeSeriesSelection timeSeriesSelection) {

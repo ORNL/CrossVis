@@ -61,7 +61,7 @@ public class PCPanel extends JComponent implements ComponentListener, MouseMotio
         this.table = table;
         this.table.addTableListener(this);
         layoutPanel();
-        calculateHistograms();
+//        calculateHistograms();
         calculatePolylines();
         repaint();
     }
