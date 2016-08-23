@@ -44,6 +44,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.stage.FileChooser;
@@ -251,9 +252,14 @@ public class CsvFileMerger extends Application {
             System.exit(0);
         });
 
-        root.add(cb1, 1, 1);
-        root.add(cb2, 2, 1);
-        root.add(button, 2, 2);
+        Label label1 = new Label("Choose the Appendee Key Column Name");
+        Label label2 = new Label("Choose the Appender Key Column Name");
+
+        root.add(label1, 1, 1);
+        root.add(label2, 2, 1);
+        root.add(cb1, 1, 2);
+        root.add(cb2, 2, 2);
+        root.add(button, 2, 3);
 
         Scene scene = new Scene(root);
 
