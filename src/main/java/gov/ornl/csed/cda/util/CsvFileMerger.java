@@ -58,6 +58,8 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.io.*;
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Observable;
@@ -139,6 +141,12 @@ public class CsvFileMerger extends Application {
             // - check the value of the key column
             Double appendeeKeyValue = Double.valueOf(temp.get(appendeeKeyCol));
 
+            // FIXME: 8/23/16 - hard coded calculations to convert build height index to build height values
+            DecimalFormat df = new DecimalFormat("#.##");
+            df.setRoundingMode(RoundingMode.HALF_UP);
+
+            appendeeKeyValue = Double.valueOf(df.format(appendeeKeyValue / 0.05 - 1));
+
             // - pull the corresponding row from the appender file
             CSVRecord appender = appenderEntries.get(appendeeKeyValue);
 
@@ -147,6 +155,8 @@ public class CsvFileMerger extends Application {
                 buffer.append(temp.get(j) + ",");
 
             }
+
+            System.out.println(appendeeKeyValue);
 
             for (int j = 0; j < appender.size(); j++) {
                 if (j == appenderKeyCol) {
