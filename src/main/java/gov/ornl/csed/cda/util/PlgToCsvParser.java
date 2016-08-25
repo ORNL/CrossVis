@@ -86,6 +86,11 @@ public class PlgToCsvParser extends Application {
     private Long sampleDuration = 10L;
 
 
+    public PlgToCsvParser() {
+
+    }
+
+
     public PlgToCsvParser(String plgFilename, String csvFilename, String variablesFileName, Long sampleDuration, String plgSegmentingVarName) throws IOException {
         this.plgFilename = plgFilename;
         this.csvFilename = csvFilename;
@@ -592,8 +597,13 @@ public class PlgToCsvParser extends Application {
 
         rootRightPanel.getChildren().addAll(variableTextBox, button, parserChooser, sampleDurationBox);
 
+        root.add(treeView, 0, 0);
+        root.add(rootRightPanel, 1, 0);
+
         Scene scene = new Scene(root);
 
         primaryStage.setScene(scene);
+
+        primaryStage.show();
     }
 }
