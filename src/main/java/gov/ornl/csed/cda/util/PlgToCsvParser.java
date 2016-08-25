@@ -54,8 +54,11 @@ import gov.ornl.csed.cda.Falcon.PLGFileReader;
 import gov.ornl.csed.cda.timevis.TimeSeries;
 import gov.ornl.csed.cda.timevis.TimeSeriesRecord;
 import javafx.application.Application;
+import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 import java.io.*;
@@ -576,6 +579,18 @@ public class PlgToCsvParser extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
         GridPane root = new GridPane();
+
+        // the left and right components of the gui
+        Node treeView = new TreeView<String>();
+        VBox rootRightPanel = new VBox();
+
+        // the child components of the rootRightPanel
+        Node variableTextBox = new TextArea();
+        Node button = new Button("–");
+        Node parserChooser = new ChoiceBox<String>();
+        Node sampleDurationBox = new TextArea();
+
+        rootRightPanel.getChildren().addAll(variableTextBox, button, parserChooser, sampleDurationBox);
 
         Scene scene = new Scene(root);
 
