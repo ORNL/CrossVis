@@ -54,6 +54,7 @@ import gov.ornl.csed.cda.Falcon.PLGFileReader;
 import gov.ornl.csed.cda.timevis.TimeSeries;
 import gov.ornl.csed.cda.timevis.TimeSeriesRecord;
 import javafx.application.Application;
+import javafx.collections.ObservableList;
 import javafx.event.EventType;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
@@ -61,6 +62,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 import java.io.*;
@@ -85,8 +87,11 @@ public class PlgToCsvParser extends Application {
     private Instant startInstant;
     private Instant endInstant;
 
-    private Long sampleDuration = 10L;
+    private Long sampleDuration = 1000L;
 
+    private enum ParserTypes {
+        SAMPLED, LOSSLESS
+    }
 
     public PlgToCsvParser() {
 
@@ -598,7 +603,9 @@ public class PlgToCsvParser extends Application {
         Menu fileMenu = new Menu("File");
         MenuItem openMenuItem = new MenuItem("Open");
         openMenuItem.setOnAction(e -> {
-            // TODO: 8/25/16  
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Choose a PLG File to Open");
+            plgFile = fileChooser.showOpenDialog(primaryStage);
         });
 
         MenuItem saveTemplateMenuItem = new MenuItem("Save Template");
@@ -610,22 +617,45 @@ public class PlgToCsvParser extends Application {
         loadTemplateMenuItem.setOnAction(e -> {
             // TODO: 8/25/16  
         });
+
+        MenuItem exitMenuItem = new MenuItem("Exit");
+        exitMenuItem.setOnAction(e -> {
+            primaryStage.close();
+        });
         
-        fileMenu.getItems().addAll(openMenuItem, new SeparatorMenuItem(), saveTemplateMenuItem, loadTemplateMenuItem);
+        fileMenu.getItems().addAll(openMenuItem, new SeparatorMenuItem(), saveTemplateMenuItem, loadTemplateMenuItem, new SeparatorMenuItem(), exitMenuItem);
 
         MenuBar menuBar = new MenuBar(plgToCsvParserMenu, fileMenu);
 
         // create the primitive components
-        Node variableListViewer = new TreeView<String>();
+        TreeView<String> variableListViewer = new TreeView<String>();
 
-        Node rmButton = new Button("–");
-        Node parserButton = new Button("Parse");
-        Node saveAsButton = new Button("Save As...");
+        Button rmButton = new Button("–");
+        rmButton.setOnAction(e -> {
+            // TODO: 8/25/16
+        });
 
-        Node variableTextBox = new TextArea();
-        Node sampleDurationBox = new TextArea();
+        Button parserButton = new Button("Parse");
+        parserButton.setOnAction(e -> {
+            // TODO: 8/25/16
 
-        Node parserChooser = new ChoiceBox<String>();
+        });
+
+        Button saveAsButton = new Button("Save As...");
+        saveAsButton.setOnAction(e -> {
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Choose File to Save to");
+            csvFile = fileChooser.showSaveDialog(primaryStage);
+        });
+
+        TextArea variableTextBox = new TextArea();
+        TextArea sampleDurationBox = new TextArea();
+
+        ChoiceBox<String> parserChooser = new ChoiceBox<>();
+        for (int i = 0; i < ParserTypes.values().length; i++) {
+            parserChooser.getItems().add(String.valueOf(ParserTypes.values()[i]));
+        }
+        parserChooser.setValue(String.valueOf(ParserTypes.LOSSLESS));
 
         // group the primitives into the scene
         HBox buttonGroup = new HBox(rmButton, saveAsButton, parserButton);
@@ -637,29 +667,14 @@ public class PlgToCsvParser extends Application {
         HBox components = new HBox(variableListViewer, rootRightPanel);
         components.setSpacing(3D);
 
-        VBox rootScene = new VBox(menuBar, components);
-        rootScene.setSpacing(3D);
-        rootScene.setPadding(new Insets(3, 3, 3, 3));
+        VBox root = new VBox(menuBar, components);
+        root.setSpacing(3D);
 
-        // the child components of the rootRightPanel
-
-
-
-
-
-        parserChooser.prefWidth(rootRightPanel.getWidth());
-
-        // combine the buttons
-
-
-        rootRightPanel.getChildren().addAll();
-
-        root.getChildren().addAll(variableListViewer, rootRightPanel);
-
+        // create the scene and add the root
         Scene scene = new Scene(root);
 
+        // add the scene to the stage and show
         primaryStage.setScene(scene);
-
         primaryStage.show();
     }
 }
