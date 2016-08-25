@@ -54,10 +54,12 @@ import gov.ornl.csed.cda.Falcon.PLGFileReader;
 import gov.ornl.csed.cda.timevis.TimeSeries;
 import gov.ornl.csed.cda.timevis.TimeSeriesRecord;
 import javafx.application.Application;
+import javafx.event.EventType;
+import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
@@ -583,22 +585,76 @@ public class PlgToCsvParser extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        GridPane root = new GridPane();
 
-        // the left and right components of the gui
-        Node treeView = new TreeView<String>();
-        VBox rootRightPanel = new VBox();
+        // create the menu bar
+        Menu plgToCsvParserMenu = new Menu("P2C Parser");
+        MenuItem aboutPlgToCsvParserMenuItem = new MenuItem("About");
+        aboutPlgToCsvParserMenuItem.setOnAction(e -> {
+            // TODO: 8/25/16
+        });
+        
+        plgToCsvParserMenu.getItems().addAll(aboutPlgToCsvParserMenuItem);
 
-        // the child components of the rootRightPanel
+        Menu fileMenu = new Menu("File");
+        MenuItem openMenuItem = new MenuItem("Open");
+        openMenuItem.setOnAction(e -> {
+            // TODO: 8/25/16  
+        });
+
+        MenuItem saveTemplateMenuItem = new MenuItem("Save Template");
+        saveTemplateMenuItem.setOnAction(e -> {
+            // TODO: 8/25/16  
+        });
+
+        MenuItem loadTemplateMenuItem = new MenuItem("Load Template");
+        loadTemplateMenuItem.setOnAction(e -> {
+            // TODO: 8/25/16  
+        });
+        
+        fileMenu.getItems().addAll(openMenuItem, new SeparatorMenuItem(), saveTemplateMenuItem, loadTemplateMenuItem);
+
+        MenuBar menuBar = new MenuBar(plgToCsvParserMenu, fileMenu);
+
+        // create the primitive components
+        Node variableListViewer = new TreeView<String>();
+
+        Node rmButton = new Button("–");
+        Node parserButton = new Button("Parse");
+        Node saveAsButton = new Button("Save As...");
+
         Node variableTextBox = new TextArea();
-        Node button = new Button("–");
-        Node parserChooser = new ChoiceBox<String>();
         Node sampleDurationBox = new TextArea();
 
-        rootRightPanel.getChildren().addAll(variableTextBox, button, parserChooser, sampleDurationBox);
+        Node parserChooser = new ChoiceBox<String>();
 
-        root.add(treeView, 0, 0);
-        root.add(rootRightPanel, 1, 0);
+        // group the primitives into the scene
+        HBox buttonGroup = new HBox(rmButton, saveAsButton, parserButton);
+        buttonGroup.setSpacing(3D);
+
+        VBox rootRightPanel = new VBox(variableTextBox, buttonGroup, parserChooser, sampleDurationBox);
+        rootRightPanel.setSpacing(3D);
+
+        HBox components = new HBox(variableListViewer, rootRightPanel);
+        components.setSpacing(3D);
+
+        VBox rootScene = new VBox(menuBar, components);
+        rootScene.setSpacing(3D);
+        rootScene.setPadding(new Insets(3, 3, 3, 3));
+
+        // the child components of the rootRightPanel
+
+
+
+
+
+        parserChooser.prefWidth(rootRightPanel.getWidth());
+
+        // combine the buttons
+
+
+        rootRightPanel.getChildren().addAll();
+
+        root.getChildren().addAll(variableListViewer, rootRightPanel);
 
         Scene scene = new Scene(root);
 
