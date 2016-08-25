@@ -156,7 +156,7 @@ public class CsvFileMerger extends Application {
 
             }
 
-            System.out.println(appendeeKeyValue);
+//            System.out.println(appendeeKeyValue);
 
             for (int j = 0; j < appender.size(); j++) {
                 if (j == appenderKeyCol) {
