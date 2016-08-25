@@ -53,12 +53,16 @@ FOR BOTH
 import gov.ornl.csed.cda.Falcon.PLGFileReader;
 import gov.ornl.csed.cda.timevis.TimeSeries;
 import gov.ornl.csed.cda.timevis.TimeSeriesRecord;
+import javafx.application.Application;
+import javafx.scene.Scene;
+import javafx.scene.layout.GridPane;
+import javafx.stage.Stage;
 
 import java.io.*;
 import java.time.Instant;
 import java.util.*;
 
-public class PlgToCsvParser {
+public class PlgToCsvParser extends Application {
 
     private String plgFilename = "";
     private String csvFilename = "";
@@ -524,7 +528,7 @@ public class PlgToCsvParser {
                         "Variables name file path - Full path to text file containing desired variable names; one variable name per line\n" +
                         "Sample Duration in ms - Duration in between regular sampling. Must be a whole number. This value is disregarded for Parser Type 2\n";
 
-        Integer parserOption;
+        Integer parserOption = null;
         String plgFileName = "/Users/whw/ORNL Internship/New Build Data/29-6-2016/For William/R1119_2016-06-14_19.09_20160614_Q10_DEHOFF_ORNL TEST ARTICACT 1 LogFiles/R1119_2016-06-14_19.09_20160614_Q10_DEHOFF_ORNL TEST ARTICACT 1.plg";
 //        String csvFileName = "/Users/whw/ORNL Internship/test_perSample.csv";
 //        String csvFileName = "/Users/whw/ORNL Internship/test_lossless.csv";
@@ -546,9 +550,11 @@ public class PlgToCsvParser {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+
         } else {
-            System.out.println(usage);
-            return;
+
+            launch(args);
+            System.exit(0);
 
         }
 
@@ -564,6 +570,15 @@ public class PlgToCsvParser {
 
         }
 
-        return;
+        System.exit(0);
+    }
+
+    @Override
+    public void start(Stage primaryStage) throws Exception {
+        GridPane root = new GridPane();
+
+        Scene scene = new Scene(root);
+
+        primaryStage.setScene(scene);
     }
 }
