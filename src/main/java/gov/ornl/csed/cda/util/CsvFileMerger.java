@@ -241,6 +241,35 @@ public class CsvFileMerger extends Application {
             FileChooser filechooser = new FileChooser();
             filechooser.setTitle("Choose a Log CSV File");
             file1 = filechooser.showOpenDialog(primaryStage);
+
+            if (file1 != null) {
+
+                // - open the files and read in the column names
+                CSVParser file1Parser = null;
+
+                try {
+                    file1Parser = new CSVParser(new FileReader(file1), CSVFormat.DEFAULT);
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                }
+
+                CSVRecord file1HeaderRecord = null;
+
+                if (file1Parser != null) {
+                    file1HeaderRecord = file1Parser.iterator().next();
+                }
+
+                // - populate the choice boxes
+                for (int i = 0; file1HeaderRecord != null && i < file1HeaderRecord.size(); i++) {
+                    appendeeChoiceBox.getItems().add(i, file1HeaderRecord.get(i));
+                }
+
+                try {
+                    file1Parser.close();
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                }
+            }
         });
 
         Button appenderChooserButton = new Button("Choose a Porosity CSV File...");
@@ -248,6 +277,36 @@ public class CsvFileMerger extends Application {
             FileChooser fileChooser = new FileChooser();
             fileChooser.setTitle("Choose a Porosity CSV File");
             file2 = fileChooser.showOpenDialog(primaryStage);
+
+            if (file2 != null) {
+                // TODO: 8/26/16
+
+                // - open the files and read in the column names
+                CSVParser file2Parser = null;
+
+                try {
+                    file2Parser = new CSVParser(new FileReader(file1), CSVFormat.DEFAULT);
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                }
+
+                CSVRecord file2HeaderRecord = null;
+
+                if (file2Parser != null) {
+                    file2HeaderRecord = file2Parser.iterator().next();
+                }
+
+                // - populate the choice boxes
+                for (int i = 0; file2HeaderRecord != null && i < file2HeaderRecord.size(); i++) {
+                    appendeeChoiceBox.getItems().add(i, file2HeaderRecord.get(i));
+                }
+
+                try {
+                    file2Parser.close();
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                }
+            }
         });
 
         Button outputFileChooserButton = new Button("Choose an Output File...");
