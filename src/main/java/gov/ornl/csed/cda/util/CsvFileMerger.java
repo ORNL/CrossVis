@@ -39,6 +39,7 @@ WHAT I'M GOING TO DO
 import javafx.application.Application;
 
 import javafx.collections.ObservableList;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -46,7 +47,9 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
@@ -229,13 +232,53 @@ public class CsvFileMerger extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
 
-        GridPane root = new GridPane();
+        // create the gui primitive
+        ChoiceBox<String> appendeeChoiceBox = new ChoiceBox<>();
+        ChoiceBox<String> appenderChoiceBox = new ChoiceBox<>();
 
+        Button appendeeChooserButton = new Button("Choose a Log CSV File...");
+        appendeeChooserButton.setOnAction(e -> {
+            FileChooser filechooser = new FileChooser();
+            filechooser.setTitle("Choose a Log CSV File");
+            file1 = filechooser.showOpenDialog(primaryStage);
+        });
+
+        Button appenderChooserButton = new Button("Choose a Porosity CSV File...");
+        appenderChooserButton.setOnAction(e -> {
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Choose a Porosity CSV File");
+            file2 = fileChooser.showOpenDialog(primaryStage);
+        });
+
+        Button outputFileChooserButton = new Button("Choose an Output File...");
+        outputFileChooserButton.setOnAction(e -> {
+            // TODO: 8/25/16
+            FileChooser outputFileChooser = new FileChooser();
+            outputFileChooser.setTitle("Choose an Output File");
+            outputFile = outputFileChooser.showSaveDialog(primaryStage);
+        });
+
+        Button combineButton = new Button("Combine");
+        combineButton.setOnAction(e -> {
+            // TODO: 8/25/16
+        });
+
+        // combine the primitives and build the root
+        VBox leftSide = new VBox();
+        leftSide.setAlignment(Pos.CENTER);
+        leftSide.setSpacing(3D);
+        leftSide.getChildren().addAll(appendeeChooserButton, appendeeChoiceBox, outputFileChooserButton);
+
+        VBox rightSide = new VBox();
+        rightSide.setAlignment(Pos.CENTER);
+        rightSide.setSpacing(3D);
+        rightSide.getChildren().addAll(appenderChooserButton, appenderChoiceBox, combineButton);
+
+        HBox root = new HBox();
+        root.setSpacing(3D);
+        root.setPadding(new Insets(3, 3, 3, 3));
         root.setAlignment(Pos.CENTER);
-        root.setHgap(100);
-        root.setVgap(100);
-//        root.setGridLinesVisible(true);
-        root.setPrefSize(Screen.getPrimary().getBounds().getWidth() * 0.5, Screen.getPrimary().getBounds().getHeight() * 0.5);
+        root.getChildren().addAll(leftSide, rightSide);
 
         ChoiceBox<String> cb1 = new ChoiceBox<>();
         ChoiceBox<String> cb2 = new ChoiceBox<>();
@@ -251,9 +294,8 @@ public class CsvFileMerger extends Application {
                 String choice2 = cb2.getValue();
                 ObservableList<String> list2 = cb2.getItems();
 
-                if (true) {
-                    CsvFileMerger.merge(file1, file2, outputFile, list1.indexOf(choice1), list2.indexOf(choice2));
-                }
+                CsvFileMerger.merge(file1, file2, outputFile, list1.indexOf(choice1), list2.indexOf(choice2));
+
             } catch (IOException e1) {
                 e1.printStackTrace();
             }
@@ -262,72 +304,48 @@ public class CsvFileMerger extends Application {
             System.exit(0);
         });
 
-        Label label1 = new Label("Choose the Appendee Key Column Name");
-        Label label2 = new Label("Choose the Appender Key Column Name");
-
-        root.add(label1, 1, 1);
-        root.add(label2, 2, 1);
-        root.add(cb1, 1, 2);
-        root.add(cb2, 2, 2);
-        root.add(button, 2, 3);
-
         Scene scene = new Scene(root);
 
         primaryStage.setScene(scene);
 
-        primaryStage.setOnShown(e -> {
-
-            // choose the three files
-            FileChooser filechooser1 = new FileChooser();
-            filechooser1.setTitle("Choose the Appendee CSV File");
-            file1 = filechooser1.showOpenDialog(primaryStage);
-//            log.debug(String.valueOf(file1));
-
-            FileChooser fileChooser2 = new FileChooser();
-            fileChooser2.setTitle("Choose the Appender CSV File");
-            file2 = fileChooser2.showOpenDialog(primaryStage);
-//            log.debug(String.valueOf(file2));
-
-            FileChooser outputFileChooser = new FileChooser();
-            outputFileChooser.setTitle("Choose the Output File");
-            outputFile = outputFileChooser.showSaveDialog(primaryStage);
-
-            // - open the files and read in the column names
-            CSVParser file1Parser = null;
-            CSVParser file2Parser = null;
-
-            try {
-                file1Parser = new CSVParser(new FileReader(file1), CSVFormat.DEFAULT);
-                file2Parser = new CSVParser(new FileReader(file2), CSVFormat.DEFAULT);
-            } catch (IOException e1) {
-                e1.printStackTrace();
-            }
-
-            CSVRecord file1HeaderRecord = null;
-            CSVRecord file2HeaderRecord = null;
-
-            if (file1Parser != null && file2Parser != null) {
-                file1HeaderRecord = file1Parser.iterator().next();
-                file2HeaderRecord = file2Parser.iterator().next();
-            }
-
-            // - populate the choice boxes
-            for (int i = 0; file1HeaderRecord != null && i < file1HeaderRecord.size(); i++) {
-                cb1.getItems().add(i, file1HeaderRecord.get(i));
-            }
-
-            for (int i = 0; file2HeaderRecord != null && i < file2HeaderRecord.size(); i++) {
-                cb2.getItems().add(i, file2HeaderRecord.get(i));
-            }
-
-            try {
-                file1Parser.close();
-                file2Parser.close();
-            } catch (IOException e1) {
-                e1.printStackTrace();
-            }
-
-        });
+//        primaryStage.setOnShown(e -> {
+//
+//            // - open the files and read in the column names
+//            CSVParser file1Parser = null;
+//            CSVParser file2Parser = null;
+//
+//            try {
+//                file1Parser = new CSVParser(new FileReader(file1), CSVFormat.DEFAULT);
+//                file2Parser = new CSVParser(new FileReader(file2), CSVFormat.DEFAULT);
+//            } catch (IOException e1) {
+//                e1.printStackTrace();
+//            }
+//
+//            CSVRecord file1HeaderRecord = null;
+//            CSVRecord file2HeaderRecord = null;
+//
+//            if (file1Parser != null && file2Parser != null) {
+//                file1HeaderRecord = file1Parser.iterator().next();
+//                file2HeaderRecord = file2Parser.iterator().next();
+//            }
+//
+//            // - populate the choice boxes
+//            for (int i = 0; file1HeaderRecord != null && i < file1HeaderRecord.size(); i++) {
+//                cb1.getItems().add(i, file1HeaderRecord.get(i));
+//            }
+//
+//            for (int i = 0; file2HeaderRecord != null && i < file2HeaderRecord.size(); i++) {
+//                cb2.getItems().add(i, file2HeaderRecord.get(i));
+//            }
+//
+//            try {
+//                file1Parser.close();
+//                file2Parser.close();
+//            } catch (IOException e1) {
+//                e1.printStackTrace();
+//            }
+//
+//        });
 
         primaryStage.show();
 
