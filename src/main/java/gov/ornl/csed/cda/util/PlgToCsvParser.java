@@ -50,20 +50,26 @@ FOR BOTH
  */
 
 
-import gov.ornl.csed.cda.Falcon.PLGFileReader;
+import gov.ornl.csed.cda.Falcon.*;
 import gov.ornl.csed.cda.timevis.TimeSeries;
 import gov.ornl.csed.cda.timevis.TimeSeriesRecord;
 import javafx.application.Application;
 import javafx.collections.ObservableList;
+import javafx.event.EventHandler;
 import javafx.event.EventType;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.input.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontSmoothingType;
+import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.util.Callback;
 
 import java.io.*;
 import java.time.Instant;
@@ -74,8 +80,8 @@ public class PlgToCsvParser extends Application {
     private String plgFilename = "";
     private String csvFilename = "";
 
-    private File plgFile;
-    private File csvFile;
+    private File plgFile = null;
+    private File csvFile = null;
 
     private ArrayList<String> plgDesiredVarNames = new ArrayList<>();
     private String plgSegmentingVarName = "";
@@ -87,7 +93,25 @@ public class PlgToCsvParser extends Application {
     private Instant startInstant;
     private Instant endInstant;
 
+    private static Integer parserOption = null;
+    private ParserTypes parserOption_e = null;
+
     private Long sampleDuration = 1000L;
+
+    /*
+    ========================================================================================================================================================================
+     */
+
+    private Font fontAwesomeFont;
+    private HashMap<TreeItem<String>, FileMetadata> fileTreeItemMetadataMap = new HashMap<>();
+    private HashMap<File, FileMetadata> fileMetadataMap = new HashMap<>();
+    private TreeItem<String> dataTreeRoot;
+    private TreeView<String> dataTreeView;
+    private final DataFormat objectDataFormat = new DataFormat("application/x-java-serialized-object");
+
+    /*
+    ========================================================================================================================================================================
+     */
 
     private enum ParserTypes {
         SAMPLED, LOSSLESS
@@ -543,7 +567,6 @@ public class PlgToCsvParser extends Application {
                         "Variables name file path - Full path to text file containing desired variable names; one variable name per line\n" +
                         "Sample Duration in ms - Duration in between regular sampling. Must be a whole number. This value is disregarded for Parser Type 2\n";
 
-        Integer parserOption = null;
         String plgFileName = "/Users/whw/ORNL Internship/New Build Data/29-6-2016/For William/R1119_2016-06-14_19.09_20160614_Q10_DEHOFF_ORNL TEST ARTICACT 1 LogFiles/R1119_2016-06-14_19.09_20160614_Q10_DEHOFF_ORNL TEST ARTICACT 1.plg";
 //        String csvFileName = "/Users/whw/ORNL Internship/test_perSample.csv";
 //        String csvFileName = "/Users/whw/ORNL Internship/test_lossless.csv";
@@ -591,11 +614,16 @@ public class PlgToCsvParser extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
 
+        InputStream is = FalconMain.class.getResourceAsStream("fontawesome-webfont.ttf");
+        fontAwesomeFont = javafx.scene.text.Font.loadFont(is, 14);
+        createDataTreeView();
+
         // create the menu bar
         Menu plgToCsvParserMenu = new Menu("P2C Parser");
         MenuItem aboutPlgToCsvParserMenuItem = new MenuItem("About");
         aboutPlgToCsvParserMenuItem.setOnAction(e -> {
             // TODO: 8/25/16
+            // later development
         });
         
         plgToCsvParserMenu.getItems().addAll(aboutPlgToCsvParserMenuItem);
@@ -606,16 +634,24 @@ public class PlgToCsvParser extends Application {
             FileChooser fileChooser = new FileChooser();
             fileChooser.setTitle("Choose a PLG File to Open");
             plgFile = fileChooser.showOpenDialog(primaryStage);
+
+            try {
+                openPLGFile(plgFile);
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
         });
 
         MenuItem saveTemplateMenuItem = new MenuItem("Save Template");
         saveTemplateMenuItem.setOnAction(e -> {
-            // TODO: 8/25/16  
+            // TODO: 8/25/16
+            // later development
         });
 
         MenuItem loadTemplateMenuItem = new MenuItem("Load Template");
         loadTemplateMenuItem.setOnAction(e -> {
-            // TODO: 8/25/16  
+            // TODO: 8/25/16
+            // later development
         });
 
         MenuItem exitMenuItem = new MenuItem("Exit");
@@ -628,16 +664,21 @@ public class PlgToCsvParser extends Application {
         MenuBar menuBar = new MenuBar(plgToCsvParserMenu, fileMenu);
 
         // create the primitive components
-        TreeView<String> variableListViewer = new TreeView<String>();
+//        TreeView<String> variableListViewer = new TreeView<String>();
 
         Button rmButton = new Button("–");
         rmButton.setOnAction(e -> {
             // TODO: 8/25/16
+
         });
 
         Button parserButton = new Button("Parse");
+        parserButton.setDisable(true);
         parserButton.setOnAction(e -> {
             // TODO: 8/25/16
+            if (plgFile != null && csvFile != null) {
+                // do the conversion
+            }
 
         });
 
@@ -646,16 +687,28 @@ public class PlgToCsvParser extends Application {
             FileChooser fileChooser = new FileChooser();
             fileChooser.setTitle("Choose File to Save to");
             csvFile = fileChooser.showSaveDialog(primaryStage);
+            parserButton.setDisable(false);
         });
 
         TextArea variableTextBox = new TextArea();
+
         TextArea sampleDurationBox = new TextArea();
+        sampleDurationBox.setVisible(false);
 
         ChoiceBox<String> parserChooser = new ChoiceBox<>();
         for (int i = 0; i < ParserTypes.values().length; i++) {
             parserChooser.getItems().add(String.valueOf(ParserTypes.values()[i]));
         }
         parserChooser.setValue(String.valueOf(ParserTypes.LOSSLESS));
+        parserChooser.setOnAction(e -> {
+            parserOption_e = ParserTypes.valueOf(parserChooser.getValue());
+
+            if (parserOption_e == ParserTypes.SAMPLED) {
+                sampleDurationBox.setVisible(true);
+            } else {
+                sampleDurationBox.setVisible(false);
+            }
+        });
 
         // group the primitives into the scene
         HBox buttonGroup = new HBox(rmButton, saveAsButton, parserButton);
@@ -664,7 +717,7 @@ public class PlgToCsvParser extends Application {
         VBox rootRightPanel = new VBox(variableTextBox, buttonGroup, parserChooser, sampleDurationBox);
         rootRightPanel.setSpacing(3D);
 
-        HBox components = new HBox(variableListViewer, rootRightPanel);
+        HBox components = new HBox(dataTreeView, rootRightPanel);
         components.setSpacing(3D);
 
         VBox root = new VBox(menuBar, components);
@@ -676,5 +729,219 @@ public class PlgToCsvParser extends Application {
         // add the scene to the stage and show
         primaryStage.setScene(scene);
         primaryStage.show();
+    }
+
+    /* Tree View Code
+    ========================================================================================================================================================================
+     */
+
+    private void openPLGFile(File plgFile) throws IOException {
+        HashMap<String, PLGVariableSchema> tmp = PLGFileReader.readVariableSchemas(plgFile);
+
+        TreeMap<String, PLGVariableSchema> variableSchemaMap = new TreeMap<>();
+
+        for (Map.Entry<String, PLGVariableSchema> entry : tmp.entrySet()) {
+            variableSchemaMap.put(entry.getKey(), entry.getValue());
+        }
+
+        // populate data tree view
+        Text itemIcon = new Text("\uf1c0");
+        itemIcon.setFont(fontAwesomeFont);
+        itemIcon.setFontSmoothingType(FontSmoothingType.LCD);
+        TreeItem<String> fileTreeItem = new TreeItem<>(plgFile.getName(), itemIcon);
+        FileMetadata fileMetadata = new FileMetadata(plgFile);
+        fileMetadata.fileType = FileMetadata.FileType.PLG;
+        fileTreeItemMetadataMap.put(fileTreeItem, fileMetadata);
+        fileMetadataMap.put(plgFile, fileMetadata);
+
+        for (PLGVariableSchema schema : variableSchemaMap.values()) {
+
+            if (schema.typeString.equals("Int16") ||
+                    schema.typeString.equals("Double") ||
+                    schema.typeString.equals("Single") ||
+                    schema.typeString.equals("Int32")) {
+                if (schema.numValues > 0) {
+                    fileMetadata.variableList.add(schema.variableName);
+                    fileMetadata.variableValueCountList.add(schema.numValues);
+
+                    String tokens[] = schema.variableName.split("[.]");
+
+                    TreeItem<String> parentTreeItem = fileTreeItem;
+                    String compoundItemName = "";
+                    for (int i = 0; i < tokens.length; i++) {
+                        TreeItem<String> treeItem = null;
+
+                        // if an item already exists for this token, use it
+                        for (TreeItem<String> item : parentTreeItem.getChildren()) {
+                            if (item.getValue().equals(tokens[i])) {
+                                treeItem = item;
+                                break;
+                            }
+                        }
+
+                        // item doesn't exist for this token so create it
+                        if (treeItem == null) {
+                            treeItem = new TreeItem<>(tokens[i]);
+                            parentTreeItem.getChildren().add(treeItem);
+                        }
+
+                        // update parent item
+                        parentTreeItem = treeItem;
+                    }
+                }
+            }
+        }
+
+        dataTreeRoot.getChildren().addAll(fileTreeItem);
+    }
+
+    private void createDataTreeView() {
+        dataTreeView = new TreeView<>();
+        dataTreeView.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
+        dataTreeView.setCellFactory(new Callback<TreeView<String>, TreeCell<String>>() {
+            @Override
+            public TreeCell<String> call(TreeView<String> param) {
+                final TreeCell<String> treeCell = new TreeCell<String>() {
+                    public void updateItem(String item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (empty) {
+                            setText(null);
+                            setGraphic(null);
+                        } else {
+                            setText(item.toString());
+                            setGraphic(getTreeItem().getGraphic());
+                            Tooltip tooltip = getTooltipForCell(this);
+                            setTooltip(tooltip);
+                        }
+                    }
+                };
+
+                treeCell.setOnMouseClicked(new EventHandler<MouseEvent>() {
+                    @Override
+                    public void handle(MouseEvent event) {
+                        if (event.getClickCount() == 2) {
+                            TreeItem<String> treeItem = treeCell.getTreeItem();
+                            if (treeItem.isLeaf()) {
+                                FileMetadata fileMetadata = getFileMetadataForTreeItem(treeItem);
+                                String variableName = getFullTreeItemName(treeItem);
+
+                                // TODO: 8/26/16 - add the variable to the list of variables to parse
+                            }
+                        }
+                    }
+                });
+
+                treeCell.setOnDragDetected(new EventHandler<MouseEvent>() {
+                    @Override
+                    public void handle(MouseEvent event) {
+                        TreeItem<String> treeItem = treeCell.getTreeItem();
+                        // we can only drag and drop leaf nodes in the tree
+                        // the leaves are the full variable names
+                        // nonleaf nodes are file nodes or partial variable names
+                        // TODO: when a nonleaf is dragged add all child variables
+                        if (treeItem.isLeaf()) {
+                            VariableClipboardData variableClipboardData = treeItemToVariableClipboardData(treeItem);
+
+                            Dragboard db = treeCell.startDragAndDrop(TransferMode.COPY);
+                            ClipboardContent content = new ClipboardContent();
+                            content.put(objectDataFormat, variableClipboardData);
+                            db.setContent(content);
+                            event.consume();
+                            Label label = new Label(String.format("Visualize %s", variableClipboardData.getVariableName()));
+                            new Scene(label);
+                            db.setDragView(label.snapshot(null, null));
+                        }
+                    }
+                });
+
+                return treeCell;
+            }
+        });
+
+        dataTreeRoot = new TreeItem<String>();
+        dataTreeView.setRoot(dataTreeRoot);
+        dataTreeView.setShowRoot(false);
+    }
+
+    private FileMetadata getFileMetadataForTreeItem(TreeItem<String> treeItem) {
+        TreeItem<String> parentItem = treeItem;
+        while (parentItem != null) {
+            FileMetadata fileMetadata = fileTreeItemMetadataMap.get(parentItem);
+            if (fileMetadata != null) {
+                return fileMetadata;
+            }
+
+            parentItem = parentItem.getParent();
+        }
+
+        return null;
+    }
+
+    private Tooltip getTooltipForCell(TreeCell<String> treeCell) {
+        Tooltip tooltip = new Tooltip();
+
+        TreeItem<String> treeItem = treeCell.getTreeItem();
+
+        // build full variable name
+        String fullVarName = treeItem.getValue();
+        TreeItem<String> parent = treeItem.getParent();
+        FileMetadata fileMetadata = null;
+        while(parent != null) {
+            if (fileTreeItemMetadataMap.containsKey(parent)) {
+                fileMetadata = fileTreeItemMetadataMap.get(parent);
+                break;
+            }
+            fullVarName = parent.getValue() + "." + fullVarName;
+            parent = parent.getParent();
+        }
+
+        String tooltipText = fullVarName;
+        if (treeItem.isLeaf()) {
+            // the item represents a variable
+            // show full name and number of values in tooltip
+            int idx = fileMetadata.variableList.indexOf(fullVarName);
+            if (idx != -1) {
+                tooltipText += " (" + fileMetadata.variableValueCountList.get(idx) + " values)";
+            }
+        }
+
+        tooltip.setText(tooltipText);
+        return tooltip;
+    }
+
+    private String getFullTreeItemName(TreeItem<String> treeItem) {
+        String variableName = treeItem.getValue();
+
+        TreeItem<String> parentItem = treeItem.getParent();
+        while (parentItem != null && !fileTreeItemMetadataMap.containsKey(parentItem)) {
+            variableName = parentItem.getValue() + "." + variableName;
+            parentItem = parentItem.getParent();
+        }
+
+        return variableName;
+    }
+
+    private VariableClipboardData treeItemToVariableClipboardData(TreeItem<String> treeItem) {
+        String variableName = null;
+
+        TreeItem<String> currentTreeItem = treeItem;
+        while (currentTreeItem.getParent() != null) {
+            if (variableName == null) {
+                variableName = currentTreeItem.getValue();
+            } else {
+                variableName = currentTreeItem.getValue() + "." + variableName;
+            }
+
+            currentTreeItem = currentTreeItem.getParent();
+            if (fileTreeItemMetadataMap.containsKey(currentTreeItem)) {
+                FileMetadata fileMetadata = fileTreeItemMetadataMap.get(currentTreeItem);
+
+                VariableClipboardData variableClipboardData = new VariableClipboardData(fileMetadata.file, fileMetadata.fileType,
+                        variableName);
+                return variableClipboardData;
+            }
+        }
+
+        return null;
     }
 }
