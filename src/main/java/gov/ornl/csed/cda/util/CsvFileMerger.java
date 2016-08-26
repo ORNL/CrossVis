@@ -234,10 +234,22 @@ public class CsvFileMerger extends Application {
 
         // create the gui primitive
         ChoiceBox<String> appendeeChoiceBox = new ChoiceBox<>();
+        appendeeChoiceBox.setOnAction(e -> {
+            // TODO: 8/26/16
+
+        });
+
         ChoiceBox<String> appenderChoiceBox = new ChoiceBox<>();
+        appenderChoiceBox.setOnAction(e -> {
+            // TODO: 8/26/16
+
+        });
 
         Button appendeeChooserButton = new Button("Choose a Log CSV File...");
         appendeeChooserButton.setOnAction(e -> {
+            appendeeChoiceBox.getItems().remove(0, appendeeChoiceBox.getItems().size());
+            file1KeyCol = null;
+
             FileChooser filechooser = new FileChooser();
             filechooser.setTitle("Choose a Log CSV File");
             file1 = filechooser.showOpenDialog(primaryStage);
@@ -274,18 +286,20 @@ public class CsvFileMerger extends Application {
 
         Button appenderChooserButton = new Button("Choose a Porosity CSV File...");
         appenderChooserButton.setOnAction(e -> {
+            appenderChoiceBox.getItems().remove(0, appenderChoiceBox.getItems().size());
+            file2KeyCol = null;
+
             FileChooser fileChooser = new FileChooser();
             fileChooser.setTitle("Choose a Porosity CSV File");
             file2 = fileChooser.showOpenDialog(primaryStage);
 
             if (file2 != null) {
-                // TODO: 8/26/16
 
                 // - open the files and read in the column names
                 CSVParser file2Parser = null;
 
                 try {
-                    file2Parser = new CSVParser(new FileReader(file1), CSVFormat.DEFAULT);
+                    file2Parser = new CSVParser(new FileReader(file2), CSVFormat.DEFAULT);
                 } catch (IOException e1) {
                     e1.printStackTrace();
                 }
@@ -298,7 +312,7 @@ public class CsvFileMerger extends Application {
 
                 // - populate the choice boxes
                 for (int i = 0; file2HeaderRecord != null && i < file2HeaderRecord.size(); i++) {
-                    appendeeChoiceBox.getItems().add(i, file2HeaderRecord.get(i));
+                    appenderChoiceBox.getItems().add(i, file2HeaderRecord.get(i));
                 }
 
                 try {
@@ -309,17 +323,29 @@ public class CsvFileMerger extends Application {
             }
         });
 
+        Button combineButton = new Button("Combine");
+        combineButton.setDisable(true);
+        combineButton.setOnAction(e -> {
+
+            int a = 1;
+
+            if (file1 != null && file2 != null && file1KeyCol != null && file2KeyCol != null) {
+                // TODO: 8/26/16
+
+                primaryStage.close();
+            }
+        });
+
         Button outputFileChooserButton = new Button("Choose an Output File...");
         outputFileChooserButton.setOnAction(e -> {
-            // TODO: 8/25/16
+
             FileChooser outputFileChooser = new FileChooser();
             outputFileChooser.setTitle("Choose an Output File");
             outputFile = outputFileChooser.showSaveDialog(primaryStage);
-        });
 
-        Button combineButton = new Button("Combine");
-        combineButton.setOnAction(e -> {
-            // TODO: 8/25/16
+            if (outputFile != null) {
+                combineButton.setDisable(false);
+            }
         });
 
         // combine the primitives and build the root
@@ -338,30 +364,6 @@ public class CsvFileMerger extends Application {
         root.setPadding(new Insets(3, 3, 3, 3));
         root.setAlignment(Pos.CENTER);
         root.getChildren().addAll(leftSide, rightSide);
-
-        ChoiceBox<String> cb1 = new ChoiceBox<>();
-        ChoiceBox<String> cb2 = new ChoiceBox<>();
-
-        Button button = new Button("Go");
-
-        button.setOnAction(e -> {
-            try {
-                System.out.println("BUTTON PRESS");
-                String choice1 = cb1.getValue();
-                ObservableList<String> list1 = cb1.getItems();
-
-                String choice2 = cb2.getValue();
-                ObservableList<String> list2 = cb2.getItems();
-
-                CsvFileMerger.merge(file1, file2, outputFile, list1.indexOf(choice1), list2.indexOf(choice2));
-
-            } catch (IOException e1) {
-                e1.printStackTrace();
-            }
-
-            primaryStage.close();
-            System.exit(0);
-        });
 
         Scene scene = new Scene(root);
 
