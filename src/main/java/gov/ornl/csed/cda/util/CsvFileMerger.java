@@ -93,20 +93,14 @@ public class CsvFileMerger extends Application {
         CSVRecord file1HeaderRecord = file1Parser.iterator().next();
         CSVRecord file2HeaderRecord = file2Parser.iterator().next();
 
-//        System.out.println("checkpoint1");
-
         for (CSVRecord record : file1Parser) {
             appendeeEntries.add(record);
         }
-
-//        System.out.println("checkpoint2");
 
         for (CSVRecord record : file2Parser) {
 
             appenderEntries.put(Double.valueOf(record.get(appenderKeyCol)), record);
         }
-
-//        System.out.println("checkpoint3");
 
         BufferedWriter csvWriter = null;
         csvWriter = new BufferedWriter(new FileWriter(outputFile));
@@ -119,8 +113,6 @@ public class CsvFileMerger extends Application {
 
         }
 
-//        System.out.println("checkpoint4");
-
         for (int j = 0; j < file2HeaderRecord.size(); j++) {
             if (j == appenderKeyCol) {
                 continue;
@@ -129,8 +121,6 @@ public class CsvFileMerger extends Application {
             buffer.append(file2HeaderRecord.get(j) + ",");
 
         }
-
-//        System.out.println("checkpoint5");
 
         buffer.deleteCharAt(buffer.length() - 1);
 
@@ -159,8 +149,6 @@ public class CsvFileMerger extends Application {
 
             }
 
-//            System.out.println(appendeeKeyValue);
-
             for (int j = 0; j < appender.size(); j++) {
                 if (j == appenderKeyCol) {
                     continue;
@@ -169,8 +157,6 @@ public class CsvFileMerger extends Application {
 
             }
 
-//            System.out.println("checkpoint6");
-
             buffer.deleteCharAt(buffer.length() - 1);
 
             // - write out the new table to a new csv file
@@ -178,14 +164,11 @@ public class CsvFileMerger extends Application {
 
         }
 
-//        System.out.println("checkpoint7");
-
         file1Parser.close();
         file2Parser.close();
         csvWriter.flush();
         csvWriter.close();
 
-//        System.out.println("before1");
         return;
     }
 
@@ -202,7 +185,6 @@ public class CsvFileMerger extends Application {
         // √ check to see if the appropriate number of CLA for comman line or not
         if (args.length != 5) {
             // launch the GUI
-//            System.out.println(args.length);
             launch(args);
 
         } else {
@@ -225,7 +207,7 @@ public class CsvFileMerger extends Application {
             CsvFileMerger.merge(file1, file2, outputFile, appendeeKeyCol, appenderKeyCol);
 
         }
-//        System.out.println("before2");
+
         System.exit(0);
     }
 
@@ -235,14 +217,12 @@ public class CsvFileMerger extends Application {
         // create the gui primitive
         ChoiceBox<String> appendeeChoiceBox = new ChoiceBox<>();
         appendeeChoiceBox.setOnAction(e -> {
-            // TODO: 8/26/16
-
+            file1KeyCol = appendeeChoiceBox.getItems().indexOf(appendeeChoiceBox.getValue());
         });
 
         ChoiceBox<String> appenderChoiceBox = new ChoiceBox<>();
         appenderChoiceBox.setOnAction(e -> {
-            // TODO: 8/26/16
-
+            file2KeyCol = appenderChoiceBox.getItems().indexOf(appenderChoiceBox.getValue());
         });
 
         Button appendeeChooserButton = new Button("Choose a Log CSV File...");
@@ -327,11 +307,12 @@ public class CsvFileMerger extends Application {
         combineButton.setDisable(true);
         combineButton.setOnAction(e -> {
 
-            int a = 1;
-
             if (file1 != null && file2 != null && file1KeyCol != null && file2KeyCol != null) {
-                // TODO: 8/26/16
-
+                try {
+                    CsvFileMerger.merge(file1, file2, outputFile, file1KeyCol, file2KeyCol);
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                }
                 primaryStage.close();
             }
         });
@@ -368,45 +349,6 @@ public class CsvFileMerger extends Application {
         Scene scene = new Scene(root);
 
         primaryStage.setScene(scene);
-
-//        primaryStage.setOnShown(e -> {
-//
-//            // - open the files and read in the column names
-//            CSVParser file1Parser = null;
-//            CSVParser file2Parser = null;
-//
-//            try {
-//                file1Parser = new CSVParser(new FileReader(file1), CSVFormat.DEFAULT);
-//                file2Parser = new CSVParser(new FileReader(file2), CSVFormat.DEFAULT);
-//            } catch (IOException e1) {
-//                e1.printStackTrace();
-//            }
-//
-//            CSVRecord file1HeaderRecord = null;
-//            CSVRecord file2HeaderRecord = null;
-//
-//            if (file1Parser != null && file2Parser != null) {
-//                file1HeaderRecord = file1Parser.iterator().next();
-//                file2HeaderRecord = file2Parser.iterator().next();
-//            }
-//
-//            // - populate the choice boxes
-//            for (int i = 0; file1HeaderRecord != null && i < file1HeaderRecord.size(); i++) {
-//                cb1.getItems().add(i, file1HeaderRecord.get(i));
-//            }
-//
-//            for (int i = 0; file2HeaderRecord != null && i < file2HeaderRecord.size(); i++) {
-//                cb2.getItems().add(i, file2HeaderRecord.get(i));
-//            }
-//
-//            try {
-//                file1Parser.close();
-//                file2Parser.close();
-//            } catch (IOException e1) {
-//                e1.printStackTrace();
-//            }
-//
-//        });
 
         primaryStage.show();
 
