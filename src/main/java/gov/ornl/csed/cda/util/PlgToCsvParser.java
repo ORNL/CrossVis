@@ -108,6 +108,7 @@ public class PlgToCsvParser extends Application {
     private TreeItem<String> dataTreeRoot;
     private TreeView<String> dataTreeView;
     private final DataFormat objectDataFormat = new DataFormat("application/x-java-serialized-object");
+    private ListView<String> variableListView;
 
     /*
     ========================================================================================================================================================================
@@ -669,7 +670,7 @@ public class PlgToCsvParser extends Application {
         Button rmButton = new Button("–");
         rmButton.setOnAction(e -> {
             // TODO: 8/25/16
-
+            variableListView.getItems().remove(variableListView.getSelectionModel().getSelectedIndex());
         });
 
         Button parserButton = new Button("Parse");
@@ -690,7 +691,10 @@ public class PlgToCsvParser extends Application {
             parserButton.setDisable(false);
         });
 
-        TextArea variableTextBox = new TextArea();
+        variableListView = new ListView<>();
+//        variableListView.setOnDragDropped(e -> {
+//            // TODO: 8/26/16
+//        });
 
         TextArea sampleDurationBox = new TextArea();
         sampleDurationBox.setVisible(false);
@@ -714,7 +718,7 @@ public class PlgToCsvParser extends Application {
         HBox buttonGroup = new HBox(rmButton, saveAsButton, parserButton);
         buttonGroup.setSpacing(3D);
 
-        VBox rootRightPanel = new VBox(variableTextBox, buttonGroup, parserChooser, sampleDurationBox);
+        VBox rootRightPanel = new VBox(variableListView, buttonGroup, parserChooser, sampleDurationBox);
         rootRightPanel.setSpacing(3D);
 
         HBox components = new HBox(dataTreeView, rootRightPanel);
@@ -825,34 +829,34 @@ public class PlgToCsvParser extends Application {
                                 FileMetadata fileMetadata = getFileMetadataForTreeItem(treeItem);
                                 String variableName = getFullTreeItemName(treeItem);
 
-                                // TODO: 8/26/16 - add the variable to the list of variables to parse
+                                variableListView.getItems().add(variableName);
                             }
                         }
                     }
                 });
 
-                treeCell.setOnDragDetected(new EventHandler<MouseEvent>() {
-                    @Override
-                    public void handle(MouseEvent event) {
-                        TreeItem<String> treeItem = treeCell.getTreeItem();
-                        // we can only drag and drop leaf nodes in the tree
-                        // the leaves are the full variable names
-                        // nonleaf nodes are file nodes or partial variable names
-                        // TODO: when a nonleaf is dragged add all child variables
-                        if (treeItem.isLeaf()) {
-                            VariableClipboardData variableClipboardData = treeItemToVariableClipboardData(treeItem);
-
-                            Dragboard db = treeCell.startDragAndDrop(TransferMode.COPY);
-                            ClipboardContent content = new ClipboardContent();
-                            content.put(objectDataFormat, variableClipboardData);
-                            db.setContent(content);
-                            event.consume();
-                            Label label = new Label(String.format("Visualize %s", variableClipboardData.getVariableName()));
-                            new Scene(label);
-                            db.setDragView(label.snapshot(null, null));
-                        }
-                    }
-                });
+//                treeCell.setOnDragDetected(new EventHandler<MouseEvent>() {
+//                    @Override
+//                    public void handle(MouseEvent event) {
+//                        TreeItem<String> treeItem = treeCell.getTreeItem();
+//                        // we can only drag and drop leaf nodes in the tree
+//                        // the leaves are the full variable names
+//                        // nonleaf nodes are file nodes or partial variable names
+//                        // TODO: when a nonleaf is dragged add all child variables
+//                        if (treeItem.isLeaf()) {
+//                            VariableClipboardData variableClipboardData = treeItemToVariableClipboardData(treeItem);
+//
+//                            Dragboard db = treeCell.startDragAndDrop(TransferMode.COPY);
+//                            ClipboardContent content = new ClipboardContent();
+//                            content.put(objectDataFormat, variableClipboardData);
+//                            db.setContent(content);
+//                            event.consume();
+//                            Label label = new Label(String.format("Visualize %s", variableClipboardData.getVariableName()));
+//                            new Scene(label);
+//                            db.setDragView(label.snapshot(null, null));
+//                        }
+//                    }
+//                });
 
                 return treeCell;
             }
