@@ -55,11 +55,10 @@ import gov.ornl.csed.cda.timevis.TimeSeries;
 import gov.ornl.csed.cda.timevis.TimeSeriesRecord;
 
 import java.io.*;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 
-public class plgTOcsvParser {
+public class PlgToCsvParser {
 
     private String plgFilename = "";
     private String csvFilename = "";
@@ -80,7 +79,7 @@ public class plgTOcsvParser {
     private Long sampleDuration = 10L;
 
 
-    public plgTOcsvParser(String plgFilename, String csvFilename, String variablesFileName, Long sampleDuration, String plgSegmentingVarName) throws IOException {
+    public PlgToCsvParser(String plgFilename, String csvFilename, String variablesFileName, Long sampleDuration, String plgSegmentingVarName) throws IOException {
         this.plgFilename = plgFilename;
         this.csvFilename = csvFilename;
         this.plgSegmentingVarName = plgSegmentingVarName;
@@ -106,7 +105,7 @@ public class plgTOcsvParser {
     }
 
 
-    public plgTOcsvParser(String plgFilename, String csvFilename, String variablesFileName, Long sampleDuration) throws IOException {
+    public PlgToCsvParser(String plgFilename, String csvFilename, String variablesFileName, Long sampleDuration) throws IOException {
         this.plgFilename = plgFilename;
         this.csvFilename = csvFilename;
 
@@ -133,7 +132,7 @@ public class plgTOcsvParser {
         }
     }
 
-    public plgTOcsvParser(String plgFilename, String csvFilename, Long sampleDuration) {
+    public PlgToCsvParser(String plgFilename, String csvFilename, Long sampleDuration) {
         this.plgFilename = plgFilename;
         this.csvFilename = csvFilename;
 
@@ -146,7 +145,7 @@ public class plgTOcsvParser {
         plgDesiredVarNames.add("OPC.PowerSupply.HighVoltage.Grid");
     }
 
-    public plgTOcsvParser(String plgFilename, String csvFilename, String plgSegmentingVarName) {
+    public PlgToCsvParser(String plgFilename, String csvFilename, String plgSegmentingVarName) {
         this.plgFilename = plgFilename;
         this.csvFilename = csvFilename;
         this.plgSegmentingVarName = plgSegmentingVarName;
@@ -286,11 +285,11 @@ public class plgTOcsvParser {
         }
 
         Long comparison = endInstant.toEpochMilli() - startInstant.toEpochMilli();
-        System.out.println(startInstant);
-        System.out.println(endInstant);
-        System.out.println(comparison);
-
-        System.out.println(Instant.ofEpochMilli(comparison));
+//        System.out.println(startInstant);
+//        System.out.println(endInstant);
+//        System.out.println(comparison);
+//
+//        System.out.println(Instant.ofEpochMilli(comparison));
 
         // - iterate over all elements in the set. for each instant get a value for each variable. if variable has recorded value(s) use it/them; if variable doesn't have a value at current instant get value with greatest instant that is less than current value (floor record). store values.
         for (Map.Entry<String, TreeMap<Instant, Double>> entry : seriesTreeSet.entrySet()) {
@@ -350,7 +349,7 @@ public class plgTOcsvParser {
                 Instant instant = instants.get(i);
 
                 temp.addRecord(instant, varValues.get(entry.getKey()).floorEntry(instant).getValue(), Double.NaN, Double.NaN);
-                System.out.println(instant.toEpochMilli() + " : " + varValues.get("OPC.PowerSupply.Beam.BeamCurrent").floorEntry(instant).getValue());
+//                System.out.println(instant.toEpochMilli() + " : " + varValues.get("OPC.PowerSupply.Beam.BeamCurrent").floorEntry(instant).getValue());
             }
 
             timeSeries.put(entry.getKey(), temp);
@@ -533,7 +532,7 @@ public class plgTOcsvParser {
         String variablesFileName = "";
         Long sampleDuration = 1000L;
 
-        plgTOcsvParser parser = null;
+        PlgToCsvParser parser = null;
 
         if (args.length == 5) {
             parserOption = Integer.parseInt(args[0]);
@@ -543,7 +542,7 @@ public class plgTOcsvParser {
             sampleDuration = Long.valueOf(args[4]);
 
             try {
-                parser = new plgTOcsvParser(plgFileName, csvFileName, variablesFileName, sampleDuration);
+                parser = new PlgToCsvParser(plgFileName, csvFileName, variablesFileName, sampleDuration);
             } catch (IOException e) {
                 e.printStackTrace();
             }
