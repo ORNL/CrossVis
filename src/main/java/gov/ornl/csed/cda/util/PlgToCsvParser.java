@@ -70,6 +70,7 @@ import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Callback;
+import sun.security.provider.ConfigFile;
 
 import java.io.*;
 import java.time.Instant;
@@ -696,8 +697,10 @@ public class PlgToCsvParser extends Application {
 //            // TODO: 8/26/16
 //        });
 
-        TextArea sampleDurationBox = new TextArea();
-        sampleDurationBox.setVisible(false);
+        Spinner<Integer> sampleDurationSpinner = new Spinner<>(1000, 1000000, 1000, 1);
+        sampleDurationSpinner.setEditable(true);
+
+        sampleDurationSpinner.setVisible(false);
 
         ChoiceBox<String> parserChooser = new ChoiceBox<>();
         for (int i = 0; i < ParserTypes.values().length; i++) {
@@ -708,9 +711,9 @@ public class PlgToCsvParser extends Application {
             parserOption_e = ParserTypes.valueOf(parserChooser.getValue());
 
             if (parserOption_e == ParserTypes.SAMPLED) {
-                sampleDurationBox.setVisible(true);
+                sampleDurationSpinner.setVisible(true);
             } else {
-                sampleDurationBox.setVisible(false);
+                sampleDurationSpinner.setVisible(false);
             }
         });
 
@@ -718,7 +721,7 @@ public class PlgToCsvParser extends Application {
         HBox buttonGroup = new HBox(rmButton, saveAsButton, parserButton);
         buttonGroup.setSpacing(3D);
 
-        VBox rootRightPanel = new VBox(variableListView, buttonGroup, parserChooser, sampleDurationBox);
+        VBox rootRightPanel = new VBox(variableListView, buttonGroup, parserChooser, sampleDurationSpinner);
         rootRightPanel.setSpacing(3D);
 
         HBox components = new HBox(dataTreeView, rootRightPanel);
