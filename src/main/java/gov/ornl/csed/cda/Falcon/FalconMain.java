@@ -582,7 +582,11 @@ public class FalconMain extends Application {
             @Override
             public void handle(ActionEvent event) {
                 FileChooser fileChooser = new FileChooser();
-                fileChooser.setInitialDirectory(new File(System.getProperty("user.dir")));
+                String lastViewTemplateDirectoryPath = preferences.get(FalconPreferenceKeys.LAST_VIEW_TEMPLATE_DIRECTORY, System.getProperty("user.home"));
+                if (!lastViewTemplateDirectoryPath.isEmpty()) {
+                    fileChooser.setInitialDirectory(new File(lastViewTemplateDirectoryPath));
+                }
+//                fileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
                 fileChooser.setTitle("Select View Template File");
                 File templateFile = fileChooser.showSaveDialog(primaryStage);
                 if (!templateFile.getName().endsWith(".vtf")) {
@@ -620,7 +624,11 @@ public class FalconMain extends Application {
 
                 // get the template file
                 FileChooser fileChooser = new FileChooser();
-                fileChooser.setInitialDirectory(new File(System.getProperty("user.dir")));
+                String lastViewTemplateDirectoryPath = preferences.get(FalconPreferenceKeys.LAST_VIEW_TEMPLATE_DIRECTORY, System.getProperty("user.home"));
+                if (!lastViewTemplateDirectoryPath.isEmpty()) {
+                    fileChooser.setInitialDirectory(new File(lastViewTemplateDirectoryPath));
+                }
+//                fileChooser.setInitialDirectory(new File(System.getProperty("user.dir")));
                 fileChooser.setTitle("Load View Template File");
                 File templateFile = fileChooser.showOpenDialog(primaryStage);
                 if (templateFile != null) {
@@ -797,6 +805,8 @@ public class FalconMain extends Application {
 
         OutputStream outputStream = new FileOutputStream(f);
         properties.store(outputStream, null);
+
+        preferences.put(FalconPreferenceKeys.LAST_VIEW_TEMPLATE_DIRECTORY, f.getParentFile().getAbsolutePath());
     }
 
     private String convertColorToString(java.awt.Color color) {
@@ -994,6 +1004,8 @@ public class FalconMain extends Application {
                 }
             }
         }
+
+        preferences.put(FalconPreferenceKeys.LAST_VIEW_TEMPLATE_DIRECTORY, f.getParentFile().getAbsolutePath());
     }
 
     private void resetDisplayPreferencesToDefaultValues() {

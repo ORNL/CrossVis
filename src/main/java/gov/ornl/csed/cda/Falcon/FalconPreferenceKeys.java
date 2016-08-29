@@ -26,6 +26,7 @@ public class FalconPreferenceKeys {
     public static final String MULTI_VIEW_HISTOGRAM_BIN_SIZE = "MULTI_VIEW_HISTOGRAM_BIN_SIZE";
     public static final String LAST_PLG_READ_DIRECTORY = "LAST_PLG_READ_DIRECTORY";
     public static final String LAST_CSV_READ_DIRECTORY = "LAST_CSV_READ_DIRECTORY";
+    public static final String LAST_VIEW_TEMPLATE_DIRECTORY = "LAST_VIEW_TEMPLATE_DIRECTORY";
     public static final String LAST_VARIABLE_PANEL_HEIGHT = "LAST_VARIABLE_PANEL_HEIGHT";
     public static final String LAST_SHOW_BUTTONS_CHECKBOX = "LAST_SHOW_BUTTONS_CHECKBOX";
     public static final String LAST_CHRONO_UNIT_WIDTH = "LAST_CHRONO_UNIT_WIDTH";
