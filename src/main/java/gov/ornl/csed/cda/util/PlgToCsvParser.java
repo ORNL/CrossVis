@@ -204,6 +204,16 @@ public class PlgToCsvParser extends Application {
         plgDesiredVarNames.add("OPC.PowerSupply.HighVoltage.Grid");
     }
 
+    public PlgToCsvParser(File plgFile, File csvFile, ArrayList<String> plgDesiredVarNames, Long sampleDuration) {
+        this.plgFile = plgFile;
+        this.csvFile = csvFile;
+
+        this.sampleDuration = sampleDuration;
+
+        this.plgDesiredVarNames = plgDesiredVarNames;
+
+    }
+
 
     public void parsePerSampleData() {
 
@@ -674,29 +684,6 @@ public class PlgToCsvParser extends Application {
             variableListView.getItems().remove(variableListView.getSelectionModel().getSelectedIndex());
         });
 
-        Button parserButton = new Button("Parse");
-        parserButton.setDisable(true);
-        parserButton.setOnAction(e -> {
-            // TODO: 8/25/16
-            if (plgFile != null && csvFile != null) {
-                // do the conversion
-            }
-
-        });
-
-        Button saveAsButton = new Button("Save As...");
-        saveAsButton.setOnAction(e -> {
-            FileChooser fileChooser = new FileChooser();
-            fileChooser.setTitle("Choose File to Save to");
-            csvFile = fileChooser.showSaveDialog(primaryStage);
-            parserButton.setDisable(false);
-        });
-
-        variableListView = new ListView<>();
-//        variableListView.setOnDragDropped(e -> {
-//            // TODO: 8/26/16
-//        });
-
         Spinner<Integer> sampleDurationSpinner = new Spinner<>(1000, 1000000, 1000, 1);
         sampleDurationSpinner.setEditable(true);
 
@@ -716,6 +703,51 @@ public class PlgToCsvParser extends Application {
                 sampleDurationSpinner.setVisible(false);
             }
         });
+
+        Button parserButton = new Button("Parse");
+        parserButton.setDisable(true);
+        parserButton.setOnAction(e -> {
+            // TODO: 8/25/16
+
+            if (plgFile != null && csvFile != null) {
+                // do the conversion
+                this.sampleDuration = sampleDurationSpinner.getValue().longValue();
+                for (String item : variableListView.getItems()) {
+                    this.plgDesiredVarNames.add(item);
+                }
+
+                if (parserChooser.getValue().equals(ParserTypes.LOSSLESS.toString())) {
+                    System.out.println("parsing lossless data");
+
+                    this.parseLosslessData();
+
+                } else if (parserChooser.getValue().equals(ParserTypes.SAMPLED.toString())) {
+                    System.out.println("parsing sampled data");
+
+                    this.parsePerSampleData();
+
+                }
+
+                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                alert.setTitle("Status");
+                alert.setHeaderText("DONE");
+                alert.show();
+            }
+
+        });
+
+        Button saveAsButton = new Button("Save As...");
+        saveAsButton.setOnAction(e -> {
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Choose File to Save to");
+            csvFile = fileChooser.showSaveDialog(primaryStage);
+            parserButton.setDisable(false);
+        });
+
+        variableListView = new ListView<>();
+//        variableListView.setOnDragDropped(e -> {
+//            // TODO: 8/26/16
+//        });
 
         // group the primitives into the scene
         HBox buttonGroup = new HBox(rmButton, saveAsButton, parserButton);
