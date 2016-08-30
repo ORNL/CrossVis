@@ -15,4 +15,4 @@
 set argC=0
 for %%x in (%*) do Set /A argC+=1
 
-IF argC != 5 java -Xmx8g -cp ../target/falcon-0.3.0-jar-with-dependencies.jar gov.ornl.csed.cda.util.PlgToCsvParser ELSE java -Xmx8g -cp ../target/falcon-0.3.0-jar-with-dependencies.jar gov.ornl.csed.cda.util.PlgToCsvParser %1 %2 %3 %4 %5
+IF argC != 5 java -Xmx8g -cp ../target/falcon-0.3.1-jar-with-dependencies.jar gov.ornl.csed.cda.util.PlgToCsvParser ELSE java -Xmx8g -cp ../target/falcon-0.3.1-jar-with-dependencies.jar gov.ornl.csed.cda.util.PlgToCsvParser %1 %2 %3 %4 %5

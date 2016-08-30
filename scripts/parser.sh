@@ -11,12 +11,14 @@
 # CSV file path - Full path to the desired CSV output file
 # Variables name file path - Full path to text file containing desired variable names; one variable name per line
 # Sample Duration in ms - Duration in between regular sampling. Must be a whole number. This value is disregarded for Parser Type 2
-usage=
 
 if [ $# -ne 5 ]
 then
-	echo "Read the Documentation in this Shell Script"
-    exit
+	java -Xmx8g -cp ../target/falcon-0.3.1-jar-with-dependencies.jar gov.ornl.csed.cda.util.PlgToCsvParser
+
+else
+    java -Xmx8g -cp ../target/falcon-0.3.1-jar-with-dependencies.jar gov.ornl.csed.cda.util.PlgToCsvParser $1 $2 $3 $4 $5
+
 fi
 
-java -Xmx8g -cp ../target/falcon-0.3.0-jar-with-dependencies.jar gov.ornl.csed.cda.util.PlgToCsvParser $1 $2 $3 $4 $5
+
