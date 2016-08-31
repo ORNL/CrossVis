@@ -73,6 +73,7 @@ import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Callback;
+import org.apache.commons.math3.ml.neuralnet.twod.util.TopographicErrorHistogram;
 import sun.security.provider.ConfigFile;
 
 import javax.swing.*;
@@ -139,19 +140,25 @@ public class PlgToCsvParser extends Application {
 
         this.sampleDuration = sampleDuration;
 
-        BufferedReader bufferedReader = new BufferedReader(new FileReader(new File(variablesFileName)));
+        // TODO: 8/31/16 - CALL THE TEMPLATE LOADING FUNCTIONS
+        FileMetadata fileMetadata = new FileMetadata(plgFile);
+        fileMetadata.fileType = FileMetadata.FileType.PLG;
+        fileMetadataMap.put(plgFile, fileMetadata);
+        this.loadViewTemplate(new File(variablesFileName));
 
-        String line = bufferedReader.readLine();
-
-        while (line != null) {
-
-            if (!plgDesiredVarNames.contains(line)) {
-                plgDesiredVarNames.add(line);
-            }
-
-            line = bufferedReader.readLine();
-            plgDesiredVarNames.add(line.trim());
-        }
+//        BufferedReader bufferedReader = new BufferedReader(new FileReader(new File(variablesFileName)));
+//
+//        String line = bufferedReader.readLine();
+//
+//        while (line != null) {
+//
+//            if (!plgDesiredVarNames.contains(line)) {
+//                plgDesiredVarNames.add(line);
+//            }
+//
+//            line = bufferedReader.readLine();
+//            plgDesiredVarNames.add(line.trim());
+//        }
     }
 
 
@@ -164,22 +171,28 @@ public class PlgToCsvParser extends Application {
 
         this.sampleDuration = sampleDuration;
 
-        BufferedReader bufferedReader = new BufferedReader(new FileReader(new File(variablesFileName)));
+        // TODO: 8/31/16 - CALL THE TEMPLATE LOADING FUNCTIONS
+        FileMetadata fileMetadata = new FileMetadata(plgFile);
+        fileMetadata.fileType = FileMetadata.FileType.PLG;
+        fileMetadataMap.put(plgFile, fileMetadata);
+        this.loadViewTemplate(new File(variablesFileName));
 
-        String line = bufferedReader.readLine();
-
-        while (line != null) {
-
-            if (!plgDesiredVarNames.contains(line)) {
-                plgDesiredVarNames.add(line);
-            }
-
-            line = bufferedReader.readLine();
-            if (line != null) {
-                plgDesiredVarNames.add(line.trim());
-
-            }
-        }
+//        BufferedReader bufferedReader = new BufferedReader(new FileReader(new File(variablesFileName)));
+//
+//        String line = bufferedReader.readLine();
+//
+//        while (line != null) {
+//
+//            if (!plgDesiredVarNames.contains(line)) {
+//                plgDesiredVarNames.add(line);
+//            }
+//
+//            line = bufferedReader.readLine();
+//            if (line != null) {
+//                plgDesiredVarNames.add(line.trim());
+//
+//            }
+//        }
     }
 
     public PlgToCsvParser(String plgFilename, String csvFilename, Long sampleDuration) {
@@ -709,6 +722,10 @@ public class PlgToCsvParser extends Application {
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
+
+                for (int i = 0; i < plgDesiredVarNames.size(); i++) {
+                    variableListView.getItems().add(plgDesiredVarNames.get(i));
+                }
             }
 
         });
@@ -1135,26 +1152,26 @@ public class PlgToCsvParser extends Application {
 
     private void loadColumnIntoMultiView (FileMetadata fileMetadata, String variableName) {
         try {
-            ArrayList<String> variableList = new ArrayList<>();
-            variableList.add(variableName);
 //            Map<String, TimeSeries> PLGTimeSeriesMap = PLGFileReader.readPLGFileAsTimeSeries(fileMetadata.file, variableList);
 
             Map<String, PLGVariableSchema> schemaMap = PLGFileReader.readVariableSchemas(fileMetadata.file);
 
-            if (!schemaMap.containsKey(variableName)) {
-                Alert alert = new Alert(Alert.AlertType.ERROR);
-                alert.setTitle("Variable Read Error");
-                alert.setHeaderText("Variable not found in file");
-                alert.setContentText("The variable '" + variableName + "' was not found in the file '" + fileMetadata.file.getName() + "'");
-                alert.showAndWait();
-                variableList.remove(variableName);
+            if (schemaMap.containsKey(variableName)) {
+//                Alert alert = new Alert(Alert.AlertType.ERROR);
+//                alert.setTitle("Variable Read Error");
+//                alert.setHeaderText("Variable not found in file");
+//                alert.setContentText("The variable '" + variableName + "' was not found in the file '" + fileMetadata.file.getName() + "'");
+//                alert.showAndWait();
+//                variableListView.getItems().add(variableName);
+                plgDesiredVarNames.add(variableName);
+
 //                return;
             }
-            for (int i = 0; i < variableList.size(); i++) {
-                variableListView.getItems().add(variableList.get(i));
-            }
+
         } catch (IOException ex) {
             ex.printStackTrace();
         }
+
+        return;
     }
 }
