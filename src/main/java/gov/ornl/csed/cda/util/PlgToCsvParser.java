@@ -51,10 +51,12 @@ FOR BOTH
 
 
 import gov.ornl.csed.cda.Falcon.*;
-import gov.ornl.csed.cda.timevis.TimeSeries;
-import gov.ornl.csed.cda.timevis.TimeSeriesRecord;
+import gov.ornl.csed.cda.timevis.*;
 import javafx.application.Application;
+import javafx.application.Platform;
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.event.EventType;
 import javafx.geometry.Insets;
@@ -62,6 +64,7 @@ import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.*;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
@@ -72,8 +75,10 @@ import javafx.stage.Stage;
 import javafx.util.Callback;
 import sun.security.provider.ConfigFile;
 
+import javax.swing.*;
 import java.io.*;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 public class PlgToCsvParser extends Application {
@@ -634,8 +639,12 @@ public class PlgToCsvParser extends Application {
         Menu plgToCsvParserMenu = new Menu("P2C Parser");
         MenuItem aboutPlgToCsvParserMenuItem = new MenuItem("About");
         aboutPlgToCsvParserMenuItem.setOnAction(e -> {
-            // TODO: 8/25/16
-            // later development
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("About");
+            alert.setHeaderText("About P2C Parser");
+            String s = "P2C Parser is developed and maintained by the Computational Data Analytics Group \nat Oak Ridge National Laboratory.\n\nThe lead developer is William Halsey\n\n\u00a9 2015 - 2016";
+            alert.setContentText(s);
+            alert.show();
         });
         
         plgToCsvParserMenu.getItems().addAll(aboutPlgToCsvParserMenuItem);
@@ -656,14 +665,52 @@ public class PlgToCsvParser extends Application {
 
         MenuItem saveTemplateMenuItem = new MenuItem("Save Template");
         saveTemplateMenuItem.setOnAction(e -> {
-            // TODO: 8/25/16
-            // later development
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
+            fileChooser.setTitle("Select View Template File");
+            File templateFile = fileChooser.showSaveDialog(primaryStage);
+            if (!templateFile.getName().endsWith(".vtf")) {
+                templateFile = new File(templateFile.getAbsolutePath() + ".vtf");
+            }
+            if (templateFile != null) {
+                try {
+                    saveViewTemplate(templateFile);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
         });
 
         MenuItem loadTemplateMenuItem = new MenuItem("Load Template");
         loadTemplateMenuItem.setOnAction(e -> {
-            // TODO: 8/25/16
-            // later development
+            // if timeseries are being shown, ask user if they want to clear the display
+            if (variableListView.getItems().size() != 0) {
+                Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+                alert.setTitle("Reset Display");
+                alert.setHeaderText("Clear existing visualization panels?");
+                alert.setContentText("Choose your preference");
+
+                alert.getButtonTypes().setAll(ButtonType.YES, ButtonType.NO);
+
+                Optional<ButtonType> result = alert.showAndWait();
+                if (result.get() == ButtonType.YES) {
+                    variableListView.getItems().removeAll(variableListView.getItems());
+                }
+            }
+
+            // get the template file
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setInitialDirectory(new File(System.getProperty("user.dir")));
+            fileChooser.setTitle("Load View Template File");
+            File templateFile = fileChooser.showOpenDialog(primaryStage);
+            if (templateFile != null) {
+                try {
+                    loadViewTemplate(templateFile);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+
         });
 
         MenuItem exitMenuItem = new MenuItem("Exit");
@@ -680,7 +727,6 @@ public class PlgToCsvParser extends Application {
 
         Button rmButton = new Button("–");
         rmButton.setOnAction(e -> {
-            // TODO: 8/25/16
             variableListView.getItems().remove(variableListView.getSelectionModel().getSelectedIndex());
         });
 
@@ -707,8 +753,6 @@ public class PlgToCsvParser extends Application {
         Button parserButton = new Button("Parse");
         parserButton.setDisable(true);
         parserButton.setOnAction(e -> {
-            // TODO: 8/25/16
-
             if (plgFile != null && csvFile != null) {
                 // do the conversion
                 this.sampleDuration = sampleDurationSpinner.getValue().longValue();
@@ -741,6 +785,11 @@ public class PlgToCsvParser extends Application {
             FileChooser fileChooser = new FileChooser();
             fileChooser.setTitle("Choose File to Save to");
             csvFile = fileChooser.showSaveDialog(primaryStage);
+
+            if (!csvFile.getName().endsWith(".csv")) {
+                csvFile = new File(csvFile.getAbsolutePath() + ".csv");
+            }
+
             parserButton.setDisable(false);
         });
 
@@ -982,5 +1031,130 @@ public class PlgToCsvParser extends Application {
         }
 
         return null;
+    }
+
+    private void saveViewTemplate(File f) throws IOException {
+        Properties properties = new Properties();
+
+        // get variables in the view now
+        ArrayList<String> variableNames = new ArrayList<>();
+
+        for (String item : variableListView.getItems()) {
+            variableNames.add(item);
+        }
+
+        StringBuffer variableNamesBuffer = new StringBuffer();
+        for (int i = 0; i < variableNames.size(); i++) {
+            String variableName = variableNames.get(i).substring(variableNames.get(i).indexOf(":") + 1);
+            if ((i + 1) < variableNames.size()) {
+                variableNamesBuffer.append(variableName + ",");
+            } else {
+                variableNamesBuffer.append(variableName);
+            }
+        }
+
+        properties.setProperty(FalconViewTemplateKeys.VARIABLES, variableNamesBuffer.toString().trim());
+
+        OutputStream outputStream = new FileOutputStream(f);
+        properties.store(outputStream, null);
+
+    }
+
+    private void loadViewTemplate(File f) throws IOException {
+        ArrayList<FileMetadata> targetFiles = new ArrayList<>();
+        if (fileMetadataMap.size() > 1) {
+//            // prompt user to specify which of the opened files to apply the template settings to
+//            Dialog<ObservableList<File>> filesDialog = new Dialog<>();
+//            filesDialog.setHeaderText("Template Target Selection");
+////            filesDialog.setContentText("Choose Open File(s) to Apply Template");
+//
+//            // Set the button types
+//            filesDialog.getDialogPane().getButtonTypes().addAll(ButtonType.APPLY, ButtonType.CANCEL);
+//
+//            BorderPane borderPane = new BorderPane();
+//
+//            ObservableList<File> filenames = FXCollections.observableArrayList();
+//            for (FileMetadata fileMetadata : fileMetadataMap.values()) {
+//                filenames.add(fileMetadata.file);
+//            }
+//
+//            ListView<File> fileListView = new ListView<>(filenames);
+//            fileListView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+//            borderPane.setCenter(fileListView);
+//            borderPane.setMaxHeight(200);
+//            borderPane.setMinWidth(400);
+//
+//            filesDialog.getDialogPane().setContentText("Choose Open File(s) to Apply Template");
+////            filesDialog.getDialogPane().setExpandableContent(borderPane);
+//            filesDialog.getDialogPane().setContent(borderPane);
+////            filesDialog.getDialogPane().getScene().getWindow().sizeToScene();
+////            filesDialog.getDialogPane().setMinWidth(500);
+////            filesDialog.getDialogPane().setMaxHeight(200);
+//
+//            // Request focus on the username field by default.
+//            Platform.runLater(() -> fileListView.requestFocus());
+//
+//            // Convert the result to a username-password-pair when the login button is clicked.
+//            filesDialog.setResultConverter(dialogButton -> {
+//                if (dialogButton == ButtonType.APPLY) {
+//                    return fileListView.getSelectionModel().getSelectedItems();
+//                }
+//                return null;
+//            });
+//
+//            filesDialog.setResizable(true);
+//            Optional<ObservableList<File>> result = filesDialog.showAndWait();
+//
+//            if (result.isPresent()) {
+//                for (File file : result.get()) {
+//                    targetFiles.add(fileMetadataMap.get(file));
+//                }
+//            }
+        } else if (fileMetadataMap.size() == 1) {
+            targetFiles.addAll(fileMetadataMap.values());
+        } else if (fileMetadataMap.isEmpty()) {
+            // TODO: Maybe show a error message here?
+            return;
+        }
+
+        Properties properties = new Properties();
+        properties.load(new FileInputStream(f));
+
+        // get variables and load each one into the view
+        String variablesString = properties.getProperty(FalconViewTemplateKeys.VARIABLES);
+        if (variablesString != null && !(variablesString.trim().isEmpty())) {
+            String variableNames[] = variablesString.split(",");
+            for (FileMetadata fileMetadata : targetFiles) {
+                for (String variableName : variableNames) {
+                    // read variable time series from file
+                    loadColumnIntoMultiView(fileMetadata, variableName);
+                }
+            }
+        }
+    }
+
+    private void loadColumnIntoMultiView (FileMetadata fileMetadata, String variableName) {
+        try {
+            ArrayList<String> variableList = new ArrayList<>();
+            variableList.add(variableName);
+//            Map<String, TimeSeries> PLGTimeSeriesMap = PLGFileReader.readPLGFileAsTimeSeries(fileMetadata.file, variableList);
+
+            Map<String, PLGVariableSchema> schemaMap = PLGFileReader.readVariableSchemas(fileMetadata.file);
+
+            if (!schemaMap.containsKey(variableName)) {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Variable Read Error");
+                alert.setHeaderText("Variable not found in file");
+                alert.setContentText("The variable '" + variableName + "' was not found in the file '" + fileMetadata.file.getName() + "'");
+                alert.showAndWait();
+                variableList.remove(variableName);
+//                return;
+            }
+            for (int i = 0; i < variableList.size(); i++) {
+                variableListView.getItems().add(variableList.get(i));
+            }
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
     }
 }
