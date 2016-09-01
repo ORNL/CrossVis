@@ -50,10 +50,6 @@ public class ImageZoomPanel extends JComponent {
         imageRect.height = dimension.height;
     }
 
-    public ImageZoomPanel() {
-
-    }
-
     public ImageZoomPanel(Image image, Double imageValue) {
         this.image = image;
         this.imageValue = imageValue;
@@ -61,23 +57,5 @@ public class ImageZoomPanel extends JComponent {
         if (imageRect == null) {
             imageRect = new Rectangle(0, 0, 0, 0);
         }
-    }
-
-    /******************
-     * @param args
-     *
-     * we will want to run several different tests in order to test the functionality of this class
-     *
-     * will write a subclass Tester to perform these tasks
-     *
-     * 1. create a window with a single instance of this panel in order to test zooming/scrolling capabilities within the panel, resizing behaviors of main window
-     * 2. create a window with multiple instance and then check linked zooming/scrolling
-     *
-     */
-    public static void main(String args[]) {
-
-        launch(Tester.class, args);
-
-        return;
     }
 }
