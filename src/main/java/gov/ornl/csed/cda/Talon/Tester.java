@@ -35,16 +35,22 @@ public class Tester extends Application {
         BufferedImage image = new BufferedImage();
         Double imageValue = null;
 
+        SwingNode imageZoomPanel = new SwingNode();
+
         MenuItem openSingleImage = new MenuItem("Open Single Image");
+        openSingleImage.setOnAction(e -> {
+            imageZoomPanel.getContent().add(new ImageZoomPanel());
+        });
+
         MenuItem openMultiImages = new MenuItem("Open Multi Images");
+        openMultiImages.setOnAction(e -> {
+
+        });
 
         Menu file = new Menu("File");
         file.getItems().addAll(openSingleImage, openMultiImages);
 
         MenuBar menuBar = new MenuBar(file);
-
-        SwingNode imageZoomPanel = new SwingNode();
-        imageZoomPanel.getContent().add(new ImageZoomPanel(image, imageValue));
 
         VBox root = new VBox();
         root.getChildren().addAll(menuBar, imageZoomPanel);
