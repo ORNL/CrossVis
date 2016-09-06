@@ -22,8 +22,9 @@ import static javafx.application.Application.launch;
     - also when multiple ones of them are grouped together in the program the desired behavior is that they
         - all display the image at the same size
         - all display the same portion of a single image
-        - the image may resized underneathe the panel
+        - the image may resized underneath the panel
  */
+
 public class ImageZoomPanel extends JComponent {
 
     private static Rectangle panelRect = null;
@@ -57,5 +58,11 @@ public class ImageZoomPanel extends JComponent {
         if (imageRect == null) {
             imageRect = new Rectangle(0, 0, 0, 0);
         }
+    }
+
+    public void paintComponent(Graphics g) {
+        Graphics2D g2 = (Graphics2D)g;
+
+        g2.drawImage(image, imageRect.x, imageRect.y, imageRect.width, imageRect.height, this);
     }
 }
