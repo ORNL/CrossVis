@@ -1,12 +1,16 @@
 package gov.ornl.csed.cda.Talon;
 
 import javafx.application.Application;
+import javafx.embed.swing.SwingNode;
 import javafx.scene.Scene;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
+import javafx.scene.image.Image;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+
+import java.awt.image.BufferedImage;
 
 /**
  * Created by whw on 9/1/16.
@@ -28,6 +32,9 @@ public class Tester extends Application {
          * CREATE THE APPROPRIATE PRIMITIVES FOR YOU NEED
          */
 
+        BufferedImage image = new BufferedImage();
+        Double imageValue = null;
+
         MenuItem openSingleImage = new MenuItem("Open Single Image");
         MenuItem openMultiImages = new MenuItem("Open Multi Images");
 
@@ -36,8 +43,11 @@ public class Tester extends Application {
 
         MenuBar menuBar = new MenuBar(file);
 
+        SwingNode imageZoomPanel = new SwingNode();
+        imageZoomPanel.getContent().add(new ImageZoomPanel(image, imageValue));
+
         VBox root = new VBox();
-        root.getChildren().addAll(menuBar);
+        root.getChildren().addAll(menuBar, imageZoomPanel);
 
         /**
          * This will stay the same regardless of future panels that may be tested
