@@ -15,9 +15,9 @@ import java.awt.image.BufferedImage;
 /**
  * Created by whw on 9/1/16.
  */
-public class Tester extends Application {
+public class ImageZoomPanelTester extends Application {
 
-    public Tester() {
+    public ImageZoomPanelTester() {
 
     }
 
