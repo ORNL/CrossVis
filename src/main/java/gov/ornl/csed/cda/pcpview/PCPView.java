@@ -25,7 +25,7 @@ public class PCPView extends Region {
 
     private final static Paint DEFAULT_SELECTED_LINE_PAINT = Color.STEELBLUE;
     private final static Paint DEFAULT_UNSELECTED_LINE_PAINT = Color.LIGHTGRAY;
-    private final static double DEFAULT_LINE_OPACITY = 0.1;
+    private final static double DEFAULT_LINE_OPACITY = 0.5;
 
     private Canvas lineCanvas;
     private GraphicsContext lineGC;
@@ -47,6 +47,12 @@ public class PCPView extends Region {
     private ArrayList<PCPTuple> tupleList;
     private HashSet<PCPTuple> unselectedTupleSet;
     private HashSet<PCPTuple> selectedTupleSet;
+    private ArrayList<PCPBinSet> PCPBinSetList;
+
+//    private DISPLAY_MODE displayMode = DISPLAY_MODE.PCP_BINS;
+//    private DISPLAY_MODE displayMode = DISPLAY_MODE.HISTOGRAM;
+    private DISPLAY_MODE displayMode = DISPLAY_MODE.PCP_LINES;
+    public enum DISPLAY_MODE {HISTOGRAM, PCP_LINES, PCP_BINS};
 
     public PCPView() {
         backgroundPaint = Color.TRANSPARENT;
@@ -58,9 +64,20 @@ public class PCPView extends Region {
         registerListeners();
     }
 
+    public void setDisplayMode(DISPLAY_MODE displayMode) {
+        if (this.displayMode != displayMode) {
+            if (this.displayMode == DISPLAY_MODE.PCP_LINES) {
+                lineGC.clearRect(0, 0, getWidth(), getHeight());
+            }
+            this.displayMode = displayMode;
+            resize();
+        }
+    }
+
+    public DISPLAY_MODE getDisplayMode() { return displayMode; }
+
     public void setSelectedLinePaint(Paint selectedLinePaint) {
         this.selectedLinePaint = selectedLinePaint;
-//        recolorLines();
         redraw();
     }
 
@@ -69,49 +86,62 @@ public class PCPView extends Region {
 
     public void setUnselectedLinePaint(Paint unselectedLinePaint) {
         this.unselectedLinePaint = unselectedLinePaint;
-//        recolorLines();
         redraw();
     }
 
     public void handleQueryChange() {
-        unselectedTupleSet.clear();
-        selectedTupleSet.clear();
-        if ((tupleList != null) && (!tupleList.isEmpty())) {
-            if (dataModel.getActiveQuery().hasColumnSelections()) {
-                for (PCPTuple pcpTuple : tupleList) {
-                    if (pcpTuple.getTuple().getQueryFlag()) {
-                        selectedTupleSet.add(pcpTuple);
-                    } else {
-                        unselectedTupleSet.add(pcpTuple);
+        if (displayMode == DISPLAY_MODE.PCP_LINES) {
+            unselectedTupleSet.clear();
+            selectedTupleSet.clear();
+            if ((tupleList != null) && (!tupleList.isEmpty())) {
+                if (dataModel.getActiveQuery().hasColumnSelections()) {
+                    for (PCPTuple pcpTuple : tupleList) {
+                        if (pcpTuple.getTuple().getQueryFlag()) {
+                            selectedTupleSet.add(pcpTuple);
+                        } else {
+                            unselectedTupleSet.add(pcpTuple);
+                        }
                     }
+                } else {
+                    selectedTupleSet.addAll(tupleList);
                 }
-            } else {
-                selectedTupleSet.addAll(tupleList);
             }
-        }
-        redraw();
-    }
+            redraw();
+        } else if (displayMode == DISPLAY_MODE.HISTOGRAM) {
+            double left = getInsets().getLeft() + (axisSpacing / 2.);
+            double top = getInsets().getTop();
+            double pcpHeight = getHeight() - (getInsets().getTop() + getInsets().getBottom());
 
-//    private void recolorLines() {
-//        if ((tupleList != null) && (!tupleList.isEmpty())) {
-//            for (PCPTuple pcpTuple : tupleList) {
-//                if (pcpTuple.getTuple().getQueryFlag()) {
-//                    pcpTuple.setStroke(selectedLinePaint);
-//                } else {
-//                    pcpTuple.setStroke(unselectedLinePaint);
-//                }
-//            }
-//        }
-//    }
+            for (int iaxis = 0; iaxis < axisList.size(); iaxis++) {
+                PCPAxis pcpAxis = axisList.get(iaxis);
+                pcpAxis.layout(left + (iaxis * axisSpacing), top, axisSpacing, pcpHeight);
+
+                pane.getChildren().add(0, pcpAxis.getHistogramBinRectangleGroup());
+                pane.getChildren().add(1, pcpAxis.getQueryHistogramBinRectangleGroup());
+            }
+        } else if (displayMode == DISPLAY_MODE.PCP_BINS) {
+            double left = getInsets().getLeft() + (axisSpacing / 2.);
+            double top = getInsets().getTop();
+            double pcpHeight = getHeight() - (getInsets().getTop() + getInsets().getBottom());
+
+            for (int iaxis = 0; iaxis < axisList.size(); iaxis++) {
+                PCPAxis pcpAxis = axisList.get(iaxis);
+                pcpAxis.layout(left + (iaxis * axisSpacing), top, axisSpacing, pcpHeight);
+            }
+
+            for (PCPBinSet PCPBinSet : PCPBinSetList) {
+                PCPBinSet.layoutBins();
+            }
+            redraw();
+        }
+    }
 
     public void setAxisSpacing(double axisSpacing) {
         this.axisSpacing = axisSpacing;
         resize();
     }
 
-    public void setDataModel (DataModel dataModel) {
-        this.dataModel = dataModel;
-
+    private void initializeLayout() {
         // add axis lines to the pane
         axisList.clear();
         for (int iaxis = 0; iaxis < dataModel.getColumnCount(); iaxis++) {
@@ -132,12 +162,45 @@ public class PCPView extends Region {
         unselectedTupleSet = new HashSet<>();
         selectedTupleSet = new HashSet<>(tupleList);
 
+        // create PCPBinSets for axis configuration
+        PCPBinSetList = new ArrayList<>();
+        for (int iaxis = 0; iaxis < axisList.size()-1; iaxis++) {
+            PCPBinSet binSet = new PCPBinSet(axisList.get(iaxis), axisList.get(iaxis+1), dataModel);
+            PCPBinSetList.add(binSet);
+        }
+
+        resize();
+    }
+
+    public void setDataModel (DataModel dataModel) {
+        this.dataModel = dataModel;
+
+//        // add axis lines to the pane
+//        axisList.clear();
+//        for (int iaxis = 0; iaxis < dataModel.getColumnCount(); iaxis++) {
+//            PCPAxis pcpAxis = new PCPAxis(dataModel.getColumn(iaxis), iaxis, dataModel, pane);
+//            pane.getChildren().add(pcpAxis.getGraphicsGroup());
+//            axisList.add(pcpAxis);
+//        }
+//
+//        // add tuples polylines from data model
+//        tupleList = new ArrayList<>();
+//        for (int iTuple = 0; iTuple < dataModel.getTupleCount(); iTuple++) {
+//            Tuple tuple = dataModel.getTuple(iTuple);
+//            PCPTuple pcpTuple = new PCPTuple(tuple);
+//            tupleList.add(pcpTuple);
+//        }
+//
+//        // create selected and unselected tuple sets
+//        unselectedTupleSet = new HashSet<>();
+//        selectedTupleSet = new HashSet<>(tupleList);
+
         resize();
 
         this.dataModel.addDataModelListener(new DataModelListener() {
             @Override
             public void dataModelChanged(DataModel dataModel) {
-
+                initializeLayout();
             }
 
             @Override
@@ -149,7 +212,7 @@ public class PCPView extends Region {
             @Override
             public void dataModelColumnSelectionAdded(DataModel dataModel, ColumnSelectionRange columnSelectionRange) {
                 log.debug("ColumnSelection added");
-                handleQueryChange();
+//                handleQueryChange();
             }
 
             @Override
@@ -160,12 +223,12 @@ public class PCPView extends Region {
 
             @Override
             public void highlightedColumnChanged(DataModel dataModel) {
-
+                log.debug("highlighted column changed");
             }
 
             @Override
             public void tuplesAdded(DataModel dataModel, ArrayList<Tuple> newTuples) {
-
+                log.debug("data model tuples added");
             }
 
             @Override
@@ -232,11 +295,25 @@ public class PCPView extends Region {
                     for (int iaxis = 0; iaxis < axisList.size(); iaxis++) {
                         PCPAxis pcpAxis = axisList.get(iaxis);
                         pcpAxis.layout(left + (iaxis * axisSpacing), top, axisSpacing, pcpHeight);
+
+                        if (displayMode == DISPLAY_MODE.HISTOGRAM) {
+                            pane.getChildren().add(0, pcpAxis.getHistogramBinRectangleGroup());
+                            pane.getChildren().add(1, pcpAxis.getQueryHistogramBinRectangleGroup());
+                        }
                     }
 
                     // add tuples polylines from data model
-                    for (PCPTuple pcpTuple : tupleList) {
-                        pcpTuple.layout(axisList);
+                    if (displayMode == DISPLAY_MODE.PCP_LINES) {
+                        if (tupleList != null) {
+                            for (PCPTuple pcpTuple : tupleList) {
+                                pcpTuple.layout(axisList);
+                            }
+                        }
+                    } else if (displayMode == DISPLAY_MODE.PCP_BINS) {
+                        // layout PCPBins
+                        for (PCPBinSet PCPBinSet : PCPBinSetList) {
+                            PCPBinSet.layoutBins();
+                        }
                     }
                 }
                 redraw();
@@ -248,9 +325,58 @@ public class PCPView extends Region {
         pane.setBackground(new Background(new BackgroundFill(backgroundPaint, new CornerRadii(1024), Insets.EMPTY)));
         pane.setBorder(new Border(new BorderStroke(borderPaint, BorderStrokeStyle.SOLID, new CornerRadii(1024), new BorderWidths(borderWidth))));
 
-        drawTuplePolylines();
-//        drawPolylines();
-//        drawAxes();
+//        if (displayMode == DISPLAY_MODE.HISTOGRAM) {
+//            for (PCPAxis pcpAxis : axisList) {
+//                pane.getChildren().add(0, pcpAxis.getHistogramBinRectangleGroup());
+////                pane.getChildren().add(pcpAxis.getHistogramBinRectangleGroup());
+//            }
+//        } else if (displayMode == DISPLAY_MODE.PCP_LINES) {
+//            drawTuplePolylines();
+//        }
+
+        if (displayMode == DISPLAY_MODE.PCP_LINES) {
+            drawTuplePolylines();
+        } else if (displayMode == DISPLAY_MODE.PCP_BINS) {
+            drawPCPBins();
+        }
+    }
+
+    private void drawPCPBins() {
+        lineCanvas.setCache(false);
+        lineGC.setLineCap(StrokeLineCap.BUTT);
+        lineGC.clearRect(0, 0, getWidth(), getHeight());
+        lineGC.setGlobalAlpha(lineOpacity);
+        lineGC.setLineWidth(2);
+        lineGC.setLineWidth(2d);
+
+        if ((PCPBinSetList != null) && (!PCPBinSetList.isEmpty())) {
+            for (PCPBinSet binSet : PCPBinSetList) {
+                for (PCPBin bin : binSet.getBins()) {
+                    lineGC.setFill(bin.fillColor);
+//                    lineGC.setStroke(Color.TRANSPARENT);
+                    double xValues[] = new double[] {bin.left, bin.right, bin.right, bin.left};
+                    double yValues[] = new double[] {bin.leftTop, bin.rightTop, bin.rightBottom, bin.leftBottom};
+                    lineGC.fillPolygon(xValues, yValues, xValues.length);
+//                    lineGC.strokeLine(bin.left, bin.leftTop, bin.right, bin.rightTop);
+//                    lineGC.strokeLine(bin.left, bin.leftBottom, bin.right, bin.rightBottom);
+                }
+            }
+
+            for (PCPBinSet binSet : PCPBinSetList) {
+                for (PCPBin bin : binSet.getBins()) {
+                    if (bin.queryCount > 0) {
+                        lineGC.setFill(bin.queryFillColor);
+//                        lineGC.setStroke(Color.BLACK);
+                        double xValues[] = new double[]{bin.left, bin.right, bin.right, bin.left};
+                        double yValues[] = new double[]{bin.leftQueryTop, bin.rightQueryTop, bin.rightQueryBottom, bin.leftQueryBottom};
+                        lineGC.fillPolygon(xValues, yValues, xValues.length);
+                    }
+                }
+            }
+        }
+
+        lineCanvas.setCache(true);
+        lineCanvas.setCacheHint(CacheHint.QUALITY);
     }
 
     private void drawTuplePolylines() {
@@ -258,9 +384,10 @@ public class PCPView extends Region {
         lineGC.setLineCap(StrokeLineCap.BUTT);
         lineGC.clearRect(0, 0, getWidth(), getHeight());
         lineGC.setGlobalAlpha(lineOpacity);
-//        lineGC.setStroke(new Color(Color.STEELBLUE.getRed(), Color.STEELBLUE.getGreen(), Color.STEELBLUE.getBlue(), 0.2));
+        lineGC.setLineWidth(2);
+        lineGC.setLineWidth(2d);
 
-        if (!unselectedTupleSet.isEmpty()) {
+        if ((unselectedTupleSet != null) && (!unselectedTupleSet.isEmpty())) {
             lineGC.setStroke(unselectedLinePaint);
             for (PCPTuple pcpTuple : unselectedTupleSet) {
                 for (int i = 1; i < pcpTuple.getXPoints().length; i++) {
@@ -270,7 +397,7 @@ public class PCPView extends Region {
             }
         }
 
-        if (!selectedTupleSet.isEmpty()) {
+        if ((selectedTupleSet != null) && (!selectedTupleSet.isEmpty())) {
             lineGC.setStroke(selectedLinePaint);
             for (PCPTuple pcpTuple : selectedTupleSet) {
                 for (int i = 1; i < pcpTuple.getXPoints().length; i++) {
@@ -279,61 +406,8 @@ public class PCPView extends Region {
                 }
             }
         }
-//        if (tupleList != null && !tupleList.isEmpty()) {
-//            for (PCPTuple pcpTuple : tupleList) {
-//                for (int i = 1; i < pcpTuple.getXPoints().length; i++) {
-//                    lineGC.setStroke(pcpTuple.getColor());
-//                    lineGC.strokeLine(axisList.get(i-1).getBarRightX(), pcpTuple.getYPoints()[i-1],
-//                            axisList.get(i).getBarLeftX(), pcpTuple.getYPoints()[i]);
-////                    lineGC.strokeLine(pcpTuple.getXPoints()[i-1], pcpTuple.getYPoints()[i-1], pcpTuple.getXPoints()[i], pcpTuple.getYPoints()[i]);
-//                }
-//            }
-//        }
 
         lineCanvas.setCache(true);
         lineCanvas.setCacheHint(CacheHint.QUALITY);
     }
-
-/*
-    private void drawPolylines() {
-        double availableHeight = getHeight() * .8;
-        double axisSpacing = getWidth() / dataModel.getColumnCount();
-        double left = axisSpacing / 2.;
-        double right = getWidth() - left;
-        double top = (getHeight() - availableHeight) / 2.;
-        double bottom = top + availableHeight;
-
-        lineCanvas.setCache(false);
-        lineGC.setLineCap(StrokeLineCap.BUTT);
-        lineGC.clearRect(0, 0, getWidth(), getHeight());
-        lineGC.setGlobalAlpha(0.5);
-
-        if (dataModel != null && !dataModel.isEmpty()) {
-
-            lineGC.setStroke(Color.STEELBLUE);
-            for (int ituple = 0; ituple < dataModel.getTupleCount(); ituple++) {
-                Tuple tuple = dataModel.getTuple(ituple);
-                double lastX = 0.;
-                double lastY = 0.;
-                for (int iaxis = 0; iaxis < dataModel.getColumnCount(); iaxis++) {
-                    double value = tuple.getElement(iaxis);
-                    Column column = dataModel.getColumn(iaxis);
-                    double x = left + (iaxis * axisSpacing);
-                    double y = GraphicsUtil.mapValue(value, column.getSummaryStats().getMin(), column.getSummaryStats().getMax(),
-                            bottom, top);
-
-                    if (iaxis > 0) {
-                        lineGC.strokeLine(lastX, lastY, x, y);
-                    }
-                    lastX = x;
-                    lastY = y;
-                }
-            }
-        }
-
-        lineCanvas.setCache(true);
-        lineCanvas.setCacheHint(CacheHint.QUALITY);
-    }
-    */
-
 }

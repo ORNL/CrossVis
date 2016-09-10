@@ -21,6 +21,7 @@ public class SummaryStats {
     private int numNaN = 0;
     private ArrayList<Double> corrCoefs = new ArrayList<>();
     private Histogram histogram;
+    private ArrayList<Histogram2D> histogram2DList = new ArrayList<>();
 
     public ArrayList<Double> getCorrelationCoefficients() {
         return corrCoefs;
@@ -41,6 +42,10 @@ public class SummaryStats {
     public void setHistogram(Histogram histogram) {
         this.histogram = histogram;
     }
+
+    public void setHistogram2DList (ArrayList<Histogram2D> histogram2DList) { this.histogram2DList = histogram2DList; }
+
+    public ArrayList<Histogram2D> getHistogram2DList () { return histogram2DList; }
 
     public double getMin() {
         return min;

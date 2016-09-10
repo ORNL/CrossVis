@@ -220,6 +220,7 @@ public class DataModel {
         if (histogramBinSize > MAX_NUM_HISTOGRAM_BINS) {
             histogramBinSize = MAX_NUM_HISTOGRAM_BINS;
         }
+//        histogramBinSize = 3;
 
 		highlightedColumn = null;
 		this.tuples.clear();
@@ -267,7 +268,6 @@ public class DataModel {
 	}
 
 	private void calculateQueryStatistics() {
-		log.debug("Entered calculate query stats");
 		double[][] data = new double[columns.size()][];
 
 		for (int icolumn = 0; icolumn < columns.size(); icolumn++) {
@@ -323,23 +323,15 @@ public class DataModel {
 			// calculate frequency information for column
             Histogram histogram;
             if (column.isContinuous()) {
-                histogram = new Histogram(column.getName(),
+                histogram = new Histogram(column.getName(), data[icolumn],
                         histogramBinSize, column.getSummaryStats().getMin(),
                         column.getSummaryStats().getMax());
             } else {
-                int numBins = column.getSummaryStats().getHistogram().numberOfBins();
-                histogram = new Histogram(column.getName(), numBins, column.getSummaryStats().getMin(),
+                int numBins = column.getSummaryStats().getHistogram().getNumBins();
+                histogram = new Histogram(column.getName(), data[icolumn], numBins, column.getSummaryStats().getMin(),
                         column.getSummaryStats().getMax());
             }
             columnSummaryStats.setHistogram(histogram);
-
-//			Histogram histogram = new Histogram(column.getName(),
-//					DEFAULT_NUM_HISTOGRAM_BINS, column.getSummaryStats().getMin(),
-//					column.getSummaryStats().getMax());
-//			columnSummaryStats.setHistogram(histogram);
-			for (double value : data[icolumn]) {
-				histogram.fill(value);
-			}
 		}
 
 		PearsonsCorrelation pCorr = new PearsonsCorrelation();
@@ -349,16 +341,22 @@ public class DataModel {
 			SummaryStats columnSummaryStats = activeQuery.getColumnQuerySummaryStats(column);
 
 			ArrayList<Double> coefList = new ArrayList<>();
+			ArrayList<Histogram2D> histogram2DArrayList = new ArrayList<Histogram2D>();
 
 			for (int iy = 0; iy < columns.size(); iy++) {
-				try {
-					double coef = pCorr.correlation(data[ix], data[iy]);
-					coefList.add(coef);
-				} catch (Exception ex) {
-					coefList.add(0.);
-				}
+                double coef = pCorr.correlation(data[ix], data[iy]);
+                coefList.add(coef);
+
+                // calculate 2D histograms
+                // TODO: This could be optimized to reduce some computational complexity
+                // TODO: The code current calculates a redundant 2D histogram for each pair of variables
+                Histogram2D histogram2D = column.getSummaryStats().getHistogram2DList().get(iy);
+                Histogram2D queryHistogram2D = new Histogram2D("", data[ix], data[iy], histogramBinSize,
+                        histogram2D.getXMinValue(), histogram2D.getXMaxValue(), histogram2D.getYMinValue(), histogram2D.getYMaxValue());
+                histogram2DArrayList.add(queryHistogram2D);
 			}
 			columnSummaryStats.setCorrelationCoefficients(coefList);
+            columnSummaryStats.setHistogram2DList(histogram2DArrayList);
 		}
 	}
 
@@ -443,32 +441,38 @@ public class DataModel {
 			// calculate frequency information for column
             Histogram histogram;
             if (column.isContinuous()) {
-                histogram = new Histogram(column.getName(),
+                histogram = new Histogram(column.getName(), data[icolumn],
                         histogramBinSize, column.getSummaryStats().getMin(),
                         column.getSummaryStats().getMax());
             } else {
                 int numBins = ((int)column.getSummaryStats().getMax() - (int)column.getSummaryStats().getMin()) + 1;
-                histogram = new Histogram(column.getName(), numBins, column.getSummaryStats().getMin(),
+                histogram = new Histogram(column.getName(), data[icolumn], numBins, column.getSummaryStats().getMin(),
                         column.getSummaryStats().getMax());
             }
             column.getSummaryStats().setHistogram(histogram);
-
-			for (double value : data[icolumn]) {
-				histogram.fill(value);
-			}
 		}
 
 		PearsonsCorrelation pCorr = new PearsonsCorrelation();
 
+
 		for (int ix = 0; ix < columns.size(); ix++) {
 			Column column = columns.get(ix);
+            ArrayList<Histogram2D> histogram2DArrayList = new ArrayList<Histogram2D>();
 			ArrayList<Double> coefList = new ArrayList<>();
 
 			for (int iy = 0; iy < columns.size(); iy++) {
 				double coef = pCorr.correlation(data[ix], data[iy]);
 				coefList.add((double) coef);
+
+                // calculate 2D histograms
+                // TODO: This could be optimized to reduce some computational complexity
+                // TODO: The code current calculates a redundant 2D histogram for each pair of variables
+                Histogram2D histogram2D = new Histogram2D("", data[ix], data[iy], histogramBinSize);
+                histogram2DArrayList.add(histogram2D);
 			}
+
 			column.getSummaryStats().setCorrelationCoefficients(coefList);
+            column.getSummaryStats().setHistogram2DList(histogram2DArrayList);
 		}
 	}
 
@@ -546,7 +550,6 @@ public class DataModel {
 	public double[] getColumnQueriedValues(int columnIndex) {
 		Column column = columns.get(columnIndex);
 
-//		double[] values = new double[queriedTuples.size()];
 		double[] values = new double[activeQuery.getTuples().size()];
 
 		for (int ituple = 0; ituple < activeQuery.getTuples().size(); ituple++) {
@@ -571,10 +574,6 @@ public class DataModel {
 		return columns.get(idx);
 	}
 
-	// public Column getDisabledColumn(int idx) {
-	// return disabledColumns.get(idx);
-	// }
-	//
 	public Column getColumn(String columnName) {
 		for (Column column : columns) {
 			if (column.getName().equals(columnName)) {
@@ -1021,5 +1020,7 @@ public class DataModel {
 				tuple.setQueryFlag(true);
 			}
 		}
+
+		log.debug("after setQueriedTuples() number of queried tuples is " + getActiveQuery().getTuples().size());
 	}
 }

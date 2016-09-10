@@ -3,6 +3,7 @@ package gov.ornl.csed.cda.pcpview;
 import gov.ornl.csed.cda.datatable.Column;
 import gov.ornl.csed.cda.datatable.ColumnSelectionRange;
 import gov.ornl.csed.cda.datatable.DataModel;
+import gov.ornl.csed.cda.datatable.Histogram;
 import gov.ornl.csed.cda.util.GraphicsUtil;
 import javafx.event.EventHandler;
 import javafx.geometry.Point2D;
@@ -14,6 +15,8 @@ import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 
@@ -21,6 +24,8 @@ import java.util.ArrayList;
  * Created by csg on 8/23/16.
  */
 public class PCPAxis {
+    public final static Logger log = LoggerFactory.getLogger(PCPAxis.class);
+
     public final static double DEFAULT_NAME_LABEL_HEIGHT = 30d;
     public final static double DEFAULT_CONTEXT_HEIGHT = 20d;
     public final static double DEFAULT_BAR_WIDTH = 10d;
@@ -41,7 +46,6 @@ public class PCPAxis {
     private double contextRegionHeight = DEFAULT_CONTEXT_HEIGHT;
 
     private Group graphicsGroup;
-//    private Line verticalBarLine;
     private Line topCrossBarLine;
     private Line bottomCrossBarLine;
     private Line topFocusCrossBarLine;
@@ -50,6 +54,13 @@ public class PCPAxis {
     private Rectangle verticalBar;
 
     private Text nameText;
+
+    // histogram bin rectangles
+    private Group histogramBinRectangleGroup;
+    private ArrayList<Rectangle> histogramBinRectangleList;
+    private Group queryHistogramBinRectangleGroup;
+    private ArrayList<Rectangle> queryHistogramBinRectangleList;
+
     private Pane pane;
 
     private ArrayList<PCPAxisSelection> axisSelectionList = new ArrayList<>();
@@ -76,7 +87,6 @@ public class PCPAxis {
         nameText = new Text(column.getName());
         nameText.setFont(new Font(DEFAULT_TEXT_SIZE));
 
-//        verticalBarLine = makeLine();
         verticalBar = new Rectangle();
         verticalBar.setStroke(Color.DARKGRAY);
         verticalBar.setFill(Color.WHITESMOKE);
@@ -92,6 +102,9 @@ public class PCPAxis {
 
         registerListeners();
     }
+
+    public Group getHistogramBinRectangleGroup() { return histogramBinRectangleGroup; }
+    public Group getQueryHistogramBinRectangleGroup() { return queryHistogramBinRectangleGroup; }
 
     private void registerListeners() {
         PCPAxis thisPCPAxis = this;
@@ -113,10 +126,7 @@ public class PCPAxis {
                 double selectionMaxY = Math.min(dragStartPoint.getY(), dragEndPoint.getY());
                 double selectionMinY = Math.max(dragStartPoint.getY(), dragEndPoint.getY());
 
-//                double selectionMaxY = dragStartPoint.getY() < dragEndPoint.getY() ? dragStartPoint.getY() : dragEndPoint.getY();
                 selectionMaxY = selectionMaxY < getFocusTopY() ? getFocusTopY() : selectionMaxY;
-
-//                double selectionMinY = dragStartPoint.getY() > dragEndPoint.getY() ? dragStartPoint.getY() : dragEndPoint.getY();
                 selectionMinY = selectionMinY > getFocusBottomY() ? getFocusBottomY() : selectionMinY;
 
                 double maxSelectionValue = GraphicsUtil.mapValue(selectionMaxY, getFocusTopY(), getFocusBottomY(),
@@ -158,6 +168,7 @@ public class PCPAxis {
     }
 
     public Group getGraphicsGroup() { return graphicsGroup; }
+
     public Text getNameText() { return nameText; }
 
     public void layout(double centerX, double topY, double width, double height) {
@@ -203,6 +214,53 @@ public class PCPAxis {
         if (!axisSelectionList.isEmpty()) {
             for (PCPAxisSelection pcpAxisSelection : axisSelectionList) {
                 pcpAxisSelection.relayout();
+            }
+        }
+
+        if (!dataModel.isEmpty()) {
+            Histogram histogram = column.getSummaryStats().getHistogram();
+
+            double binHeight = (getFocusBottomY() - getFocusTopY()) / histogram.getNumBins();
+            histogramBinRectangleList = new ArrayList<>();
+
+            if (histogramBinRectangleGroup != null) {
+                pane.getChildren().remove(histogramBinRectangleGroup);
+            }
+
+            histogramBinRectangleGroup = new Group();
+
+            for (int i = 0; i < histogram.getNumBins(); i++) {
+                double y = getFocusTopY() + ((histogram.getNumBins() - i - 1) * binHeight);
+                double binWidth = GraphicsUtil.mapValue(histogram.getBinCount(i), 0, histogram.getMaxBinCount(), DEFAULT_BAR_WIDTH + 2, width - 2);
+                double x = left + ((width - binWidth) / 2.);
+                Rectangle rectangle = new Rectangle(x, y, binWidth, binHeight);
+                rectangle.setStroke(Color.BLUE);
+                rectangle.setFill(Color.TRANSPARENT);
+                histogramBinRectangleList.add(rectangle);
+                histogramBinRectangleGroup.getChildren().add(rectangle);
+            }
+
+            queryHistogramBinRectangleList = new ArrayList<>();
+            if (queryHistogramBinRectangleGroup != null) {
+                pane.getChildren().remove(queryHistogramBinRectangleGroup);
+            }
+            queryHistogramBinRectangleGroup = new Group();
+
+            if (dataModel.getActiveQuery().hasColumnSelections()) {
+                Histogram queryHistogram = dataModel.getActiveQuery().getColumnQuerySummaryStats(column).getHistogram();
+
+                for (int i = 0; i < histogram.getNumBins(); i++) {
+                    if (queryHistogram.getBinCount(i) > 0) {
+                        double y = getFocusTopY() + ((histogram.getNumBins() - i - 1) * binHeight);
+                        double binWidth = GraphicsUtil.mapValue(queryHistogram.getBinCount(i), 0, histogram.getMaxBinCount(), DEFAULT_BAR_WIDTH + 2, width - 2);
+                        double x = left + ((width - binWidth) / 2.);
+                        Rectangle rectangle = new Rectangle(x, y, binWidth, binHeight);
+                        rectangle.setStroke(Color.RED);
+                        rectangle.setFill(Color.TRANSPARENT);
+                        queryHistogramBinRectangleList.add(rectangle);
+                        queryHistogramBinRectangleGroup.getChildren().add(rectangle);
+                    }
+                }
             }
         }
     }

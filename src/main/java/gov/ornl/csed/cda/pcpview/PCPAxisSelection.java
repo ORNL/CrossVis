@@ -341,6 +341,7 @@ public class PCPAxisSelection {
                     pane.getChildren().remove(getGraphicsGroup());
                     pcpAxis.getAxisSelectionList().remove(this);
                     dataModel.clearColumnSelectionRange(getColumnSelectionRange());
+                    dataModel.setQueriedTuples();
                 }
             }
         });

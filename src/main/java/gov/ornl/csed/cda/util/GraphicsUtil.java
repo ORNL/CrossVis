@@ -1,6 +1,7 @@
 package gov.ornl.csed.cda.util;
 
 
+import javafx.scene.paint.Color;
 
 /**
  * Created by csg on 3/10/16.
@@ -13,6 +14,15 @@ public class GraphicsUtil {
         int blue = (int)Math.round(c1.getBlue() + (c2.getBlue() - c1.getBlue()) * amount);
 
         return new java.awt.Color (red, green, blue, opacity);
+    }
+
+    static public final Color lerpColorFX(Color c1, Color c2, double amount) {
+        double opacity = (c1.getOpacity() + (c2.getOpacity() - c1.getOpacity()) * amount);
+        double red = (c1.getRed() + (c2.getRed() - c1.getRed()) * amount);
+        double green = (c1.getGreen() + (c2.getGreen() - c1.getGreen()) * amount);
+        double blue = (c1.getBlue() + (c2.getBlue() - c1.getBlue()) * amount);
+
+        return new Color (red, green, blue, opacity);
     }
 
     public static double mapValue(double value, double currentMin, double currentMax, double newMin, double newMax) {

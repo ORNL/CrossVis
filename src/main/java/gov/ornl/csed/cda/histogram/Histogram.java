@@ -26,7 +26,6 @@ public class Histogram {
     private double percentile25;
     private double percentile75;
 
-
     public Histogram(String name, double values[], int numBins) {
         this.name = name;
         this.values = values;

@@ -147,12 +147,15 @@ public class IOUtilities {
 //                        log.debug("token=" + token + " value=" + ((long)value) + " dvalue=" + (long)dvalue);
 //                    }
 
+                    if (Double.isNaN(value)) {
+                        skip_line = true;
+                        break;
+                    }
                     // data attribute
 					tuple.addElement(value);
 					token_counter++;
 				} catch (NumberFormatException ex) {
-					System.out
-							.println("DataSet.readCSV(): NumberFormatException caught so skipping record. "
+					System.out.println("DataSet.readCSV(): NumberFormatException caught so skipping record. "
 									+ ex.fillInStackTrace());
 					skip_line = true;
 					break;
