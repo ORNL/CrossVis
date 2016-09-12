@@ -10,6 +10,8 @@ import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
+import javafx.geometry.Orientation;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.SceneAntialiasing;
 import javafx.scene.control.*;
@@ -17,6 +19,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.GridPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.slf4j.Logger;
@@ -40,6 +43,10 @@ public class EDENFXMain extends Application {
     private HashMap<String, PCPView.DISPLAY_MODE> displayModeMap;
     private Preferences preferences;
     private Menu displayModeMenu;
+
+    private ChoiceBox<String> displayModeChoiceBox;
+    private Spinner axisSpacingSpinner;
+    private CheckBox fitAxesToWidthCheckBox;
 
     @Override
     public void init() {
@@ -66,10 +73,18 @@ public class EDENFXMain extends Application {
         scrollPane.setFitToHeight(true);
 
         MenuBar menuBar = createMenuBar(stage);
+        Node settingsPane = createSideSettingsPane();
+
+        SplitPane middleSplit = new SplitPane();
+        middleSplit.setOrientation(Orientation.HORIZONTAL);
+        middleSplit.getItems().addAll(settingsPane, scrollPane);
+        middleSplit.setResizableWithParent(settingsPane, false);
+        middleSplit.setDividerPositions(0.2);
 
         BorderPane rootNode = new BorderPane();
-        rootNode.setCenter(scrollPane);
+        rootNode.setCenter(middleSplit);
         rootNode.setTop(menuBar);
+        rootNode.setLeft(settingsPane);
 
         Scene scene = new Scene(rootNode, 1000, 500, true, SceneAntialiasing.BALANCED);
 
@@ -85,6 +100,67 @@ public class EDENFXMain extends Application {
 
     public static void main (String args[]) {
         launch(args);
+    }
+
+    private Node createSideSettingsPane() {
+        GridPane grid = new GridPane();
+        grid.setVgap(4);
+        grid.setPadding(new Insets(4));
+
+        // Display mode Choice
+        displayModeChoiceBox = new ChoiceBox<>();
+        displayModeChoiceBox.setTooltip(new Tooltip("Change the display mode for the parallel coordinates plot"));
+        displayModeChoiceBox.getItems().addAll("Histogram", "Parallel Coordinates Bins", "Parallel Coordinates Lines");
+        PCPView.DISPLAY_MODE displayMode = pcpView.getDisplayMode();
+        if (displayMode == PCPView.DISPLAY_MODE.HISTOGRAM) {
+            displayModeChoiceBox.getSelectionModel().select("Histogram");
+        } else if (displayMode == PCPView.DISPLAY_MODE.PCP_BINS) {
+            displayModeChoiceBox.getSelectionModel().select("Parallel Coordinates Bins");
+        } else {
+            displayModeChoiceBox.getSelectionModel().select("Parallel Coordinates Lines");
+        }
+        displayModeChoiceBox.getSelectionModel().selectedItemProperty().addListener((obs, oldValue, newValue) -> {
+            if (oldValue != newValue) {
+                PCPView.DISPLAY_MODE newDisplayMode = displayModeMap.get((String)newValue);
+                pcpView.setDisplayMode(newDisplayMode);
+            }
+        });
+        grid.add(new Label("Display Mode: "), 0, 0);
+        grid.add(displayModeChoiceBox, 1, 0);
+
+        // Fix Axes to Width Check
+        fitAxesToWidthCheckBox = new CheckBox("Fit Axes to Width");
+        fitAxesToWidthCheckBox.setTooltip(new Tooltip("Determine the axis spacing using the current width of the display"));
+        fitAxesToWidthCheckBox.setSelected(pcpView.getFitAxisSpacingToWidthEnabled());
+        fitAxesToWidthCheckBox.selectedProperty().addListener((obs, oldValue, newValue) -> {
+            if (fitAxesToWidthCheckBox.isSelected()) {
+                axisSpacingSpinner.setDisable(true);
+                pcpView.setFitAxisSpacingToWidthEnabled(true);
+            } else {
+                axisSpacingSpinner.setDisable(false);
+                pcpView.setFitAxisSpacingToWidthEnabled(false);
+            }
+        });
+        grid.add(fitAxesToWidthCheckBox, 0, 1, 2, 1);
+
+        // Axis spacing Spinner
+        axisSpacingSpinner = new Spinner(10, 300, pcpView.getAxisSpacing());
+        axisSpacingSpinner.setEditable(true);
+        axisSpacingSpinner.setTooltip(new Tooltip("Change the spacing between axes in parallel coordinates plot"));
+        axisSpacingSpinner.setDisable(pcpView.getFitAxisSpacingToWidthEnabled());
+        axisSpacingSpinner.valueProperty().addListener((obs, oldValue, newValue) -> {
+           pcpView.setAxisSpacing((Integer)newValue);
+        });
+        grid.add(new Label("Axis Spacing: "), 0, 2);
+        grid.add(axisSpacingSpinner, 1, 2);
+
+        TitledPane generalSettingsTitledPane = new TitledPane("General Display Settings", new ScrollPane(grid));
+
+        Accordion accordion = new Accordion();
+        accordion.getPanes().addAll(generalSettingsTitledPane);
+        accordion.setExpandedPane(generalSettingsTitledPane);
+
+        return accordion;
     }
 
     private MenuBar createMenuBar (Stage stage) {

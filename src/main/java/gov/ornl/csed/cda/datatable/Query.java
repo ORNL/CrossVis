@@ -11,9 +11,16 @@ public class Query {
     private ArrayList<ColumnSelection> columnSelectionList = new ArrayList<ColumnSelection>();
     private ArrayList<Tuple> tuples = new ArrayList<Tuple>();
     private HashMap<Column, SummaryStats> columnQuerySummaryStatsMap = new HashMap<Column, SummaryStats>();
+    private int maxHistogram2DBinCount = 0;
 
     public Query(String id) {
         this.id = id;
+    }
+
+    public int getMaxHistogram2DBinCount() { return maxHistogram2DBinCount; }
+
+    public void setMaxHistogram2DBinCount(int maxHistogram2DBinCount) {
+        this.maxHistogram2DBinCount = maxHistogram2DBinCount;
     }
 
     public boolean hasColumnSelections() {

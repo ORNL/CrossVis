@@ -11,6 +11,7 @@ import javafx.scene.Group;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.Paint;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
@@ -25,6 +26,11 @@ import java.util.ArrayList;
  */
 public class PCPAxis {
     public final static Logger log = LoggerFactory.getLogger(PCPAxis.class);
+
+    public final static Paint DEFAULT_HISTOGRAM_FILL = new Color(Color.DARKGRAY.getRed(), Color.DARKGRAY.getGreen(), Color.DARKGRAY.getBlue(), 0.8d);
+    public final static Paint DEFAULT_QUERY_HISTOGRAM_FILL = new Color(Color.STEELBLUE.getRed(), Color.STEELBLUE.getGreen(), Color.STEELBLUE.getBlue(), 0.8d);
+    public final static Paint DEFAULT_HISTOGRAM_STROKE = Color.DARKGRAY;
+
 
     public final static double DEFAULT_NAME_LABEL_HEIGHT = 30d;
     public final static double DEFAULT_CONTEXT_HEIGHT = 20d;
@@ -60,6 +66,10 @@ public class PCPAxis {
     private ArrayList<Rectangle> histogramBinRectangleList;
     private Group queryHistogramBinRectangleGroup;
     private ArrayList<Rectangle> queryHistogramBinRectangleList;
+
+    private Paint histogramFill = DEFAULT_HISTOGRAM_FILL;
+    private Paint queryHistogramFill = DEFAULT_QUERY_HISTOGRAM_FILL;
+    private Paint histogramStroke = DEFAULT_HISTOGRAM_STROKE;
 
     private Pane pane;
 
@@ -234,8 +244,8 @@ public class PCPAxis {
                 double binWidth = GraphicsUtil.mapValue(histogram.getBinCount(i), 0, histogram.getMaxBinCount(), DEFAULT_BAR_WIDTH + 2, width - 2);
                 double x = left + ((width - binWidth) / 2.);
                 Rectangle rectangle = new Rectangle(x, y, binWidth, binHeight);
-                rectangle.setStroke(Color.BLUE);
-                rectangle.setFill(Color.TRANSPARENT);
+                rectangle.setStroke(histogramStroke);
+                rectangle.setFill(histogramFill);
                 histogramBinRectangleList.add(rectangle);
                 histogramBinRectangleGroup.getChildren().add(rectangle);
             }
@@ -255,8 +265,8 @@ public class PCPAxis {
                         double binWidth = GraphicsUtil.mapValue(queryHistogram.getBinCount(i), 0, histogram.getMaxBinCount(), DEFAULT_BAR_WIDTH + 2, width - 2);
                         double x = left + ((width - binWidth) / 2.);
                         Rectangle rectangle = new Rectangle(x, y, binWidth, binHeight);
-                        rectangle.setStroke(Color.RED);
-                        rectangle.setFill(Color.TRANSPARENT);
+                        rectangle.setStroke(histogramStroke);
+                        rectangle.setFill(queryHistogramFill);
                         queryHistogramBinRectangleList.add(rectangle);
                         queryHistogramBinRectangleGroup.getChildren().add(rectangle);
                     }

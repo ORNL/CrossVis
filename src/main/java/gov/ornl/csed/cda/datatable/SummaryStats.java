@@ -22,6 +22,11 @@ public class SummaryStats {
     private ArrayList<Double> corrCoefs = new ArrayList<>();
     private Histogram histogram;
     private ArrayList<Histogram2D> histogram2DList = new ArrayList<>();
+    private int maxHistogram2DCount = 0;
+
+    public int getMaxHistogram2DCount() { return maxHistogram2DCount; }
+
+    public void setMaxHistogram2DCount(int maxHistogram2DCount) { this.maxHistogram2DCount = maxHistogram2DCount; }
 
     public ArrayList<Double> getCorrelationCoefficients() {
         return corrCoefs;

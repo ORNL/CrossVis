@@ -31,9 +31,13 @@ public class DataModel {
 	private int nextQueryNumber = 2;
     private int histogramBinSize = DEFAULT_NUM_HISTOGRAM_BINS;
 
+    private int maxHistogram2DBinCount = 0;
+
 	public DataModel() {
 
 	}
+
+	public int getMaxHistogram2DBinCount() { return maxHistogram2DBinCount; }
 
     public Column getXColumn() {
         return xColumn;
@@ -336,6 +340,7 @@ public class DataModel {
 
 		PearsonsCorrelation pCorr = new PearsonsCorrelation();
 
+        activeQuery.setMaxHistogram2DBinCount(0);
 		for (int ix = 0; ix < columns.size(); ix++) {
 			Column column = columns.get(ix);
 			SummaryStats columnSummaryStats = activeQuery.getColumnQuerySummaryStats(column);
@@ -354,9 +359,18 @@ public class DataModel {
                 Histogram2D queryHistogram2D = new Histogram2D("", data[ix], data[iy], histogramBinSize,
                         histogram2D.getXMinValue(), histogram2D.getXMaxValue(), histogram2D.getYMinValue(), histogram2D.getYMaxValue());
                 histogram2DArrayList.add(queryHistogram2D);
+
+                if (histogram2D.getMaxBinCount() > columnSummaryStats.getMaxHistogram2DCount()) {
+                    columnSummaryStats.setMaxHistogram2DCount(histogram2D.getMaxBinCount());
+                }
 			}
+
 			columnSummaryStats.setCorrelationCoefficients(coefList);
             columnSummaryStats.setHistogram2DList(histogram2DArrayList);
+
+            if (columnSummaryStats.getMaxHistogram2DCount() > activeQuery.getMaxHistogram2DBinCount()) {
+                activeQuery.setMaxHistogram2DBinCount(column.getSummaryStats().getMaxHistogram2DCount());
+            }
 		}
 	}
 
@@ -454,7 +468,6 @@ public class DataModel {
 
 		PearsonsCorrelation pCorr = new PearsonsCorrelation();
 
-
 		for (int ix = 0; ix < columns.size(); ix++) {
 			Column column = columns.get(ix);
             ArrayList<Histogram2D> histogram2DArrayList = new ArrayList<Histogram2D>();
@@ -469,10 +482,18 @@ public class DataModel {
                 // TODO: The code current calculates a redundant 2D histogram for each pair of variables
                 Histogram2D histogram2D = new Histogram2D("", data[ix], data[iy], histogramBinSize);
                 histogram2DArrayList.add(histogram2D);
+
+				if (histogram2D.getMaxBinCount() > column.getSummaryStats().getMaxHistogram2DCount()) {
+					column.getSummaryStats().setMaxHistogram2DCount(histogram2D.getMaxBinCount());
+				}
 			}
 
 			column.getSummaryStats().setCorrelationCoefficients(coefList);
             column.getSummaryStats().setHistogram2DList(histogram2DArrayList);
+
+            if (column.getSummaryStats().getMaxHistogram2DCount() > maxHistogram2DBinCount) {
+                maxHistogram2DBinCount = column.getSummaryStats().getMaxHistogram2DCount();
+            }
 		}
 	}
 

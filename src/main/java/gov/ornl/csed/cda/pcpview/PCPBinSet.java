@@ -74,17 +74,17 @@ public class PCPBinSet {
                     bin.count = count;
 
                     // compute fill color
-                    double normCount = GraphicsUtil.norm(count, 0, histogram2D.getMaxBinCount());
+                    double normCount = GraphicsUtil.norm(count, 0, dataModel.getMaxHistogram2DBinCount());
                     Color fillColor = GraphicsUtil.lerpColorFX(minCountFillColor, maxCountFillColor, normCount);
                     bin.fillColor = fillColor;
 
-                    // compute query file color
+                    // compute query fill color
                     if (queryHistogram2D != null) {
                         int queryCount = queryHistogram2D.getBinCount(ix, iy);
 
                         bin.queryCount = queryCount;
                         if (queryCount > 0) {
-                            normCount = GraphicsUtil.norm(queryCount, 0, queryHistogram2D.getMaxBinCount());
+                            normCount = GraphicsUtil.norm(queryCount, 0, dataModel.getActiveQuery().getMaxHistogram2DBinCount());
                             Color queryFillColor = GraphicsUtil.lerpColorFX(minQueryCountFillColor, maxQueryCountFillColor, normCount);
                             bin.queryFillColor = queryFillColor;
                         }

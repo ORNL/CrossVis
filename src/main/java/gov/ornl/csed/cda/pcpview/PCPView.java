@@ -50,9 +50,13 @@ public class PCPView extends Region {
     private ArrayList<PCPBinSet> PCPBinSetList;
 
 //    private DISPLAY_MODE displayMode = DISPLAY_MODE.PCP_BINS;
-//    private DISPLAY_MODE displayMode = DISPLAY_MODE.HISTOGRAM;
-    private DISPLAY_MODE displayMode = DISPLAY_MODE.PCP_LINES;
+    private DISPLAY_MODE displayMode = DISPLAY_MODE.HISTOGRAM;
+//    private DISPLAY_MODE displayMode = DISPLAY_MODE.PCP_LINES;
+
+    private boolean fitAxisSpacingToWidthEnabled = true;
+
     public enum DISPLAY_MODE {HISTOGRAM, PCP_LINES, PCP_BINS};
+
 
     public PCPView() {
         backgroundPaint = Color.TRANSPARENT;
@@ -66,7 +70,8 @@ public class PCPView extends Region {
 
     public void setDisplayMode(DISPLAY_MODE displayMode) {
         if (this.displayMode != displayMode) {
-            if (this.displayMode == DISPLAY_MODE.PCP_LINES) {
+            if ((this.displayMode == DISPLAY_MODE.PCP_LINES) ||
+                    (this.displayMode == DISPLAY_MODE.PCP_BINS)){
                 lineGC.clearRect(0, 0, getWidth(), getHeight());
             }
             this.displayMode = displayMode;
@@ -275,6 +280,14 @@ public class PCPView extends Region {
         });
     }
 
+    public void setFitAxisSpacingToWidthEnabled (boolean enabled) {
+        fitAxisSpacingToWidthEnabled = enabled;
+    }
+
+    public int getAxisSpacing () {return (int)axisSpacing;}
+
+    public boolean getFitAxisSpacingToWidthEnabled() { return fitAxisSpacingToWidthEnabled; }
+
     private void resize() {
         if (dataModel != null && !dataModel.isEmpty()) {
             double pcpWidth = axisSpacing * dataModel.getColumnCount();
@@ -325,15 +338,6 @@ public class PCPView extends Region {
         pane.setBackground(new Background(new BackgroundFill(backgroundPaint, new CornerRadii(1024), Insets.EMPTY)));
         pane.setBorder(new Border(new BorderStroke(borderPaint, BorderStrokeStyle.SOLID, new CornerRadii(1024), new BorderWidths(borderWidth))));
 
-//        if (displayMode == DISPLAY_MODE.HISTOGRAM) {
-//            for (PCPAxis pcpAxis : axisList) {
-//                pane.getChildren().add(0, pcpAxis.getHistogramBinRectangleGroup());
-////                pane.getChildren().add(pcpAxis.getHistogramBinRectangleGroup());
-//            }
-//        } else if (displayMode == DISPLAY_MODE.PCP_LINES) {
-//            drawTuplePolylines();
-//        }
-
         if (displayMode == DISPLAY_MODE.PCP_LINES) {
             drawTuplePolylines();
         } else if (displayMode == DISPLAY_MODE.PCP_BINS) {
@@ -353,12 +357,9 @@ public class PCPView extends Region {
             for (PCPBinSet binSet : PCPBinSetList) {
                 for (PCPBin bin : binSet.getBins()) {
                     lineGC.setFill(bin.fillColor);
-//                    lineGC.setStroke(Color.TRANSPARENT);
                     double xValues[] = new double[] {bin.left, bin.right, bin.right, bin.left};
                     double yValues[] = new double[] {bin.leftTop, bin.rightTop, bin.rightBottom, bin.leftBottom};
                     lineGC.fillPolygon(xValues, yValues, xValues.length);
-//                    lineGC.strokeLine(bin.left, bin.leftTop, bin.right, bin.rightTop);
-//                    lineGC.strokeLine(bin.left, bin.leftBottom, bin.right, bin.rightBottom);
                 }
             }
 
@@ -366,7 +367,6 @@ public class PCPView extends Region {
                 for (PCPBin bin : binSet.getBins()) {
                     if (bin.queryCount > 0) {
                         lineGC.setFill(bin.queryFillColor);
-//                        lineGC.setStroke(Color.BLACK);
                         double xValues[] = new double[]{bin.left, bin.right, bin.right, bin.left};
                         double yValues[] = new double[]{bin.leftQueryTop, bin.rightQueryTop, bin.rightQueryBottom, bin.leftQueryBottom};
                         lineGC.fillPolygon(xValues, yValues, xValues.length);
