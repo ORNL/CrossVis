@@ -744,6 +744,7 @@ public class PlgToCsvParser extends Application {
 
         Button rmButton = new Button("–");
         rmButton.setOnAction(e -> {
+            plgDesiredVarNames.remove(variableListView.getSelectionModel().getSelectedIndex());
             variableListView.getItems().remove(variableListView.getSelectionModel().getSelectedIndex());
         });
 

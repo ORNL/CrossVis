@@ -138,7 +138,7 @@ public class CsvFileMerger extends Application {
             DecimalFormat df = new DecimalFormat("#.##");
             df.setRoundingMode(RoundingMode.HALF_UP);
 
-            appendeeKeyValue = Double.valueOf(df.format(appendeeKeyValue / 0.05 - 1));
+            appendeeKeyValue = Double.valueOf(df.format(appendeeKeyValue / 0.05));
 
             // - pull the corresponding row from the appender file
             CSVRecord appender = appenderEntries.get(appendeeKeyValue);
