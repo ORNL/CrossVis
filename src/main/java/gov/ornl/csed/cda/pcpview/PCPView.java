@@ -265,7 +265,7 @@ public class PCPView extends Region {
 //        pane.setBackground(new Background(new BackgroundFill(backgroundPaint, new CornerRadii(1024), Insets.EMPTY)));
 //        pane.setBorder(new Border(new BorderStroke(borderPaint, BorderStrokeStyle.SOLID, new CornerRadii(1024), new BorderWidths(borderWidth))));
 
-        getChildren().setAll(pane);
+        getChildren().add(pane);
     }
 
     private void registerListeners() {
@@ -290,9 +290,18 @@ public class PCPView extends Region {
 
     private void resize() {
         if (dataModel != null && !dataModel.isEmpty()) {
-            double pcpWidth = axisSpacing * dataModel.getColumnCount();
             double pcpHeight = getHeight() - (getInsets().getTop() + getInsets().getBottom());
-            double width = (getInsets().getLeft() + getInsets().getRight()) + pcpWidth;
+            double pcpWidth;
+            double width;
+
+            if (fitAxisSpacingToWidthEnabled) {
+                width = getWidth();
+                pcpWidth = width - (getInsets().getLeft() + getInsets().getRight());
+                axisSpacing = pcpWidth / dataModel.getColumnCount();
+            } else {
+                pcpWidth = axisSpacing * dataModel.getColumnCount();
+                width = (getInsets().getLeft() + getInsets().getRight()) + pcpWidth;
+            }
 
             if (pcpWidth > 0 && pcpHeight > 0) {
                 pane.setPrefSize(width, getHeight());

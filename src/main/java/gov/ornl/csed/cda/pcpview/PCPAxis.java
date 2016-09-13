@@ -1,9 +1,6 @@
 package gov.ornl.csed.cda.pcpview;
 
-import gov.ornl.csed.cda.datatable.Column;
-import gov.ornl.csed.cda.datatable.ColumnSelectionRange;
-import gov.ornl.csed.cda.datatable.DataModel;
-import gov.ornl.csed.cda.datatable.Histogram;
+import gov.ornl.csed.cda.datatable.*;
 import gov.ornl.csed.cda.util.GraphicsUtil;
 import javafx.event.EventHandler;
 import javafx.geometry.Point2D;
@@ -27,6 +24,7 @@ import java.util.ArrayList;
 public class PCPAxis {
     public final static Logger log = LoggerFactory.getLogger(PCPAxis.class);
 
+    public final static int DEFAULT_MAX_HISTOGRAM_BIN_WIDTH = 30;
     public final static Paint DEFAULT_HISTOGRAM_FILL = new Color(Color.DARKGRAY.getRed(), Color.DARKGRAY.getGreen(), Color.DARKGRAY.getBlue(), 0.8d);
     public final static Paint DEFAULT_QUERY_HISTOGRAM_FILL = new Color(Color.STEELBLUE.getRed(), Color.STEELBLUE.getGreen(), Color.STEELBLUE.getBlue(), 0.8d);
     public final static Paint DEFAULT_HISTOGRAM_STROKE = Color.DARKGRAY;
@@ -61,6 +59,14 @@ public class PCPAxis {
 
     private Text nameText;
 
+    // summary statistics objects
+    private Group overallSummaryStatisticsGroup;
+    private Rectangle overallDispersionRectangle;
+    private Line overallTypicalLine;
+    private Group querySummaryStatisticsGroup;
+    private Rectangle queryDispersionRectangle;
+    private Line queryTypicalLine;
+
     // histogram bin rectangles
     private Group histogramBinRectangleGroup;
     private ArrayList<Rectangle> histogramBinRectangleList;
@@ -70,6 +76,8 @@ public class PCPAxis {
     private Paint histogramFill = DEFAULT_HISTOGRAM_FILL;
     private Paint queryHistogramFill = DEFAULT_QUERY_HISTOGRAM_FILL;
     private Paint histogramStroke = DEFAULT_HISTOGRAM_STROKE;
+
+    private int maxHistogramBinWidth = DEFAULT_MAX_HISTOGRAM_BIN_WIDTH;
 
     private Pane pane;
 
@@ -96,6 +104,7 @@ public class PCPAxis {
 
         nameText = new Text(column.getName());
         nameText.setFont(new Font(DEFAULT_TEXT_SIZE));
+        nameText.setSmooth(true);
 
         verticalBar = new Rectangle();
         verticalBar.setStroke(Color.DARKGRAY);
@@ -109,6 +118,30 @@ public class PCPAxis {
         bottomFocusCrossBarLine = makeLine();
 
         graphicsGroup = new Group(verticalBar, topCrossBarLine, bottomCrossBarLine, topFocusCrossBarLine, bottomFocusCrossBarLine, nameText);
+
+        overallDispersionRectangle = new Rectangle();
+//        overallDispersionRectangle.setStroke(Color.DARKGRAY);
+        overallDispersionRectangle.setFill(Color.LIGHTGRAY);
+        overallDispersionRectangle.setSmooth(true);
+        overallDispersionRectangle.setStrokeWidth(DEFAULT_STROKE_WIDTH);
+
+        overallTypicalLine = makeLine();
+        overallTypicalLine.setStroke(Color.DARKGRAY.darker());
+        overallSummaryStatisticsGroup = new Group(overallDispersionRectangle, overallTypicalLine);
+        overallSummaryStatisticsGroup.setMouseTransparent(true);
+        graphicsGroup.getChildren().add(overallSummaryStatisticsGroup);
+
+        queryDispersionRectangle = new Rectangle();
+//        queryDispersionRectangle.setStroke(Color.);
+        queryDispersionRectangle.setFill(Color.STEELBLUE);
+        queryDispersionRectangle.setSmooth(true);
+        queryDispersionRectangle.setStrokeWidth(DEFAULT_STROKE_WIDTH);
+
+        queryTypicalLine = makeLine();
+        queryTypicalLine.setStroke(Color.BLACK);
+        querySummaryStatisticsGroup = new Group(queryDispersionRectangle, queryTypicalLine);
+        querySummaryStatisticsGroup.setMouseTransparent(true);
+//        graphicsGroup.getChildren().add(querySummaryStatisticsGroup);
 
         registerListeners();
     }
@@ -228,6 +261,25 @@ public class PCPAxis {
         }
 
         if (!dataModel.isEmpty()) {
+            // layout summary statistics
+            double typicalValueY = GraphicsUtil.mapValue(column.getSummaryStats().getMean(), column.getSummaryStats().getMin(), column.getSummaryStats().getMax(), getFocusBottomY(), getFocusTopY());
+            overallTypicalLine.setStartX(bottomCrossBarLine.getStartX());
+            overallTypicalLine.setEndX(bottomCrossBarLine.getEndX());
+            overallTypicalLine.setStartY(typicalValueY);
+            overallTypicalLine.setEndY(typicalValueY);
+
+            double topValue = column.getSummaryStats().getMean() + column.getSummaryStats().getStandardDeviation();
+            double overallDispersionTop = GraphicsUtil.mapValue(topValue, column.getSummaryStats().getMin(), column.getSummaryStats().getMax(), getFocusBottomY(), getFocusTopY());
+            overallDispersionTop = overallDispersionTop < focusTopY ? focusTopY : overallDispersionTop;
+            double bottomValue = column.getSummaryStats().getMean() - column.getSummaryStats().getStandardDeviation();
+            double overallDispersionBottom = GraphicsUtil.mapValue(bottomValue, column.getSummaryStats().getMin(), column.getSummaryStats().getMax(), getFocusBottomY(), getFocusTopY());
+            overallDispersionBottom = overallDispersionBottom > focusBottomY ? focusBottomY : overallDispersionBottom;
+            overallDispersionRectangle.setX(overallTypicalLine.getStartX());
+            overallDispersionRectangle.setWidth(overallTypicalLine.getEndX() - overallTypicalLine.getStartX());
+            overallDispersionRectangle.setY(overallDispersionTop);
+            overallDispersionRectangle.setHeight(overallDispersionBottom - overallDispersionTop);
+
+            // layout histogram bin information
             Histogram histogram = column.getSummaryStats().getHistogram();
 
             double binHeight = (getFocusBottomY() - getFocusTopY()) / histogram.getNumBins();
@@ -240,8 +292,17 @@ public class PCPAxis {
             histogramBinRectangleGroup = new Group();
 
             for (int i = 0; i < histogram.getNumBins(); i++) {
+//                double y = getFocusTopY() + ((histogram.getNumBins() - i - 1) * binHeight);
+//                double binWidth = GraphicsUtil.mapValue(histogram.getBinCount(i), 0, histogram.getMaxBinCount(), 1, DEFAULT_BAR_WIDTH - 2);
+//                double x = left + ((width - binWidth) / 2.);
+//                Rectangle rectangle = new Rectangle(x, y, binWidth, binHeight);
+//                rectangle.setStroke(histogramStroke);
+//                rectangle.setFill(histogramFill);
+//                histogramBinRectangleList.add(rectangle);
+//                histogramBinRectangleGroup.getChildren().add(rectangle);
+
                 double y = getFocusTopY() + ((histogram.getNumBins() - i - 1) * binHeight);
-                double binWidth = GraphicsUtil.mapValue(histogram.getBinCount(i), 0, histogram.getMaxBinCount(), DEFAULT_BAR_WIDTH + 2, width - 2);
+                double binWidth = GraphicsUtil.mapValue(histogram.getBinCount(i), 0, histogram.getMaxBinCount(), DEFAULT_BAR_WIDTH + 2, DEFAULT_BAR_WIDTH + 2 + maxHistogramBinWidth);
                 double x = left + ((width - binWidth) / 2.);
                 Rectangle rectangle = new Rectangle(x, y, binWidth, binHeight);
                 rectangle.setStroke(histogramStroke);
@@ -257,12 +318,45 @@ public class PCPAxis {
             queryHistogramBinRectangleGroup = new Group();
 
             if (dataModel.getActiveQuery().hasColumnSelections()) {
+                // layer query summary statistics
+                SummaryStats queryColumnSummaryStats = dataModel.getActiveQuery().getColumnQuerySummaryStats(column);
+                typicalValueY = GraphicsUtil.mapValue(queryColumnSummaryStats.getMean(), column.getSummaryStats().getMin(), column.getSummaryStats().getMax(), getFocusBottomY(), getFocusTopY());
+                queryTypicalLine.setStartX(centerX - 2.);
+                queryTypicalLine.setEndX(centerX + 2.);
+                queryTypicalLine.setStartY(typicalValueY);
+                queryTypicalLine.setEndY(typicalValueY);
+
+                double value = queryColumnSummaryStats.getMean() + queryColumnSummaryStats.getStandardDeviation();
+                double queryDispersionTop = GraphicsUtil.mapValue(value, column.getSummaryStats().getMin(), column.getSummaryStats().getMax(), getFocusBottomY(), getFocusTopY());
+                queryDispersionTop = queryDispersionTop < focusTopY ? focusTopY : queryDispersionTop;
+                value = queryColumnSummaryStats.getMean() - queryColumnSummaryStats.getStandardDeviation();
+                double queryDispersionBottom = GraphicsUtil.mapValue(value, column.getSummaryStats().getMin(), column.getSummaryStats().getMax(), getFocusBottomY(), getFocusTopY());
+                queryDispersionBottom = queryDispersionBottom > focusBottomY ? focusBottomY : queryDispersionBottom;
+                queryDispersionRectangle.setX(queryTypicalLine.getStartX());
+                queryDispersionRectangle.setWidth(queryTypicalLine.getEndX() - queryTypicalLine.getStartX());
+                queryDispersionRectangle.setY(queryDispersionTop);
+                queryDispersionRectangle.setHeight(queryDispersionBottom - queryDispersionTop);
+
+                if (!graphicsGroup.getChildren().contains(querySummaryStatisticsGroup)) {
+                    graphicsGroup.getChildren().add(querySummaryStatisticsGroup);
+                }
+
+                // layout query histogram bins
                 Histogram queryHistogram = dataModel.getActiveQuery().getColumnQuerySummaryStats(column).getHistogram();
 
                 for (int i = 0; i < histogram.getNumBins(); i++) {
                     if (queryHistogram.getBinCount(i) > 0) {
+//                        double y = getFocusTopY() + ((histogram.getNumBins() - i - 1) * binHeight);
+//                        double binWidth = GraphicsUtil.mapValue(queryHistogram.getBinCount(i), 0, histogram.getMaxBinCount(), 1, DEFAULT_BAR_WIDTH - 2);
+//                        double x = left + ((width - binWidth) / 2.);
+//                        Rectangle rectangle = new Rectangle(x, y, binWidth, binHeight);
+//                        rectangle.setStroke(histogramStroke);
+//                        rectangle.setFill(queryHistogramFill);
+//                        queryHistogramBinRectangleList.add(rectangle);
+//                        queryHistogramBinRectangleGroup.getChildren().add(rectangle);
+
                         double y = getFocusTopY() + ((histogram.getNumBins() - i - 1) * binHeight);
-                        double binWidth = GraphicsUtil.mapValue(queryHistogram.getBinCount(i), 0, histogram.getMaxBinCount(), DEFAULT_BAR_WIDTH + 2, width - 2);
+                        double binWidth = GraphicsUtil.mapValue(queryHistogram.getBinCount(i), 0, histogram.getMaxBinCount(), DEFAULT_BAR_WIDTH + 2, DEFAULT_BAR_WIDTH + 2 + maxHistogramBinWidth);
                         double x = left + ((width - binWidth) / 2.);
                         Rectangle rectangle = new Rectangle(x, y, binWidth, binHeight);
                         rectangle.setStroke(histogramStroke);
@@ -271,6 +365,8 @@ public class PCPAxis {
                         queryHistogramBinRectangleGroup.getChildren().add(rectangle);
                     }
                 }
+            } else {
+                graphicsGroup.getChildren().remove(querySummaryStatisticsGroup);
             }
         }
     }

@@ -47,6 +47,7 @@ public class EDENFXMain extends Application {
     private ChoiceBox<String> displayModeChoiceBox;
     private Spinner axisSpacingSpinner;
     private CheckBox fitAxesToWidthCheckBox;
+    private ScrollPane pcpScrollPane;
 
     @Override
     public void init() {
@@ -69,17 +70,18 @@ public class EDENFXMain extends Application {
         pcpView.setAxisSpacing(100);
         pcpView.setPadding(new Insets(10));
 
-        ScrollPane scrollPane = new ScrollPane(pcpView);
-        scrollPane.setFitToHeight(true);
+        pcpScrollPane = new ScrollPane(pcpView);
+        pcpScrollPane.setFitToHeight(true);
+        pcpScrollPane.setFitToWidth(pcpView.getFitAxisSpacingToWidthEnabled());
 
         MenuBar menuBar = createMenuBar(stage);
         Node settingsPane = createSideSettingsPane();
 
         SplitPane middleSplit = new SplitPane();
         middleSplit.setOrientation(Orientation.HORIZONTAL);
-        middleSplit.getItems().addAll(settingsPane, scrollPane);
+        middleSplit.getItems().addAll(settingsPane, pcpScrollPane);
         middleSplit.setResizableWithParent(settingsPane, false);
-        middleSplit.setDividerPositions(0.2);
+        middleSplit.setDividerPositions(0.3);
 
         BorderPane rootNode = new BorderPane();
         rootNode.setCenter(middleSplit);
@@ -136,9 +138,12 @@ public class EDENFXMain extends Application {
             if (fitAxesToWidthCheckBox.isSelected()) {
                 axisSpacingSpinner.setDisable(true);
                 pcpView.setFitAxisSpacingToWidthEnabled(true);
+                pcpScrollPane.setFitToWidth(true);
             } else {
                 axisSpacingSpinner.setDisable(false);
+                axisSpacingSpinner.getValueFactory().setValue(pcpView.getAxisSpacing());
                 pcpView.setFitAxisSpacingToWidthEnabled(false);
+                pcpScrollPane.setFitToWidth(false);
             }
         });
         grid.add(fitAxesToWidthCheckBox, 0, 1, 2, 1);
