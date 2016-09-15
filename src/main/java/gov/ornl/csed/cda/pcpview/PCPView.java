@@ -75,6 +75,11 @@ public class PCPView extends Region {
                 lineGC.clearRect(0, 0, getWidth(), getHeight());
             }
             this.displayMode = displayMode;
+
+            if (displayMode == DISPLAY_MODE.PCP_LINES) {
+                fillTupleSets();
+            }
+
             resize();
         }
     }
@@ -94,45 +99,79 @@ public class PCPView extends Region {
         redraw();
     }
 
-    public void handleQueryChange() {
-        if (displayMode == DISPLAY_MODE.PCP_LINES) {
-            unselectedTupleSet.clear();
-            selectedTupleSet.clear();
-            if ((tupleList != null) && (!tupleList.isEmpty())) {
-                if (dataModel.getActiveQuery().hasColumnSelections()) {
-                    for (PCPTuple pcpTuple : tupleList) {
-                        if (pcpTuple.getTuple().getQueryFlag()) {
-                            selectedTupleSet.add(pcpTuple);
-                        } else {
-                            unselectedTupleSet.add(pcpTuple);
-                        }
+    private void fillTupleSets() {
+        unselectedTupleSet.clear();
+        selectedTupleSet.clear();
+        if ((tupleList != null) && (!tupleList.isEmpty())) {
+            if (dataModel.getActiveQuery().hasColumnSelections()) {
+                for (PCPTuple pcpTuple : tupleList) {
+                    if (pcpTuple.getTuple().getQueryFlag()) {
+                        selectedTupleSet.add(pcpTuple);
+                    } else {
+                        unselectedTupleSet.add(pcpTuple);
                     }
-                } else {
-                    selectedTupleSet.addAll(tupleList);
                 }
+            } else {
+                selectedTupleSet.addAll(tupleList);
             }
-            redraw();
-        } else if (displayMode == DISPLAY_MODE.HISTOGRAM) {
-            double left = getInsets().getLeft() + (axisSpacing / 2.);
-            double top = getInsets().getTop();
-            double pcpHeight = getHeight() - (getInsets().getTop() + getInsets().getBottom());
+        }
+    }
 
-            for (int iaxis = 0; iaxis < axisList.size(); iaxis++) {
-                PCPAxis pcpAxis = axisList.get(iaxis);
-                pcpAxis.layout(left + (iaxis * axisSpacing), top, axisSpacing, pcpHeight);
+    public void handleQueryChange() {
+        // TODO: Improve efficiency by only laying out the objects that change (e.g., don't layout the axes, just bins, lines, or histograms)
+        double left = getInsets().getLeft() + (axisSpacing / 2.);
+        double top = getInsets().getTop();
+        double pcpHeight = getHeight() - (getInsets().getTop() + getInsets().getBottom());
 
+        for (int iaxis = 0; iaxis < axisList.size(); iaxis++) {
+            PCPAxis pcpAxis = axisList.get(iaxis);
+            pcpAxis.layout(left + (iaxis * axisSpacing), top, axisSpacing, pcpHeight);
+
+            if (displayMode == DISPLAY_MODE.HISTOGRAM) {
                 pane.getChildren().add(0, pcpAxis.getHistogramBinRectangleGroup());
                 pane.getChildren().add(1, pcpAxis.getQueryHistogramBinRectangleGroup());
             }
-        } else if (displayMode == DISPLAY_MODE.PCP_BINS) {
-            double left = getInsets().getLeft() + (axisSpacing / 2.);
-            double top = getInsets().getTop();
-            double pcpHeight = getHeight() - (getInsets().getTop() + getInsets().getBottom());
+        }
 
-            for (int iaxis = 0; iaxis < axisList.size(); iaxis++) {
-                PCPAxis pcpAxis = axisList.get(iaxis);
-                pcpAxis.layout(left + (iaxis * axisSpacing), top, axisSpacing, pcpHeight);
-            }
+        if (displayMode == DISPLAY_MODE.PCP_LINES) {
+            fillTupleSets();
+//            unselectedTupleSet.clear();
+//            selectedTupleSet.clear();
+//            if ((tupleList != null) && (!tupleList.isEmpty())) {
+//                if (dataModel.getActiveQuery().hasColumnSelections()) {
+//                    for (PCPTuple pcpTuple : tupleList) {
+//                        if (pcpTuple.getTuple().getQueryFlag()) {
+//                            selectedTupleSet.add(pcpTuple);
+//                        } else {
+//                            unselectedTupleSet.add(pcpTuple);
+//                        }
+//                    }
+//                } else {
+//                    selectedTupleSet.addAll(tupleList);
+//                }
+//            }
+            redraw();
+        } else if (displayMode == DISPLAY_MODE.HISTOGRAM) {
+//            double left = getInsets().getLeft() + (axisSpacing / 2.);
+//            double top = getInsets().getTop();
+//            double pcpHeight = getHeight() - (getInsets().getTop() + getInsets().getBottom());
+//
+//            for (int iaxis = 0; iaxis < axisList.size(); iaxis++) {
+//                PCPAxis pcpAxis = axisList.get(iaxis);
+//                pcpAxis.layout(left + (iaxis * axisSpacing), top, axisSpacing, pcpHeight);
+//
+//                pane.getChildren().add(0, pcpAxis.getHistogramBinRectangleGroup());
+//                pane.getChildren().add(1, pcpAxis.getQueryHistogramBinRectangleGroup());
+//            }
+        } else if (displayMode == DISPLAY_MODE.PCP_BINS) {
+//            double left = getInsets().getLeft() + (axisSpacing / 2.);
+//            double top = getInsets().getTop();
+//            double pcpHeight = getHeight() - (getInsets().getTop() + getInsets().getBottom());
+//
+//            for (int iaxis = 0; iaxis < axisList.size(); iaxis++) {
+//                PCPAxis pcpAxis = axisList.get(iaxis);
+//                pcpAxis.layout(left + (iaxis * axisSpacing), top, axisSpacing, pcpHeight);
+//            }
 
             for (PCPBinSet PCPBinSet : PCPBinSetList) {
                 PCPBinSet.layoutBins();

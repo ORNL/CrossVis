@@ -361,13 +361,27 @@ public class PCPAxisSelection {
 
         rectangle.setY(top);
         rectangle.setHeight(bottom - top);
+        rectangle.setX(pcpAxis.getVerticalBar().getX());
+        rectangle.setWidth(pcpAxis.getVerticalBar().getWidth());
+
+        double left = rectangle.getX();
+        double right = rectangle.getX() + rectangle.getWidth();
+        topCrossbar.getPoints().set(0, left);
         topCrossbar.getPoints().set(1, top + 2d);
+        topCrossbar.getPoints().set(2, left);
         topCrossbar.getPoints().set(3, top);
+        topCrossbar.getPoints().set(4, right);
         topCrossbar.getPoints().set(5, top);
+        topCrossbar.getPoints().set(6, right);
         topCrossbar.getPoints().set(7, top + 2d);
+
+        bottomCrossbar.getPoints().set(0, left);
         bottomCrossbar.getPoints().set(1, bottom - 2d);
+        bottomCrossbar.getPoints().set(2, left);
         bottomCrossbar.getPoints().set(3, bottom);
+        bottomCrossbar.getPoints().set(4, right);
         bottomCrossbar.getPoints().set(5, bottom);
+        bottomCrossbar.getPoints().set(6, right);
         bottomCrossbar.getPoints().set(7, bottom - 2d);
 
         minText.setText(String.valueOf(selectionRange.getMinValue()));

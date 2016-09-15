@@ -48,6 +48,10 @@ public class EDENFXMain extends Application {
     private Spinner axisSpacingSpinner;
     private CheckBox fitAxesToWidthCheckBox;
     private ScrollPane pcpScrollPane;
+    private TabPane tabPane;
+    private Menu axisLayoutMenu;
+    private CheckMenuItem fitPCPAxesToWidthCheckMI;
+    private MenuItem changeAxisSpacingMI;
 
     @Override
     public void init() {
@@ -75,22 +79,29 @@ public class EDENFXMain extends Application {
         pcpScrollPane.setFitToWidth(pcpView.getFitAxisSpacingToWidthEnabled());
 
         MenuBar menuBar = createMenuBar(stage);
-        Node settingsPane = createSideSettingsPane();
+        menuBar.setUseSystemMenuBar(true);
+
+        tabPane = new TabPane();
+        Tab columnTableTab = new Tab(" Column Table ");
+        columnTableTab.setClosable(false);
+        Tab dataTableTab = new Tab(" Data Table ");
+        dataTableTab.setClosable(false);
+        tabPane.getTabs().addAll(columnTableTab, dataTableTab);
 
         SplitPane middleSplit = new SplitPane();
-        middleSplit.setOrientation(Orientation.HORIZONTAL);
-        middleSplit.getItems().addAll(settingsPane, pcpScrollPane);
-        middleSplit.setResizableWithParent(settingsPane, false);
-        middleSplit.setDividerPositions(0.3);
+        middleSplit.setOrientation(Orientation.VERTICAL);
+        middleSplit.getItems().addAll(pcpScrollPane, tabPane);
+        middleSplit.setResizableWithParent(tabPane, false);
+        middleSplit.setDividerPositions(0.7);
 
         BorderPane rootNode = new BorderPane();
         rootNode.setCenter(middleSplit);
         rootNode.setTop(menuBar);
-        rootNode.setLeft(settingsPane);
+//        rootNode.setLeft(settingsPane);
 
         Scene scene = new Scene(rootNode, 1000, 500, true, SceneAntialiasing.BALANCED);
 
-        stage.setTitle("EDEN.FX Alpha");
+        stage.setTitle("EDEN.FX Alpha Version");
         stage.setScene(scene);
         stage.show();
     }
@@ -220,6 +231,23 @@ public class EDENFXMain extends Application {
             item.setSelected(true);
         }
         viewMenu.getItems().add(displayModeMenu);
+
+        axisLayoutMenu = new Menu("Axis Layout");
+        fitPCPAxesToWidthCheckMI = new CheckMenuItem("Fit Axis Spacing to Width");
+        fitPCPAxesToWidthCheckMI.setSelected(pcpView.getFitAxisSpacingToWidthEnabled());
+        fitPCPAxesToWidthCheckMI.setDisable(true);
+        fitPCPAxesToWidthCheckMI.selectedProperty().addListener((observable, oldValue, newValue) -> {
+           pcpView.setFitAxisSpacingToWidthEnabled(fitPCPAxesToWidthCheckMI.isSelected());
+        });
+
+        changeAxisSpacingMI = new MenuItem("Change Axis Spacing...");
+        changeAxisSpacingMI.setDisable(true);
+        changeAxisSpacingMI.setOnAction(event -> {
+            // TODO: Show dialog with spinner and slider for changing the axis spacing
+        });
+
+        axisLayoutMenu.getItems().addAll(fitPCPAxesToWidthCheckMI);
+        viewMenu.getItems().add(axisLayoutMenu);
 
         displayModeGroup.selectedToggleProperty().addListener(new ChangeListener<Toggle>() {
             @Override

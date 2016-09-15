@@ -120,8 +120,7 @@ public class PCPAxis {
         graphicsGroup = new Group(verticalBar, topCrossBarLine, bottomCrossBarLine, topFocusCrossBarLine, bottomFocusCrossBarLine, nameText);
 
         overallDispersionRectangle = new Rectangle();
-//        overallDispersionRectangle.setStroke(Color.DARKGRAY);
-        overallDispersionRectangle.setFill(Color.LIGHTGRAY);
+        overallDispersionRectangle.setFill(Color.LIGHTSTEELBLUE);
         overallDispersionRectangle.setSmooth(true);
         overallDispersionRectangle.setStrokeWidth(DEFAULT_STROKE_WIDTH);
 
@@ -132,7 +131,6 @@ public class PCPAxis {
         graphicsGroup.getChildren().add(overallSummaryStatisticsGroup);
 
         queryDispersionRectangle = new Rectangle();
-//        queryDispersionRectangle.setStroke(Color.);
         queryDispersionRectangle.setFill(Color.STEELBLUE);
         queryDispersionRectangle.setSmooth(true);
         queryDispersionRectangle.setStrokeWidth(DEFAULT_STROKE_WIDTH);
@@ -141,7 +139,6 @@ public class PCPAxis {
         queryTypicalLine.setStroke(Color.BLACK);
         querySummaryStatisticsGroup = new Group(queryDispersionRectangle, queryTypicalLine);
         querySummaryStatisticsGroup.setMouseTransparent(true);
-//        graphicsGroup.getChildren().add(querySummaryStatisticsGroup);
 
         registerListeners();
     }
