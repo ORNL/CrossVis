@@ -857,7 +857,9 @@ public class PlgToCsvParser extends Application {
         TreeItem<String> fileTreeItem = new TreeItem<>(plgFile.getName(), itemIcon);
         FileMetadata fileMetadata = new FileMetadata(plgFile);
         fileMetadata.fileType = FileMetadata.FileType.PLG;
+        fileTreeItemMetadataMap.clear();
         fileTreeItemMetadataMap.put(fileTreeItem, fileMetadata);
+        fileMetadataMap.clear();
         fileMetadataMap.put(plgFile, fileMetadata);
 
         for (PLGVariableSchema schema : variableSchemaMap.values()) {
@@ -898,6 +900,7 @@ public class PlgToCsvParser extends Application {
             }
         }
 
+        dataTreeRoot.getChildren().clear();
         dataTreeRoot.getChildren().addAll(fileTreeItem);
     }
 
