@@ -1,12 +1,17 @@
 package gov.ornl.csed.cda.edenfx;
 
 import gov.ornl.csed.cda.Falcon.FalconPreferenceKeys;
-import gov.ornl.csed.cda.datatable.DataModel;
-import gov.ornl.csed.cda.datatable.IOUtilities;
+import gov.ornl.csed.cda.datatable.*;
 import gov.ornl.csed.cda.pcpview.PCPView;
 import javafx.application.Application;
+import javafx.application.Platform;
+import javafx.beans.InvalidationListener;
+import javafx.beans.Observable;
+import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
@@ -15,6 +20,8 @@ import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.SceneAntialiasing;
 import javafx.scene.control.*;
+import javafx.scene.control.cell.CheckBoxTableCell;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
@@ -22,13 +29,16 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.util.Callback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.prefs.Preferences;
 
 /**
@@ -44,14 +54,14 @@ public class EDENFXMain extends Application {
     private Preferences preferences;
     private Menu displayModeMenu;
 
-    private ChoiceBox<String> displayModeChoiceBox;
-    private Spinner axisSpacingSpinner;
-    private CheckBox fitAxesToWidthCheckBox;
     private ScrollPane pcpScrollPane;
     private TabPane tabPane;
     private Menu axisLayoutMenu;
     private CheckMenuItem fitPCPAxesToWidthCheckMI;
     private MenuItem changeAxisSpacingMI;
+
+    private TableView<Column> columnTableView;
+    private TableView<Tuple> dataTableView;
 
     @Override
     public void init() {
@@ -64,6 +74,34 @@ public class EDENFXMain extends Application {
 
 
         dataModel = new DataModel();
+    }
+
+    private void createColumnTableView() {
+        columnTableView = new TableView<>();
+
+        TableColumn<Column, String> nameColumn = new TableColumn<>("Variable Name");
+        nameColumn.setMinWidth(140);
+        nameColumn.setCellValueFactory(new PropertyValueFactory<Column, String>("name"));
+
+        TableColumn<Column, Boolean> enabledColumn = new TableColumn<>("Visible");
+        enabledColumn.setMinWidth(20);
+        enabledColumn.setCellValueFactory(new PropertyValueFactory<Column, Boolean>("enabled"));
+        enabledColumn.setCellFactory(column -> new CheckBoxTableCell());
+
+        TableColumn<Column, Double> minColumn = new TableColumn<>("Min");
+        minColumn.setCellValueFactory(new PropertyValueFactory<Column, Double>("minValue"));
+
+        TableColumn<Column, Double> maxColumn = new TableColumn<>("Max");
+        maxColumn.setCellValueFactory(new PropertyValueFactory<Column, Double>("maxValue"));
+
+        TableColumn<Column, Double> stdevColumn = new TableColumn<>("St. Dev.");
+        stdevColumn.setCellValueFactory(new PropertyValueFactory<Column, Double>("standardDeviationValue"));
+
+        TableColumn<Column, Double> meanColumn = new TableColumn<>("Mean");
+        meanColumn.setCellValueFactory(new PropertyValueFactory<Column, Double>("meanValue"));
+
+
+        columnTableView.getColumns().addAll(enabledColumn, nameColumn, minColumn, maxColumn, meanColumn, stdevColumn);
     }
 
     @Override
@@ -79,13 +117,18 @@ public class EDENFXMain extends Application {
         pcpScrollPane.setFitToWidth(pcpView.getFitAxisSpacingToWidthEnabled());
 
         MenuBar menuBar = createMenuBar(stage);
-        menuBar.setUseSystemMenuBar(true);
+//        menuBar.setUseSystemMenuBar(true);
+        createColumnTableView();
+        dataTableView = new TableView<>();
 
         tabPane = new TabPane();
         Tab columnTableTab = new Tab(" Column Table ");
         columnTableTab.setClosable(false);
+        columnTableTab.setContent(columnTableView);
+
         Tab dataTableTab = new Tab(" Data Table ");
         dataTableTab.setClosable(false);
+        dataTableTab.setContent(dataTableView);
         tabPane.getTabs().addAll(columnTableTab, dataTableTab);
 
         SplitPane middleSplit = new SplitPane();
@@ -115,68 +158,60 @@ public class EDENFXMain extends Application {
         launch(args);
     }
 
-    private Node createSideSettingsPane() {
+    private void changeAxisSpacing() {
+        Dialog<Integer> axisSpacingDialog = new Dialog<>();
+        axisSpacingDialog.setTitle("Axis Spacing");
+        axisSpacingDialog.setHeaderText("Set the pixel spacing between axes");
+
         GridPane grid = new GridPane();
-        grid.setVgap(4);
-        grid.setPadding(new Insets(4));
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setPadding(new Insets(20, 150, 10, 10));
 
-        // Display mode Choice
-        displayModeChoiceBox = new ChoiceBox<>();
-        displayModeChoiceBox.setTooltip(new Tooltip("Change the display mode for the parallel coordinates plot"));
-        displayModeChoiceBox.getItems().addAll("Histogram", "Parallel Coordinates Bins", "Parallel Coordinates Lines");
-        PCPView.DISPLAY_MODE displayMode = pcpView.getDisplayMode();
-        if (displayMode == PCPView.DISPLAY_MODE.HISTOGRAM) {
-            displayModeChoiceBox.getSelectionModel().select("Histogram");
-        } else if (displayMode == PCPView.DISPLAY_MODE.PCP_BINS) {
-            displayModeChoiceBox.getSelectionModel().select("Parallel Coordinates Bins");
-        } else {
-            displayModeChoiceBox.getSelectionModel().select("Parallel Coordinates Lines");
-        }
-        displayModeChoiceBox.getSelectionModel().selectedItemProperty().addListener((obs, oldValue, newValue) -> {
-            if (oldValue != newValue) {
-                PCPView.DISPLAY_MODE newDisplayMode = displayModeMap.get((String)newValue);
-                pcpView.setDisplayMode(newDisplayMode);
+        Spinner<Integer> spinner = new Spinner<>();
+        spinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 800, pcpView.getAxisSpacing(), 1));
+        spinner.setEditable(true);
+
+        grid.add(new Label("Axis Spacing: "), 0, 0);
+        grid.add(spinner, 1, 0);
+
+        axisSpacingDialog.getDialogPane().setContent(grid);
+
+        Platform.runLater(() -> spinner.requestFocus());
+
+        axisSpacingDialog.getDialogPane().getButtonTypes().addAll(ButtonType.APPLY, ButtonType.OK, ButtonType.CANCEL);
+
+        final Button buttonApply = (Button)axisSpacingDialog.getDialogPane().lookupButton(ButtonType.APPLY);
+        buttonApply.setDisable(true);
+        buttonApply.addEventFilter(ActionEvent.ACTION, event -> {
+            int axisSpacing = spinner.getValue();
+            pcpView.setAxisSpacing(axisSpacing);
+            event.consume();
+        });
+
+        final Button buttonOK = (Button)axisSpacingDialog.getDialogPane().lookupButton(ButtonType.OK);
+        buttonOK.setDisable(true);
+
+        spinner.valueProperty().addListener((observable, oldValue, newValue) -> {
+            if (spinner.getValue() != pcpView.getAxisSpacing()) {
+                buttonApply.setDisable(false);
+                buttonOK.setDisable(false);
             }
         });
-        grid.add(new Label("Display Mode: "), 0, 0);
-        grid.add(displayModeChoiceBox, 1, 0);
 
-        // Fix Axes to Width Check
-        fitAxesToWidthCheckBox = new CheckBox("Fit Axes to Width");
-        fitAxesToWidthCheckBox.setTooltip(new Tooltip("Determine the axis spacing using the current width of the display"));
-        fitAxesToWidthCheckBox.setSelected(pcpView.getFitAxisSpacingToWidthEnabled());
-        fitAxesToWidthCheckBox.selectedProperty().addListener((obs, oldValue, newValue) -> {
-            if (fitAxesToWidthCheckBox.isSelected()) {
-                axisSpacingSpinner.setDisable(true);
-                pcpView.setFitAxisSpacingToWidthEnabled(true);
-                pcpScrollPane.setFitToWidth(true);
-            } else {
-                axisSpacingSpinner.setDisable(false);
-                axisSpacingSpinner.getValueFactory().setValue(pcpView.getAxisSpacing());
-                pcpView.setFitAxisSpacingToWidthEnabled(false);
-                pcpScrollPane.setFitToWidth(false);
+        axisSpacingDialog.setResultConverter(dialogButton -> {
+            if (dialogButton == ButtonType.OK) {
+                return spinner.getValue();
             }
+            return null;
         });
-        grid.add(fitAxesToWidthCheckBox, 0, 1, 2, 1);
 
-        // Axis spacing Spinner
-        axisSpacingSpinner = new Spinner(10, 300, pcpView.getAxisSpacing());
-        axisSpacingSpinner.setEditable(true);
-        axisSpacingSpinner.setTooltip(new Tooltip("Change the spacing between axes in parallel coordinates plot"));
-        axisSpacingSpinner.setDisable(pcpView.getFitAxisSpacingToWidthEnabled());
-        axisSpacingSpinner.valueProperty().addListener((obs, oldValue, newValue) -> {
-           pcpView.setAxisSpacing((Integer)newValue);
+        Optional<Integer> result = axisSpacingDialog.showAndWait();
+
+        result.ifPresent(axisSpacing -> {
+            System.out.println("new axis spacing is " + axisSpacing);
+            pcpView.setAxisSpacing(axisSpacing);
         });
-        grid.add(new Label("Axis Spacing: "), 0, 2);
-        grid.add(axisSpacingSpinner, 1, 2);
-
-        TitledPane generalSettingsTitledPane = new TitledPane("General Display Settings", new ScrollPane(grid));
-
-        Accordion accordion = new Accordion();
-        accordion.getPanes().addAll(generalSettingsTitledPane);
-        accordion.setExpandedPane(generalSettingsTitledPane);
-
-        return accordion;
     }
 
     private MenuBar createMenuBar (Stage stage) {
@@ -202,6 +237,9 @@ public class EDENFXMain extends Application {
                 if (csvFile != null) {
                     try {
                         openCSVFile(csvFile);
+                        displayModeMenu.setDisable(false);
+                        fitPCPAxesToWidthCheckMI.setDisable(false);
+                        changeAxisSpacingMI.setDisable(pcpView.getFitAxisSpacingToWidthEnabled());
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -237,16 +275,23 @@ public class EDENFXMain extends Application {
         fitPCPAxesToWidthCheckMI.setSelected(pcpView.getFitAxisSpacingToWidthEnabled());
         fitPCPAxesToWidthCheckMI.setDisable(true);
         fitPCPAxesToWidthCheckMI.selectedProperty().addListener((observable, oldValue, newValue) -> {
-           pcpView.setFitAxisSpacingToWidthEnabled(fitPCPAxesToWidthCheckMI.isSelected());
+            pcpView.setFitAxisSpacingToWidthEnabled(fitPCPAxesToWidthCheckMI.isSelected());
+            if (pcpView.getFitAxisSpacingToWidthEnabled()) {
+                changeAxisSpacingMI.setDisable(true);
+                pcpScrollPane.setFitToWidth(true);
+            } else {
+                changeAxisSpacingMI.setDisable(false);
+                pcpScrollPane.setFitToWidth(false);
+            }
         });
 
         changeAxisSpacingMI = new MenuItem("Change Axis Spacing...");
         changeAxisSpacingMI.setDisable(true);
         changeAxisSpacingMI.setOnAction(event -> {
-            // TODO: Show dialog with spinner and slider for changing the axis spacing
+            changeAxisSpacing();
         });
 
-        axisLayoutMenu.getItems().addAll(fitPCPAxesToWidthCheckMI);
+        axisLayoutMenu.getItems().addAll(fitPCPAxesToWidthCheckMI, changeAxisSpacingMI);
         viewMenu.getItems().add(axisLayoutMenu);
 
         displayModeGroup.selectedToggleProperty().addListener(new ChangeListener<Toggle>() {
@@ -282,7 +327,93 @@ public class EDENFXMain extends Application {
         }
 
         IOUtilities.readCSV(f, dataModel);
+
+        columnTableView.getItems().clear();
+        columnTableView.setItems(FXCollections.observableArrayList(dataModel.getColumns()));
+
+//        dataTableView.getItems().clear();
+        setDataTableColumns();
+        setDataTableItems();
+
+        dataModel.addDataModelListener(new DataModelListener() {
+            @Override
+            public void dataModelChanged(DataModel dataModel) {
+
+            }
+
+            @Override
+            public void queryChanged(DataModel dataModel) {
+                setDataTableItems();
+            }
+
+            @Override
+            public void dataModelColumnSelectionAdded(DataModel dataModel, ColumnSelectionRange columnSelectionRange) {
+
+            }
+
+            @Override
+            public void dataModelColumnSelectionRemoved(DataModel dataModel, ColumnSelectionRange columnSelectionRange) {
+
+            }
+
+            @Override
+            public void highlightedColumnChanged(DataModel dataModel) {
+
+            }
+
+            @Override
+            public void tuplesAdded(DataModel dataModel, ArrayList<Tuple> newTuples) {
+
+            }
+
+            @Override
+            public void columnDisabled(DataModel dataModel, Column disabledColumn) {
+
+            }
+
+            @Override
+            public void columnsDisabled(DataModel dataModel, ArrayList<Column> disabledColumns) {
+
+            }
+
+            @Override
+            public void columnEnabled(DataModel dataModel, Column enabledColumn) {
+
+            }
+        });
+
         displayModeMenu.setDisable(false);
     }
 
+    private void setDataTableItems() {
+        ObservableList<Tuple> tableTuples;
+        dataTableView.getItems().clear();
+
+        if (dataModel.getActiveQuery().hasColumnSelections()) {
+            tableTuples = FXCollections.observableArrayList(dataModel.getActiveQuery().getTuples());
+        } else {
+            tableTuples = FXCollections.observableArrayList(dataModel.getTuples());
+        }
+
+        dataTableView.setItems(tableTuples);
+    }
+
+    private void setDataTableColumns() {
+        dataTableView.getColumns().clear();
+
+        // make a column for each enabled data table column
+        if (!dataModel.isEmpty()) {
+            for (int icol = 0; icol < dataModel.getColumnCount(); icol++) {
+                Column column = dataModel.getColumn(icol);
+                final int columnIndex = icol;
+                TableColumn<Tuple, Double> tableColumn = new TableColumn<>(column.getName());
+                tableColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<Tuple, Double>, ObservableValue<Double>>() {
+                    public ObservableValue<Double> call(TableColumn.CellDataFeatures<Tuple, Double> t) {
+                        return new ReadOnlyObjectWrapper(t.getValue().getElement(columnIndex));
+                    }
+                });
+                dataTableView.getColumns().add(tableColumn);
+            }
+        }
+    }
 }

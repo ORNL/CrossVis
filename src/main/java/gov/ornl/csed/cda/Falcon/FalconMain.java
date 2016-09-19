@@ -1,7 +1,6 @@
 package gov.ornl.csed.cda.Falcon;
 
 import gov.ornl.csed.cda.Talon.Talon;
-import gov.ornl.csed.cda.coalesce.Utilities;
 import gov.ornl.csed.cda.timevis.*;
 import gov.ornl.csed.cda.util.GraphicsUtil;
 import javafx.application.Application;
@@ -36,9 +35,6 @@ import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 import javafx.util.Callback;
-import org.controlsfx.control.ListSelectionView;
-import org.controlsfx.dialog.Wizard;
-import org.controlsfx.dialog.WizardPane;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,11 +46,9 @@ import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.*;
-import java.lang.reflect.Array;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
-import java.util.List;
 import java.util.prefs.Preferences;
 
 
