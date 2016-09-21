@@ -16,6 +16,7 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.SceneAntialiasing;
@@ -72,12 +73,20 @@ public class EDENFXMain extends Application {
         displayModeMap.put("Parallel Coordinates Bins", PCPView.DISPLAY_MODE.PCP_BINS);
         displayModeMap.put("Parallel Coordinates Lines", PCPView.DISPLAY_MODE.PCP_LINES);
 
-
         dataModel = new DataModel();
     }
 
     private void createColumnTableView() {
         columnTableView = new TableView<>();
+        columnTableView.setEditable(true);
+        columnTableView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue != null) {
+                log.debug("Column '" + newValue.getName() + "' selected in column table");
+                dataModel.setHighlightedColumn(newValue);
+            } else {
+                log.debug("SelectedItemProperty changed and new value is null");
+            }
+        });
 
         TableColumn<Column, String> nameColumn = new TableColumn<>("Variable Name");
         nameColumn.setMinWidth(140);
@@ -86,9 +95,55 @@ public class EDENFXMain extends Application {
         TableColumn<Column, Boolean> enabledColumn = new TableColumn<>("Visible");
         enabledColumn.setMinWidth(20);
         enabledColumn.setCellValueFactory(new PropertyValueFactory<Column, Boolean>("enabled"));
-        enabledColumn.setCellFactory(column -> new CheckBoxTableCell());
+//        enabledColumn.setCellFactory(column -> new CheckBoxTableCell());
+        enabledColumn.setCellFactory(new Callback<TableColumn<Column, Boolean>, TableCell<Column, Boolean>>() {
+            @Override
+            public TableCell<Column, Boolean> call(TableColumn<Column, Boolean> param) {
+                return new CheckBoxTableCell<Column, Boolean>() {
+                    {
+                        setAlignment(Pos.CENTER);
+                    }
 
-        TableColumn<Column, Double> minColumn = new TableColumn<>("Min");
+                    @Override
+                    public void updateItem(Boolean item, boolean empty) {
+                        if (!empty) {
+                            TableRow row = getTableRow();
+
+                            if (row != null) {
+                                int rowNumber = row.getIndex();
+                                TableView.TableViewSelectionModel sm = getTableView().getSelectionModel();
+
+                                if (item) {
+                                    // enable a disabled column
+                                    // get the column name; lookup column in data model; enable the column
+//                                    sm.select(rowNumber);
+//                                    log.debug("Would set column " + dataModel.getColumn(rowNumber) + " to enabled");
+
+//                                    dataModel.enableColumn(dataModel.getColumn(rowNumber));
+                                    Column column = columnTableView.getItems().get(rowNumber);
+                                    dataModel.enableColumn(column);
+                                    log.debug("Set column '" + column.getName() + "' to enabled");
+                                } else {
+                                    // disable an enabled column
+                                    // get the column name; disable column in data model
+                                    Column column = columnTableView.getItems().get(rowNumber);
+                                    dataModel.disableColumn(column);
+                                    log.debug("Set column '" + column.getName() + "' to disabled");
+//                                    sm.clearSelection(rowNumber);
+//                                    log.debug("Would set column " + dataModel.getColumn(rowNumber) + " to disabled");
+//                                    dataModel.disableColumn(dataModel.getColumn(rowNumber));
+                                }
+                            }
+                        }
+
+                        super.updateItem(item, empty);
+                    }
+                };
+            }
+        });
+        enabledColumn.setEditable(true);
+
+        TableColumn < Column, Double > minColumn = new TableColumn<>("Min");
         minColumn.setCellValueFactory(new PropertyValueFactory<Column, Double>("minValue"));
 
         TableColumn<Column, Double> maxColumn = new TableColumn<>("Max");
@@ -102,6 +157,7 @@ public class EDENFXMain extends Application {
 
 
         columnTableView.getColumns().addAll(enabledColumn, nameColumn, minColumn, maxColumn, meanColumn, stdevColumn);
+
     }
 
     @Override
@@ -368,7 +424,16 @@ public class EDENFXMain extends Application {
 
             @Override
             public void columnDisabled(DataModel dataModel, Column disabledColumn) {
+                for (int i = 0; i < dataTableView.getColumns().size(); i++) {
+                    if (dataTableView.getColumns().get(i).getText().equals(disabledColumn.getName())) {
+                        dataTableView.getItems().clear();
+                        dataTableView.getColumns().remove(i);
 
+
+                        setDataTableItems();
+                        break;
+                    }
+                }
             }
 
             @Override
@@ -378,7 +443,17 @@ public class EDENFXMain extends Application {
 
             @Override
             public void columnEnabled(DataModel dataModel, Column enabledColumn) {
+                int columnIndex = dataModel.getColumnIndex(enabledColumn);
+                TableColumn<Tuple, Double> tableColumn = new TableColumn<>(enabledColumn.getName());
+                tableColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<Tuple, Double>, ObservableValue<Double>>() {
+                    public ObservableValue<Double> call(TableColumn.CellDataFeatures<Tuple, Double> t) {
+                        return new ReadOnlyObjectWrapper(t.getValue().getElement(columnIndex));
+                    }
+                });
+                log.debug("Adding column to column table at index " + columnIndex);
+                dataTableView.getColumns().add(columnIndex, tableColumn);
 
+                setDataTableItems();
             }
         });
 
@@ -405,10 +480,11 @@ public class EDENFXMain extends Application {
         if (!dataModel.isEmpty()) {
             for (int icol = 0; icol < dataModel.getColumnCount(); icol++) {
                 Column column = dataModel.getColumn(icol);
-                final int columnIndex = icol;
+//                int columnIndex = icol;
                 TableColumn<Tuple, Double> tableColumn = new TableColumn<>(column.getName());
                 tableColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<Tuple, Double>, ObservableValue<Double>>() {
                     public ObservableValue<Double> call(TableColumn.CellDataFeatures<Tuple, Double> t) {
+                        int columnIndex = dataModel.getColumnIndex(column);
                         return new ReadOnlyObjectWrapper(t.getValue().getElement(columnIndex));
                     }
                 });

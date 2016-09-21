@@ -355,8 +355,12 @@ public class DataModel {
 			ArrayList<Histogram2D> histogram2DArrayList = new ArrayList<Histogram2D>();
 
 			for (int iy = 0; iy < columns.size(); iy++) {
-                double coef = pCorr.correlation(data[ix], data[iy]);
-                coefList.add(coef);
+				try {
+					double coef = pCorr.correlation(data[ix], data[iy]);
+					coefList.add(coef);
+				} catch (Exception ex) {
+					coefList.add(0.);
+				}
 
                 // calculate 2D histograms
                 // TODO: This could be optimized to reduce some computational complexity

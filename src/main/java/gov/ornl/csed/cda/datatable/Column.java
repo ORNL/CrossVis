@@ -14,6 +14,7 @@ public class Column implements Serializable {
 
     private StringProperty name;
     private BooleanProperty enabled;
+
     private DoubleProperty meanValue;
     private DoubleProperty minValue;
     private DoubleProperty maxValue;

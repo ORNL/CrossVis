@@ -135,44 +135,8 @@ public class PCPView extends Region {
 
         if (displayMode == DISPLAY_MODE.PCP_LINES) {
             fillTupleSets();
-//            unselectedTupleSet.clear();
-//            selectedTupleSet.clear();
-//            if ((tupleList != null) && (!tupleList.isEmpty())) {
-//                if (dataModel.getActiveQuery().hasColumnSelections()) {
-//                    for (PCPTuple pcpTuple : tupleList) {
-//                        if (pcpTuple.getTuple().getQueryFlag()) {
-//                            selectedTupleSet.add(pcpTuple);
-//                        } else {
-//                            unselectedTupleSet.add(pcpTuple);
-//                        }
-//                    }
-//                } else {
-//                    selectedTupleSet.addAll(tupleList);
-//                }
-//            }
             redraw();
-        } else if (displayMode == DISPLAY_MODE.HISTOGRAM) {
-//            double left = getInsets().getLeft() + (axisSpacing / 2.);
-//            double top = getInsets().getTop();
-//            double pcpHeight = getHeight() - (getInsets().getTop() + getInsets().getBottom());
-//
-//            for (int iaxis = 0; iaxis < axisList.size(); iaxis++) {
-//                PCPAxis pcpAxis = axisList.get(iaxis);
-//                pcpAxis.layout(left + (iaxis * axisSpacing), top, axisSpacing, pcpHeight);
-//
-//                pane.getChildren().add(0, pcpAxis.getHistogramBinRectangleGroup());
-//                pane.getChildren().add(1, pcpAxis.getQueryHistogramBinRectangleGroup());
-//            }
         } else if (displayMode == DISPLAY_MODE.PCP_BINS) {
-//            double left = getInsets().getLeft() + (axisSpacing / 2.);
-//            double top = getInsets().getTop();
-//            double pcpHeight = getHeight() - (getInsets().getTop() + getInsets().getBottom());
-//
-//            for (int iaxis = 0; iaxis < axisList.size(); iaxis++) {
-//                PCPAxis pcpAxis = axisList.get(iaxis);
-//                pcpAxis.layout(left + (iaxis * axisSpacing), top, axisSpacing, pcpHeight);
-//            }
-
             for (PCPBinSet PCPBinSet : PCPBinSetList) {
                 PCPBinSet.layoutBins();
             }
@@ -219,26 +183,6 @@ public class PCPView extends Region {
     public void setDataModel (DataModel dataModel) {
         this.dataModel = dataModel;
 
-//        // add axis lines to the pane
-//        axisList.clear();
-//        for (int iaxis = 0; iaxis < dataModel.getColumnCount(); iaxis++) {
-//            PCPAxis pcpAxis = new PCPAxis(dataModel.getColumn(iaxis), iaxis, dataModel, pane);
-//            pane.getChildren().add(pcpAxis.getGraphicsGroup());
-//            axisList.add(pcpAxis);
-//        }
-//
-//        // add tuples polylines from data model
-//        tupleList = new ArrayList<>();
-//        for (int iTuple = 0; iTuple < dataModel.getTupleCount(); iTuple++) {
-//            Tuple tuple = dataModel.getTuple(iTuple);
-//            PCPTuple pcpTuple = new PCPTuple(tuple);
-//            tupleList.add(pcpTuple);
-//        }
-//
-//        // create selected and unselected tuple sets
-//        unselectedTupleSet = new HashSet<>();
-//        selectedTupleSet = new HashSet<>(tupleList);
-
         resize();
 
         this.dataModel.addDataModelListener(new DataModelListener() {
@@ -267,6 +211,19 @@ public class PCPView extends Region {
 
             @Override
             public void highlightedColumnChanged(DataModel dataModel) {
+                if (dataModel.getHighlightedColumn() == null) {
+                    for (PCPAxis pcpAxis : axisList) {
+                        pcpAxis.setHighlighted(false);
+                    }
+                } else {
+                    for (PCPAxis pcpAxis : axisList) {
+                        if (pcpAxis.getColumn() == dataModel.getHighlightedColumn()) {
+                            pcpAxis.setHighlighted(true);
+                        } else {
+                            pcpAxis.setHighlighted(false);
+                        }
+                    }
+                }
                 log.debug("highlighted column changed");
             }
 
@@ -277,7 +234,44 @@ public class PCPView extends Region {
 
             @Override
             public void columnDisabled(DataModel dataModel, Column disabledColumn) {
+//                pane.getChildren().clear();
+//                initializeLayout();
+                for (int iaxis = 0; iaxis < axisList.size(); iaxis++) {
+                    PCPAxis pcpAxis = axisList.get(iaxis);
+                    if (pcpAxis.getColumn() == disabledColumn) {
+                        axisList.remove(pcpAxis);
+                        pane.getChildren().remove(pcpAxis.getGraphicsGroup());
+                        pane.getChildren().remove(pcpAxis.getHistogramBinRectangleGroup());
+                        pane.getChildren().remove(pcpAxis.getQueryHistogramBinRectangleGroup());
 
+                        // remove axis selection graphics
+                        if (!pcpAxis.getAxisSelectionList().isEmpty()) {
+                            for (PCPAxisSelection axisSelection : pcpAxis.getAxisSelectionList()) {
+                                pane.getChildren().remove(axisSelection.getGraphicsGroup());
+                            }
+                        }
+
+                        // create PCPBinSets for axis configuration
+                        PCPBinSetList = new ArrayList<>();
+                        for (int i = 0; i < axisList.size()-1; i++) {
+                            PCPBinSet binSet = new PCPBinSet(axisList.get(i), axisList.get(i+1), dataModel);
+                            binSet.layoutBins();
+                            PCPBinSetList.add(binSet);
+                        }
+
+                        // add tuples polylines from data model
+                        tupleList = new ArrayList<>();
+                        for (int iTuple = 0; iTuple < dataModel.getTupleCount(); iTuple++) {
+                            Tuple tuple = dataModel.getTuple(iTuple);
+                            PCPTuple pcpTuple = new PCPTuple(tuple);
+                            tupleList.add(pcpTuple);
+                        }
+                        fillTupleSets();
+
+                        break;
+                    }
+                }
+                resize();
             }
 
             @Override
@@ -287,7 +281,35 @@ public class PCPView extends Region {
 
             @Override
             public void columnEnabled(DataModel dataModel, Column enabledColumn) {
+                // add axis lines to the pane
+                PCPAxis pcpAxis = new PCPAxis(enabledColumn, dataModel.getColumnIndex(enabledColumn), dataModel, pane);
+                pane.getChildren().add(pcpAxis.getGraphicsGroup());
+                axisList.add(pcpAxis);
+//                axisList.clear();
+//                for (int iaxis = 0; iaxis < dataModel.getColumnCount(); iaxis++) {
+//                    PCPAxis pcpAxis = new PCPAxis(dataModel.getColumn(iaxis), iaxis, dataModel, pane);
+//                    pane.getChildren().add(pcpAxis.getGraphicsGroup());
+//                    axisList.add(pcpAxis);
+//                }
 
+                // add tuples polylines from data model
+                tupleList = new ArrayList<>();
+                for (int iTuple = 0; iTuple < dataModel.getTupleCount(); iTuple++) {
+                    Tuple tuple = dataModel.getTuple(iTuple);
+                    PCPTuple pcpTuple = new PCPTuple(tuple);
+                    tupleList.add(pcpTuple);
+                }
+
+                fillTupleSets();
+
+                // create PCPBinSets for axis configuration
+                PCPBinSetList = new ArrayList<>();
+                for (int iaxis = 0; iaxis < axisList.size()-1; iaxis++) {
+                    PCPBinSet binSet = new PCPBinSet(axisList.get(iaxis), axisList.get(iaxis+1), dataModel);
+                    PCPBinSetList.add(binSet);
+                }
+
+                resize();
             }
         });
     }

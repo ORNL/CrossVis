@@ -12,6 +12,7 @@ import javafx.scene.paint.Paint;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -169,13 +170,16 @@ public class PCPAxis {
                 selectionMaxY = selectionMaxY < getFocusTopY() ? getFocusTopY() : selectionMaxY;
                 selectionMinY = selectionMinY > getFocusBottomY() ? getFocusBottomY() : selectionMinY;
 
+                if (selectionMaxY == getFocusTopY()) {
+                    log.debug("selectionMaxY = " + selectionMaxY + " getFocusTopY() = " + getFocusTopY());
+                }
                 double maxSelectionValue = GraphicsUtil.mapValue(selectionMaxY, getFocusTopY(), getFocusBottomY(),
                         column.getSummaryStats().getMax(), column.getSummaryStats().getMin());
                 double minSelectionValue = GraphicsUtil.mapValue(selectionMinY, getFocusTopY(), getFocusBottomY(),
                         column.getSummaryStats().getMax(), column.getSummaryStats().getMin());
 
                 if (draggingSelection == null) {
-                    ColumnSelectionRange selectionRange = dataModel.addColumnSelectionRangeToActiveQuery(column, (float)minSelectionValue, (float)maxSelectionValue);
+                    ColumnSelectionRange selectionRange = dataModel.addColumnSelectionRangeToActiveQuery(column, minSelectionValue, maxSelectionValue);
                     draggingSelection = new PCPAxisSelection(thisPCPAxis, selectionRange, selectionMinY, selectionMaxY, pane, dataModel);
                 } else {
                     draggingSelection.update(minSelectionValue, maxSelectionValue, selectionMinY, selectionMaxY);
@@ -205,6 +209,16 @@ public class PCPAxis {
         line.setSmooth(true);
         line.setStrokeWidth(DEFAULT_STROKE_WIDTH);
         return line;
+    }
+
+    public void setHighlighted(boolean highlighted) {
+        if (highlighted) {
+            nameText.setFont(Font.font(nameText.getFont().getFamily(), FontWeight.BOLD, DEFAULT_TEXT_SIZE));
+            nameText.setFill(Color.BLUE);
+        } else {
+            nameText.setFont(Font.font(nameText.getFont().getFamily(), FontWeight.NORMAL, DEFAULT_TEXT_SIZE));
+            nameText.setFill(Color.BLACK);
+        }
     }
 
     public Group getGraphicsGroup() { return graphicsGroup; }
@@ -289,15 +303,6 @@ public class PCPAxis {
             histogramBinRectangleGroup = new Group();
 
             for (int i = 0; i < histogram.getNumBins(); i++) {
-//                double y = getFocusTopY() + ((histogram.getNumBins() - i - 1) * binHeight);
-//                double binWidth = GraphicsUtil.mapValue(histogram.getBinCount(i), 0, histogram.getMaxBinCount(), 1, DEFAULT_BAR_WIDTH - 2);
-//                double x = left + ((width - binWidth) / 2.);
-//                Rectangle rectangle = new Rectangle(x, y, binWidth, binHeight);
-//                rectangle.setStroke(histogramStroke);
-//                rectangle.setFill(histogramFill);
-//                histogramBinRectangleList.add(rectangle);
-//                histogramBinRectangleGroup.getChildren().add(rectangle);
-
                 double y = getFocusTopY() + ((histogram.getNumBins() - i - 1) * binHeight);
                 double binWidth = GraphicsUtil.mapValue(histogram.getBinCount(i), 0, histogram.getMaxBinCount(), DEFAULT_BAR_WIDTH + 2, DEFAULT_BAR_WIDTH + 2 + maxHistogramBinWidth);
                 double x = left + ((width - binWidth) / 2.);
@@ -343,15 +348,6 @@ public class PCPAxis {
 
                 for (int i = 0; i < histogram.getNumBins(); i++) {
                     if (queryHistogram.getBinCount(i) > 0) {
-//                        double y = getFocusTopY() + ((histogram.getNumBins() - i - 1) * binHeight);
-//                        double binWidth = GraphicsUtil.mapValue(queryHistogram.getBinCount(i), 0, histogram.getMaxBinCount(), 1, DEFAULT_BAR_WIDTH - 2);
-//                        double x = left + ((width - binWidth) / 2.);
-//                        Rectangle rectangle = new Rectangle(x, y, binWidth, binHeight);
-//                        rectangle.setStroke(histogramStroke);
-//                        rectangle.setFill(queryHistogramFill);
-//                        queryHistogramBinRectangleList.add(rectangle);
-//                        queryHistogramBinRectangleGroup.getChildren().add(rectangle);
-
                         double y = getFocusTopY() + ((histogram.getNumBins() - i - 1) * binHeight);
                         double binWidth = GraphicsUtil.mapValue(queryHistogram.getBinCount(i), 0, histogram.getMaxBinCount(), DEFAULT_BAR_WIDTH + 2, DEFAULT_BAR_WIDTH + 2 + maxHistogramBinWidth);
                         double x = left + ((width - binWidth) / 2.);

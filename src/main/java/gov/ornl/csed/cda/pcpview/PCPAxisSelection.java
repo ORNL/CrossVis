@@ -394,8 +394,8 @@ public class PCPAxisSelection {
     }
 
     public void update(double minValue, double maxValue, double minValueY, double maxValueY) {
-        selectionRange.setMaxValue((float)maxValue);
-        selectionRange.setMinValue((float)minValue);
+        selectionRange.setMaxValue(maxValue);
+        selectionRange.setMinValue(minValue);
         layoutGraphics(minValueY, maxValueY);
 //        double top = Math.min(minValueY, maxValueY);
 //        double bottom = Math.max(minValueY, maxValueY);
