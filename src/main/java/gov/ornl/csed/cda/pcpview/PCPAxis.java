@@ -5,8 +5,14 @@ import gov.ornl.csed.cda.util.GraphicsUtil;
 import javafx.event.EventHandler;
 import javafx.geometry.Point2D;
 import javafx.scene.Group;
+import javafx.scene.Node;
+import javafx.scene.SnapshotParameters;
+import javafx.scene.effect.GaussianBlur;
+import javafx.scene.image.ImageView;
+import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.shape.Line;
@@ -39,7 +45,7 @@ public class PCPAxis {
 
     private DataModel dataModel;
     private Column column;
-    private int dataModelIndex;
+//    private int dataModelIndex;
 
     private double centerX;
     private Rectangle bounds;
@@ -59,6 +65,12 @@ public class PCPAxis {
     private Rectangle verticalBar;
 
     private Text nameText;
+
+    // axis relocation stuff
+    private double dragAnchorX;
+    private Group dragGraphicsGroup;
+    private WritableImage dragImage;
+    private ImageView dragImageView;
 
     // summary statistics objects
     private Group overallSummaryStatisticsGroup;
@@ -90,9 +102,12 @@ public class PCPAxis {
     PCPAxisSelection draggingSelection;
     boolean dragging = false;
 
-    public PCPAxis(Column column, int dataModelIndex, DataModel dataModel, Pane pane) {
+    private PCPView pcpView;
+
+    public PCPAxis(PCPView pcpView, Column column, DataModel dataModel, Pane pane) {
+        this.pcpView = pcpView;
         this.column = column;
-        this.dataModelIndex = dataModelIndex;
+//        this.dataModelIndex = dataModelIndex;
         this.dataModel = dataModel;
         this.pane = pane;
 
@@ -147,8 +162,80 @@ public class PCPAxis {
     public Group getHistogramBinRectangleGroup() { return histogramBinRectangleGroup; }
     public Group getQueryHistogramBinRectangleGroup() { return queryHistogramBinRectangleGroup; }
 
+    public Group createDragGroup () {
+        // copy axis info
+        Text nameText = new Text(column.getName());
+        nameText.setFont(new Font(DEFAULT_TEXT_SIZE));
+        nameText.setSmooth(true);
+
+        Rectangle verticalBar = new Rectangle();
+        verticalBar.setStroke(Color.DARKGRAY);
+        verticalBar.setFill(Color.WHITESMOKE);
+        verticalBar.setSmooth(true);
+        verticalBar.setStrokeWidth(DEFAULT_STROKE_WIDTH);
+
+        Line topCrossBarLine = makeLine();
+        Line bottomCrossBarLine = makeLine();
+        Line topFocusCrossBarLine = makeLine();
+        Line bottomFocusCrossBarLine = makeLine();
+
+        return new Group(verticalBar, topCrossBarLine, bottomCrossBarLine, topFocusCrossBarLine, bottomFocusCrossBarLine, nameText);
+    }
+
     private void registerListeners() {
         PCPAxis thisPCPAxis = this;
+
+        nameText.setOnMousePressed(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+//                dragAnchorX = event.getSceneX();
+
+            }
+        });
+
+        nameText.setOnMouseDragged(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                if (!dragging) {
+                    dragging = true;
+                    SnapshotParameters snapshotParameters = new SnapshotParameters();
+                    snapshotParameters.setFill(Color.TRANSPARENT);
+                    dragImage = graphicsGroup.snapshot(snapshotParameters, null);
+                    dragImageView = new ImageView(dragImage);
+                    dragImageView.setX(centerX - (dragImage.getWidth() / 2d));
+                    dragImageView.setY(graphicsGroup.getLayoutY());
+
+                    // blur everything except the drag image view
+                    for (Node node : pane.getChildren()) {
+                        node.setEffect(new GaussianBlur());
+                    }
+                    pane.getChildren().add(dragImageView);
+                }
+                dragImageView.setX(event.getX()- (dragImage.getWidth() / 2d));
+            }
+        });
+
+        nameText.setOnMouseReleased(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                if (dragging) {
+                    pane.getChildren().remove(dragImageView);
+                    for (Node node : pane.getChildren()) {
+                        node.setEffect(null);
+                    }
+                    dragging = false;
+
+                    // calculate the new index position for the column associated with this axis
+                    double dragImageCenterX = dragImageView.getX() + (dragImageView.getFitWidth() / 2.);
+                    int newColumnIndex = (int) dragImageCenterX / pcpView.getAxisSpacing();
+                    newColumnIndex = GraphicsUtil.constrain(newColumnIndex, 0, dataModel.getColumnCount() - 1);
+
+                    if (!(newColumnIndex == dataModel.getColumnIndex(column))) {
+                        dataModel.changeColumnOrder(getColumn(), newColumnIndex);
+                    }
+                }
+            }
+        });
 
         verticalBar.setOnMousePressed(new EventHandler<MouseEvent>() {
             @Override
@@ -373,7 +460,7 @@ public class PCPAxis {
     public Rectangle getVerticalBar() { return verticalBar; }
 
     public Column getColumn() { return column; }
-    public int getColumnDataModelIndex() { return dataModelIndex; }
+    public int getColumnDataModelIndex() { return dataModel.getColumnIndex(getColumn()); }
 
     public double getFocusTopY() { return focusTopY; }
     public double getFocusBottomY() { return focusBottomY; }

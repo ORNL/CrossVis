@@ -645,6 +645,7 @@ public class DataModel {
             clearActiveQueryColumnSelection(disabledColumn);
             for (Column column : columns) {
                 column.getSummaryStats().getCorrelationCoefficients().remove(disabledColumnIndex);
+                column.getSummaryStats().getHistogram2DList().remove(disabledColumnIndex);
             }
 			fireColumnDisabled(disabledColumn);
 		}
@@ -792,13 +793,14 @@ public class DataModel {
 
 	public void clearActiveQuery() {
         activeQuery = new Query("Q" + (nextQueryNumber++));
+		fireQueryChanged();
 //		activeQuery = new Query("Q"+(nextQueryNumber++));
 	}
 
 	public void clearActiveQueryColumnSelection(Column column) {
 		if (activeQuery != null) {
             getActiveQuery().clearColumnSelection(column);
-//			activeQuery.clearColumnSelection(column);
+			fireQueryChanged();
 		}
 	}
 
@@ -899,6 +901,14 @@ public class DataModel {
         changeColumnOrder(newColumnList);
     }
 
+    public void changeColumnOrder(Column column, int newColumnIndex) {
+		ArrayList<Column> newColumnOrder = new ArrayList<>(columns);
+		newColumnOrder.remove(newColumnOrder.indexOf(column));
+		newColumnOrder.add(newColumnIndex, column);
+
+		changeColumnOrder(newColumnOrder);
+	}
+
     public void changeColumnOrder(ArrayList<Column> newColumnOrder) {
         // determine destination indices for new column order
         int dstColumnIndices[] = new int[newColumnOrder.size()];
@@ -920,6 +930,13 @@ public class DataModel {
                 newCorrCoef.add(corrCoef.get(dstColumnIndices[iCorrCoef]));
             }
             column.getSummaryStats().setCorrelationCoefficients(newCorrCoef);
+
+			ArrayList<Histogram2D> histogram2DList = column.getSummaryStats().getHistogram2DList();
+			ArrayList<Histogram2D> newHistogram2DList = new ArrayList<>();
+			for (int i = 0; i < histogram2DList.size(); i++) {
+				newHistogram2DList.add(histogram2DList.get(dstColumnIndices[i]));
+			}
+			column.getSummaryStats().setHistogram2DList(newHistogram2DList);
         }
 
         // move tuple elements to reflect new column order
@@ -944,6 +961,13 @@ public class DataModel {
                     newCorrCoef.add(corrCoef.get(dstColumnIndices[iCorrCoef]));
                 }
                 summaryStats.setCorrelationCoefficients(newCorrCoef);
+
+				ArrayList<Histogram2D> histogram2DList = summaryStats.getHistogram2DList();
+				ArrayList<Histogram2D> newHistogram2DList = new ArrayList<>();
+				for (int i = 0; i < histogram2DList.size(); i++) {
+					newHistogram2DList.add(histogram2DList.get(dstColumnIndices[i]));
+				}
+				summaryStats.setHistogram2DList(newHistogram2DList);
             }
         }
 

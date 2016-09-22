@@ -150,10 +150,13 @@ public class PCPView extends Region {
     }
 
     private void initializeLayout() {
+        pane.getChildren().clear();
+        pane.getChildren().add(lineCanvas);
+
         // add axis lines to the pane
         axisList.clear();
         for (int iaxis = 0; iaxis < dataModel.getColumnCount(); iaxis++) {
-            PCPAxis pcpAxis = new PCPAxis(dataModel.getColumn(iaxis), iaxis, dataModel, pane);
+            PCPAxis pcpAxis = new PCPAxis(this, dataModel.getColumn(iaxis), dataModel, pane);
             pane.getChildren().add(pcpAxis.getGraphicsGroup());
             axisList.add(pcpAxis);
         }
@@ -180,15 +183,101 @@ public class PCPView extends Region {
         resize();
     }
 
+    private void addAxis(Column column) {
+        PCPAxis pcpAxis = new PCPAxis(this, column, dataModel, pane);
+        pane.getChildren().add(pcpAxis.getGraphicsGroup());
+        axisList.add(pcpAxis);
+    }
+
     public void setDataModel (DataModel dataModel) {
         this.dataModel = dataModel;
-
+        final PCPView pcpView = this;
         resize();
 
         this.dataModel.addDataModelListener(new DataModelListener() {
             @Override
             public void dataModelChanged(DataModel dataModel) {
-                initializeLayout();
+//                initializeLayout();
+//                pane.getChildren().clear();
+//                pane.getChildren().add(lineCanvas);
+
+                // add axis lines to the pane
+//                axisList.clear();
+
+                /*
+                pane.getChildren().clear();
+                pane.getChildren().add(lineCanvas);
+
+                // add axis lines to the pane
+                axisList.clear();
+                for (int iaxis = 0; iaxis < dataModel.getColumnCount(); iaxis++) {
+                    PCPAxis pcpAxis = new PCPAxis(pcpView, dataModel.getColumn(iaxis), iaxis, dataModel, pane);
+                    pane.getChildren().add(pcpAxis.getGraphicsGroup());
+                    axisList.add(pcpAxis);
+                }
+                */
+
+
+                if (axisList.isEmpty()) {
+                    for (int iaxis = 0; iaxis < dataModel.getColumnCount(); iaxis++) {
+                        PCPAxis pcpAxis = new PCPAxis(pcpView, dataModel.getColumn(iaxis), dataModel, pane);
+                        pane.getChildren().add(pcpAxis.getGraphicsGroup());
+                        axisList.add(pcpAxis);
+                    }
+                } else {
+                    ArrayList<PCPAxis> newAxisList = new ArrayList<PCPAxis>();
+                    for (int iDstCol = 0; iDstCol < dataModel.getColumnCount(); iDstCol++) {
+                        Column column = dataModel.getColumn(iDstCol);
+                        for (int iSrcCol = 0; iSrcCol < axisList.size(); iSrcCol++) {
+                            PCPAxis pcpAxis = axisList.get(iSrcCol);
+                            if (pcpAxis.getColumn() == column) {
+                                newAxisList.add(pcpAxis);
+
+                                log.debug("Axis added to list: " + pcpAxis.getColumn().getName());
+                                break;
+                            }
+                        }
+                    }
+
+                    axisList = newAxisList;
+                }
+
+
+                // add tuples polylines from data model
+                tupleList = new ArrayList<>();
+                for (int iTuple = 0; iTuple < dataModel.getTupleCount(); iTuple++) {
+                    Tuple tuple = dataModel.getTuple(iTuple);
+                    PCPTuple pcpTuple = new PCPTuple(tuple);
+                    tupleList.add(pcpTuple);
+                }
+
+                fillTupleSets();
+
+                // create PCPBinSets for axis configuration
+                PCPBinSetList = new ArrayList<>();
+                for (int iaxis = 0; iaxis < axisList.size()-1; iaxis++) {
+                    PCPBinSet binSet = new PCPBinSet(axisList.get(iaxis), axisList.get(iaxis+1), dataModel);
+                    PCPBinSetList.add(binSet);
+                }
+
+                resize();
+
+//                // create PCPBinSets for axis configuration
+//                PCPBinSetList = new ArrayList<>();
+//                for (int i = 0; i < axisList.size()-1; i++) {
+//                    PCPBinSet binSet = new PCPBinSet(axisList.get(i), axisList.get(i+1), dataModel);
+//                    binSet.layoutBins();
+//                    PCPBinSetList.add(binSet);
+//                }
+//
+//                // add tuples polylines from data model
+//                tupleList = new ArrayList<>();
+//                for (int iTuple = 0; iTuple < dataModel.getTupleCount(); iTuple++) {
+//                    Tuple tuple = dataModel.getTuple(iTuple);
+//                    PCPTuple pcpTuple = new PCPTuple(tuple);
+//                    tupleList.add(pcpTuple);
+//                }
+//                fillTupleSets();
             }
 
             @Override
@@ -234,12 +323,12 @@ public class PCPView extends Region {
 
             @Override
             public void columnDisabled(DataModel dataModel, Column disabledColumn) {
-//                pane.getChildren().clear();
-//                initializeLayout();
                 for (int iaxis = 0; iaxis < axisList.size(); iaxis++) {
                     PCPAxis pcpAxis = axisList.get(iaxis);
                     if (pcpAxis.getColumn() == disabledColumn) {
                         axisList.remove(pcpAxis);
+
+                        // remove axis graphics from pane
                         pane.getChildren().remove(pcpAxis.getGraphicsGroup());
                         pane.getChildren().remove(pcpAxis.getHistogramBinRectangleGroup());
                         pane.getChildren().remove(pcpAxis.getQueryHistogramBinRectangleGroup());
@@ -268,10 +357,48 @@ public class PCPView extends Region {
                         }
                         fillTupleSets();
 
+                        resize();
                         break;
                     }
                 }
-                resize();
+//                pane.getChildren().clear();
+//                initializeLayout();
+//                for (int iaxis = 0; iaxis < axisList.size(); iaxis++) {
+//                    PCPAxis pcpAxis = axisList.get(iaxis);
+//                    if (pcpAxis.getColumn() == disabledColumn) {
+//                        axisList.remove(pcpAxis);
+//                        pane.getChildren().remove(pcpAxis.getGraphicsGroup());
+//                        pane.getChildren().remove(pcpAxis.getHistogramBinRectangleGroup());
+//                        pane.getChildren().remove(pcpAxis.getQueryHistogramBinRectangleGroup());
+//
+//                        // remove axis selection graphics
+//                        if (!pcpAxis.getAxisSelectionList().isEmpty()) {
+//                            for (PCPAxisSelection axisSelection : pcpAxis.getAxisSelectionList()) {
+//                                pane.getChildren().remove(axisSelection.getGraphicsGroup());
+//                            }
+//                        }
+//
+//                        // create PCPBinSets for axis configuration
+//                        PCPBinSetList = new ArrayList<>();
+//                        for (int i = 0; i < axisList.size()-1; i++) {
+//                            PCPBinSet binSet = new PCPBinSet(axisList.get(i), axisList.get(i+1), dataModel);
+//                            binSet.layoutBins();
+//                            PCPBinSetList.add(binSet);
+//                        }
+//
+//                        // add tuples polylines from data model
+//                        tupleList = new ArrayList<>();
+//                        for (int iTuple = 0; iTuple < dataModel.getTupleCount(); iTuple++) {
+//                            Tuple tuple = dataModel.getTuple(iTuple);
+//                            PCPTuple pcpTuple = new PCPTuple(tuple);
+//                            tupleList.add(pcpTuple);
+//                        }
+//                        fillTupleSets();
+//
+//                        break;
+//                    }
+//                }
+//                resize();
             }
 
             @Override
@@ -282,9 +409,10 @@ public class PCPView extends Region {
             @Override
             public void columnEnabled(DataModel dataModel, Column enabledColumn) {
                 // add axis lines to the pane
-                PCPAxis pcpAxis = new PCPAxis(enabledColumn, dataModel.getColumnIndex(enabledColumn), dataModel, pane);
-                pane.getChildren().add(pcpAxis.getGraphicsGroup());
-                axisList.add(pcpAxis);
+                addAxis(enabledColumn);
+//                PCPAxis pcpAxis = new PCPAxis(this, enabledColumn, dataModel.getColumnIndex(enabledColumn), dataModel, pane);
+//                pane.getChildren().add(pcpAxis.getGraphicsGroup());
+//                axisList.add(pcpAxis);
 //                axisList.clear();
 //                for (int iaxis = 0; iaxis < dataModel.getColumnCount(); iaxis++) {
 //                    PCPAxis pcpAxis = new PCPAxis(dataModel.getColumn(iaxis), iaxis, dataModel, pane);
@@ -316,6 +444,8 @@ public class PCPView extends Region {
 
     private void init() {
         axisList = new ArrayList<>();
+        unselectedTupleSet = new HashSet<>();
+        selectedTupleSet = new HashSet<>();
     }
 
     private void initGraphics() {
@@ -346,6 +476,12 @@ public class PCPView extends Region {
     }
 
     public int getAxisSpacing () {return (int)axisSpacing;}
+
+    public final PCPAxis getAxis(int index) {
+        return axisList.get(index);
+    }
+
+    public final int getAxisCount() { return axisList.size(); }
 
     public boolean getFitAxisSpacingToWidthEnabled() { return fitAxisSpacingToWidthEnabled; }
 
@@ -413,6 +549,25 @@ public class PCPView extends Region {
         } else if (displayMode == DISPLAY_MODE.PCP_BINS) {
             drawPCPBins();
         }
+    }
+
+    public void clearQuery() {
+        dataModel.clearActiveQuery();
+        dataModel.setQueriedTuples();
+
+        log.debug("clearQuery(): " + dataModel.getActiveQuery().hasColumnSelections());
+
+        // clear all axis selection graphics
+        for (PCPAxis pcpAxis : axisList) {
+            if (!pcpAxis.getAxisSelectionList().isEmpty()) {
+                for (PCPAxisSelection pcpAxisSelection : pcpAxis.getAxisSelectionList()) {
+                    pane.getChildren().remove(pcpAxisSelection.getGraphicsGroup());
+                }
+                pcpAxis.getAxisSelectionList().clear();
+            }
+        }
+
+        handleQueryChange();
     }
 
     private void drawPCPBins() {

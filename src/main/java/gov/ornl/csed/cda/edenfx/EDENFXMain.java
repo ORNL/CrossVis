@@ -2,6 +2,8 @@ package gov.ornl.csed.cda.edenfx;
 
 import gov.ornl.csed.cda.Falcon.FalconPreferenceKeys;
 import gov.ornl.csed.cda.datatable.*;
+import gov.ornl.csed.cda.pcpview.PCPAxis;
+import gov.ornl.csed.cda.pcpview.PCPAxisSelection;
 import gov.ornl.csed.cda.pcpview.PCPView;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -62,7 +64,9 @@ public class EDENFXMain extends Application {
     private MenuItem changeAxisSpacingMI;
 
     private TableView<Column> columnTableView;
+    private TableView<ColumnSelectionRange> queryTableView;
     private TableView<Tuple> dataTableView;
+    private MenuItem removeAllQueriesMI;
 
     @Override
     public void init() {
@@ -74,6 +78,23 @@ public class EDENFXMain extends Application {
         displayModeMap.put("Parallel Coordinates Lines", PCPView.DISPLAY_MODE.PCP_LINES);
 
         dataModel = new DataModel();
+    }
+
+    private void createQueryTableView() {
+        queryTableView = new TableView();
+        queryTableView.setEditable(true);
+
+        TableColumn<ColumnSelectionRange, String> columnNameColumn = new TableColumn<>("Column");
+        columnNameColumn.setMinWidth(140);
+        columnNameColumn.setCellValueFactory(new PropertyValueFactory<ColumnSelectionRange, String>("column"));
+
+        TableColumn<ColumnSelectionRange, Double> minColumn = new TableColumn<>("Minimum Value");
+        minColumn.setCellValueFactory(new PropertyValueFactory<ColumnSelectionRange, Double>("minValue"));
+
+        TableColumn<ColumnSelectionRange, Double> maxColumn = new TableColumn<>("Maximum Value");
+        maxColumn.setCellValueFactory(new PropertyValueFactory<ColumnSelectionRange, Double>("maxValue"));
+
+        queryTableView.getColumns().addAll(columnNameColumn);
     }
 
     private void createColumnTableView() {
@@ -157,8 +178,9 @@ public class EDENFXMain extends Application {
 
 
         columnTableView.getColumns().addAll(enabledColumn, nameColumn, minColumn, maxColumn, meanColumn, stdevColumn);
-
     }
+
+
 
     @Override
     public void start(Stage stage) throws Exception {
@@ -175,8 +197,10 @@ public class EDENFXMain extends Application {
         MenuBar menuBar = createMenuBar(stage);
 //        menuBar.setUseSystemMenuBar(true);
         createColumnTableView();
+        createQueryTableView();
         dataTableView = new TableView<>();
 
+        // create table tab pane
         tabPane = new TabPane();
         Tab columnTableTab = new Tab(" Column Table ");
         columnTableTab.setClosable(false);
@@ -185,7 +209,13 @@ public class EDENFXMain extends Application {
         Tab dataTableTab = new Tab(" Data Table ");
         dataTableTab.setClosable(false);
         dataTableTab.setContent(dataTableView);
-        tabPane.getTabs().addAll(columnTableTab, dataTableTab);
+
+        Tab queryTableTab = new Tab(" Query Table ");
+        queryTableTab.setClosable(false);
+        queryTableTab.setContent(queryTableView);
+
+        tabPane.getTabs().addAll(columnTableTab, dataTableTab, queryTableTab);
+
 
         SplitPane middleSplit = new SplitPane();
         middleSplit.setOrientation(Orientation.VERTICAL);
@@ -361,6 +391,14 @@ public class EDENFXMain extends Application {
             }
         });
 
+        // create menu item to remove all active queries
+        removeAllQueriesMI = new MenuItem("Remove All Range Queries");
+        removeAllQueriesMI.setDisable(true);
+        removeAllQueriesMI.setOnAction(event -> {
+            pcpView.clearQuery();
+        });
+        viewMenu.getItems().add(removeAllQueriesMI);
+
 
         MenuItem exitMI = new MenuItem("Quit Falcon");
         exitMI.setAccelerator(new KeyCodeCombination(KeyCode.Q, KeyCombination.META_DOWN));
@@ -399,17 +437,21 @@ public class EDENFXMain extends Application {
 
             @Override
             public void queryChanged(DataModel dataModel) {
+                log.debug("EDENFXMain queryChanged: " + dataModel.getActiveQuery().hasColumnSelections());
+                removeAllQueriesMI.setDisable(!dataModel.getActiveQuery().hasColumnSelections());
                 setDataTableItems();
             }
 
             @Override
             public void dataModelColumnSelectionAdded(DataModel dataModel, ColumnSelectionRange columnSelectionRange) {
-
+                removeAllQueriesMI.setDisable(!dataModel.getActiveQuery().hasColumnSelections());
+                setDataTableItems();
             }
 
             @Override
             public void dataModelColumnSelectionRemoved(DataModel dataModel, ColumnSelectionRange columnSelectionRange) {
-
+                removeAllQueriesMI.setDisable(!dataModel.getActiveQuery().hasColumnSelections());
+                setDataTableItems();
             }
 
             @Override
@@ -428,7 +470,6 @@ public class EDENFXMain extends Application {
                     if (dataTableView.getColumns().get(i).getText().equals(disabledColumn.getName())) {
                         dataTableView.getItems().clear();
                         dataTableView.getColumns().remove(i);
-
 
                         setDataTableItems();
                         break;
