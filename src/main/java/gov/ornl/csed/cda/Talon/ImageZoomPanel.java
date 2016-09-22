@@ -22,7 +22,7 @@ import static javafx.application.Application.launch;
     - also when multiple ones of them are grouped together in the program the desired behavior is that they
         - all display the image at the same size
         - all display the same portion of a single image
-        - the image may resized underneath the panel
+        - the image may resize underneath the panel
  */
 
 public class ImageZoomPanel extends JComponent {
