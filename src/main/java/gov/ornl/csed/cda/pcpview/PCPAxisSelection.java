@@ -21,11 +21,15 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.util.Pair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
 
 
 public class PCPAxisSelection {
+    private final static Logger log = LoggerFactory.getLogger(PCPAxisSelection.class);
+
     public final static Color DEFAULT_TEXT_FILL = Color.BLACK;
     public final static double DEFAULT_TEXT_SIZE = 8d;
     public final static Color DEFAULT_SELECTION_RECTANGLE_FILL_COLOR = new Color(Color.YELLOW.getRed(), Color.YELLOW.getGreen(), Color.YELLOW.getBlue(), 0.2);
@@ -52,6 +56,15 @@ public class PCPAxisSelection {
         this.selectionRange = selectionRange;
         this.pane = pane;
         this.dataModel = dataModel;
+
+        this.selectionRange.maxValueProperty().addListener((observable, oldValue, newValue) -> {
+            log.debug("Got change notification from ColumnSelectionRange max value property");
+            relayout();
+        });
+        this.selectionRange.minValueProperty().addListener(((observable, oldValue, newValue) -> {
+            log.debug("Got change notification from ColumnSelectionRange min value property");
+            relayout();;
+        }));
 
         double top = Math.min(minValueY, maxValueY);
         double bottom = Math.max(minValueY, maxValueY);

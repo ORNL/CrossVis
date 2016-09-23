@@ -25,17 +25,22 @@ import javafx.scene.SceneAntialiasing;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Callback;
+import javafx.util.converter.NumberStringConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -88,13 +93,17 @@ public class EDENFXMain extends Application {
         columnNameColumn.setMinWidth(160);
         columnNameColumn.setCellValueFactory(new PropertyValueFactory<ColumnSelectionRange, String>("column"));
 
-        TableColumn<ColumnSelectionRange, Double> minColumn = new TableColumn<>("Minimum Value");
+        TableColumn<ColumnSelectionRange, Number> minColumn = new TableColumn<>("Minimum Value");
         minColumn.setMinWidth(200);
-        minColumn.setCellValueFactory(new PropertyValueFactory<ColumnSelectionRange, Double>("minValue"));
+        minColumn.setCellValueFactory(new PropertyValueFactory<ColumnSelectionRange, Number>("minValue"));
+        minColumn.setCellFactory(TextFieldTableCell.<ColumnSelectionRange, Number>forTableColumn(new NumberStringConverter()));
+        minColumn.setEditable(true);
 
-        TableColumn<ColumnSelectionRange, Double> maxColumn = new TableColumn<>("Maximum Value");
+        TableColumn<ColumnSelectionRange, Number> maxColumn = new TableColumn<>("Maximum Value");
         maxColumn.setMinWidth(200);
-        maxColumn.setCellValueFactory(new PropertyValueFactory<ColumnSelectionRange, Double>("maxValue"));
+        maxColumn.setCellValueFactory(new PropertyValueFactory<ColumnSelectionRange, Number>("maxValue"));
+        maxColumn.setCellFactory(TextFieldTableCell.<ColumnSelectionRange, Number>forTableColumn(new NumberStringConverter()));
+        maxColumn.setEditable(true);
 
         queryTableView.getColumns().addAll(columnNameColumn, minColumn, maxColumn);
     }
@@ -182,10 +191,54 @@ public class EDENFXMain extends Application {
         columnTableView.getColumns().addAll(enabledColumn, nameColumn, minColumn, maxColumn, meanColumn, stdevColumn);
     }
 
+    private ToolBar createToolBar(Stage stage) {
+        ToolBar toolBar = new ToolBar();
 
+        ToggleButton summaryDisplayModeButton = new ToggleButton("S");
+        summaryDisplayModeButton.setTooltip(new Tooltip("Summary Display Mode"));
+        ToggleButton histogramDisplayModeButton = new ToggleButton("H");
+        histogramDisplayModeButton.setTooltip(new Tooltip("Histogram Display Mode"));
+        ToggleButton binDisplayModeButton = new ToggleButton("B");
+        binDisplayModeButton.setTooltip(new Tooltip("Binned Parallel Coordinates Display Mode"));
+        ToggleButton lineDisplayModeButton = new ToggleButton("T");
+        lineDisplayModeButton.setTooltip(new Tooltip("Parallel Coordinates Line Display Mode"));
+        ToggleGroup displayModeButtonGroup = new ToggleGroup();
+        displayModeButtonGroup.getToggles().addAll(histogramDisplayModeButton, binDisplayModeButton, lineDisplayModeButton);
+
+        ToggleButton showUnselectedButton = new ToggleButton("U");
+        showUnselectedButton.setTooltip(new Tooltip("Show Unselected Items"));
+        ToggleButton showSelectedButton = new ToggleButton("S");
+        showSelectedButton.setTooltip(new Tooltip("Show Selected Items"));
+
+        Button opacityButton = new Button("O");
+        ColorPicker selectedItemsColorPicker = new ColorPicker();
+        selectedItemsColorPicker.setPromptText("Selected Items");
+        selectedItemsColorPicker.setValue(Color.STEELBLUE);
+
+        toolBar.getItems().addAll(histogramDisplayModeButton, binDisplayModeButton, lineDisplayModeButton, new Separator(),
+                showUnselectedButton, showSelectedButton, new Separator(), opacityButton, selectedItemsColorPicker);
+
+        return toolBar;
+    }
 
     @Override
     public void start(Stage stage) throws Exception {
+        stage.setOnShown(event -> {
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Open CSV File");
+            File file = fileChooser.showOpenDialog(stage);
+            if (file != null) {
+                try {
+                    openCSVFile(file);
+                    displayModeMenu.setDisable(false);
+                    fitPCPAxesToWidthCheckMI.setDisable(false);
+                    changeAxisSpacingMI.setDisable(pcpView.getFitAxisSpacingToWidthEnabled());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
         pcpView = new PCPView();
         pcpView.setDataModel(dataModel);
         pcpView.setPrefHeight(400);
@@ -195,6 +248,8 @@ public class EDENFXMain extends Application {
         pcpScrollPane = new ScrollPane(pcpView);
         pcpScrollPane.setFitToHeight(true);
         pcpScrollPane.setFitToWidth(pcpView.getFitAxisSpacingToWidthEnabled());
+
+        ToolBar toolBar = createToolBar(stage);
 
         MenuBar menuBar = createMenuBar(stage);
 //        menuBar.setUseSystemMenuBar(true);
@@ -218,16 +273,19 @@ public class EDENFXMain extends Application {
 
         tabPane.getTabs().addAll(columnTableTab, dataTableTab, queryTableTab);
 
-
         SplitPane middleSplit = new SplitPane();
         middleSplit.setOrientation(Orientation.VERTICAL);
         middleSplit.getItems().addAll(pcpScrollPane, tabPane);
-        middleSplit.setResizableWithParent(tabPane, false);
+        middleSplit.setResizableWithParent(pcpScrollPane, false);
         middleSplit.setDividerPositions(0.7);
+
+        VBox topContainer = new VBox();
+        topContainer.getChildren().add(menuBar);
+        topContainer.getChildren().add(toolBar);
 
         BorderPane rootNode = new BorderPane();
         rootNode.setCenter(middleSplit);
-        rootNode.setTop(menuBar);
+        rootNode.setTop(topContainer);
 //        rootNode.setLeft(settingsPane);
 
         Scene scene = new Scene(rootNode, 1000, 500, true, SceneAntialiasing.BALANCED);

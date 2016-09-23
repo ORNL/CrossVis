@@ -7,7 +7,9 @@ import javafx.geometry.Point2D;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.SnapshotParameters;
+import javafx.scene.control.Tooltip;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.effect.DropShadow;
 import javafx.scene.effect.GaussianBlur;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.WritableImage;
@@ -127,6 +129,10 @@ public class PCPAxis {
         focusBottomY = 0d;
 
         nameText = new Text(column.getName());
+        // TODO: bind the name to the column name property
+        Tooltip tooltip = new Tooltip();
+        tooltip.textProperty().bindBidirectional(column.nameProperty());
+        Tooltip.install(nameText, tooltip);
         nameText.setFont(new Font(DEFAULT_NAME_TEXT_SIZE));
         nameText.setSmooth(true);
 
