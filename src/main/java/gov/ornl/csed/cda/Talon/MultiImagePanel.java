@@ -154,21 +154,32 @@ public class MultiImagePanel extends JComponent implements ComponentListener, Mo
         if (!imageInfoMap.isEmpty()) {
             g2.setColor(Color.blue);
 
+            // for all images in the directory
             for (ImageInfo info : imageInfoMap.values()) {
 
+                // if this image intersects the screen boundaries
                 if (info.screenRect.intersects(clipRect)) {
 
+                    // retrieve each image to be drawn [try from cache first]
                     BufferedImage image = imageCacheMap.get(info);
+
+                    // if image is not in the cache
                     if (image == null) {
 
+                        // try reading it from disk
                         try {
 
                             image = ImageIO.read(info.file);
+
+                            // if the cache is full
                             if (imageCacheMap.size() == maxImageCacheSize) {
+
+                                // delete image and corresponding info
                                 ImageInfo infoToDelete = imageCacheTimeMap.pollFirstEntry().getValue();
                                 imageCacheMap.remove(infoToDelete);
                             }
-//                            info.lastAccessTime = System.currentTimeMillis();
+
+                            // insert current image into cache and entry into time stamp cache
                             info.lastAccessTime = System.nanoTime();
                             imageCacheMap.put(info, image);
 
@@ -178,6 +189,7 @@ public class MultiImagePanel extends JComponent implements ComponentListener, Mo
                             e.printStackTrace();
                         }
 
+                    // if the image DOES exist in the cache
                     } else {
 
                         // we need to get the info object for this image out of the cache queue

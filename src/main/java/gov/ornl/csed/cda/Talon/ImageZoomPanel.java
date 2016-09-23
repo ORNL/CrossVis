@@ -34,8 +34,7 @@ public class ImageZoomPanel extends JComponent {
 
     public ImageZoomPanel(BufferedImage image) {
         this.image = image;
-        this.setPreferredSize(new Dimension((int)(image.getWidth()*zoom), (int)(image.getHeight()*zoom)));
-        repaint();
+        layoutComponent();
     }
 
     public ImageZoomPanel() {
@@ -49,26 +48,24 @@ public class ImageZoomPanel extends JComponent {
         g2.drawImage(image, 0, 0, this);
     }
 
+    public void layoutComponent() {
+        this.setPreferredSize(new Dimension((int)(image.getWidth()*zoom), (int)(image.getHeight()*zoom)));
+        repaint();
+    }
+
     public void setImage(BufferedImage image) {
         this.image = image;
-        this.setPreferredSize(new Dimension(image.getWidth(), image.getHeight()));
-        this.setPreferredSize(new Dimension((int)(image.getWidth()*zoom), (int)(image.getHeight()*zoom)));
-        repaint();
     }
 
-    public void originalSize() {
+    public static void originalSize() {
         zoom = 1.0;
-        this.setPreferredSize(new Dimension((int)(image.getWidth()*zoom), (int)(image.getHeight()*zoom)));
-        repaint();
     }
 
-    public void zoomIn() {
+    public static void zoomIn() {
         zoom += percentage;
-        this.setPreferredSize(new Dimension((int)(image.getWidth()*zoom), (int)(image.getHeight()*zoom)));
-        repaint();
     }
 
-    public void zoomOut() {
+    public static void zoomOut() {
         zoom -= percentage;
 
         if (zoom < percentage) {
@@ -78,8 +75,6 @@ public class ImageZoomPanel extends JComponent {
                 zoomIn();
             }
         }
-        this.setPreferredSize(new Dimension((int)(image.getWidth()*zoom), (int)(image.getHeight()*zoom)));
-        repaint();
     }
 
     public static void main(String[] args) {
