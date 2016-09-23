@@ -8,9 +8,13 @@ import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.image.Image;
 import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
+import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 
 /**
  * Created by whw on 9/1/16.
@@ -32,14 +36,24 @@ public class ImageZoomPanelTester extends Application {
          * CREATE THE APPROPRIATE PRIMITIVES FOR YOU NEED
          */
 
-        BufferedImage image = new BufferedImage();
         Double imageValue = null;
 
         SwingNode imageZoomPanel = new SwingNode();
 
         MenuItem openSingleImage = new MenuItem("Open Single Image");
         openSingleImage.setOnAction(e -> {
-            imageZoomPanel.getContent().add(new ImageZoomPanel());
+            BufferedImage image = null;
+
+            FileChooser chooser = new FileChooser();
+            File imageFile = chooser.showOpenDialog(primaryStage);
+
+            try {
+                image = ImageIO.read(imageFile);
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
+            imageZoomPanel.setContent(new ImageZoomPanel(image));
+            imageZoomPanel.getContent().repaint();
         });
 
         MenuItem openMultiImages = new MenuItem("Open Multi Images");
