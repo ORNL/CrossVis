@@ -3,6 +3,8 @@ package gov.ornl.csed.cda.Talon;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -14,7 +16,7 @@ import static javafx.application.Application.launch;
  */
 
 /*
-    guys.. what we need is a class that can display a single image within a defined boudary
+    guys.. what we need is a class that can display a single image within a defined boundary
 
     CONSIDERATIONS
     - also when multiple ones of them are grouped together in the program the desired behavior is that they
@@ -32,6 +34,7 @@ public class ImageZoomPanel extends JComponent {
 
     public ImageZoomPanel(BufferedImage image) {
         this.image = image;
+        this.setPreferredSize(new Dimension((int)(image.getWidth()*zoom), (int)(image.getHeight()*zoom)));
         repaint();
     }
 
@@ -49,16 +52,19 @@ public class ImageZoomPanel extends JComponent {
     public void setImage(BufferedImage image) {
         this.image = image;
         this.setPreferredSize(new Dimension(image.getWidth(), image.getHeight()));
+        this.setPreferredSize(new Dimension((int)(image.getWidth()*zoom), (int)(image.getHeight()*zoom)));
         repaint();
     }
 
     public void originalSize() {
         zoom = 1.0;
+        this.setPreferredSize(new Dimension((int)(image.getWidth()*zoom), (int)(image.getHeight()*zoom)));
         repaint();
     }
 
     public void zoomIn() {
         zoom += percentage;
+        this.setPreferredSize(new Dimension((int)(image.getWidth()*zoom), (int)(image.getHeight()*zoom)));
         repaint();
     }
 
@@ -72,6 +78,7 @@ public class ImageZoomPanel extends JComponent {
                 zoomIn();
             }
         }
+        this.setPreferredSize(new Dimension((int)(image.getWidth()*zoom), (int)(image.getHeight()*zoom)));
         repaint();
     }
 
@@ -100,6 +107,7 @@ public class ImageZoomPanel extends JComponent {
 
                 if (image != null) {
                     imageZoomPanel.setImage(image);
+                    imageZoomPanel.revalidate();
                 }
             }
         });
@@ -117,18 +125,23 @@ public class ImageZoomPanel extends JComponent {
         JMenu zoomMenu = new JMenu("Zoom");
 
         JMenuItem zoomIn = new JMenuItem("In");
+        zoomIn.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_PLUS, ActionEvent.SHIFT_MASK));
         zoomIn.addActionListener(e -> {
             imageZoomPanel.zoomIn();
+            imageZoomPanel.revalidate();
         });
 
         JMenuItem zoomOut = new JMenuItem("Out");
+        zoomOut.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_MINUS, ActionEvent.CTRL_MASK));
         zoomOut.addActionListener(e -> {
             imageZoomPanel.zoomOut();
+            imageZoomPanel.revalidate();
         });
 
         JMenuItem zoomOriginal = new JMenuItem("Original");
         zoomOriginal.addActionListener(e -> {
             imageZoomPanel.originalSize();
+            imageZoomPanel.revalidate();
         });
 
         zoomMenu.add(zoomIn);
@@ -139,7 +152,9 @@ public class ImageZoomPanel extends JComponent {
 
         frame.setJMenuBar(menuBar);
 
-        frame.getContentPane().add(imageZoomPanel);
+        JScrollPane imageScrollPane = new JScrollPane(imageZoomPanel);
+
+        frame.getContentPane().add(imageScrollPane);
 
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
