@@ -85,16 +85,18 @@ public class EDENFXMain extends Application {
         queryTableView.setEditable(true);
 
         TableColumn<ColumnSelectionRange, String> columnNameColumn = new TableColumn<>("Column");
-        columnNameColumn.setMinWidth(140);
+        columnNameColumn.setMinWidth(160);
         columnNameColumn.setCellValueFactory(new PropertyValueFactory<ColumnSelectionRange, String>("column"));
 
         TableColumn<ColumnSelectionRange, Double> minColumn = new TableColumn<>("Minimum Value");
+        minColumn.setMinWidth(200);
         minColumn.setCellValueFactory(new PropertyValueFactory<ColumnSelectionRange, Double>("minValue"));
 
         TableColumn<ColumnSelectionRange, Double> maxColumn = new TableColumn<>("Maximum Value");
+        maxColumn.setMinWidth(200);
         maxColumn.setCellValueFactory(new PropertyValueFactory<ColumnSelectionRange, Double>("maxValue"));
 
-        queryTableView.getColumns().addAll(columnNameColumn);
+        queryTableView.getColumns().addAll(columnNameColumn, minColumn, maxColumn);
     }
 
     private void createColumnTableView() {
@@ -425,6 +427,9 @@ public class EDENFXMain extends Application {
         columnTableView.getItems().clear();
         columnTableView.setItems(FXCollections.observableArrayList(dataModel.getColumns()));
 
+        queryTableView.getItems().clear();
+        queryTableView.setItems(dataModel.getActiveQuery().columnSelectionRangeList());
+        
 //        dataTableView.getItems().clear();
         setDataTableColumns();
         setDataTableItems();
@@ -440,18 +445,35 @@ public class EDENFXMain extends Application {
                 log.debug("EDENFXMain queryChanged: " + dataModel.getActiveQuery().hasColumnSelections());
                 removeAllQueriesMI.setDisable(!dataModel.getActiveQuery().hasColumnSelections());
                 setDataTableItems();
+//                if (dataModel.getActiveQuery().hasColumnSelections()) {
+//                    queryTableView.setItems(FXCollections.observableArrayList(dataModel.getActiveQuery().getAllColumnSelectionRanges()));
+//                } else {
+//                    queryTableView.getItems().clear();
+//                }
             }
 
             @Override
             public void dataModelColumnSelectionAdded(DataModel dataModel, ColumnSelectionRange columnSelectionRange) {
                 removeAllQueriesMI.setDisable(!dataModel.getActiveQuery().hasColumnSelections());
                 setDataTableItems();
+
+//                if (dataModel.getActiveQuery().hasColumnSelections()) {
+//                    queryTableView.setItems(FXCollections.observableArrayList(dataModel.getActiveQuery().getAllColumnSelectionRanges()));
+//                } else {
+//                    queryTableView.getItems().clear();
+//                }
             }
 
             @Override
             public void dataModelColumnSelectionRemoved(DataModel dataModel, ColumnSelectionRange columnSelectionRange) {
                 removeAllQueriesMI.setDisable(!dataModel.getActiveQuery().hasColumnSelections());
                 setDataTableItems();
+
+//                if (dataModel.getActiveQuery().hasColumnSelections()) {
+//                    queryTableView.setItems(FXCollections.observableArrayList(dataModel.getActiveQuery().getAllColumnSelectionRanges()));
+//                } else {
+//                    queryTableView.getItems().clear();
+//                }
             }
 
             @Override

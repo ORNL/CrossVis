@@ -642,7 +642,7 @@ public class DataModel {
 			}
 			disabledColumns.add(disabledColumn);
             columns.remove(disabledColumn);
-            clearActiveQueryColumnSelection(disabledColumn);
+            clearActiveQueryColumnSelections(disabledColumn);
             for (Column column : columns) {
                 column.getSummaryStats().getCorrelationCoefficients().remove(disabledColumnIndex);
                 column.getSummaryStats().getHistogram2DList().remove(disabledColumnIndex);
@@ -703,7 +703,7 @@ public class DataModel {
 				}
 				disabledColumns.add(column);
                 columns.remove(column);
-                clearActiveQueryColumnSelection(column);
+                clearActiveQueryColumnSelections(column);
 			}
 		}
 
@@ -733,12 +733,14 @@ public class DataModel {
 	}
 
 	public void clearColumnSelectionRange (ColumnSelectionRange selectionRange) {
-		ColumnSelection columnSelection = selectionRange.getColumnSelection();
-		columnSelection.removeColumnSelectionRange(selectionRange);
-		if (columnSelection.getColumnSelectionRangeCount() == 0) {
-			getActiveQuery().clearColumnSelection(columnSelection.getColumn());
-		}
-		
+//		ColumnSelection columnSelection = selectionRange.getColumnSelection();
+//		columnSelection.removeColumnSelectionRange(selectionRange);
+//		if (columnSelection.getColumnSelectionRangeCount() == 0) {
+//			getActiveQuery().clearColumnSelection(columnSelection.getColumn());
+//		}
+
+		getActiveQuery().removeColumnSelectionRange(selectionRange);
+
 		setQueriedTuples();
 		this.fireColumnSelectionRemoved(selectionRange);
 	}
@@ -797,9 +799,9 @@ public class DataModel {
 //		activeQuery = new Query("Q"+(nextQueryNumber++));
 	}
 
-	public void clearActiveQueryColumnSelection(Column column) {
+	public void clearActiveQueryColumnSelections(Column column) {
 		if (activeQuery != null) {
-            getActiveQuery().clearColumnSelection(column);
+            getActiveQuery().removeColumnSelectionRanges(column);
 			fireQueryChanged();
 		}
 	}
@@ -823,16 +825,21 @@ public class DataModel {
 //	}
 
 	public ColumnSelectionRange addColumnSelectionRangeToActiveQuery(Column column, double minValue, double maxValue) {
-		ColumnSelection columnSelection = getActiveQuery().getColumnSelection(column);
-		if (columnSelection == null) {
-			columnSelection = new ColumnSelection(activeQuery, column);
-			getActiveQuery().addColumnSelection(columnSelection);
-		}
+		ColumnSelectionRange newColumnSelectionRange = new ColumnSelectionRange(column, minValue, maxValue);
+		getActiveQuery().addColumnSelectionRange(newColumnSelectionRange);
 
-		ColumnSelectionRange selectionRange = columnSelection.addColumnSelectionRange(minValue, maxValue);
-
-		fireColumnSelectionAdded(selectionRange);
-		return selectionRange;
+		fireColumnSelectionAdded(newColumnSelectionRange);
+		return newColumnSelectionRange;
+//		ColumnSelection columnSelection = getActiveQuery().getColumnSelection(column);
+//		if (columnSelection == null) {
+//			columnSelection = new ColumnSelection(activeQuery, column);
+//			getActiveQuery().addColumnSelection(columnSelection);
+//		}
+//
+//		ColumnSelectionRange selectionRange = columnSelection.addColumnSelectionRange(minValue, maxValue);
+//
+//		fireColumnSelectionAdded(selectionRange);
+//		return selectionRange;
 	}
 
     public void orderColumnsByCorrelation (Column compareColumn, boolean useQueryCorrelations) {
@@ -1037,6 +1044,7 @@ public class DataModel {
 	}
 
 
+	// Working here 9/22/2016
 	public void setQueriedTuples() {
 		getActiveQuery().clearTuples();
 
@@ -1044,18 +1052,20 @@ public class DataModel {
 			return;
 		}
 
-		if (!getActiveQuery().getColumnSelections().isEmpty()) {
+		if (!getActiveQuery().getAllColumnSelectionRanges().isEmpty()) {
 			for (int ituple = 0; ituple < getTupleCount(); ituple++) {
 				Tuple currentTuple = getTuple(ituple);
 				currentTuple.setQueryFlag(true);
 
 				for (int icolumn = 0; icolumn < columns.size(); icolumn++) {
 					Column column = columns.get(icolumn);
-					ColumnSelection columnSelection = getActiveQuery().getColumnSelection(column);
-					if (columnSelection != null && !columnSelection.getColumnSelectionRanges().isEmpty()) {
+					ArrayList<ColumnSelectionRange> columnSelectionRanges = getActiveQuery().getColumnSelectionRanges(column);
+//					ColumnSelection columnSelection = getActiveQuery().getColumnSelection(column);
+//					if (columnSelection != null && !columnSelection.getColumnSelectionRanges().isEmpty()) {
+					if ((columnSelectionRanges != null) && (!columnSelectionRanges.isEmpty())) {
 						boolean insideSelection = false;
 
-						for (ColumnSelectionRange selectionRange : columnSelection.getColumnSelectionRanges()) {
+						for (ColumnSelectionRange selectionRange : columnSelectionRanges) {
 							if ((currentTuple.getElement(icolumn) <= selectionRange.getMaxValue()) &&
 									(currentTuple.getElement(icolumn) >= selectionRange.getMinValue())) {
 								insideSelection = true;

@@ -23,7 +23,7 @@ public class ColumnSelection {
     public ColumnSelectionRange addColumnSelectionRange(double minValue, double maxValue) {
         // TODO: first see if this range overlaps other existing selection range objects
         // if it does then merge the two into a new column selection range
-        ColumnSelectionRange selectionRange = new ColumnSelectionRange(this, minValue, maxValue);
+        ColumnSelectionRange selectionRange = new ColumnSelectionRange(column, minValue, maxValue);
         selectionRangeArrayList.add(selectionRange);
         return selectionRange;
     }
