@@ -7,6 +7,7 @@ import javafx.geometry.Point2D;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.SnapshotParameters;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.effect.GaussianBlur;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.WritableImage;
@@ -20,6 +21,7 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
+import javafx.util.converter.NumberStringConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,6 +40,7 @@ public class PCPAxis {
 
 
     public final static double DEFAULT_NAME_LABEL_HEIGHT = 30d;
+    public final static double DEFAULT_NAME_TEXT_SIZE = 12d;
     public final static double DEFAULT_CONTEXT_HEIGHT = 20d;
     public final static double DEFAULT_BAR_WIDTH = 10d;
     public final static double DEFAULT_TEXT_SIZE = 10d;
@@ -64,11 +67,16 @@ public class PCPAxis {
 
     private Rectangle verticalBar;
 
+    // axis column name label
     private Text nameText;
 
+    // value labels
+    private Text maxValueText;
+    private Text minValueText;
+    private Text focusMaxValueText;
+    private Text focusMinValueText;
+
     // axis relocation stuff
-    private double dragAnchorX;
-    private Group dragGraphicsGroup;
     private WritableImage dragImage;
     private ImageView dragImageView;
 
@@ -119,8 +127,27 @@ public class PCPAxis {
         focusBottomY = 0d;
 
         nameText = new Text(column.getName());
-        nameText.setFont(new Font(DEFAULT_TEXT_SIZE));
+        nameText.setFont(new Font(DEFAULT_NAME_TEXT_SIZE));
         nameText.setSmooth(true);
+
+//        columnNameColumn.setCellValueFactory(new PropertyValueFactory<ColumnSelectionRange, String>("column"));
+        minValueText = new Text();
+        minValueText.textProperty().bindBidirectional(column.minValueProperty(), new NumberStringConverter());
+        minValueText.setFont(new Font(DEFAULT_TEXT_SIZE));
+        minValueText.setSmooth(true);
+
+        maxValueText = new Text();
+        maxValueText.textProperty().bindBidirectional(column.maxValueProperty(), new NumberStringConverter());
+        maxValueText.setFont(new Font(DEFAULT_TEXT_SIZE));
+        maxValueText.setSmooth(true);
+
+        focusMinValueText = new Text();
+        focusMinValueText.setFont(new Font(DEFAULT_TEXT_SIZE));
+        focusMinValueText.setSmooth(true);
+
+        focusMaxValueText = new Text();
+        focusMaxValueText.setFont(new Font(DEFAULT_TEXT_SIZE));
+        focusMaxValueText.setSmooth(true);
 
         verticalBar = new Rectangle();
         verticalBar.setStroke(Color.DARKGRAY);
@@ -133,7 +160,8 @@ public class PCPAxis {
         topFocusCrossBarLine = makeLine();
         bottomFocusCrossBarLine = makeLine();
 
-        graphicsGroup = new Group(verticalBar, topCrossBarLine, bottomCrossBarLine, topFocusCrossBarLine, bottomFocusCrossBarLine, nameText);
+        graphicsGroup = new Group(verticalBar, topCrossBarLine, bottomCrossBarLine, topFocusCrossBarLine,
+                bottomFocusCrossBarLine, nameText, minValueText, maxValueText, focusMinValueText, focusMaxValueText);
 
         overallDispersionRectangle = new Rectangle();
         overallDispersionRectangle.setFill(Color.LIGHTSTEELBLUE);
@@ -161,26 +189,6 @@ public class PCPAxis {
 
     public Group getHistogramBinRectangleGroup() { return histogramBinRectangleGroup; }
     public Group getQueryHistogramBinRectangleGroup() { return queryHistogramBinRectangleGroup; }
-
-    public Group createDragGroup () {
-        // copy axis info
-        Text nameText = new Text(column.getName());
-        nameText.setFont(new Font(DEFAULT_TEXT_SIZE));
-        nameText.setSmooth(true);
-
-        Rectangle verticalBar = new Rectangle();
-        verticalBar.setStroke(Color.DARKGRAY);
-        verticalBar.setFill(Color.WHITESMOKE);
-        verticalBar.setSmooth(true);
-        verticalBar.setStrokeWidth(DEFAULT_STROKE_WIDTH);
-
-        Line topCrossBarLine = makeLine();
-        Line bottomCrossBarLine = makeLine();
-        Line topFocusCrossBarLine = makeLine();
-        Line bottomFocusCrossBarLine = makeLine();
-
-        return new Group(verticalBar, topCrossBarLine, bottomCrossBarLine, topFocusCrossBarLine, bottomFocusCrossBarLine, nameText);
-    }
 
     private void registerListeners() {
         PCPAxis thisPCPAxis = this;
@@ -317,7 +325,7 @@ public class PCPAxis {
         double left = centerX - (width / 2.);
         bounds = new Rectangle(left, topY, width, height);
         barTopY = topY + DEFAULT_NAME_LABEL_HEIGHT;
-        barBottomY = bounds.getY() + bounds.getHeight();
+        barBottomY = bounds.getY() + bounds.getHeight() - maxValueText.getLayoutBounds().getHeight();
         focusTopY = topY + DEFAULT_NAME_LABEL_HEIGHT + contextRegionHeight;
         focusBottomY = barBottomY - contextRegionHeight;
 
@@ -346,11 +354,18 @@ public class PCPAxis {
         bottomFocusCrossBarLine.setStartX(centerX - (DEFAULT_BAR_WIDTH / 2.));
         bottomFocusCrossBarLine.setEndX(centerX + (DEFAULT_BAR_WIDTH / 2.));
 
-        nameText.setFont(new Font(DEFAULT_TEXT_SIZE));
+//        nameText.setFont(new Font(DEFAULT_TEXT_SIZE));
 //        adjustTextSize(nameText, width, DEFAULT_TEXT_SIZE);
         nameText.setX(bounds.getX() + ((width - nameText.getLayoutBounds().getWidth()) / 2.));
-        nameText.setY(barTopY - (DEFAULT_NAME_LABEL_HEIGHT / 2.));
-        nameText.setRotate(-10.);
+        nameText.setY(bounds.getY() + nameText.getLayoutBounds().getHeight());
+//        nameText.setY(barTopY - (DEFAULT_NAME_LABEL_HEIGHT / 2.));
+//        nameText.setRotate(-10.);
+
+        minValueText.setX(bounds.getX() + ((width - minValueText.getLayoutBounds().getWidth()) / 2.));
+        minValueText.setY(barBottomY + minValueText.getLayoutBounds().getHeight());
+
+        maxValueText.setX(bounds.getX() + ((width - maxValueText.getLayoutBounds().getWidth()) / 2.));
+        maxValueText.setY(barTopY - 4d);
 
         if (!axisSelectionList.isEmpty()) {
             for (PCPAxisSelection pcpAxisSelection : axisSelectionList) {
