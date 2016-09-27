@@ -4,6 +4,7 @@ import gov.ornl.csed.cda.datatable.*;
 import gov.ornl.csed.cda.util.GraphicsUtil;
 import javafx.event.EventHandler;
 import javafx.geometry.Point2D;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.SnapshotParameters;
@@ -81,6 +82,7 @@ public class PCPAxis {
     // axis relocation stuff
     private WritableImage dragImage;
     private ImageView dragImageView;
+    private Group axisDraggingGraphicsGroup;
 
     // summary statistics objects
     private Group overallSummaryStatisticsGroup;
@@ -196,6 +198,15 @@ public class PCPAxis {
     public Group getHistogramBinRectangleGroup() { return histogramBinRectangleGroup; }
     public Group getQueryHistogramBinRectangleGroup() { return queryHistogramBinRectangleGroup; }
 
+    private void makeAxisDraggingGraphicsGroup() {
+        Rectangle rectangle = new Rectangle(verticalBar.getX(), verticalBar.getY(), verticalBar.getWidth(), verticalBar.getHeight());
+        rectangle.setStroke(verticalBar.getStroke());
+        rectangle.setFill(verticalBar.getFill());
+
+        axisDraggingGraphicsGroup = new Group();
+        axisDraggingGraphicsGroup.getChildren().add(rectangle);
+    }
+
     private void registerListeners() {
         PCPAxis thisPCPAxis = this;
 
@@ -214,18 +225,30 @@ public class PCPAxis {
                     dragging = true;
                     SnapshotParameters snapshotParameters = new SnapshotParameters();
                     snapshotParameters.setFill(Color.TRANSPARENT);
-                    dragImage = graphicsGroup.snapshot(snapshotParameters, null);
+                    dragImage = pane.snapshot(snapshotParameters, null);
+
                     dragImageView = new ImageView(dragImage);
-                    dragImageView.setX(centerX - (dragImage.getWidth() / 2d));
-                    dragImageView.setY(graphicsGroup.getLayoutY());
+                    dragImageView.setViewport(new Rectangle2D(bounds.getX(), bounds.getY(), bounds.getWidth(), bounds.getHeight()));
+                    dragImageView.setX(centerX - (dragImageView.getLayoutBounds().getWidth() / 2d));
+                    dragImageView.setY(graphicsGroup.getLayoutY() + 5);
+//                    log.debug("GraphicsGroup.getLayout() = " + graphicsGroup.getLayoutBounds());
 
                     // blur everything except the drag image view
-                    for (Node node : pane.getChildren()) {
-                        node.setEffect(new GaussianBlur());
-                    }
+//                    for (Node node : pane.getChildren()) {
+//                        node.setEffect(new GaussianBlur());
+//                    }
+
+//                    makeAxisDraggingGraphicsGroup();
+//                    pane.getChildren().add(axisDraggingGraphicsGroup);
+                    dragImageView.setEffect(new DropShadow());
                     pane.getChildren().add(dragImageView);
                 }
-                dragImageView.setX(event.getX()- (dragImage.getWidth() / 2d));
+
+//                axisDraggingGraphicsGroup.relocate(event.getX() - axisDraggingGraphicsGroup.getLayoutBounds().getWidth()/2d, verticalBar.getY() + 10);
+//                log.debug("event.getX()= " + event.getX() + " event.getSceneX()= " + event.getSceneX() + " event.getScreenX()= " + event.getScreenX());
+//                log.debug("dragImage.getFitWidth() = " + dragImageView.getFitWidth() + " dragImage.getWidth() = " + dragImage.getWidth());
+//                log.debug("dragImageView.getLayoutBounds().getWidth() = " + dragImageView.getLayoutBounds().getWidth());
+                dragImageView.setX(event.getX() - (dragImageView.getLayoutBounds().getWidth() / 2d));
             }
         });
 
@@ -240,10 +263,11 @@ public class PCPAxis {
                     dragging = false;
 
                     // calculate the new index position for the column associated with this axis
-                    double dragImageCenterX = dragImageView.getX() + (dragImageView.getFitWidth() / 2.);
+                    double dragImageCenterX = dragImageView.getX() + (dragImageView.getLayoutBounds().getWidth() / 2.);
                     int newColumnIndex = (int) dragImageCenterX / pcpView.getAxisSpacing();
                     newColumnIndex = GraphicsUtil.constrain(newColumnIndex, 0, dataModel.getColumnCount() - 1);
 
+                    log.debug("newColumnIndex is " + newColumnIndex);
                     if (!(newColumnIndex == dataModel.getColumnIndex(column))) {
                         dataModel.changeColumnOrder(getColumn(), newColumnIndex);
                     }

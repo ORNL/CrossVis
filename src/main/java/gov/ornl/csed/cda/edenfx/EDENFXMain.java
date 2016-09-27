@@ -29,9 +29,7 @@ import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -72,6 +70,21 @@ public class EDENFXMain extends Application {
     private TableView<ColumnSelectionRange> queryTableView;
     private TableView<Tuple> dataTableView;
     private MenuItem removeAllQueriesMI;
+
+    // toggle group for toolbar buttons to change display mode of PCPView
+    private ToggleGroup displayModeMenuGroup;
+    private RadioMenuItem summaryDisplayModeMenuItem;
+    private RadioMenuItem histogramDisplayModeMenuItem;
+    private RadioMenuItem binDisplayModeMenuItem;
+    private RadioMenuItem lineDisplayModeMenuItem;
+//    private HashMap<PCPView.DISPLAY_MODE, ToggleButton> displayModeButtonMap;
+
+    private ToggleGroup displayModeButtonGroup;
+//    private HashMap<PCPView.DISPLAY_MODE, RadioMenuItem> displayModeMenuItemMap;
+    private ToggleButton summaryDisplayModeButton;
+    private ToggleButton histogramDisplayModeButton;
+    private ToggleButton binDisplayModeButton;
+    private ToggleButton lineDisplayModeButton;
 
     @Override
     public void init() {
@@ -194,29 +207,83 @@ public class EDENFXMain extends Application {
     private ToolBar createToolBar(Stage stage) {
         ToolBar toolBar = new ToolBar();
 
-        ToggleButton summaryDisplayModeButton = new ToggleButton("S");
+        // Make toggle button group for display mode shortcut buttons
+//        displayModeButtonMap = new HashMap<>();
+        summaryDisplayModeButton = new ToggleButton("S");
         summaryDisplayModeButton.setTooltip(new Tooltip("Summary Display Mode"));
-        ToggleButton histogramDisplayModeButton = new ToggleButton("H");
+//        displayModeButtonMap.put(PCPView.DISPLAY_MODE.HISTOGRAM, summaryDisplayModeButton);
+        histogramDisplayModeButton = new ToggleButton("H");
         histogramDisplayModeButton.setTooltip(new Tooltip("Histogram Display Mode"));
-        ToggleButton binDisplayModeButton = new ToggleButton("B");
+//        displayModeButtonMap.put(PCPView.DISPLAY_MODE.HISTOGRAM, histogramDisplayModeButton);
+        binDisplayModeButton = new ToggleButton("B");
         binDisplayModeButton.setTooltip(new Tooltip("Binned Parallel Coordinates Display Mode"));
-        ToggleButton lineDisplayModeButton = new ToggleButton("T");
+//        displayModeButtonMap.put(PCPView.DISPLAY_MODE.PCP_BINS, binDisplayModeButton);
+        lineDisplayModeButton = new ToggleButton("L");
         lineDisplayModeButton.setTooltip(new Tooltip("Parallel Coordinates Line Display Mode"));
-        ToggleGroup displayModeButtonGroup = new ToggleGroup();
-        displayModeButtonGroup.getToggles().addAll(histogramDisplayModeButton, binDisplayModeButton, lineDisplayModeButton);
+//        displayModeButtonMap.put(PCPView.DISPLAY_MODE.PCP_LINES, lineDisplayModeButton);
+        displayModeButtonGroup = new ToggleGroup();
+        displayModeButtonGroup.getToggles().addAll(summaryDisplayModeButton, histogramDisplayModeButton, binDisplayModeButton, lineDisplayModeButton);
 
+        if (pcpView.getDisplayMode() == PCPView.DISPLAY_MODE.HISTOGRAM) {
+            displayModeButtonGroup.selectToggle(histogramDisplayModeButton);
+        } else if (pcpView.getDisplayMode() == PCPView.DISPLAY_MODE.PCP_BINS) {
+            displayModeButtonGroup.selectToggle(binDisplayModeButton);
+        } else if (pcpView.getDisplayMode() == PCPView.DISPLAY_MODE.PCP_LINES) {
+            displayModeButtonGroup.selectToggle(lineDisplayModeButton);
+        }
+
+        displayModeButtonGroup.selectedToggleProperty().addListener((observable, oldValue, newValue) -> {
+            log.debug("Button DisplayMode Group changed");
+            if (newValue != null) {
+                if (newValue == summaryDisplayModeButton) {
+                    pcpView.setDisplayMode(PCPView.DISPLAY_MODE.HISTOGRAM);
+                    displayModeMenuGroup.selectToggle(summaryDisplayModeMenuItem);
+                } else if (newValue == histogramDisplayModeButton) {
+                    pcpView.setDisplayMode(PCPView.DISPLAY_MODE.HISTOGRAM);
+                    displayModeMenuGroup.selectToggle(histogramDisplayModeMenuItem);
+                } else if (newValue == binDisplayModeButton) {
+                    pcpView.setDisplayMode(PCPView.DISPLAY_MODE.PCP_BINS);
+                    displayModeMenuGroup.selectToggle(binDisplayModeMenuItem);
+                } else if (newValue == lineDisplayModeButton) {
+                    pcpView.setDisplayMode(PCPView.DISPLAY_MODE.PCP_LINES);
+                    displayModeMenuGroup.selectToggle(lineDisplayModeMenuItem);
+                }
+
+//                pcpView.setDisplayMode(PCPView.DISPLAY_MODE.PCP_LINES);
+
+//                displayModeMenuGroup.selectToggle(displayModeMenuItemMap.get(newDisplayMode));
+            }
+        });
+
+        // make toggle buttons for showing/hiding selected/unselected items
         ToggleButton showUnselectedButton = new ToggleButton("U");
         showUnselectedButton.setTooltip(new Tooltip("Show Unselected Items"));
+        showUnselectedButton.selectedProperty().bindBidirectional(pcpView.showUnselectedItems());
         ToggleButton showSelectedButton = new ToggleButton("S");
+        showSelectedButton.selectedProperty().bindBidirectional(pcpView.showSelectedItems());
         showSelectedButton.setTooltip(new Tooltip("Show Selected Items"));
 
-        Button opacityButton = new Button("O");
-        ColorPicker selectedItemsColorPicker = new ColorPicker();
-        selectedItemsColorPicker.setPromptText("Selected Items");
-        selectedItemsColorPicker.setValue(Color.STEELBLUE);
+        // create selected items color modification UI components
+        HBox selectedItemsColorBox = new HBox();
+        selectedItemsColorBox.setAlignment(Pos.CENTER);
 
+        ColorPicker selectedItemsColorPicker = new ColorPicker();
+        selectedItemsColorPicker.valueProperty().bindBidirectional(pcpView.selectedItemsColor());
+        selectedItemsColorPicker.getStyleClass().add("button");
+        selectedItemsColorBox.getChildren().addAll(new Label(" Selected Color: "), selectedItemsColorPicker);
+
+        // create unselected items color modification UI components
+        HBox unselectedItemsColorBox = new HBox();
+        unselectedItemsColorBox.setAlignment(Pos.CENTER);
+
+        ColorPicker unselectedItemsColorPicker = new ColorPicker();
+        unselectedItemsColorPicker.getStyleClass().add("button");
+        unselectedItemsColorPicker.valueProperty().bindBidirectional(pcpView.unselectedItemsColor());
+        unselectedItemsColorBox.getChildren().addAll(new Label(" Unselected Color: "), unselectedItemsColorPicker);
+
+        // add all items to layout
         toolBar.getItems().addAll(histogramDisplayModeButton, binDisplayModeButton, lineDisplayModeButton, new Separator(),
-                showUnselectedButton, showSelectedButton, new Separator(), opacityButton, selectedItemsColorPicker);
+                showUnselectedButton, showSelectedButton, new Separator(), selectedItemsColorBox, unselectedItemsColorBox);
 
         return toolBar;
     }
@@ -395,26 +462,53 @@ public class EDENFXMain extends Application {
 
         displayModeMenu = new Menu("Display Mode");
         displayModeMenu.setDisable(true);
-        final ToggleGroup displayModeGroup = new ToggleGroup();
-        RadioMenuItem item = new RadioMenuItem("Histograms");
-        item.setToggleGroup(displayModeGroup);
-        displayModeMenu.getItems().add(item);
+        displayModeMenuGroup = new ToggleGroup();
+//        displayModeMenuItemMap = new HashMap<>();
+
+        histogramDisplayModeMenuItem = new RadioMenuItem("Histograms");
+        histogramDisplayModeMenuItem.setToggleGroup(displayModeMenuGroup);
+//        displayModeMenu.getItems().add(item);
+//        displayModeMenuItemMap.put(PCPView.DISPLAY_MODE.HISTOGRAM, item);
         if (pcpView.getDisplayMode() == PCPView.DISPLAY_MODE.HISTOGRAM) {
-            item.setSelected(true);
+            histogramDisplayModeMenuItem.setSelected(true);
         }
-        item = new RadioMenuItem("Parallel Coordinates Bins");
-        item.setToggleGroup(displayModeGroup);
-        displayModeMenu.getItems().add(item);
+        binDisplayModeMenuItem = new RadioMenuItem("Parallel Coordinates Bins");
+        binDisplayModeMenuItem.setToggleGroup(displayModeMenuGroup);
+//        displayModeMenu.getItems().add(item);
+//        displayModeMenuItemMap.put(PCPView.DISPLAY_MODE.PCP_BINS, item);
         if (pcpView.getDisplayMode() == PCPView.DISPLAY_MODE.PCP_BINS) {
-            item.setSelected(true);
+            binDisplayModeMenuItem.setSelected(true);
         }
-        item = new RadioMenuItem("Parallel Coordinates Lines");
-        item.setToggleGroup(displayModeGroup);
-        displayModeMenu.getItems().add(item);
+        lineDisplayModeMenuItem = new RadioMenuItem("Parallel Coordinates Lines");
+        lineDisplayModeMenuItem.setToggleGroup(displayModeMenuGroup);
+//        displayModeMenu.getItems().add(item);
+//        displayModeMenuItemMap.put(PCPView.DISPLAY_MODE.PCP_LINES, item);
         if (pcpView.getDisplayMode() == PCPView.DISPLAY_MODE.PCP_LINES) {
-            item.setSelected(true);
+            lineDisplayModeMenuItem.setSelected(true);
         }
+        displayModeMenu.getItems().addAll(histogramDisplayModeMenuItem, binDisplayModeMenuItem, lineDisplayModeMenuItem);
         viewMenu.getItems().add(displayModeMenu);
+
+        // create listener for display mode menu group
+        displayModeMenuGroup.selectedToggleProperty().addListener(new ChangeListener<Toggle>() {
+            @Override
+            public void changed(ObservableValue<? extends Toggle> observable, Toggle oldValue, Toggle newValue) {
+                log.debug("Menu Display Mode group changed");
+                if (newValue != null) {
+                    RadioMenuItem toggleItem = (RadioMenuItem)newValue;
+                    PCPView.DISPLAY_MODE newDisplayMode = displayModeMap.get(toggleItem.getText());
+                    if (newDisplayMode == PCPView.DISPLAY_MODE.HISTOGRAM) {
+                        displayModeButtonGroup.selectToggle(histogramDisplayModeButton);
+                    } else if (newDisplayMode == PCPView.DISPLAY_MODE.PCP_BINS) {
+                        displayModeButtonGroup.selectToggle(binDisplayModeButton);
+                    } else if (newDisplayMode == PCPView.DISPLAY_MODE.PCP_LINES) {
+                        displayModeButtonGroup.selectToggle(lineDisplayModeButton);
+                    }
+
+                    pcpView.setDisplayMode(newDisplayMode);
+                }
+            }
+        });
 
         axisLayoutMenu = new Menu("Axis Layout");
         fitPCPAxesToWidthCheckMI = new CheckMenuItem("Fit Axis Spacing to Width");
@@ -439,17 +533,6 @@ public class EDENFXMain extends Application {
 
         axisLayoutMenu.getItems().addAll(fitPCPAxesToWidthCheckMI, changeAxisSpacingMI);
         viewMenu.getItems().add(axisLayoutMenu);
-
-        displayModeGroup.selectedToggleProperty().addListener(new ChangeListener<Toggle>() {
-            @Override
-            public void changed(ObservableValue<? extends Toggle> observable, Toggle oldValue, Toggle newValue) {
-                if (newValue != null) {
-                    RadioMenuItem toggleItem = (RadioMenuItem)newValue;
-                    PCPView.DISPLAY_MODE newDisplayMode = displayModeMap.get(toggleItem.getText());
-                    pcpView.setDisplayMode(newDisplayMode);
-                }
-            }
-        });
 
         // create menu item to remove all active queries
         removeAllQueriesMI = new MenuItem("Remove All Range Queries");

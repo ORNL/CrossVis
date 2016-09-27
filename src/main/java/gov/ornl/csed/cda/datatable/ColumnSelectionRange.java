@@ -10,17 +10,10 @@ public class ColumnSelectionRange {
     private DoubleProperty minValue;
     private DoubleProperty maxValue;
 
-//    private ColumnSelection columnSelection;
-//    private double minValue;
-//    private double maxValue;
-
     public ColumnSelectionRange(Column column, double minValue, double maxValue) {
         this.column = new SimpleObjectProperty<Column>(column);
         this.minValue = new SimpleDoubleProperty(minValue);
         this.maxValue = new SimpleDoubleProperty(maxValue);
-//        this.columnSelection = columnSelection;
-//        this.minValue = minValue;
-//        this.maxValue = maxValue;
     }
 
     public final Column getColumn() { return column.get(); }
