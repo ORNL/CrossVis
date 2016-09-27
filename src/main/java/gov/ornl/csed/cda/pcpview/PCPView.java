@@ -671,29 +671,45 @@ public class PCPView extends Region {
         lineGC.setLineWidth(2d);
 
         if ((PCPBinSetList != null) && (!PCPBinSetList.isEmpty())) {
-            if (isShowingUnselectedItems()) {
-                for (PCPBinSet binSet : PCPBinSetList) {
-                    for (PCPBin bin : binSet.getBins()) {
-                        Color binColor = new Color(getUnselectedItemsColor().getRed(), getUnselectedItemsColor().getGreen(),
-                                getUnselectedItemsColor().getBlue(), bin.fillColor.getOpacity());
-                        lineGC.setFill(binColor);
-                        double xValues[] = new double[]{bin.left, bin.right, bin.right, bin.left};
-                        double yValues[] = new double[]{bin.leftTop, bin.rightTop, bin.rightBottom, bin.leftBottom};
-                        lineGC.fillPolygon(xValues, yValues, xValues.length);
-                    }
-                }
-            }
 
-            if (isShowingSelectedItems()) {
-                for (PCPBinSet binSet : PCPBinSetList) {
-                    for (PCPBin bin : binSet.getBins()) {
-                        if (bin.queryCount > 0) {
-                            //                        lineGC.setFill(bin.queryFillColor);
-                            Color binColor = new Color(getSelectedItemsColor().getRed(), getSelectedItemsColor().getGreen(),
-                                    getSelectedItemsColor().getBlue(), bin.queryFillColor.getOpacity());
+            if (dataModel.getActiveQuery().hasColumnSelections()) {
+                if (isShowingUnselectedItems()) {
+                    for (PCPBinSet binSet : PCPBinSetList) {
+                        for (PCPBin bin : binSet.getBins()) {
+                            Color binColor = new Color(getUnselectedItemsColor().getRed(), getUnselectedItemsColor().getGreen(),
+                                    getUnselectedItemsColor().getBlue(), bin.fillColor.getOpacity());
                             lineGC.setFill(binColor);
                             double xValues[] = new double[]{bin.left, bin.right, bin.right, bin.left};
-                            double yValues[] = new double[]{bin.leftQueryTop, bin.rightQueryTop, bin.rightQueryBottom, bin.leftQueryBottom};
+                            double yValues[] = new double[]{bin.leftTop, bin.rightTop, bin.rightBottom, bin.leftBottom};
+                            lineGC.fillPolygon(xValues, yValues, xValues.length);
+                        }
+                    }
+                }
+
+                if (isShowingSelectedItems()) {
+                    for (PCPBinSet binSet : PCPBinSetList) {
+                        for (PCPBin bin : binSet.getBins()) {
+                            if (bin.queryCount > 0) {
+                                //                        lineGC.setFill(bin.queryFillColor);
+                                Color binColor = new Color(getSelectedItemsColor().getRed(), getSelectedItemsColor().getGreen(),
+                                        getSelectedItemsColor().getBlue(), bin.queryFillColor.getOpacity());
+                                lineGC.setFill(binColor);
+                                double xValues[] = new double[]{bin.left, bin.right, bin.right, bin.left};
+                                double yValues[] = new double[]{bin.leftQueryTop, bin.rightQueryTop, bin.rightQueryBottom, bin.leftQueryBottom};
+                                lineGC.fillPolygon(xValues, yValues, xValues.length);
+                            }
+                        }
+                    }
+                }
+            } else {
+                if (isShowingSelectedItems()) {
+                    for (PCPBinSet binSet : PCPBinSetList) {
+                        for (PCPBin bin : binSet.getBins()) {
+                            Color binColor = new Color(getSelectedItemsColor().getRed(), getSelectedItemsColor().getGreen(),
+                                    getSelectedItemsColor().getBlue(), bin.fillColor.getOpacity());
+                            lineGC.setFill(binColor);
+                            double xValues[] = new double[]{bin.left, bin.right, bin.right, bin.left};
+                            double yValues[] = new double[]{bin.leftTop, bin.rightTop, bin.rightBottom, bin.leftBottom};
                             lineGC.fillPolygon(xValues, yValues, xValues.length);
                         }
                     }

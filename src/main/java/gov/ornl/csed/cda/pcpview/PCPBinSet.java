@@ -28,6 +28,8 @@ public class PCPBinSet {
     private PCPAxis rightAxis;
     private DataModel dataModel;
 
+    private int binsWithQueries;
+
     private ArrayList<PCPBin> bins;
 
     public PCPBinSet(PCPAxis leftAxis, PCPAxis rightAxis, DataModel dataModel) {
@@ -40,6 +42,8 @@ public class PCPBinSet {
         minCountFillColor = DEFAULT_MIN_COUNT_FILL_COLOR;
         maxQueryCountFillColor = DEFAULT_QUERY_MAX_COUNT_FILL_COLOR;
         minQueryCountFillColor = DEFAULT_QUERY_MIN_COUNT_FILL_COLOR;
+
+        binsWithQueries = 0;
     }
 
     public ArrayList<PCPBin> getBins () { return bins; }
@@ -48,6 +52,7 @@ public class PCPBinSet {
 
     public void layoutBins() {
         bins = new ArrayList<>();
+        binsWithQueries = 0;
 
         Histogram2D histogram2D = leftAxis.getColumn().getSummaryStats().getHistogram2DList().get(rightAxis.getColumnDataModelIndex());
         Histogram2D queryHistogram2D = null;
@@ -87,6 +92,7 @@ public class PCPBinSet {
                             normCount = GraphicsUtil.norm(queryCount, 0, dataModel.getActiveQuery().getMaxHistogram2DBinCount());
                             Color queryFillColor = GraphicsUtil.lerpColorFX(minQueryCountFillColor, maxQueryCountFillColor, normCount);
                             bin.queryFillColor = queryFillColor;
+                            binsWithQueries++;
                         }
                     }
 
