@@ -30,10 +30,7 @@ import org.slf4j.LoggerFactory;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ComponentEvent;
-import java.awt.event.ComponentListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseMotionListener;
+import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FilenameFilter;
@@ -53,6 +50,7 @@ public class MultiImagePanel extends JComponent implements ComponentListener, Mo
 
     // =-= CLASS FIELDS =-=
     private final static Logger log = LoggerFactory.getLogger(MultiImagePanel.class);
+    private final static Integer DEFAULT_IMAGE_ARR_SIZE = 30;
 
 
 
@@ -68,6 +66,10 @@ public class MultiImagePanel extends JComponent implements ComponentListener, Mo
     private int imageSpacing = 4;
     private Insets margins = new Insets(2,2,2,2);
 
+
+    // need to wrap every IZP in a scroll pane
+    private ImageZoomPanel[] imageZoomArray = new ImageZoomPanel[DEFAULT_IMAGE_ARR_SIZE];
+    private JScrollPane[] imageScrollPaneArray = new JScrollPane[DEFAULT_IMAGE_ARR_SIZE];
 
 
 
@@ -387,5 +389,61 @@ public class MultiImagePanel extends JComponent implements ComponentListener, Mo
         });
     }
 
+
+    public class ImageZoomPanel extends JComponent {
+
+        private final Double ZOOM_DEFAULT = 0.5;
+
+        private Double zoom = ZOOM_DEFAULT;
+        private Double percentage = 0.01;
+
+        private BufferedImage image = null;
+
+        public ImageZoomPanel(BufferedImage image) {
+            this.image = image;
+            layoutComponent();
+        }
+
+        public ImageZoomPanel() {
+
+        }
+
+        public void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D)g;
+            g2.scale(zoom, zoom);
+
+            g2.drawImage(image, 0, 0, this);
+        }
+
+        public void layoutComponent() {
+            this.setPreferredSize(new Dimension((int)(image.getWidth()*zoom), (int)(image.getHeight()*zoom)));
+            repaint();
+        }
+
+        public void setImage(BufferedImage image) {
+            this.image = image;
+        }
+
+        public void originalSize() {
+            zoom = ZOOM_DEFAULT;
+        }
+
+        public void zoomIn() {
+            zoom += percentage;
+        }
+
+        public void zoomOut() {
+            zoom -= percentage;
+
+            if (zoom < percentage) {
+                if (percentage > 1.0) {
+                    zoom = 1.0;
+                } else {
+                    zoomIn();
+                }
+            }
+        }
+
+    }
 
 }

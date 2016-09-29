@@ -28,6 +28,7 @@ import static javafx.application.Application.launch;
 public class ImageZoomPanel extends JComponent {
 
     private static final Double ZOOM_DEFAULT = 0.5;
+
     private static Double zoom = ZOOM_DEFAULT;
     private static Double percentage = 0.01;
 
@@ -79,6 +80,7 @@ public class ImageZoomPanel extends JComponent {
     }
 
     public static void main(String[] args) {
+
         JFrame frame = new JFrame();
 
         ImageZoomPanel imageZoomPanel = new ImageZoomPanel();
