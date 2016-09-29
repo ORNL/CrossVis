@@ -27,7 +27,8 @@ import static javafx.application.Application.launch;
 
 public class ImageZoomPanel extends JComponent {
 
-    private static Double zoom = 1.0;
+    private static final Double ZOOM_DEFAULT = 0.5;
+    private static Double zoom = ZOOM_DEFAULT;
     private static Double percentage = 0.01;
 
     private BufferedImage image = null;
@@ -58,7 +59,7 @@ public class ImageZoomPanel extends JComponent {
     }
 
     public static void originalSize() {
-        zoom = 1.0;
+        zoom = ZOOM_DEFAULT;
     }
 
     public static void zoomIn() {
@@ -102,6 +103,7 @@ public class ImageZoomPanel extends JComponent {
 
                 if (image != null) {
                     imageZoomPanel.setImage(image);
+                    imageZoomPanel.layoutComponent();
                     imageZoomPanel.revalidate();
                 }
             }
@@ -120,22 +122,25 @@ public class ImageZoomPanel extends JComponent {
         JMenu zoomMenu = new JMenu("Zoom");
 
         JMenuItem zoomIn = new JMenuItem("In");
-        zoomIn.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_PLUS, ActionEvent.SHIFT_MASK));
+        zoomIn.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS, ActionEvent.CTRL_MASK));
         zoomIn.addActionListener(e -> {
-            imageZoomPanel.zoomIn();
+            ImageZoomPanel.zoomIn();
+            imageZoomPanel.layoutComponent();
             imageZoomPanel.revalidate();
         });
 
         JMenuItem zoomOut = new JMenuItem("Out");
         zoomOut.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_MINUS, ActionEvent.CTRL_MASK));
         zoomOut.addActionListener(e -> {
-            imageZoomPanel.zoomOut();
+            ImageZoomPanel.zoomOut();
+            imageZoomPanel.layoutComponent();
             imageZoomPanel.revalidate();
         });
 
         JMenuItem zoomOriginal = new JMenuItem("Original");
         zoomOriginal.addActionListener(e -> {
-            imageZoomPanel.originalSize();
+            ImageZoomPanel.originalSize();
+            imageZoomPanel.layoutComponent();
             imageZoomPanel.revalidate();
         });
 
@@ -151,7 +156,7 @@ public class ImageZoomPanel extends JComponent {
 
         frame.getContentPane().add(imageScrollPane);
 
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
         frame.setVisible(true);
     }
