@@ -50,7 +50,6 @@ public class MultiImagePanel extends JComponent implements ComponentListener, Mo
 
     // =-= CLASS FIELDS =-=
     private final static Logger log = LoggerFactory.getLogger(MultiImagePanel.class);
-    private final static Integer DEFAULT_IMAGE_ARR_SIZE = 30;
 
 
 
@@ -68,8 +67,8 @@ public class MultiImagePanel extends JComponent implements ComponentListener, Mo
 
 
     // need to wrap every IZP in a scroll pane
-    private ImageZoomPanel[] imageZoomArray = new ImageZoomPanel[DEFAULT_IMAGE_ARR_SIZE];
-    private JScrollPane[] imageScrollPaneArray = new JScrollPane[DEFAULT_IMAGE_ARR_SIZE];
+    private ImageZoomPanel[] imageZoomArray = null;
+    private JScrollPane[] imageScrollPaneArray = null;
 
 
 
@@ -78,6 +77,8 @@ public class MultiImagePanel extends JComponent implements ComponentListener, Mo
     public MultiImagePanel(Orientation orientation, TalonData data) {
         this.orientation = orientation;
         this.data = data;
+
+        this.setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
 
         addComponentListener(this);
         addMouseMotionListener(this);
@@ -92,6 +93,11 @@ public class MultiImagePanel extends JComponent implements ComponentListener, Mo
     public void setImageFileInfo(ArrayList<File> files, ArrayList<Double> heightValues, ArrayList<Dimension> dimensions) {
         imageInfoMap.clear();
 
+        imageZoomArray = new ImageZoomPanel[files.size()];
+        imageScrollPaneArray = new JScrollPane[files.size()];
+
+        this.removeAll();
+
         for (int i = 0; i < files.size(); i++) {
             ImageInfo info = new ImageInfo();
             info.heightValue = heightValues.get(i);
@@ -104,32 +110,38 @@ public class MultiImagePanel extends JComponent implements ComponentListener, Mo
         }
 
         layoutComponent();
-        repaint();
+//        repaint();
     }
 
-
+    // !! not sure I will have to do any of this
     public void layoutComponent() {
         if (!imageInfoMap.isEmpty()) {
 
+            // clear caches
             imageCacheMap.clear();
             imageCacheTimeMap.clear();
 
+            // initialize new panel dimensions
             Dimension panelDimension = new Dimension();
 
             if (orientation == Orientation.VERTICAL) {
+
+                // get the current width of the MultiImagePanel
                 panelDimension.width = getWidth() - 1;
 
+                // initialize x, y for first image location
+                // !! not sure i will have to do this
                 int x = 0;
                 int y = 0;
+                int i = 0;
                 for (ImageInfo info : imageInfoMap.values()) {
+
                     int width = (info.imageDimension.width < panelDimension.width) ? info.imageDimension.width : panelDimension.width;
                     int height = (int) (width / info.aspectRatio);
 //                    double height = (double)(info.imageDimension.height * width) / info.imageDimension.width;
-//                    info.screenRect = new Rectangle2D.Double(x, y, width, height);
                     info.screenRect = new Rectangle(x, y, width, height);
-//                    log.debug(info.screenRect.toString());
+
                     y += height + imageSpacing;
-//                    log.debug("width: " + width + "height: " + height + " aspect ratio: " + info.aspectRatio);
                 }
 
                 panelDimension.height = y - imageSpacing;
@@ -142,79 +154,94 @@ public class MultiImagePanel extends JComponent implements ComponentListener, Mo
 
 //            log.debug("Panel dimension:  " + panelDimension.toString());
             setPreferredSize(panelDimension);
-        }
-    }
 
+            System.out.println(this.getWidth());
+            System.out.println(this.getPreferredSize().getWidth());
+            System.out.println(panelDimension.getWidth());
 
-    public void paintComponent(Graphics g) {
-        Graphics2D g2 = (Graphics2D)g;
-        g2.setColor(getBackground());
-        g2.fillRect(0, 0, getWidth(), getHeight());
+            for (int i = 0; i < imageScrollPaneArray.length; i++) {
+                imageZoomArray[i] = new ImageZoomPanel();
+                imageZoomArray[i].setMinimumSize(new Dimension(2 * this.getWidth(), 2 * this.getWidth()));
 
-        Rectangle clipRect = g2.getClipBounds();
+                imageScrollPaneArray[i] = new JScrollPane(imageZoomArray[i]);
+                imageScrollPaneArray[i].setMinimumSize(new Dimension(this.getWidth(), this.getWidth()));
 
-        if (!imageInfoMap.isEmpty()) {
-            g2.setColor(Color.blue);
-
-            // for all images in the directory
-            for (ImageInfo info : imageInfoMap.values()) {
-
-                // if this image intersects the screen boundaries
-                if (info.screenRect.intersects(clipRect)) {
-
-                    // retrieve each image to be drawn [try from cache first]
-                    BufferedImage image = imageCacheMap.get(info);
-
-                    // if image is not in the cache
-                    if (image == null) {
-
-                        // try reading it from disk
-                        try {
-
-                            image = ImageIO.read(info.file);
-
-                            // if the cache is full
-                            if (imageCacheMap.size() == maxImageCacheSize) {
-
-                                // delete image and corresponding info
-                                ImageInfo infoToDelete = imageCacheTimeMap.pollFirstEntry().getValue();
-                                imageCacheMap.remove(infoToDelete);
-                            }
-
-                            // insert current image into cache and entry into time stamp cache
-                            info.lastAccessTime = System.nanoTime();
-                            imageCacheMap.put(info, image);
-
-                            imageCacheTimeMap.put(info.lastAccessTime, info);
-
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-
-                    // if the image DOES exist in the cache
-                    } else {
-
-                        // we need to get the info object for this image out of the cache queue
-                        // and re-add it (this essentially helps us keep track of the order of last
-                        // reading each image so that we can remove the older image when we need to)
-                        imageCacheTimeMap.remove(info.lastAccessTime);
-                        info.lastAccessTime = System.nanoTime();
-                        imageCacheTimeMap.put(info.lastAccessTime, info);
-                    }
-
-                    g2.drawImage(image, info.screenRect.x, info.screenRect.y, info.screenRect.width, info.screenRect.height, this);
-//                    g2.draw(info.screenRect);
-                }
+                this.add(imageScrollPaneArray[i]);
             }
+
         }
     }
+
+
+//    public void paintComponent(Graphics g) {
+//        Graphics2D g2 = (Graphics2D)g;
+//        g2.setColor(getBackground());
+//        g2.fillRect(0, 0, getWidth(), getHeight());
+//
+//        Rectangle clipRect = g2.getClipBounds();
+//
+//        if (!imageInfoMap.isEmpty()) {
+//            g2.setColor(Color.blue);
+//
+//            // for all images in the directory
+//            for (ImageInfo info : imageInfoMap.values()) {
+//
+//                // if this image intersects the screen boundaries
+//                if (info.screenRect.intersects(clipRect)) {
+//
+//                    // retrieve each image to be drawn [try from cache first]
+//                    BufferedImage image = imageCacheMap.get(info);
+//
+//                    // if image is not in the cache
+//                    if (image == null) {
+//
+//                        // try reading it from disk
+//                        try {
+//
+//                            image = ImageIO.read(info.file);
+//
+//                            // if the cache is full
+//                            if (imageCacheMap.size() == maxImageCacheSize) {
+//
+//                                // delete image and corresponding info
+//                                ImageInfo infoToDelete = imageCacheTimeMap.pollFirstEntry().getValue();
+//                                imageCacheMap.remove(infoToDelete);
+//                            }
+//
+//                            // insert current image into cache and entry into time stamp cache
+//                            info.lastAccessTime = System.nanoTime();
+//                            imageCacheMap.put(info, image);
+//
+//                            imageCacheTimeMap.put(info.lastAccessTime, info);
+//
+//                        } catch (IOException e) {
+//                            e.printStackTrace();
+//                        }
+//
+//                    // if the image DOES exist in the cache
+//                    } else {
+//
+//                        // we need to get the info object for this image out of the cache queue
+//                        // and re-add it (this essentially helps us keep track of the order of last
+//                        // reading each image so that we can remove the older image when we need to)
+//                        imageCacheTimeMap.remove(info.lastAccessTime);
+//                        info.lastAccessTime = System.nanoTime();
+//                        imageCacheTimeMap.put(info.lastAccessTime, info);
+//                    }
+//
+//                    g2.drawImage(image, info.screenRect.x, info.screenRect.y, info.screenRect.width, info.screenRect.height, this);
+////                    g2.draw(info.screenRect);
+//                }
+//            }
+//        }
+//    }
 
 
     // ComponentListener methods
     @Override
     public void componentResized(ComponentEvent e) {
-        layoutComponent();
-        repaint();
+//        layoutComponent();
+//        repaint();
     }
 
 
@@ -321,7 +348,7 @@ public class MultiImagePanel extends JComponent implements ComponentListener, Mo
     public static void main (String args[]) {
 
         // read images
-        File imageDirectory = new File("/Users/whw/ORNL Internship/Printer Log Files/FromServer/R1119_2016-01-22_09.53_20160121_Q10_MDF_ARCAM TEST ARTICLE BUILD 1_1_Images/Image_1");
+        File imageDirectory = new File("/Volumes/home/RemoteStorage/Data/07.28.16/subset");
 //        File imageDirectory = new File("/Users/csg/Desktop/TestAMImages");
 //        File imageDirectory = new File("/Users/csg/Desktop/AM_data/R1140_2015-01-30_15.06/R1140_2015-01-30_15.06_Images/Image_2");
 
@@ -364,7 +391,10 @@ public class MultiImagePanel extends JComponent implements ComponentListener, Mo
                 JFrame frame = new JFrame();
                 frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-                MultiImagePanel imagePanel = new MultiImagePanel(Orientation.VERTICAL, new TalonData(ChronoUnit.SECONDS));
+                TalonData talonData = new TalonData(ChronoUnit.SECONDS);
+                talonData.setImageDirectory(imageDirectory);
+
+                MultiImagePanel imagePanel = new MultiImagePanel(Orientation.VERTICAL, talonData);
                 imagePanel.setImageFileInfo(imageFiles, heightValues, imageDimensions);
                 imagePanel.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
 
@@ -408,20 +438,40 @@ public class MultiImagePanel extends JComponent implements ComponentListener, Mo
 
         }
 
+        public ImageZoomPanel(Double zoom) {
+            this.zoom = zoom;
+            layoutComponent();
+        }
+
+        public ImageZoomPanel(BufferedImage image, Double zoom) {
+            this.image = image;
+            this.zoom = zoom;
+        }
+
+        public void layoutComponent() {
+            if (this.isVisible() && this.image != null) {
+                this.setPreferredSize(new Dimension((int) (image.getWidth() * zoom), (int) (image.getHeight() * zoom)));
+                repaint();
+            }
+        }
+
         public void paintComponent(Graphics g) {
-            Graphics2D g2 = (Graphics2D)g;
+            Graphics2D g2 = (Graphics2D) g;
             g2.scale(zoom, zoom);
 
             g2.drawImage(image, 0, 0, this);
         }
 
-        public void layoutComponent() {
-            this.setPreferredSize(new Dimension((int)(image.getWidth()*zoom), (int)(image.getHeight()*zoom)));
-            repaint();
+        public Double getZoom() {
+            return zoom;
         }
 
         public void setImage(BufferedImage image) {
             this.image = image;
+        }
+
+        public void deleteImage() {
+            this.image = null;
         }
 
         public void originalSize() {

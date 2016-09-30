@@ -543,14 +543,14 @@ public class Talon implements TalonDataListener, DistanceIndicatorPanelListener 
     public static void main (String args[]) {
 
         // Create instance of Talon class
-//        EventQueue.invokeLater(() -> {
-//            Talon app = new Talon();
-//        });
-
-
         EventQueue.invokeLater(() -> {
-            Talon app = new Talon(new File("/Users/whw/ORNL Internship/Printer Log Files/BuildG/R1057_2014-09-16_9.19_20140916_M1_AIR FORCE _BUILD G.plg"));
+            Talon app = new Talon();
         });
+
+
+//        EventQueue.invokeLater(() -> {
+//            Talon app = new Talon(new File("/Users/whw/ORNL Internship/Printer Log Files/BuildG/R1057_2014-09-16_9.19_20140916_M1_AIR FORCE _BUILD G.plg"));
+//        });
 
 
 //        EventQueue.invokeLater(() -> {
