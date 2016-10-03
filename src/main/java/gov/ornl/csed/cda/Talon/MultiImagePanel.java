@@ -451,6 +451,7 @@ public class MultiImagePanel extends JComponent implements ComponentListener, Mo
 
         public void setImage(BufferedImage image) {
             this.image = image;
+            setPreferredSize(new Dimension((int) (image.getWidth()*zoom), (int) (image.getHeight()*zoom)));
         }
 
         public void deleteImage() {
