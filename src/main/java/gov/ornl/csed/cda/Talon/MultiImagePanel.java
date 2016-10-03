@@ -60,6 +60,7 @@ public class MultiImagePanel extends JComponent implements ComponentListener, Mo
     private Orientation orientation;
     private TreeMap<Double, ImageInfo> imageInfoMap = new TreeMap<>();
     private HashMap<ImageInfo, BufferedImage> imageCacheMap = new HashMap<>();
+    private HashMap<ImageInfo, ImageZoomPanel> izpCacheMap = new HashMap<>();
     private TreeMap<Long, ImageInfo> imageCacheTimeMap = new TreeMap<>();
     private int maxImageCacheSize = 30;
     private int imageSpacing = 4;
@@ -172,69 +173,82 @@ public class MultiImagePanel extends JComponent implements ComponentListener, Mo
         }
     }
 
-
-//    public void paintComponent(Graphics g) {
-//        Graphics2D g2 = (Graphics2D)g;
+    @Override
+    public void paintComponent(Graphics g) {
+        Graphics2D g2 = (Graphics2D)g;
 //        g2.setColor(getBackground());
 //        g2.fillRect(0, 0, getWidth(), getHeight());
-//
-//        Rectangle clipRect = g2.getClipBounds();
-//
-//        if (!imageInfoMap.isEmpty()) {
+
+        Rectangle clipRect = g2.getClipBounds();
+
+        if (!imageInfoMap.isEmpty()) {
 //            g2.setColor(Color.blue);
-//
-//            // for all images in the directory
-//            for (ImageInfo info : imageInfoMap.values()) {
-//
-//                // if this image intersects the screen boundaries
+
+            // for all images in the directory
+            int i = 0;
+            for (ImageInfo info : imageInfoMap.values()) {
+//            for (int i = 0; i < imageScrollPaneArray.length; i++) {
+
+                // if this image intersects the screen boundaries
 //                if (info.screenRect.intersects(clipRect)) {
-//
-//                    // retrieve each image to be drawn [try from cache first]
-//                    BufferedImage image = imageCacheMap.get(info);
-//
-//                    // if image is not in the cache
-//                    if (image == null) {
-//
-//                        // try reading it from disk
-//                        try {
-//
-//                            image = ImageIO.read(info.file);
-//
-//                            // if the cache is full
-//                            if (imageCacheMap.size() == maxImageCacheSize) {
-//
-//                                // delete image and corresponding info
-//                                ImageInfo infoToDelete = imageCacheTimeMap.pollFirstEntry().getValue();
-//                                imageCacheMap.remove(infoToDelete);
-//                            }
-//
-//                            // insert current image into cache and entry into time stamp cache
-//                            info.lastAccessTime = System.nanoTime();
-//                            imageCacheMap.put(info, image);
-//
-//                            imageCacheTimeMap.put(info.lastAccessTime, info);
-//
-//                        } catch (IOException e) {
-//                            e.printStackTrace();
-//                        }
-//
-//                    // if the image DOES exist in the cache
-//                    } else {
-//
-//                        // we need to get the info object for this image out of the cache queue
-//                        // and re-add it (this essentially helps us keep track of the order of last
-//                        // reading each image so that we can remove the older image when we need to)
-//                        imageCacheTimeMap.remove(info.lastAccessTime);
-//                        info.lastAccessTime = System.nanoTime();
-//                        imageCacheTimeMap.put(info.lastAccessTime, info);
-//                    }
-//
+                if (imageScrollPaneArray[i].getBounds().intersects(clipRect)) {
+
+                    // retrieve each image to be drawn [try from cache first]
+                    BufferedImage image = imageCacheMap.get(info);
+
+                    // if image is not in the cache
+                    if (image == null) {
+
+                        // try reading it from disk
+                        try {
+
+                            image = ImageIO.read(info.file);
+                            imageZoomArray[i].setImage(image);
+
+                            // if the cache is full
+                            if (imageCacheMap.size() == maxImageCacheSize) {
+
+                                // delete image and corresponding info
+                                ImageInfo infoToDelete = imageCacheTimeMap.pollFirstEntry().getValue();
+                                imageCacheMap.remove(infoToDelete);
+
+                                // remove the image from the IZP
+                                izpCacheMap.get(infoToDelete).deleteImage();
+                                izpCacheMap.remove(infoToDelete);
+                            }
+
+                            // insert current image into cache and entry into time stamp cache
+                            info.lastAccessTime = System.nanoTime();
+                            imageCacheMap.put(info, image);
+                            izpCacheMap.put(info, imageZoomArray[i]);
+
+                            imageCacheTimeMap.put(info.lastAccessTime, info);
+
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+
+                    // if the image DOES exist in the cache
+                    } else {
+
+                        // we need to get the info object for this image out of the cache queue
+                        // and re-add it (this essentially helps us keep track of the order of last
+                        // reading each image so that we can remove the older image when we need to)
+                        imageCacheTimeMap.remove(info.lastAccessTime);
+                        info.lastAccessTime = System.nanoTime();
+                        imageCacheTimeMap.put(info.lastAccessTime, info);
+                    }
+
 //                    g2.drawImage(image, info.screenRect.x, info.screenRect.y, info.screenRect.width, info.screenRect.height, this);
-////                    g2.draw(info.screenRect);
-//                }
-//            }
-//        }
-//    }
+//                    g2.draw(info.screenRect);
+                    imageZoomArray[i].repaint();
+                    imageScrollPaneArray[i].revalidate();
+                }
+
+                i++;
+            }
+        }
+    }
 
 
     // ComponentListener methods
