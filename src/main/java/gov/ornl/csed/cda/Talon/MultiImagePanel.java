@@ -352,50 +352,16 @@ public class MultiImagePanel extends JComponent implements ComponentListener, Mo
 //        File imageDirectory = new File("/Users/csg/Desktop/TestAMImages");
 //        File imageDirectory = new File("/Users/csg/Desktop/AM_data/R1140_2015-01-30_15.06/R1140_2015-01-30_15.06_Images/Image_2");
 
-        ArrayList<File> imageFiles = new ArrayList<>();
-        ArrayList<Double> heightValues = new ArrayList<>();
-        ArrayList<Dimension> imageDimensions = new ArrayList<>();
-
-        File[] files = imageDirectory.listFiles(new FilenameFilter() {
-            @Override
-            public boolean accept(File dir, String name) {
-                if (name.endsWith(".png")) {
-                    return true;
-                }
-                return false;
-            }
-        });
-
-        String prefix = "Layer";
-        String postfix = "Image";
-
-//        log.debug("Scanning " + files.length + " image files from " + imageDirectory.getAbsolutePath());
-
-        for (File imageFile : files) {
-            try {
-                BufferedImage image = ImageIO.read(imageFile);
-                imageFiles.add(imageFile);
-                Dimension dimension = new Dimension(image.getWidth(), image.getHeight());
-                imageDimensions.add(dimension);
-                // parse build height value from file name
-                String heightString = imageFile.getName().substring(prefix.length(), imageFile.getName().indexOf(postfix));
-                heightValues.add(Double.valueOf(heightString));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-//        log.debug("Finished Reading files");
-
         EventQueue.invokeLater(new Runnable() {
             public void run() {
                 JFrame frame = new JFrame();
                 frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
                 TalonData talonData = new TalonData(ChronoUnit.SECONDS);
-                talonData.setImageDirectory(imageDirectory);
 
                 MultiImagePanel imagePanel = new MultiImagePanel(Orientation.VERTICAL, talonData);
-                imagePanel.setImageFileInfo(imageFiles, heightValues, imageDimensions);
+//                imagePanel.setImageFileInfo(imageFiles, heightValues, imageDimensions);
+
                 imagePanel.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
 
                 JScrollPane scrollPane = new JScrollPane(imagePanel);
@@ -413,8 +379,11 @@ public class MultiImagePanel extends JComponent implements ComponentListener, Mo
                 ((JPanel)frame.getContentPane()).setLayout(new BorderLayout());
                 ((JPanel)frame.getContentPane()).add(scrollPane, BorderLayout.CENTER);
 
-                frame.setSize(new Dimension(200, 600));
+                frame.setSize(new Dimension(600, 600));
+
                 frame.setVisible(true);
+
+                talonData.setImageDirectory(imageDirectory);
             }
         });
     }
