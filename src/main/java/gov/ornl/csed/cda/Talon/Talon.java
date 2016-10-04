@@ -24,6 +24,7 @@ import gov.ornl.csed.cda.timevis.NumericTimeSeriesPanel;
 import gov.ornl.csed.cda.timevis.TimeSeries;
 import gov.ornl.csed.cda.util.GraphicsUtil;
 import javafx.geometry.Orientation;
+import javafx.scene.input.Mnemonic;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -178,6 +179,7 @@ public class Talon implements TalonDataListener, DistanceIndicatorPanelListener 
 
         JMenu file = new JMenu("File");
         JMenu tools = new JMenu("Tools");
+        JMenu view = new JMenu("View");
 
         JMenuItem openPLG = new JMenuItem("Open PLG...", KeyEvent.VK_O); // This menu item will respond to the 'o' key being pressed
         JMenuItem openImages = new JMenuItem("Open Images...");
@@ -185,6 +187,10 @@ public class Talon implements TalonDataListener, DistanceIndicatorPanelListener 
 
         JMenuItem showSummary = new JMenuItem("Show Summary");
 //        JMenuItem changeSegmentingVariable = new JMenuItem("Change Segmenting Variable");
+
+        JMenuItem zoomIn = new JMenuItem("Zoom In");
+        JMenuItem zoomOut = new JMenuItem("Zoom Out");
+        JMenuItem zoomOriginal = new JMenuItem("Zoom Original");
 
         //  -> add menubar and menuitems to the frame
         talonFrame.setJMenuBar(talonMenuBar);
@@ -198,6 +204,10 @@ public class Talon implements TalonDataListener, DistanceIndicatorPanelListener 
         tools.add(showSummary);
 //        tools.add(changeSegmentingVariable);
 
+        talonMenuBar.add(view);
+        view.add(zoomIn);
+        view.add(zoomOut);
+        view.add(zoomOriginal);
 
         //  -> add the actionListeners to the menuitmes
 
@@ -249,6 +259,21 @@ public class Talon implements TalonDataListener, DistanceIndicatorPanelListener 
             talonFrame.dispatchEvent(new WindowEvent(talonFrame, Event.WINDOW_DESTROY));
         });
 
+        zoomIn.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_I, ActionEvent.CTRL_MASK));
+        zoomOut.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, ActionEvent.CTRL_MASK));
+        zoomOriginal.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS, ActionEvent.CTRL_MASK));
+
+        zoomIn.addActionListener(e -> {
+            imagePanel.zoomIn();
+        });
+
+        zoomOut.addActionListener(e -> {
+            imagePanel.zoomOut();
+        });
+
+        zoomOriginal.addActionListener(e -> {
+            imagePanel.zoomOriginal();
+        });
     }
 
 

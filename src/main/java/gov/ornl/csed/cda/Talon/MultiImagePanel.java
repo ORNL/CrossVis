@@ -173,6 +173,30 @@ public class MultiImagePanel extends JComponent implements ComponentListener, Mo
         }
     }
 
+    public void zoomIn() {
+        for (int i = 0; i < imageZoomArray.length; i++) {
+            imageZoomArray[i].zoomIn();
+        }
+
+        this.repaint();
+    }
+
+    public void zoomOut() {
+        for (int i = 0; i < imageZoomArray.length; i++) {
+            imageZoomArray[i].zoomOut();
+        }
+
+        this.repaint();
+    }
+
+    public void zoomOriginal() {
+        for (int i = 0; i < imageZoomArray.length; i++) {
+            imageZoomArray[i].originalSize();
+        }
+
+        this.repaint();
+    }
+
     @Override
     public void paintComponent(Graphics g) {
         Graphics2D g2 = (Graphics2D)g;
@@ -241,7 +265,7 @@ public class MultiImagePanel extends JComponent implements ComponentListener, Mo
 
 //                    g2.drawImage(image, info.screenRect.x, info.screenRect.y, info.screenRect.width, info.screenRect.height, this);
 //                    g2.draw(info.screenRect);
-                    imageZoomArray[i].repaint();
+                    imageZoomArray[i].layoutComponent();
                     imageScrollPaneArray[i].revalidate();
                 }
 
