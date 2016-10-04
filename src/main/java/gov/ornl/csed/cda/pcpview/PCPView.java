@@ -666,7 +666,6 @@ public class PCPView extends Region {
         lineCanvas.setCache(false);
         lineGC.setLineCap(StrokeLineCap.BUTT);
         lineGC.clearRect(0, 0, getWidth(), getHeight());
-//        lineGC.setGlobalAlpha(lineOpacity);
         lineGC.setLineWidth(2);
         lineGC.setLineWidth(2d);
 

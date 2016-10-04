@@ -58,11 +58,11 @@ public class PCPAxisSelection {
         this.dataModel = dataModel;
 
         this.selectionRange.maxValueProperty().addListener((observable, oldValue, newValue) -> {
-            log.debug("Got change notification from ColumnSelectionRange max value property");
+//            log.debug("Got change notification from ColumnSelectionRange max value property");
             relayout();
         });
         this.selectionRange.minValueProperty().addListener(((observable, oldValue, newValue) -> {
-            log.debug("Got change notification from ColumnSelectionRange min value property");
+//            log.debug("Got change notification from ColumnSelectionRange min value property");
             relayout();;
         }));
 
@@ -76,7 +76,6 @@ public class PCPAxisSelection {
 //                // clear the selection
 //                pane.getChildren().remove(rectangle);
 //                pcpAxis.getAxisSelectionList().remove(this);
-//                // TODO: Reset queried tuples
 //            }
 //        });
 
@@ -261,20 +260,6 @@ public class PCPAxisSelection {
             }
         });
 
-//        rectangle.setOnMouseClicked(new EventHandler<MouseEvent>() {
-//            @Override
-//            public void handle(MouseEvent event) {
-//                if (event.getClickCount() == 2) {
-//                    Dialog dialog = createNumberInputDialog("Change Selection Minimum Value", "Enter New Minimum Value", "MinimumValue", getColumnSelectionRange().getMinValue());
-//                    Optional<Double> result = dialog.showAndWait();
-//
-//                    result.ifPresent(newMinValue -> {
-//                        System.out.println(result.get());
-//                    });
-//                }
-//            }
-//        });
-
         rectangle.setOnMousePressed(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
@@ -286,8 +271,6 @@ public class PCPAxisSelection {
                     Optional<Pair<Double,Double>> result = dialog.showAndWait();
 
                     result.ifPresent(newMinValue -> {
-                        System.out.println(result.get().getKey() + ", " + result.get().getValue());
-                        // TODO: assign new min and max values and find new top and bottom y locations
                         double minValue = result.get().getKey();
                         double maxValue = result.get().getValue();
 

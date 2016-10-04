@@ -827,7 +827,8 @@ public class DataModel {
 	public ColumnSelectionRange addColumnSelectionRangeToActiveQuery(Column column, double minValue, double maxValue) {
 		ColumnSelectionRange newColumnSelectionRange = new ColumnSelectionRange(column, minValue, maxValue);
 		getActiveQuery().addColumnSelectionRange(newColumnSelectionRange);
-
+//
+//		newColumnSelectionRange.maxValueProperty()
 		fireColumnSelectionAdded(newColumnSelectionRange);
 		return newColumnSelectionRange;
 //		ColumnSelection columnSelection = getActiveQuery().getColumnSelection(column);

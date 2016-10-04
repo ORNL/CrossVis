@@ -1,14 +1,9 @@
 package gov.ornl.csed.cda.edenfx;
 
-import gov.ornl.csed.cda.Falcon.FalconPreferenceKeys;
 import gov.ornl.csed.cda.datatable.*;
-import gov.ornl.csed.cda.pcpview.PCPAxis;
-import gov.ornl.csed.cda.pcpview.PCPAxisSelection;
 import gov.ornl.csed.cda.pcpview.PCPView;
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.beans.InvalidationListener;
-import javafx.beans.Observable;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -19,7 +14,6 @@ import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
-import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.SceneAntialiasing;
 import javafx.scene.control.*;
@@ -29,8 +23,10 @@ import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
-import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Callback;
@@ -38,12 +34,10 @@ import javafx.util.converter.NumberStringConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
 import java.util.prefs.Preferences;
 
@@ -77,10 +71,8 @@ public class EDENFXMain extends Application {
     private RadioMenuItem histogramDisplayModeMenuItem;
     private RadioMenuItem binDisplayModeMenuItem;
     private RadioMenuItem lineDisplayModeMenuItem;
-//    private HashMap<PCPView.DISPLAY_MODE, ToggleButton> displayModeButtonMap;
 
     private ToggleGroup displayModeButtonGroup;
-//    private HashMap<PCPView.DISPLAY_MODE, RadioMenuItem> displayModeMenuItemMap;
     private ToggleButton summaryDisplayModeButton;
     private ToggleButton histogramDisplayModeButton;
     private ToggleButton binDisplayModeButton;
@@ -161,10 +153,6 @@ public class EDENFXMain extends Application {
                                 if (item) {
                                     // enable a disabled column
                                     // get the column name; lookup column in data model; enable the column
-//                                    sm.select(rowNumber);
-//                                    log.debug("Would set column " + dataModel.getColumn(rowNumber) + " to enabled");
-
-//                                    dataModel.enableColumn(dataModel.getColumn(rowNumber));
                                     Column column = columnTableView.getItems().get(rowNumber);
                                     dataModel.enableColumn(column);
                                     log.debug("Set column '" + column.getName() + "' to enabled");
@@ -174,9 +162,6 @@ public class EDENFXMain extends Application {
                                     Column column = columnTableView.getItems().get(rowNumber);
                                     dataModel.disableColumn(column);
                                     log.debug("Set column '" + column.getName() + "' to disabled");
-//                                    sm.clearSelection(rowNumber);
-//                                    log.debug("Would set column " + dataModel.getColumn(rowNumber) + " to disabled");
-//                                    dataModel.disableColumn(dataModel.getColumn(rowNumber));
                                 }
                             }
                         }
@@ -208,19 +193,14 @@ public class EDENFXMain extends Application {
         ToolBar toolBar = new ToolBar();
 
         // Make toggle button group for display mode shortcut buttons
-//        displayModeButtonMap = new HashMap<>();
         summaryDisplayModeButton = new ToggleButton("S");
         summaryDisplayModeButton.setTooltip(new Tooltip("Summary Display Mode"));
-//        displayModeButtonMap.put(PCPView.DISPLAY_MODE.HISTOGRAM, summaryDisplayModeButton);
         histogramDisplayModeButton = new ToggleButton("H");
         histogramDisplayModeButton.setTooltip(new Tooltip("Histogram Display Mode"));
-//        displayModeButtonMap.put(PCPView.DISPLAY_MODE.HISTOGRAM, histogramDisplayModeButton);
         binDisplayModeButton = new ToggleButton("B");
         binDisplayModeButton.setTooltip(new Tooltip("Binned Parallel Coordinates Display Mode"));
-//        displayModeButtonMap.put(PCPView.DISPLAY_MODE.PCP_BINS, binDisplayModeButton);
         lineDisplayModeButton = new ToggleButton("L");
         lineDisplayModeButton.setTooltip(new Tooltip("Parallel Coordinates Line Display Mode"));
-//        displayModeButtonMap.put(PCPView.DISPLAY_MODE.PCP_LINES, lineDisplayModeButton);
         displayModeButtonGroup = new ToggleGroup();
         displayModeButtonGroup.getToggles().addAll(summaryDisplayModeButton, histogramDisplayModeButton, binDisplayModeButton, lineDisplayModeButton);
 
@@ -248,10 +228,6 @@ public class EDENFXMain extends Application {
                     pcpView.setDisplayMode(PCPView.DISPLAY_MODE.PCP_LINES);
                     displayModeMenuGroup.selectToggle(lineDisplayModeMenuItem);
                 }
-
-//                pcpView.setDisplayMode(PCPView.DISPLAY_MODE.PCP_LINES);
-
-//                displayModeMenuGroup.selectToggle(displayModeMenuItemMap.get(newDisplayMode));
             }
         });
 
@@ -463,26 +439,19 @@ public class EDENFXMain extends Application {
         displayModeMenu = new Menu("Display Mode");
         displayModeMenu.setDisable(true);
         displayModeMenuGroup = new ToggleGroup();
-//        displayModeMenuItemMap = new HashMap<>();
 
         histogramDisplayModeMenuItem = new RadioMenuItem("Histograms");
         histogramDisplayModeMenuItem.setToggleGroup(displayModeMenuGroup);
-//        displayModeMenu.getItems().add(item);
-//        displayModeMenuItemMap.put(PCPView.DISPLAY_MODE.HISTOGRAM, item);
         if (pcpView.getDisplayMode() == PCPView.DISPLAY_MODE.HISTOGRAM) {
             histogramDisplayModeMenuItem.setSelected(true);
         }
         binDisplayModeMenuItem = new RadioMenuItem("Parallel Coordinates Bins");
         binDisplayModeMenuItem.setToggleGroup(displayModeMenuGroup);
-//        displayModeMenu.getItems().add(item);
-//        displayModeMenuItemMap.put(PCPView.DISPLAY_MODE.PCP_BINS, item);
         if (pcpView.getDisplayMode() == PCPView.DISPLAY_MODE.PCP_BINS) {
             binDisplayModeMenuItem.setSelected(true);
         }
         lineDisplayModeMenuItem = new RadioMenuItem("Parallel Coordinates Lines");
         lineDisplayModeMenuItem.setToggleGroup(displayModeMenuGroup);
-//        displayModeMenu.getItems().add(item);
-//        displayModeMenuItemMap.put(PCPView.DISPLAY_MODE.PCP_LINES, item);
         if (pcpView.getDisplayMode() == PCPView.DISPLAY_MODE.PCP_LINES) {
             lineDisplayModeMenuItem.setSelected(true);
         }
