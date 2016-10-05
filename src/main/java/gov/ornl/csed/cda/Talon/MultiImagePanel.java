@@ -66,6 +66,10 @@ public class MultiImagePanel extends JComponent implements ComponentListener, Mo
     private int imageSpacing = 4;
     private Insets margins = new Insets(2,2,2,2);
 
+    private int imageHorizontalScrollerVal = 0;
+    private int imageVerticalScrollerVal = 0;
+    private int uncachedImageFlagVertical = 0;
+    private int uncachedImageFlagHorizontal = 0;
 
     // need to wrap every IZP in a scroll pane
     private ImageZoomPanel[] imageZoomArray = null;
@@ -165,7 +169,27 @@ public class MultiImagePanel extends JComponent implements ComponentListener, Mo
                 imageZoomArray[i].setMinimumSize(new Dimension(2 * this.getWidth(), 2 * this.getWidth()));
 
                 imageScrollPaneArray[i] = new JScrollPane(imageZoomArray[i]);
-                imageScrollPaneArray[i].setMinimumSize(new Dimension(this.getWidth(), this.getWidth()));
+                imageScrollPaneArray[i].setPreferredSize(new Dimension(this.getWidth(), this.getWidth()));
+
+                JScrollPane temp = imageScrollPaneArray[i];
+
+                imageScrollPaneArray[i].getHorizontalScrollBar().addAdjustmentListener(e -> {
+//                    System.out.println("horizontal" + e.getAdjustmentType());
+                    if (uncachedImageFlagHorizontal == 0) {
+                        imageHorizontalScrollerVal = temp.getHorizontalScrollBar().getModel().getValue();
+                    }
+
+                    uncachedImageFlagHorizontal = 0;
+                });
+
+                imageScrollPaneArray[i].getVerticalScrollBar().addAdjustmentListener(e -> {
+//                    System.out.println("vertical" + e.getAdjustmentType());
+                    if (uncachedImageFlagVertical == 0) {
+                        imageVerticalScrollerVal = temp.getVerticalScrollBar().getModel().getValue();
+                    }
+
+                    uncachedImageFlagVertical = 0;
+                });
 
                 this.add(imageScrollPaneArray[i]);
             }
@@ -265,8 +289,17 @@ public class MultiImagePanel extends JComponent implements ComponentListener, Mo
 
 //                    g2.drawImage(image, info.screenRect.x, info.screenRect.y, info.screenRect.width, info.screenRect.height, this);
 //                    g2.draw(info.screenRect);
+                    uncachedImageFlagVertical = 1;
+                    uncachedImageFlagHorizontal = 1;
                     imageZoomArray[i].layoutComponent();
+//                    uncachedImageFlagVertical = 1;
+//                    uncachedImageFlagHorizontal = 1;
                     imageScrollPaneArray[i].revalidate();
+
+                    uncachedImageFlagVertical = 1;
+                    uncachedImageFlagHorizontal = 1;
+                    imageScrollPaneArray[i].getVerticalScrollBar().getModel().setValue(imageVerticalScrollerVal);
+                    imageScrollPaneArray[i].getHorizontalScrollBar().getModel().setValue(imageHorizontalScrollerVal);
                 }
 
                 i++;
