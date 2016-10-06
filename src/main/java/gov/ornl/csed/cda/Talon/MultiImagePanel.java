@@ -175,7 +175,7 @@ public class MultiImagePanel extends JComponent implements ComponentListener, Mo
 
                 imageScrollPaneArray[i].getHorizontalScrollBar().addAdjustmentListener(e -> {
 //                    System.out.println("horizontal" + e.getAdjustmentType());
-                    if (uncachedImageFlagHorizontal == 0) {
+                    if (uncachedImageFlagHorizontal == 0 && temp.getHorizontalScrollBar().getModel().getValue() != 0) {
                         imageHorizontalScrollerVal = temp.getHorizontalScrollBar().getModel().getValue();
                     }
 
@@ -184,7 +184,7 @@ public class MultiImagePanel extends JComponent implements ComponentListener, Mo
 
                 imageScrollPaneArray[i].getVerticalScrollBar().addAdjustmentListener(e -> {
 //                    System.out.println("vertical" + e.getAdjustmentType());
-                    if (uncachedImageFlagVertical == 0) {
+                    if (uncachedImageFlagVertical == 0 && temp.getVerticalScrollBar().getModel().getValue() != 0) {
                         imageVerticalScrollerVal = temp.getVerticalScrollBar().getModel().getValue();
                     }
 
@@ -292,6 +292,7 @@ public class MultiImagePanel extends JComponent implements ComponentListener, Mo
                     uncachedImageFlagVertical = 1;
                     uncachedImageFlagHorizontal = 1;
                     imageZoomArray[i].layoutComponent();
+
 //                    uncachedImageFlagVertical = 1;
 //                    uncachedImageFlagHorizontal = 1;
                     imageScrollPaneArray[i].revalidate();
