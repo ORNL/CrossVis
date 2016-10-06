@@ -33,6 +33,7 @@ public class ImageZoomPanel extends JComponent {
     private static Double percentage = 0.01;
 
     private BufferedImage image = null;
+    private Double heightValue = null;
 
     public ImageZoomPanel(BufferedImage image) {
         this.image = image;
@@ -57,6 +58,18 @@ public class ImageZoomPanel extends JComponent {
 
     public void setImage(BufferedImage image) {
         this.image = image;
+    }
+
+    public void removeImage() {
+        this.image = null;
+    }
+
+    public void setHeightValue(Double value) {
+        this.heightValue = heightValue;
+    }
+
+    public Double getHeightValue() {
+        return heightValue;
     }
 
     public static void originalSize() {

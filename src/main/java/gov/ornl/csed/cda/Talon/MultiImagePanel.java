@@ -166,7 +166,7 @@ public class MultiImagePanel extends JComponent implements ComponentListener, Mo
 
             for (int i = 0; i < imageScrollPaneArray.length; i++) {
                 imageZoomArray[i] = new ImageZoomPanel();
-                imageZoomArray[i].setMinimumSize(new Dimension(2 * this.getWidth(), 2 * this.getWidth()));
+                imageZoomArray[i].setPreferredSize(new Dimension(2 * this.getWidth(), 2 * this.getWidth()));
 
                 imageScrollPaneArray[i] = new JScrollPane(imageZoomArray[i]);
                 imageScrollPaneArray[i].setPreferredSize(new Dimension(this.getWidth(), this.getWidth()));
