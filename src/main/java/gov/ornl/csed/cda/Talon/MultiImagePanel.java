@@ -171,6 +171,22 @@ public class MultiImagePanel extends JComponent implements ComponentListener, Mo
                 imageScrollPaneArray[i] = new JScrollPane(imageZoomArray[i]);
                 imageScrollPaneArray[i].setPreferredSize(new Dimension(this.getWidth(), this.getWidth()));
 
+//                imageScrollPaneArray[i].addMouseMotionListener(new MouseMotionListener() {
+//                    @Override
+//                    public void mouseDragged(MouseEvent e) {
+//
+//                    }
+//
+//                    @Override
+//                    public void mouseMoved(MouseEvent e) {
+//                        setToolTipText("");
+//
+//                        if (imageScrollPaneArray[i].getBounds().contains(e.getPoint())) {
+//                            setToolTipText("Build Height: " + )
+//                        }
+//                    }
+//                });
+
                 JScrollPane temp = imageScrollPaneArray[i];
 
                 imageScrollPaneArray[i].getHorizontalScrollBar().addAdjustmentListener(e -> {
@@ -252,6 +268,7 @@ public class MultiImagePanel extends JComponent implements ComponentListener, Mo
 
                             image = ImageIO.read(info.file);
                             imageZoomArray[i].setImage(image);
+                            imageZoomArray[i].setHeightValue(info.heightValue);
 
                             // if the cache is full
                             if (imageCacheMap.size() == maxImageCacheSize) {
@@ -343,15 +360,15 @@ public class MultiImagePanel extends JComponent implements ComponentListener, Mo
 
     @Override
     public void mouseMoved(MouseEvent e) {
-        setToolTipText("");
-
-        for (Map.Entry<Double, ImageInfo> image  : imageInfoMap.entrySet()) {
-
-            if (image.getValue().screenRect.contains(e.getPoint())) {
-                setToolTipText("Build Height: " + image.getKey());
-                break;
-            }
-        }
+//        setToolTipText("");
+//
+//        for (int i = 0; i < imageScrollPaneArray.length; i++) {
+//
+//            if (imageScrollPaneArray[i].getVisibleRect().contains(e.getPoint())) {
+//                setToolTipText("Build Height: " + ( (ImageZoomPanel) imageScrollPaneArray[i].getComponent(0)).getHeightValue() );
+//                break;
+//            }
+//        }
     }
 
 
@@ -461,7 +478,7 @@ public class MultiImagePanel extends JComponent implements ComponentListener, Mo
     }
 
 
-    public class ImageZoomPanel extends JComponent {
+    public class ImageZoomPanel extends JComponent implements MouseMotionListener {
 
         private final Double ZOOM_DEFAULT = 0.5;
 
@@ -469,6 +486,7 @@ public class MultiImagePanel extends JComponent implements ComponentListener, Mo
         private Double percentage = 0.01;
 
         private BufferedImage image = null;
+        private Double heightValue = null;
 
         public ImageZoomPanel(BufferedImage image) {
             this.image = image;
@@ -516,6 +534,14 @@ public class MultiImagePanel extends JComponent implements ComponentListener, Mo
             this.image = null;
         }
 
+        public void setHeightValue(Double heightValue) {
+            this.heightValue = heightValue;
+        }
+
+        public Double getHeightValue() {
+            return this.heightValue;
+        }
+
         public void originalSize() {
             zoom = ZOOM_DEFAULT;
         }
@@ -536,6 +562,19 @@ public class MultiImagePanel extends JComponent implements ComponentListener, Mo
             }
         }
 
+        @Override
+        public void mouseDragged(MouseEvent e) {
+
+        }
+
+        @Override
+        public void mouseMoved(MouseEvent e) {
+            setToolTipText("");
+
+            if (this.getBounds().contains(e.getPoint())) {
+                setToolTipText("Build Height: " + this.heightValue);
+            }
+        }
     }
 
 }
