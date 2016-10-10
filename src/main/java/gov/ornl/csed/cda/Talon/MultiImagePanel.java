@@ -146,10 +146,12 @@ public class MultiImagePanel extends JComponent implements ComponentListener, Mo
 //                    double height = (double)(info.imageDimension.height * width) / info.imageDimension.width;
                     info.screenRect = new Rectangle(x, y, width, height);
 
-                    y += height + imageSpacing;
+//                    y += height + imageSpacing;
+                    y += width;
                 }
 
-                panelDimension.height = y - imageSpacing;
+                panelDimension.height = y;
+                setPreferredSize(panelDimension);
 
                 // Reverses the order of the images by "inverting" the y value of each image
                 for (ImageInfo info : imageInfoMap.values()) {
@@ -158,13 +160,12 @@ public class MultiImagePanel extends JComponent implements ComponentListener, Mo
             }
 
 //            log.debug("Panel dimension:  " + panelDimension.toString());
-            setPreferredSize(panelDimension);
 
             System.out.println(this.getWidth());
             System.out.println(this.getPreferredSize().getWidth());
             System.out.println(panelDimension.getWidth());
 
-            for (int i = 0; i < imageScrollPaneArray.length; i++) {
+            for (int i = imageScrollPaneArray.length-1; i >= 0; i--) {
                 imageZoomArray[i] = new ImageZoomPanel();
                 imageZoomArray[i].setPreferredSize(new Dimension(2 * this.getWidth(), 2 * this.getWidth()));
 
@@ -210,6 +211,8 @@ public class MultiImagePanel extends JComponent implements ComponentListener, Mo
                 this.add(imageScrollPaneArray[i]);
             }
 
+            panelDimension.height = this.getWidth() * imageScrollPaneArray.length;
+            setPreferredSize(panelDimension);
         }
     }
 
