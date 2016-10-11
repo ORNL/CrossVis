@@ -129,6 +129,7 @@ public class MultiImagePanel extends JComponent implements TalonDataListener {
             }
 
             for (int i = 0; i < imageScrollPaneArray.length; i++) {
+
                 imageZoomArray[i] = new ImageZoomPanel();
                 imageZoomArray[i].setPreferredSize(new Dimension(2 * this.getWidth(), 2 * this.getWidth()));
 
@@ -157,6 +158,7 @@ public class MultiImagePanel extends JComponent implements TalonDataListener {
 
                 this.add(imageScrollPaneArray[i]);
             }
+
         }
     }
 
