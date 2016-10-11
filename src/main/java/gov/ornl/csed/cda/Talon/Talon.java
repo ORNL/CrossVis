@@ -65,6 +65,7 @@ public class Talon implements TalonDataListener, DistanceIndicatorPanelListener 
     private MultiImagePanel imagePanel = null;                                  // Panel for displaying build height images
     private DistanceIndicatorPanel distanceIndicatorPanel = null;               // Panel for distance indicator tick marks
     private NumericTimeSeriesPanel timeSeriesOverviewPanel = null;
+    JScrollPane imagePanelScroller = null;
 
     // helper variables
     private JComboBox<String> segmentedVariableComboBox = null;                 // Combobox of variable names from plgFile in settingsPanel
@@ -306,8 +307,7 @@ public class Talon implements TalonDataListener, DistanceIndicatorPanelListener 
         segmentmentedTimeSeriesPanelScroller.getHorizontalScrollBar().setUnitIncrement(10);
 
         imagePanel.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
-        JScrollPane imagePanelScroller = new JScrollPane(imagePanel);
-        imagePanelScroller.getVerticalScrollBar().setUnitIncrement(10);
+        imagePanelScroller = new JScrollPane(imagePanel);
 
         JScrollPane timeSeriesOverview = new JScrollPane(timeSeriesOverviewPanel);
         timeSeriesOverview.getHorizontalScrollBar().setUnitIncrement(10);
@@ -558,6 +558,8 @@ public class Talon implements TalonDataListener, DistanceIndicatorPanelListener 
     @Override
     public void TalonDataImageDirectoryChange() {
 //        log.debug("Image Directory Change");
+        imagePanelScroller.getVerticalScrollBar().setUnitIncrement(imagePanel.getWidth());
+        System.out.println(imagePanel.getWidth());
     }
 
 

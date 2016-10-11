@@ -42,7 +42,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 
-public class MultiImagePanel extends JComponent implements ComponentListener, MouseMotionListener, TalonDataListener {
+public class MultiImagePanel extends JComponent implements TalonDataListener {
 
 
 
@@ -85,8 +85,6 @@ public class MultiImagePanel extends JComponent implements ComponentListener, Mo
 
         this.setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
 
-        addComponentListener(this);
-        addMouseMotionListener(this);
         data.addTalonDataListener(this);
     }
 
@@ -126,43 +124,9 @@ public class MultiImagePanel extends JComponent implements ComponentListener, Mo
             imageCacheMap.clear();
             imageCacheTimeMap.clear();
 
-            // initialize new panel dimensions
-            Dimension panelDimension = new Dimension();
-
             if (orientation == Orientation.VERTICAL) {
 
-                // get the current width of the MultiImagePanel
-                panelDimension.width = getWidth() - 1;
-
-                // initialize x, y for first image location
-                // !! not sure i will have to do this
-                int x = 0;
-                int y = 0;
-                int i = 0;
-                for (ImageInfo info : imageInfoMap.values()) {
-
-                    int width = (info.imageDimension.width < panelDimension.width) ? info.imageDimension.width : panelDimension.width;
-                    int height = (int) (width / info.aspectRatio);
-//                    double height = (double)(info.imageDimension.height * width) / info.imageDimension.width;
-                    info.screenRect = new Rectangle(x, y, width, height);
-
-                    y += height + imageSpacing;
-                }
-
-                panelDimension.height = y - imageSpacing;
-
-                // Reverses the order of the images by "inverting" the y value of each image
-                for (ImageInfo info : imageInfoMap.values()) {
-                    info.screenRect = new Rectangle(info.screenRect.x, panelDimension.height - info.screenRect.y - info.screenRect.height, info.screenRect.width, info.screenRect.height);
-                }
             }
-
-//            log.debug("Panel dimension:  " + panelDimension.toString());
-            setPreferredSize(panelDimension);
-
-            System.out.println(this.getWidth());
-            System.out.println(this.getPreferredSize().getWidth());
-            System.out.println(panelDimension.getWidth());
 
             for (int i = 0; i < imageScrollPaneArray.length; i++) {
                 imageZoomArray[i] = new ImageZoomPanel();
@@ -170,22 +134,6 @@ public class MultiImagePanel extends JComponent implements ComponentListener, Mo
 
                 imageScrollPaneArray[i] = new JScrollPane(imageZoomArray[i]);
                 imageScrollPaneArray[i].setPreferredSize(new Dimension(this.getWidth(), this.getWidth()));
-
-//                imageScrollPaneArray[i].addMouseMotionListener(new MouseMotionListener() {
-//                    @Override
-//                    public void mouseDragged(MouseEvent e) {
-//
-//                    }
-//
-//                    @Override
-//                    public void mouseMoved(MouseEvent e) {
-//                        setToolTipText("");
-//
-//                        if (imageScrollPaneArray[i].getBounds().contains(e.getPoint())) {
-//                            setToolTipText("Build Height: " + )
-//                        }
-//                    }
-//                });
 
                 JScrollPane temp = imageScrollPaneArray[i];
 
@@ -209,13 +157,13 @@ public class MultiImagePanel extends JComponent implements ComponentListener, Mo
 
                 this.add(imageScrollPaneArray[i]);
             }
-
         }
     }
 
     public void zoomIn() {
         for (int i = 0; i < imageZoomArray.length; i++) {
             imageZoomArray[i].zoomIn();
+            imageScrollPaneArray[i].revalidate();
         }
 
         this.repaint();
@@ -224,6 +172,7 @@ public class MultiImagePanel extends JComponent implements ComponentListener, Mo
     public void zoomOut() {
         for (int i = 0; i < imageZoomArray.length; i++) {
             imageZoomArray[i].zoomOut();
+            imageScrollPaneArray[i].revalidate();
         }
 
         this.repaint();
@@ -232,6 +181,7 @@ public class MultiImagePanel extends JComponent implements ComponentListener, Mo
     public void zoomOriginal() {
         for (int i = 0; i < imageZoomArray.length; i++) {
             imageZoomArray[i].originalSize();
+            imageScrollPaneArray[i].revalidate();
         }
 
         this.repaint();
@@ -240,21 +190,16 @@ public class MultiImagePanel extends JComponent implements ComponentListener, Mo
     @Override
     public void paintComponent(Graphics g) {
         Graphics2D g2 = (Graphics2D)g;
-//        g2.setColor(getBackground());
-//        g2.fillRect(0, 0, getWidth(), getHeight());
 
         Rectangle clipRect = g2.getClipBounds();
 
         if (!imageInfoMap.isEmpty()) {
-//            g2.setColor(Color.blue);
 
             // for all images in the directory
-            int i = 0;
+            int i = imageZoomArray.length - 1;
             for (ImageInfo info : imageInfoMap.values()) {
-//            for (int i = 0; i < imageScrollPaneArray.length; i++) {
 
                 // if this image intersects the screen boundaries
-//                if (info.screenRect.intersects(clipRect)) {
                 if (imageScrollPaneArray[i].getBounds().intersects(clipRect)) {
 
                     // retrieve each image to be drawn [try from cache first]
@@ -304,14 +249,10 @@ public class MultiImagePanel extends JComponent implements ComponentListener, Mo
                         imageCacheTimeMap.put(info.lastAccessTime, info);
                     }
 
-//                    g2.drawImage(image, info.screenRect.x, info.screenRect.y, info.screenRect.width, info.screenRect.height, this);
-//                    g2.draw(info.screenRect);
                     uncachedImageFlagVertical = 1;
                     uncachedImageFlagHorizontal = 1;
                     imageZoomArray[i].layoutComponent();
 
-//                    uncachedImageFlagVertical = 1;
-//                    uncachedImageFlagHorizontal = 1;
                     imageScrollPaneArray[i].revalidate();
 
                     uncachedImageFlagVertical = 1;
@@ -320,57 +261,10 @@ public class MultiImagePanel extends JComponent implements ComponentListener, Mo
                     imageScrollPaneArray[i].getHorizontalScrollBar().getModel().setValue(imageHorizontalScrollerVal);
                 }
 
-                i++;
+                i--;
             }
         }
     }
-
-
-    // ComponentListener methods
-    @Override
-    public void componentResized(ComponentEvent e) {
-//        layoutComponent();
-//        repaint();
-    }
-
-
-    @Override
-    public void componentMoved(ComponentEvent e) {
-
-    }
-
-
-    @Override
-    public void componentShown(ComponentEvent e) {
-
-    }
-
-
-    @Override
-    public void componentHidden(ComponentEvent e) {
-
-    }
-
-
-    // MouseMotionListener methods
-    @Override
-    public void mouseDragged(MouseEvent e) {
-
-    }
-
-    @Override
-    public void mouseMoved(MouseEvent e) {
-//        setToolTipText("");
-//
-//        for (int i = 0; i < imageScrollPaneArray.length; i++) {
-//
-//            if (imageScrollPaneArray[i].getVisibleRect().contains(e.getPoint())) {
-//                setToolTipText("Build Height: " + ( (ImageZoomPanel) imageScrollPaneArray[i].getComponent(0)).getHeightValue() );
-//                break;
-//            }
-//        }
-    }
-
 
     // TalonDataListener methods
     @Override
@@ -399,15 +293,6 @@ public class MultiImagePanel extends JComponent implements ComponentListener, Mo
         setImageFileInfo(data.getImageFiles(), data.getHeightValues(), data.getImageDimensions());
         revalidate();
     }
-
-
-    // will make the tooltip follow the cursor when hovering over images if desired
-//    @Override
-//    public Point getToolTipLocation(MouseEvent event) {
-//        Point pt = new Point(event.getX(), event.getY());
-//        return pt;
-//    }
-
 
 
 
@@ -478,7 +363,7 @@ public class MultiImagePanel extends JComponent implements ComponentListener, Mo
     }
 
 
-    public class ImageZoomPanel extends JComponent implements MouseMotionListener {
+    public class ImageZoomPanel extends JComponent {
 
         private final Double ZOOM_DEFAULT = 0.5;
 
@@ -536,6 +421,7 @@ public class MultiImagePanel extends JComponent implements ComponentListener, Mo
 
         public void setHeightValue(Double heightValue) {
             this.heightValue = heightValue;
+            this.setToolTipText("Build Height: " + heightValue);
         }
 
         public Double getHeightValue() {
@@ -561,20 +447,5 @@ public class MultiImagePanel extends JComponent implements ComponentListener, Mo
                 }
             }
         }
-
-        @Override
-        public void mouseDragged(MouseEvent e) {
-
-        }
-
-        @Override
-        public void mouseMoved(MouseEvent e) {
-            setToolTipText("");
-
-            if (this.getBounds().contains(e.getPoint())) {
-                setToolTipText("Build Height: " + this.heightValue);
-            }
-        }
     }
-
 }
