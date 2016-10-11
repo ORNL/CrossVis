@@ -431,10 +431,10 @@ public class DataModel {
 			column.getSummaryStats().setSkewness(stats.getSkewness());
 			column.getSummaryStats().setKurtosis(stats.getKurtosis());
 
-			column.meanValueProperty().setValue(stats.getMean());
-			column.minValueProperty().setValue(stats.getMin());
-			column.maxValueProperty().setValue(stats.getMax());
-			column.standardDeviationValueProperty().setValue(stats.getStandardDeviation());
+			column.setMeanValue(stats.getMean());
+			column.setMinValue(stats.getMin());
+			column.setMaxValue(stats.getMax());
+			column.setStandardDeviationValue(stats.getStandardDeviation());
 
 			// calculate whiskers for box plot 1.5 of IQR
 			double iqr_range = 1.5 * column.getSummaryStats().getIQR();
@@ -1044,8 +1044,6 @@ public class DataModel {
 		return getActiveQuery().getTuples();
 	}
 
-
-	// Working here 9/22/2016
 	public void setQueriedTuples() {
 		getActiveQuery().clearTuples();
 

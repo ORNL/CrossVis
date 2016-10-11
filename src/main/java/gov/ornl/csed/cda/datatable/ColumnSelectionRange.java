@@ -53,24 +53,4 @@ public class ColumnSelectionRange {
     }
 
     public DoubleProperty maxValueProperty() { return maxValue; }
-
-//    public double getMaxValue() {
-//        return maxValue;
-//    }
-//
-//    public ColumnSelection getColumnSelection () {
-//        return columnSelection;
-//    }
-//
-//    public void setMaxValue(double maxValue) {
-//        this.maxValue = maxValue;
-//    }
-//
-//    public double getMinValue() {
-//        return minValue;
-//    }
-//
-//    public void setMinValue(double minValue) {
-//        this.minValue = minValue;
-//    }
 }

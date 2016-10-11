@@ -1,11 +1,7 @@
 package gov.ornl.csed.cda.experimental;
 
-import gov.ornl.csed.cda.datatable.Column;
-import gov.ornl.csed.cda.datatable.ColumnSelection;
-import gov.ornl.csed.cda.datatable.Query;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
-import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ListProperty;
 import javafx.beans.property.SimpleListProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -13,10 +9,6 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
-import javafx.collections.ObservableList;
-
-import java.beans.PropertyChangeSupport;
-import java.util.ArrayList;
 
 /**
  * Created by csg on 9/16/16.

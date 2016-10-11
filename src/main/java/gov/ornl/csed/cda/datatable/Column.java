@@ -63,7 +63,7 @@ public class Column implements Serializable {
 
     public final void setEnabled (boolean enabled) { this.enabled.set(enabled); }
 
-    public BooleanProperty enabledProperty() { return enabled; }
+    public ReadOnlyBooleanProperty enabledProperty() { return enabled; }
 
     public final String getName() { return name.get(); }
 
@@ -75,17 +75,25 @@ public class Column implements Serializable {
 
     public final double getStandardDeviationValue() { return standardDeviationValue.get(); }
 
+    public final void setStandardDeviationValue(double value) { standardDeviationValue.set(value); }
+
     public DoubleProperty standardDeviationValueProperty() { return standardDeviationValue; }
 
     public final double getMeanValue() { return meanValue.get(); }
+
+    public final void setMeanValue(double value) { meanValue.set(value); }
 
     public DoubleProperty meanValueProperty() { return meanValue; }
 
     public final double getMinValue() { return minValue.get(); }
 
+    public final void setMinValue (double value) { minValue.set(value); }
+
     public DoubleProperty minValueProperty() { return minValue; }
 
     public final double getMaxValue() { return maxValue.get(); }
+
+    public final void setMaxValue(double value) { maxValue.set(value); }
 
     public DoubleProperty maxValueProperty() { return maxValue; }
 

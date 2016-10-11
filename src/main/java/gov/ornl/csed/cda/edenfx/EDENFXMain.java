@@ -31,11 +31,13 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Callback;
 import javafx.util.converter.NumberStringConverter;
+import org.controlsfx.control.StatusBar;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Optional;
@@ -78,10 +80,15 @@ public class EDENFXMain extends Application {
     private ToggleButton binDisplayModeButton;
     private ToggleButton lineDisplayModeButton;
 
+    private ProgressBar percentSelectedProgress;
+    private DecimalFormat decimalFormat;
+    private StatusBar statusBar;
+
     @Override
     public void init() {
         preferences = Preferences.userNodeForPackage(this.getClass());
 
+        decimalFormat = new DecimalFormat("###.0%");
         displayModeMap = new HashMap<>();
         displayModeMap.put("Histograms", PCPView.DISPLAY_MODE.HISTOGRAM);
         displayModeMap.put("Parallel Coordinates Bins", PCPView.DISPLAY_MODE.PCP_BINS);
@@ -264,6 +271,18 @@ public class EDENFXMain extends Application {
         return toolBar;
     }
 
+    private void createStatusBar() {
+        statusBar = new StatusBar();
+
+        percentSelectedProgress = new ProgressBar();
+        percentSelectedProgress.setProgress(0.0);
+        percentSelectedProgress.setTooltip(new Tooltip("Selected Tuples Percentage"));
+
+        statusBar.getLeftItems().add(percentSelectedProgress);
+
+        updatePercentSelected();
+    }
+
     @Override
     public void start(Stage stage) throws Exception {
         stage.setOnShown(event -> {
@@ -293,6 +312,8 @@ public class EDENFXMain extends Application {
         pcpScrollPane.setFitToWidth(pcpView.getFitAxisSpacingToWidthEnabled());
 
         ToolBar toolBar = createToolBar(stage);
+
+        createStatusBar();
 
         MenuBar menuBar = createMenuBar(stage);
 //        menuBar.setUseSystemMenuBar(true);
@@ -329,6 +350,7 @@ public class EDENFXMain extends Application {
         BorderPane rootNode = new BorderPane();
         rootNode.setCenter(middleSplit);
         rootNode.setTop(topContainer);
+        rootNode.setBottom(statusBar);
 //        rootNode.setLeft(settingsPane);
 
         Scene scene = new Scene(rootNode, 1000, 500, true, SceneAntialiasing.BALANCED);
@@ -526,6 +548,16 @@ public class EDENFXMain extends Application {
         return menuBar;
     }
 
+    private void updatePercentSelected() {
+        if (dataModel != null && !dataModel.isEmpty()) {
+            double percentSelected = (double) dataModel.getQueriedTupleCount() / dataModel.getTupleCount();
+            percentSelectedProgress.setProgress(percentSelected);
+            statusBar.setText(" " + dataModel.getQueriedTupleCount() + " of " + dataModel.getTupleCount() + " tuples selected (" + decimalFormat.format(percentSelected) + ")");
+        } else {
+            statusBar.setText(" Ready ");
+        }
+    }
+
     private void openCSVFile(File f) throws IOException {
         if (dataModel != null) {
             // TODO: Clear the data model from the PCPView
@@ -547,7 +579,7 @@ public class EDENFXMain extends Application {
         dataModel.addDataModelListener(new DataModelListener() {
             @Override
             public void dataModelChanged(DataModel dataModel) {
-
+                updatePercentSelected();
             }
 
             @Override
@@ -555,6 +587,11 @@ public class EDENFXMain extends Application {
                 log.debug("EDENFXMain queryChanged: " + dataModel.getActiveQuery().hasColumnSelections());
                 removeAllQueriesMI.setDisable(!dataModel.getActiveQuery().hasColumnSelections());
                 setDataTableItems();
+
+                updatePercentSelected();
+//                double percentSelected = (double)dataModel.getQueriedTupleCount() / dataModel.getTupleCount();
+//                percentSelectedProgress.setProgress(percentSelected);
+//                statusBar.setText(" " + dataModel.getQueriedTupleCount() + " of " + dataModel.getTupleCount() + " tuples selected (" + decimalFormat.format(percentSelected) + ")");
 //                if (dataModel.getActiveQuery().hasColumnSelections()) {
 //                    queryTableView.setItems(FXCollections.observableArrayList(dataModel.getActiveQuery().getAllColumnSelectionRanges()));
 //                } else {
@@ -566,7 +603,7 @@ public class EDENFXMain extends Application {
             public void dataModelColumnSelectionAdded(DataModel dataModel, ColumnSelectionRange columnSelectionRange) {
                 removeAllQueriesMI.setDisable(!dataModel.getActiveQuery().hasColumnSelections());
                 setDataTableItems();
-
+                updatePercentSelected();
 //                if (dataModel.getActiveQuery().hasColumnSelections()) {
 //                    queryTableView.setItems(FXCollections.observableArrayList(dataModel.getActiveQuery().getAllColumnSelectionRanges()));
 //                } else {
@@ -578,7 +615,7 @@ public class EDENFXMain extends Application {
             public void dataModelColumnSelectionRemoved(DataModel dataModel, ColumnSelectionRange columnSelectionRange) {
                 removeAllQueriesMI.setDisable(!dataModel.getActiveQuery().hasColumnSelections());
                 setDataTableItems();
-
+                updatePercentSelected();
 //                if (dataModel.getActiveQuery().hasColumnSelections()) {
 //                    queryTableView.setItems(FXCollections.observableArrayList(dataModel.getActiveQuery().getAllColumnSelectionRanges()));
 //                } else {
