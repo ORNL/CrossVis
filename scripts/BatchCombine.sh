@@ -37,13 +37,18 @@ echo "$HOME"
 
 mkdir -p $CSV_DIR
 
-cd $PLG_DIR
+cd $APPENDEE_DIR
 
+APPENDER_FILES=(`ls $APPENDER_DIR`)
+
+i=0
 for F in *
 do
 
-echo "Processing $F ..."
-java -Xmx8g -cp $HOME/../target/falcon-0.3.1-jar-with-dependencies.jar gov.ornl.csed.cda.util.PlgToCsvParser $PARSER_TYPE "$PLG_DIR/$F" "$CSV_DIR/$F.csv" "$TEMPLATE" $DURATION
+echo "Processing $F and ${APPENDER_FILES[$i]}"
+java -Xmx8g -cp $HOME/../target/falcon-0.3.1-jar-with-dependencies.jar gov.ornl.csed.cda.util.CsvFileMerger "$APPENDEE_DIR/$F" "$APPENDER_DIR/${APPENDER_FILES[$i]}" "$CSV_DIR/$F" $APPENDEE_KEY $APPENDER_KEY
+
+i=`expr $i + 1`
 
 done
 
