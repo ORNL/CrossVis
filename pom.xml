@@ -2,15 +2,15 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>gov.ornl.csed.cda.falcon</groupId>
-	<artifactId>falcon</artifactId>
+	<groupId>gov.ornl.csed.cda.edenfx</groupId>
+	<artifactId>edenfx</artifactId>
 	<packaging>jar</packaging>
-	<version>0.3.2</version>
+	<version>0.0.2</version>
 
-	<name>falcon</name>
+	<name>edenfx</name>
     <organization>
         <name>Oak Ridge National Laboratory</name>
-        <url>http://cda.ornl.gov/</url>
+        <url>http://cda.ornl.gov/projects/edenfx</url>
     </organization>
 
 	<properties>
@@ -37,11 +37,6 @@
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-csv</artifactId>
 			<version>1.4</version>
-		</dependency>
-		<dependency>
-			<groupId>com.github.davidmoten</groupId>
-			<artifactId>fastdtw</artifactId>
-			<version>0.1</version>
 		</dependency>
 		<dependency>
 			<groupId>org.controlsfx</groupId>
@@ -72,13 +67,13 @@
 					</descriptorRefs>
                     <archive>
                         <manifest>
-                            <mainClass>gov.ornl.csed.cda.Falcon.FalconMain</mainClass>
+                            <mainClass>gov.ornl.csed.cda.edenfx.EDENFXMain</mainClass>
                         </manifest>
                         <manifestEntries>
                             <Title>${project.artifactId}</Title>
                             <Version>${project.version}</Version>
                             <Vendor>${project.organization.name}</Vendor>
-                            <SplashScreen-Image>Falcon-SplashScreen.png</SplashScreen-Image>
+                            <SplashScreen-Image>EDENFX-SplashScreen.png</SplashScreen-Image>
                         </manifestEntries>
                     </archive>
 				</configuration>
@@ -99,7 +94,7 @@
                 <version>1.4.0</version>
                 <executions>
                     <execution>
-                        <id>Falcon_package</id>
+                        <id>EDENFX_package</id>
                         <phase>package</phase>
                         <goals>
                             <goal>exec</goal>
@@ -114,21 +109,21 @@
                                 <argument>-native</argument>
                                 <argument>installer</argument>
                                 <argument>-name</argument>
-                                <argument>Falcon</argument>
+                                <argument>EDENFX</argument>
                                 <argument>-title</argument>
-                                <argument>Falcon</argument>
+                                <argument>EDENFX</argument>
                                 <argument>-vendor</argument>
                                 <argument>ORNL</argument>
                                 <argument>-outdir</argument>
                                 <argument>./target</argument>
                                 <argument>-srcfiles</argument>
-                                <argument>./target/falcon-${project.version}-jar-with-dependencies.jar</argument>
+                                <argument>./target/edenfx-${project.version}-jar-with-dependencies.jar</argument>
                                 <argument>-appclass</argument>
-                                <argument>gov.ornl.csed.cda.Falcon.FalconMain</argument>
+                                <argument>gov.ornl.csed.cda.edenfx.EDENFXMain</argument>
                                 <argument>-outdir</argument>
                                 <argument>./target</argument>
                                 <argument>-outfile</argument>
-                                <argument>Falcon-v${project.version}</argument>
+                                <argument>EDENFX-v${project.version}</argument>
                                 <argument>-BjvmOptions=-Xmx8g</argument>
                                 <argument>-BjvmOptions=-Xms8g</argument>
                                 <argument>-v</argument>
