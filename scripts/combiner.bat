@@ -12,15 +12,8 @@
 # Appendee Key Column - Column number of build height values (1-indexed)
 # Appender Key Column - Column number of build indices (1-indexed)
 
-usage=
+set argC=0
+for %%x in (%*) do Set /A argC+=1
 
-if [ $# -ne 5 ]
-then
-	java -Xmx8g -cp ../target/falcon-0.3.1-jar-with-dependencies.jar gov.ornl.csed.cda.util.CsvFileMerger
-
-else
-    java -Xmx8g -cp ../target/falcon-0.3.1-jar-with-dependencies.jar gov.ornl.csed.cda.util.CsvFileMerger $1 $2 $3 $4 $5
-
-fi
-
+IF argC != 5 java -Xmx8g -cp ../target/falcon-0.3.1-jar-with-dependencies.jar gov.ornl.csed.cda.util.CsvFileMerger ELSE java -Xmx8g -cp ../target/falcon-0.3.1-jar-with-dependencies.jar gov.ornl.csed.cda.util.CsvFileMerger $1 $2 $3 $4 $5
 

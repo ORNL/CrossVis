@@ -50,21 +50,45 @@ FOR BOTH
  */
 
 
-import gov.ornl.csed.cda.Falcon.PLGFileReader;
-import gov.ornl.csed.cda.timevis.TimeSeries;
-import gov.ornl.csed.cda.timevis.TimeSeriesRecord;
+import gov.ornl.csed.cda.Falcon.*;
+import gov.ornl.csed.cda.timevis.*;
+import javafx.application.Application;
+import javafx.application.Platform;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
+import javafx.event.EventType;
+import javafx.geometry.Insets;
+import javafx.scene.Node;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.scene.input.*;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontSmoothingType;
+import javafx.scene.text.Text;
+import javafx.stage.FileChooser;
+import javafx.stage.Stage;
+import javafx.util.Callback;
+import org.apache.commons.math3.ml.neuralnet.twod.util.TopographicErrorHistogram;
+import sun.security.provider.ConfigFile;
 
+import javax.swing.*;
 import java.io.*;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
-public class PlgToCsvParser {
+public class PlgToCsvParser extends Application {
 
     private String plgFilename = "";
     private String csvFilename = "";
 
-    private File plgFile;
-    private File csvFile;
+    private File plgFile = null;
+    private File csvFile = null;
 
     private ArrayList<String> plgDesiredVarNames = new ArrayList<>();
     private String plgSegmentingVarName = "";
@@ -76,7 +100,34 @@ public class PlgToCsvParser {
     private Instant startInstant;
     private Instant endInstant;
 
-    private Long sampleDuration = 10L;
+    private static Integer parserOption = null;
+    private ParserTypes parserOption_e = null;
+
+    private Long sampleDuration = 1000L;
+
+    /*
+    ========================================================================================================================================================================
+     */
+
+    private Font fontAwesomeFont;
+    private HashMap<TreeItem<String>, FileMetadata> fileTreeItemMetadataMap = new HashMap<>();
+    private HashMap<File, FileMetadata> fileMetadataMap = new HashMap<>();
+    private TreeItem<String> dataTreeRoot;
+    private TreeView<String> dataTreeView;
+    private final DataFormat objectDataFormat = new DataFormat("application/x-java-serialized-object");
+    private ListView<String> variableListView;
+
+    /*
+    ========================================================================================================================================================================
+     */
+
+    private enum ParserTypes {
+        SAMPLED, LOSSLESS
+    }
+
+    public PlgToCsvParser() {
+
+    }
 
 
     public PlgToCsvParser(String plgFilename, String csvFilename, String variablesFileName, Long sampleDuration, String plgSegmentingVarName) throws IOException {
@@ -89,19 +140,25 @@ public class PlgToCsvParser {
 
         this.sampleDuration = sampleDuration;
 
-        BufferedReader bufferedReader = new BufferedReader(new FileReader(new File(variablesFileName)));
+        // TODO: 8/31/16 - CALL THE TEMPLATE LOADING FUNCTIONS
+        FileMetadata fileMetadata = new FileMetadata(plgFile);
+        fileMetadata.fileType = FileMetadata.FileType.PLG;
+        fileMetadataMap.put(plgFile, fileMetadata);
+        this.loadViewTemplate(new File(variablesFileName));
 
-        String line = bufferedReader.readLine();
-
-        while (line != null) {
-
-            if (!plgDesiredVarNames.contains(line)) {
-                plgDesiredVarNames.add(line);
-            }
-
-            line = bufferedReader.readLine();
-            plgDesiredVarNames.add(line.trim());
-        }
+//        BufferedReader bufferedReader = new BufferedReader(new FileReader(new File(variablesFileName)));
+//
+//        String line = bufferedReader.readLine();
+//
+//        while (line != null) {
+//
+//            if (!plgDesiredVarNames.contains(line)) {
+//                plgDesiredVarNames.add(line);
+//            }
+//
+//            line = bufferedReader.readLine();
+//            plgDesiredVarNames.add(line.trim());
+//        }
     }
 
 
@@ -114,22 +171,28 @@ public class PlgToCsvParser {
 
         this.sampleDuration = sampleDuration;
 
-        BufferedReader bufferedReader = new BufferedReader(new FileReader(new File(variablesFileName)));
+        // TODO: 8/31/16 - CALL THE TEMPLATE LOADING FUNCTIONS
+        FileMetadata fileMetadata = new FileMetadata(plgFile);
+        fileMetadata.fileType = FileMetadata.FileType.PLG;
+        fileMetadataMap.put(plgFile, fileMetadata);
+        this.loadViewTemplate(new File(variablesFileName));
 
-        String line = bufferedReader.readLine();
-
-        while (line != null) {
-
-            if (!plgDesiredVarNames.contains(line)) {
-                plgDesiredVarNames.add(line);
-            }
-
-            line = bufferedReader.readLine();
-            if (line != null) {
-                plgDesiredVarNames.add(line.trim());
-
-            }
-        }
+//        BufferedReader bufferedReader = new BufferedReader(new FileReader(new File(variablesFileName)));
+//
+//        String line = bufferedReader.readLine();
+//
+//        while (line != null) {
+//
+//            if (!plgDesiredVarNames.contains(line)) {
+//                plgDesiredVarNames.add(line);
+//            }
+//
+//            line = bufferedReader.readLine();
+//            if (line != null) {
+//                plgDesiredVarNames.add(line.trim());
+//
+//            }
+//        }
     }
 
     public PlgToCsvParser(String plgFilename, String csvFilename, Long sampleDuration) {
@@ -157,6 +220,16 @@ public class PlgToCsvParser {
 
         plgDesiredVarNames.add("OPC.PowerSupply.Beam.BeamCurrent");
         plgDesiredVarNames.add("OPC.PowerSupply.HighVoltage.Grid");
+    }
+
+    public PlgToCsvParser(File plgFile, File csvFile, ArrayList<String> plgDesiredVarNames, Long sampleDuration) {
+        this.plgFile = plgFile;
+        this.csvFile = csvFile;
+
+        this.sampleDuration = sampleDuration;
+
+        this.plgDesiredVarNames = plgDesiredVarNames;
+
     }
 
 
@@ -524,7 +597,6 @@ public class PlgToCsvParser {
                         "Variables name file path - Full path to text file containing desired variable names; one variable name per line\n" +
                         "Sample Duration in ms - Duration in between regular sampling. Must be a whole number. This value is disregarded for Parser Type 2\n";
 
-        Integer parserOption;
         String plgFileName = "/Users/whw/ORNL Internship/New Build Data/29-6-2016/For William/R1119_2016-06-14_19.09_20160614_Q10_DEHOFF_ORNL TEST ARTICACT 1 LogFiles/R1119_2016-06-14_19.09_20160614_Q10_DEHOFF_ORNL TEST ARTICACT 1.plg";
 //        String csvFileName = "/Users/whw/ORNL Internship/test_perSample.csv";
 //        String csvFileName = "/Users/whw/ORNL Internship/test_lossless.csv";
@@ -546,9 +618,11 @@ public class PlgToCsvParser {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+
         } else {
-            System.out.println(usage);
-            return;
+
+            launch(args);
+            System.exit(0);
 
         }
 
@@ -562,6 +636,544 @@ public class PlgToCsvParser {
                 parser.parsePerLayerData();
             }
 
+        }
+
+        System.exit(0);
+    }
+
+    @Override
+    public void start(Stage primaryStage) throws Exception {
+
+        InputStream is = FalconMain.class.getResourceAsStream("fontawesome-webfont.ttf");
+        fontAwesomeFont = javafx.scene.text.Font.loadFont(is, 14);
+        createDataTreeView();
+
+        // create the menu bar
+        Menu plgToCsvParserMenu = new Menu("P2C Parser");
+        MenuItem aboutPlgToCsvParserMenuItem = new MenuItem("About");
+        aboutPlgToCsvParserMenuItem.setOnAction(e -> {
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("About");
+            alert.setHeaderText("About P2C Parser");
+            String s = "P2C Parser is developed and maintained by the Computational Data Analytics Group \nat Oak Ridge National Laboratory.\n\nThe lead developer is William Halsey\n\n\u00a9 2015 - 2016";
+            alert.setContentText(s);
+            alert.show();
+        });
+        
+        plgToCsvParserMenu.getItems().addAll(aboutPlgToCsvParserMenuItem);
+
+        Menu fileMenu = new Menu("File");
+        MenuItem openMenuItem = new MenuItem("Open");
+        openMenuItem.setOnAction(e -> {
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Choose a PLG File to Open");
+            plgFile = fileChooser.showOpenDialog(primaryStage);
+
+            try {
+                openPLGFile(plgFile);
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
+        });
+
+        MenuItem saveTemplateMenuItem = new MenuItem("Save Template");
+        saveTemplateMenuItem.setOnAction(e -> {
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
+            fileChooser.setTitle("Select View Template File");
+            File templateFile = fileChooser.showSaveDialog(primaryStage);
+            if (!templateFile.getName().endsWith(".vtf")) {
+                templateFile = new File(templateFile.getAbsolutePath() + ".vtf");
+            }
+            if (templateFile != null) {
+                try {
+                    saveViewTemplate(templateFile);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+        });
+
+        MenuItem loadTemplateMenuItem = new MenuItem("Load Template");
+        loadTemplateMenuItem.setOnAction(e -> {
+            // if timeseries are being shown, ask user if they want to clear the display
+            if (variableListView.getItems().size() != 0) {
+                Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+                alert.setTitle("Reset Display");
+                alert.setHeaderText("Clear existing visualization panels?");
+                alert.setContentText("Choose your preference");
+
+                alert.getButtonTypes().setAll(ButtonType.YES, ButtonType.NO);
+
+                Optional<ButtonType> result = alert.showAndWait();
+                if (result.get() == ButtonType.YES) {
+                    variableListView.getItems().removeAll(variableListView.getItems());
+                }
+            }
+
+            // get the template file
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setInitialDirectory(new File(System.getProperty("user.dir")));
+            fileChooser.setTitle("Load View Template File");
+            File templateFile = fileChooser.showOpenDialog(primaryStage);
+            if (templateFile != null) {
+                try {
+                    loadViewTemplate(templateFile);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+
+                for (int i = 0; i < plgDesiredVarNames.size(); i++) {
+                    variableListView.getItems().add(plgDesiredVarNames.get(i));
+                }
+            }
+
+        });
+
+        MenuItem exitMenuItem = new MenuItem("Exit");
+        exitMenuItem.setOnAction(e -> {
+            primaryStage.close();
+        });
+        
+        fileMenu.getItems().addAll(openMenuItem, new SeparatorMenuItem(), saveTemplateMenuItem, loadTemplateMenuItem, new SeparatorMenuItem(), exitMenuItem);
+
+        MenuBar menuBar = new MenuBar(plgToCsvParserMenu, fileMenu);
+
+        // create the primitive components
+//        TreeView<String> variableListViewer = new TreeView<String>();
+
+        Button rmButton = new Button("–");
+        rmButton.setOnAction(e -> {
+            plgDesiredVarNames.remove(variableListView.getSelectionModel().getSelectedIndex());
+            variableListView.getItems().remove(variableListView.getSelectionModel().getSelectedIndex());
+        });
+
+        Spinner<Integer> sampleDurationSpinner = new Spinner<>(1000, 1000000, 1000, 1);
+        sampleDurationSpinner.setEditable(true);
+
+        sampleDurationSpinner.setVisible(false);
+
+        ChoiceBox<String> parserChooser = new ChoiceBox<>();
+        for (int i = 0; i < ParserTypes.values().length; i++) {
+            parserChooser.getItems().add(String.valueOf(ParserTypes.values()[i]));
+        }
+        parserChooser.setValue(String.valueOf(ParserTypes.LOSSLESS));
+        parserChooser.setOnAction(e -> {
+            parserOption_e = ParserTypes.valueOf(parserChooser.getValue());
+
+            if (parserOption_e == ParserTypes.SAMPLED) {
+                sampleDurationSpinner.setVisible(true);
+            } else {
+                sampleDurationSpinner.setVisible(false);
+            }
+        });
+
+        Button parserButton = new Button("Parse");
+        parserButton.setDisable(true);
+        parserButton.setOnAction(e -> {
+            if (plgFile != null && csvFile != null) {
+                // do the conversion
+                this.sampleDuration = sampleDurationSpinner.getValue().longValue();
+                for (String item : variableListView.getItems()) {
+                    this.plgDesiredVarNames.add(item);
+                }
+
+                if (parserChooser.getValue().equals(ParserTypes.LOSSLESS.toString())) {
+                    System.out.println("parsing lossless data");
+
+                    this.parseLosslessData();
+
+                } else if (parserChooser.getValue().equals(ParserTypes.SAMPLED.toString())) {
+                    System.out.println("parsing sampled data");
+
+                    this.parsePerSampleData();
+
+                }
+
+                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                alert.setTitle("Status");
+                alert.setHeaderText("DONE");
+                alert.show();
+            }
+
+        });
+
+        Button saveAsButton = new Button("Save As...");
+        saveAsButton.setOnAction(e -> {
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Choose File to Save to");
+            csvFile = fileChooser.showSaveDialog(primaryStage);
+
+            if (!csvFile.getName().endsWith(".csv")) {
+                csvFile = new File(csvFile.getAbsolutePath() + ".csv");
+            }
+
+            parserButton.setDisable(false);
+        });
+
+        variableListView = new ListView<>();
+//        variableListView.setOnDragDropped(e -> {
+//            // TODO: 8/26/16
+//        });
+
+        // group the primitives into the scene
+        HBox buttonGroup = new HBox(rmButton, saveAsButton, parserButton);
+        buttonGroup.setSpacing(3D);
+
+        VBox rootRightPanel = new VBox(variableListView, buttonGroup, parserChooser, sampleDurationSpinner);
+        rootRightPanel.setSpacing(3D);
+
+        HBox components = new HBox(dataTreeView, rootRightPanel);
+        components.setSpacing(3D);
+
+        VBox root = new VBox(menuBar, components);
+        root.setSpacing(3D);
+
+        // create the scene and add the root
+        Scene scene = new Scene(root);
+
+        // add the scene to the stage and show
+        primaryStage.setScene(scene);
+        primaryStage.show();
+    }
+
+    /* Tree View Code
+    ========================================================================================================================================================================
+     */
+
+    private void openPLGFile(File plgFile) throws IOException {
+        HashMap<String, PLGVariableSchema> tmp = PLGFileReader.readVariableSchemas(plgFile);
+
+        TreeMap<String, PLGVariableSchema> variableSchemaMap = new TreeMap<>();
+
+        for (Map.Entry<String, PLGVariableSchema> entry : tmp.entrySet()) {
+            variableSchemaMap.put(entry.getKey(), entry.getValue());
+        }
+
+        // populate data tree view
+        Text itemIcon = new Text("\uf1c0");
+        itemIcon.setFont(fontAwesomeFont);
+        itemIcon.setFontSmoothingType(FontSmoothingType.LCD);
+        TreeItem<String> fileTreeItem = new TreeItem<>(plgFile.getName(), itemIcon);
+        FileMetadata fileMetadata = new FileMetadata(plgFile);
+        fileMetadata.fileType = FileMetadata.FileType.PLG;
+        fileTreeItemMetadataMap.clear();
+        fileTreeItemMetadataMap.put(fileTreeItem, fileMetadata);
+        fileMetadataMap.clear();
+        fileMetadataMap.put(plgFile, fileMetadata);
+
+        for (PLGVariableSchema schema : variableSchemaMap.values()) {
+
+            if (schema.typeString.equals("Int16") ||
+                    schema.typeString.equals("Double") ||
+                    schema.typeString.equals("Single") ||
+                    schema.typeString.equals("Int32")) {
+                if (schema.numValues > 0) {
+                    fileMetadata.variableList.add(schema.variableName);
+                    fileMetadata.variableValueCountList.add(schema.numValues);
+
+                    String tokens[] = schema.variableName.split("[.]");
+
+                    TreeItem<String> parentTreeItem = fileTreeItem;
+                    String compoundItemName = "";
+                    for (int i = 0; i < tokens.length; i++) {
+                        TreeItem<String> treeItem = null;
+
+                        // if an item already exists for this token, use it
+                        for (TreeItem<String> item : parentTreeItem.getChildren()) {
+                            if (item.getValue().equals(tokens[i])) {
+                                treeItem = item;
+                                break;
+                            }
+                        }
+
+                        // item doesn't exist for this token so create it
+                        if (treeItem == null) {
+                            treeItem = new TreeItem<>(tokens[i]);
+                            parentTreeItem.getChildren().add(treeItem);
+                        }
+
+                        // update parent item
+                        parentTreeItem = treeItem;
+                    }
+                }
+            }
+        }
+
+        dataTreeRoot.getChildren().clear();
+        dataTreeRoot.getChildren().addAll(fileTreeItem);
+    }
+
+    private void createDataTreeView() {
+        dataTreeView = new TreeView<>();
+        dataTreeView.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
+        dataTreeView.setCellFactory(new Callback<TreeView<String>, TreeCell<String>>() {
+            @Override
+            public TreeCell<String> call(TreeView<String> param) {
+                final TreeCell<String> treeCell = new TreeCell<String>() {
+                    public void updateItem(String item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (empty) {
+                            setText(null);
+                            setGraphic(null);
+                        } else {
+                            setText(item.toString());
+                            setGraphic(getTreeItem().getGraphic());
+                            Tooltip tooltip = getTooltipForCell(this);
+                            setTooltip(tooltip);
+                        }
+                    }
+                };
+
+                treeCell.setOnMouseClicked(new EventHandler<MouseEvent>() {
+                    @Override
+                    public void handle(MouseEvent event) {
+                        if (event.getClickCount() == 2) {
+                            TreeItem<String> treeItem = treeCell.getTreeItem();
+                            if (treeItem.isLeaf()) {
+                                FileMetadata fileMetadata = getFileMetadataForTreeItem(treeItem);
+                                String variableName = getFullTreeItemName(treeItem);
+
+                                variableListView.getItems().add(variableName);
+                            }
+                        }
+                    }
+                });
+
+//                treeCell.setOnDragDetected(new EventHandler<MouseEvent>() {
+//                    @Override
+//                    public void handle(MouseEvent event) {
+//                        TreeItem<String> treeItem = treeCell.getTreeItem();
+//                        // we can only drag and drop leaf nodes in the tree
+//                        // the leaves are the full variable names
+//                        // nonleaf nodes are file nodes or partial variable names
+//                        // TODO: when a nonleaf is dragged add all child variables
+//                        if (treeItem.isLeaf()) {
+//                            VariableClipboardData variableClipboardData = treeItemToVariableClipboardData(treeItem);
+//
+//                            Dragboard db = treeCell.startDragAndDrop(TransferMode.COPY);
+//                            ClipboardContent content = new ClipboardContent();
+//                            content.put(objectDataFormat, variableClipboardData);
+//                            db.setContent(content);
+//                            event.consume();
+//                            Label label = new Label(String.format("Visualize %s", variableClipboardData.getVariableName()));
+//                            new Scene(label);
+//                            db.setDragView(label.snapshot(null, null));
+//                        }
+//                    }
+//                });
+
+                return treeCell;
+            }
+        });
+
+        dataTreeRoot = new TreeItem<String>();
+        dataTreeView.setRoot(dataTreeRoot);
+        dataTreeView.setShowRoot(false);
+    }
+
+    private FileMetadata getFileMetadataForTreeItem(TreeItem<String> treeItem) {
+        TreeItem<String> parentItem = treeItem;
+        while (parentItem != null) {
+            FileMetadata fileMetadata = fileTreeItemMetadataMap.get(parentItem);
+            if (fileMetadata != null) {
+                return fileMetadata;
+            }
+
+            parentItem = parentItem.getParent();
+        }
+
+        return null;
+    }
+
+    private Tooltip getTooltipForCell(TreeCell<String> treeCell) {
+        Tooltip tooltip = new Tooltip();
+
+        TreeItem<String> treeItem = treeCell.getTreeItem();
+
+        // build full variable name
+        String fullVarName = treeItem.getValue();
+        TreeItem<String> parent = treeItem.getParent();
+        FileMetadata fileMetadata = null;
+        while(parent != null) {
+            if (fileTreeItemMetadataMap.containsKey(parent)) {
+                fileMetadata = fileTreeItemMetadataMap.get(parent);
+                break;
+            }
+            fullVarName = parent.getValue() + "." + fullVarName;
+            parent = parent.getParent();
+        }
+
+        String tooltipText = fullVarName;
+        if (treeItem.isLeaf()) {
+            // the item represents a variable
+            // show full name and number of values in tooltip
+            int idx = fileMetadata.variableList.indexOf(fullVarName);
+            if (idx != -1) {
+                tooltipText += " (" + fileMetadata.variableValueCountList.get(idx) + " values)";
+            }
+        }
+
+        tooltip.setText(tooltipText);
+        return tooltip;
+    }
+
+    private String getFullTreeItemName(TreeItem<String> treeItem) {
+        String variableName = treeItem.getValue();
+
+        TreeItem<String> parentItem = treeItem.getParent();
+        while (parentItem != null && !fileTreeItemMetadataMap.containsKey(parentItem)) {
+            variableName = parentItem.getValue() + "." + variableName;
+            parentItem = parentItem.getParent();
+        }
+
+        return variableName;
+    }
+
+    private VariableClipboardData treeItemToVariableClipboardData(TreeItem<String> treeItem) {
+        String variableName = null;
+
+        TreeItem<String> currentTreeItem = treeItem;
+        while (currentTreeItem.getParent() != null) {
+            if (variableName == null) {
+                variableName = currentTreeItem.getValue();
+            } else {
+                variableName = currentTreeItem.getValue() + "." + variableName;
+            }
+
+            currentTreeItem = currentTreeItem.getParent();
+            if (fileTreeItemMetadataMap.containsKey(currentTreeItem)) {
+                FileMetadata fileMetadata = fileTreeItemMetadataMap.get(currentTreeItem);
+
+                VariableClipboardData variableClipboardData = new VariableClipboardData(fileMetadata.file, fileMetadata.fileType,
+                        variableName);
+                return variableClipboardData;
+            }
+        }
+
+        return null;
+    }
+
+    private void saveViewTemplate(File f) throws IOException {
+        Properties properties = new Properties();
+
+        // get variables in the view now
+        ArrayList<String> variableNames = new ArrayList<>();
+
+        for (String item : variableListView.getItems()) {
+            variableNames.add(item);
+        }
+
+        StringBuffer variableNamesBuffer = new StringBuffer();
+        for (int i = 0; i < variableNames.size(); i++) {
+            String variableName = variableNames.get(i).substring(variableNames.get(i).indexOf(":") + 1);
+            if ((i + 1) < variableNames.size()) {
+                variableNamesBuffer.append(variableName + ",");
+            } else {
+                variableNamesBuffer.append(variableName);
+            }
+        }
+
+        properties.setProperty(FalconViewTemplateKeys.VARIABLES, variableNamesBuffer.toString().trim());
+
+        OutputStream outputStream = new FileOutputStream(f);
+        properties.store(outputStream, null);
+
+    }
+
+    private void loadViewTemplate(File f) throws IOException {
+        ArrayList<FileMetadata> targetFiles = new ArrayList<>();
+        if (fileMetadataMap.size() > 1) {
+//            // prompt user to specify which of the opened files to apply the template settings to
+//            Dialog<ObservableList<File>> filesDialog = new Dialog<>();
+//            filesDialog.setHeaderText("Template Target Selection");
+////            filesDialog.setContentText("Choose Open File(s) to Apply Template");
+//
+//            // Set the button types
+//            filesDialog.getDialogPane().getButtonTypes().addAll(ButtonType.APPLY, ButtonType.CANCEL);
+//
+//            BorderPane borderPane = new BorderPane();
+//
+//            ObservableList<File> filenames = FXCollections.observableArrayList();
+//            for (FileMetadata fileMetadata : fileMetadataMap.values()) {
+//                filenames.add(fileMetadata.file);
+//            }
+//
+//            ListView<File> fileListView = new ListView<>(filenames);
+//            fileListView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+//            borderPane.setCenter(fileListView);
+//            borderPane.setMaxHeight(200);
+//            borderPane.setMinWidth(400);
+//
+//            filesDialog.getDialogPane().setContentText("Choose Open File(s) to Apply Template");
+////            filesDialog.getDialogPane().setExpandableContent(borderPane);
+//            filesDialog.getDialogPane().setContent(borderPane);
+////            filesDialog.getDialogPane().getScene().getWindow().sizeToScene();
+////            filesDialog.getDialogPane().setMinWidth(500);
+////            filesDialog.getDialogPane().setMaxHeight(200);
+//
+//            // Request focus on the username field by default.
+//            Platform.runLater(() -> fileListView.requestFocus());
+//
+//            // Convert the result to a username-password-pair when the login button is clicked.
+//            filesDialog.setResultConverter(dialogButton -> {
+//                if (dialogButton == ButtonType.APPLY) {
+//                    return fileListView.getSelectionModel().getSelectedItems();
+//                }
+//                return null;
+//            });
+//
+//            filesDialog.setResizable(true);
+//            Optional<ObservableList<File>> result = filesDialog.showAndWait();
+//
+//            if (result.isPresent()) {
+//                for (File file : result.get()) {
+//                    targetFiles.add(fileMetadataMap.get(file));
+//                }
+//            }
+        } else if (fileMetadataMap.size() == 1) {
+            targetFiles.addAll(fileMetadataMap.values());
+        } else if (fileMetadataMap.isEmpty()) {
+            // TODO: Maybe show a error message here?
+            return;
+        }
+
+        Properties properties = new Properties();
+        properties.load(new FileInputStream(f));
+
+        // get variables and load each one into the view
+        String variablesString = properties.getProperty(FalconViewTemplateKeys.VARIABLES);
+        if (variablesString != null && !(variablesString.trim().isEmpty())) {
+            String variableNames[] = variablesString.split(",");
+            for (FileMetadata fileMetadata : targetFiles) {
+                for (String variableName : variableNames) {
+                    // read variable time series from file
+                    loadColumnIntoMultiView(fileMetadata, variableName);
+                }
+            }
+        }
+    }
+
+    private void loadColumnIntoMultiView (FileMetadata fileMetadata, String variableName) {
+        try {
+//            Map<String, TimeSeries> PLGTimeSeriesMap = PLGFileReader.readPLGFileAsTimeSeries(fileMetadata.file, variableList);
+
+            Map<String, PLGVariableSchema> schemaMap = PLGFileReader.readVariableSchemas(fileMetadata.file);
+
+            if (schemaMap.containsKey(variableName)) {
+//                Alert alert = new Alert(Alert.AlertType.ERROR);
+//                alert.setTitle("Variable Read Error");
+//                alert.setHeaderText("Variable not found in file");
+//                alert.setContentText("The variable '" + variableName + "' was not found in the file '" + fileMetadata.file.getName() + "'");
+//                alert.showAndWait();
+//                variableListView.getItems().add(variableName);
+                plgDesiredVarNames.add(variableName);
+
+//                return;
+            }
+
+        } catch (IOException ex) {
+            ex.printStackTrace();
         }
 
         return;
