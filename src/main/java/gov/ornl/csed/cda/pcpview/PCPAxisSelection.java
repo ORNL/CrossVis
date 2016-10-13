@@ -4,6 +4,8 @@ import gov.ornl.csed.cda.datatable.ColumnSelectionRange;
 import gov.ornl.csed.cda.datatable.DataModel;
 import gov.ornl.csed.cda.util.GraphicsUtil;
 import javafx.application.Platform;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
@@ -21,6 +23,7 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.util.Pair;
+import javafx.util.converter.NumberStringConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,6 +53,8 @@ public class PCPAxisSelection {
     private Point2D dragStartPoint;
     private Point2D dragEndPoint;
     private boolean dragging;
+    private DoubleProperty draggingMinValue;
+    private DoubleProperty draggingMaxValue;
 
     public PCPAxisSelection(PCPAxis pcpAxis, ColumnSelectionRange selectionRange, double minValueY, double maxValueY, Pane pane, DataModel dataModel) {
         this.pcpAxis = pcpAxis;
@@ -90,7 +95,9 @@ public class PCPAxisSelection {
         bottomCrossbar.setStroke(topCrossbar.getStroke());
         bottomCrossbar.setStrokeWidth(topCrossbar.getStrokeWidth());
 
-        minText = new Text(String.valueOf(selectionRange.getMinValue()));
+//        minText = new Text(String.valueOf(selectionRange.getMinValue()));
+        minText = new Text();
+        minText.textProperty().bindBidirectional(getColumnSelectionRange().minValueProperty(), new NumberStringConverter());
         minText.setFont(new Font(DEFAULT_TEXT_SIZE));
         minText.setX(pcpAxis.getCenterX() - (minText.getLayoutBounds().getWidth() / 2d));
         minText.setY(getBottomY() + minText.getLayoutBounds().getHeight());
@@ -98,7 +105,9 @@ public class PCPAxisSelection {
         minText.setFill(DEFAULT_TEXT_FILL);
         minText.setVisible(false);
 
-        maxText = new Text(String.valueOf(selectionRange.getMaxValue()));
+//        maxText = new Text(String.valueOf(selectionRange.getMaxValue()));
+        maxText = new Text();
+        maxText.textProperty().bindBidirectional(getColumnSelectionRange().maxValueProperty(), new NumberStringConverter());
         maxText.setFont(new Font(DEFAULT_TEXT_SIZE));
         maxText.setX(pcpAxis.getCenterX() - (maxText.getLayoutBounds().getWidth() / 2d));
         maxText.setY(getTopY() - 2d);
@@ -112,7 +121,6 @@ public class PCPAxisSelection {
     }
 
     private void registerListeners() {
-
         rectangle.setOnMouseEntered(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
@@ -188,7 +196,17 @@ public class PCPAxisSelection {
         topCrossbar.setOnMouseDragged(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                dragging = true;
+                if (!dragging) {
+                    dragging = true;
+
+                    // unbind range selection max label from selection range max property
+                    maxText.textProperty().unbindBidirectional(getColumnSelectionRange().maxValueProperty());
+
+                    // bind range selection max labels to local value during drag operation
+                    draggingMaxValue = new SimpleDoubleProperty(getColumnSelectionRange().getMaxValue());
+                    maxText.textProperty().bindBidirectional(draggingMaxValue, new NumberStringConverter());
+                }
+
                 double deltaY = event.getY() - dragEndPoint.getY();
                 dragEndPoint = new Point2D(event.getX(), event.getY());
 
@@ -202,10 +220,14 @@ public class PCPAxisSelection {
                     topY = getBottomY();
                 }
 
-                double maxSelectionValue = GraphicsUtil.mapValue(topY, pcpAxis.getFocusTopY(), pcpAxis.getFocusBottomY(),
-                        pcpAxis.getColumn().getSummaryStats().getMax(), pcpAxis.getColumn().getSummaryStats().getMin());
+                draggingMaxValue.set(GraphicsUtil.mapValue(topY, pcpAxis.getFocusTopY(), pcpAxis.getFocusBottomY(),
+                        pcpAxis.getColumn().getSummaryStats().getMax(), pcpAxis.getColumn().getSummaryStats().getMin()));
 
-                update(getColumnSelectionRange().getMinValue(), maxSelectionValue, topY, getBottomY());
+                layoutGraphics(getBottomY(), topY);
+//                double maxSelectionValue = GraphicsUtil.mapValue(topY, pcpAxis.getFocusTopY(), pcpAxis.getFocusBottomY(),
+//                        pcpAxis.getColumn().getSummaryStats().getMax(), pcpAxis.getColumn().getSummaryStats().getMin());
+//
+//                update(getColumnSelectionRange().getMinValue(), maxSelectionValue, topY, getBottomY());
             }
         });
 
@@ -214,7 +236,17 @@ public class PCPAxisSelection {
             public void handle(MouseEvent event) {
                 if (dragging) {
                     dragging = false;
-                    dataModel.setQueriedTuples();
+
+                    // update column selection range max property
+                    selectionRange.setMaxValue(draggingMaxValue.get());
+
+                    // unbind selection range max label from dragging max range value
+                    maxText.textProperty().unbindBidirectional(draggingMaxValue);
+
+                    // bind selection range max label to column selection range max property
+                    maxText.textProperty().bindBidirectional(getColumnSelectionRange().maxValueProperty(), new NumberStringConverter());
+
+//                    dataModel.setQueriedTuples();
                 }
             }
         });
@@ -230,7 +262,18 @@ public class PCPAxisSelection {
         bottomCrossbar.setOnMouseDragged(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                dragging = true;
+//                dragging = true;
+                if (!dragging) {
+                    dragging = true;
+
+                    // unbind range selection min labels from selection range min properties
+                    minText.textProperty().unbindBidirectional(getColumnSelectionRange().minValueProperty());
+
+                    // bind range selection min/max labels to local values during drag operation
+                    draggingMinValue = new SimpleDoubleProperty(getColumnSelectionRange().getMinValue());
+                    minText.textProperty().bindBidirectional(draggingMinValue, new NumberStringConverter());
+                }
+
                 double deltaY = event.getY() - dragEndPoint.getY();
                 dragEndPoint = new Point2D(event.getX(), event.getY());
 
@@ -244,19 +287,33 @@ public class PCPAxisSelection {
                     bottomY = getTopY();
                 }
 
-                double minSelectionValue = GraphicsUtil.mapValue(bottomY, pcpAxis.getFocusTopY(), pcpAxis.getFocusBottomY(),
-                        pcpAxis.getColumn().getSummaryStats().getMax(), pcpAxis.getColumn().getSummaryStats().getMin());
+                draggingMinValue.set(GraphicsUtil.mapValue(bottomY, pcpAxis.getFocusTopY(), pcpAxis.getFocusBottomY(),
+                        pcpAxis.getColumn().getSummaryStats().getMax(), pcpAxis.getColumn().getSummaryStats().getMin()));
+                layoutGraphics(bottomY, getTopY());
 
-                update(minSelectionValue, getColumnSelectionRange().getMaxValue(), getTopY(), bottomY);
+//                double minSelectionValue = GraphicsUtil.mapValue(bottomY, pcpAxis.getFocusTopY(), pcpAxis.getFocusBottomY(),
+//                        pcpAxis.getColumn().getSummaryStats().getMax(), pcpAxis.getColumn().getSummaryStats().getMin());
+//
+//                update(minSelectionValue, getColumnSelectionRange().getMaxValue(), getTopY(), bottomY);
             }
         });
 
-        topCrossbar.setOnMouseReleased(new EventHandler<MouseEvent>() {
+        bottomCrossbar.setOnMouseReleased(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
                 if (dragging) {
                     dragging = false;
-                    dataModel.setQueriedTuples();
+
+                    // update column selection range min properties
+                    selectionRange.setMinValue(draggingMinValue.get());
+
+                    // unbind selection range min labels from dragging min range value
+                    minText.textProperty().unbindBidirectional(draggingMinValue);
+
+                    // bind selection range min labels to column selection range min property
+                    minText.textProperty().bindBidirectional(getColumnSelectionRange().minValueProperty(), new NumberStringConverter());
+
+//                    dataModel.setQueriedTuples();
                 }
             }
         });
@@ -286,8 +343,6 @@ public class PCPAxisSelection {
                     Optional<Pair<Double,Double>> result = dialog.showAndWait();
 
                     result.ifPresent(newMinValue -> {
-                        System.out.println(result.get().getKey() + ", " + result.get().getValue());
-                        // TODO: assign new min and max values and find new top and bottom y locations
                         double minValue = result.get().getKey();
                         double maxValue = result.get().getValue();
 
@@ -315,7 +370,20 @@ public class PCPAxisSelection {
         rectangle.setOnMouseDragged(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                dragging = true;
+                if (!dragging) {
+                    dragging = true;
+
+                    // unbind range selection min/max labels from selection range min/max properties
+                    minText.textProperty().unbindBidirectional(getColumnSelectionRange().minValueProperty());
+                    maxText.textProperty().unbindBidirectional(getColumnSelectionRange().maxValueProperty());
+
+                    // bind range selection min/max labels to local values during drag operation
+                    draggingMinValue = new SimpleDoubleProperty(getColumnSelectionRange().getMinValue());
+                    draggingMaxValue = new SimpleDoubleProperty(getColumnSelectionRange().getMaxValue());
+                    minText.textProperty().bindBidirectional(draggingMinValue, new NumberStringConverter());
+                    maxText.textProperty().bindBidirectional(draggingMaxValue, new NumberStringConverter());
+                }
+
                 double deltaY = event.getY() - dragEndPoint.getY();
                 dragEndPoint = new Point2D(event.getX(), event.getY());
 
@@ -334,12 +402,18 @@ public class PCPAxisSelection {
                     bottomY = pcpAxis.getFocusBottomY();
                 }
 
-                double maxSelectionValue = GraphicsUtil.mapValue(topY, pcpAxis.getFocusTopY(), pcpAxis.getFocusBottomY(),
-                        pcpAxis.getColumn().getSummaryStats().getMax(), pcpAxis.getColumn().getSummaryStats().getMin());
-                double minSelectionValue = GraphicsUtil.mapValue(bottomY, pcpAxis.getFocusTopY(), pcpAxis.getFocusBottomY(),
-                        pcpAxis.getColumn().getSummaryStats().getMax(), pcpAxis.getColumn().getSummaryStats().getMin());
+                draggingMaxValue.set(GraphicsUtil.mapValue(topY, pcpAxis.getFocusTopY(), pcpAxis.getFocusBottomY(),
+                        pcpAxis.getColumn().getSummaryStats().getMax(), pcpAxis.getColumn().getSummaryStats().getMin()));
+                draggingMinValue.set(GraphicsUtil.mapValue(bottomY, pcpAxis.getFocusTopY(), pcpAxis.getFocusBottomY(),
+                        pcpAxis.getColumn().getSummaryStats().getMax(), pcpAxis.getColumn().getSummaryStats().getMin()));
 
-                update(minSelectionValue, maxSelectionValue, topY, bottomY);
+                layoutGraphics(bottomY, topY);
+//                double maxSelectionValue = GraphicsUtil.mapValue(topY, pcpAxis.getFocusTopY(), pcpAxis.getFocusBottomY(),
+//                        pcpAxis.getColumn().getSummaryStats().getMax(), pcpAxis.getColumn().getSummaryStats().getMin());
+//                double minSelectionValue = GraphicsUtil.mapValue(bottomY, pcpAxis.getFocusTopY(), pcpAxis.getFocusBottomY(),
+//                        pcpAxis.getColumn().getSummaryStats().getMax(), pcpAxis.getColumn().getSummaryStats().getMin());
+
+//                update(minSelectionValue, maxSelectionValue, topY, bottomY);
             }
         });
 
@@ -349,12 +423,25 @@ public class PCPAxisSelection {
                 System.out.println("Axis selection mouse Released");
                 if (dragging) {
                     dragging = false;
-                    dataModel.setQueriedTuples();
+
+                    // update column selection range min/max properties
+                    selectionRange.setMaxValue(draggingMaxValue.get());
+                    selectionRange.setMinValue(draggingMinValue.get());
+
+                    // unbind selection range min/max labels from dragging min/max range values
+                    minText.textProperty().unbindBidirectional(draggingMinValue);
+                    maxText.textProperty().unbindBidirectional(draggingMaxValue);
+
+                    // bind selection range min/max labels to column selection range min/max properties
+                    minText.textProperty().bindBidirectional(getColumnSelectionRange().minValueProperty(), new NumberStringConverter());
+                    maxText.textProperty().bindBidirectional(getColumnSelectionRange().maxValueProperty(), new NumberStringConverter());
+
+//                    dataModel.setQueriedTuples();
                 } else {
                     pane.getChildren().remove(getGraphicsGroup());
                     pcpAxis.getAxisSelectionList().remove(this);
                     dataModel.clearColumnSelectionRange(getColumnSelectionRange());
-                    dataModel.setQueriedTuples();
+//                    dataModel.setQueriedTuples();
                 }
             }
         });
@@ -397,11 +484,11 @@ public class PCPAxisSelection {
         bottomCrossbar.getPoints().set(6, right);
         bottomCrossbar.getPoints().set(7, bottom - 2d);
 
-        minText.setText(String.valueOf(selectionRange.getMinValue()));
+//        minText.setText(String.valueOf(selectionRange.getMinValue()));
         minText.setY(getBottomY() + minText.getLayoutBounds().getHeight());
         minText.setX(pcpAxis.getCenterX() - (minText.getLayoutBounds().getWidth() / 2d));
 
-        maxText.setText(String.valueOf(selectionRange.getMaxValue()));
+//        maxText.setText(String.valueOf(selectionRange.getMaxValue()));
         maxText.setX(pcpAxis.getCenterX() - (maxText.getLayoutBounds().getWidth() / 2d));
         maxText.setY(getTopY() - 2d);
     }
@@ -410,29 +497,7 @@ public class PCPAxisSelection {
         selectionRange.setMaxValue(maxValue);
         selectionRange.setMinValue(minValue);
         layoutGraphics(minValueY, maxValueY);
-//        double top = Math.min(minValueY, maxValueY);
-//        double bottom = Math.max(minValueY, maxValueY);
-//
-//        rectangle.setY(top);
-//        rectangle.setHeight(bottom - top);
-//        topCrossbar.getPoints().set(1, top + 2d);
-//        topCrossbar.getPoints().set(3, top);
-//        topCrossbar.getPoints().set(5, top);
-//        topCrossbar.getPoints().set(7, top + 2d);
-//        bottomCrossbar.getPoints().set(1, bottom - 2d);
-//        bottomCrossbar.getPoints().set(3, bottom);
-//        bottomCrossbar.getPoints().set(5, bottom);
-//        bottomCrossbar.getPoints().set(7, bottom - 2d);
-//
-//        minText.setText(String.valueOf(minValue));
-//        minText.setY(getBottomY() + minText.getLayoutBounds().getHeight());
-//        minText.setX(pcpAxis.getCenterX() - (minText.getLayoutBounds().getWidth() / 2d));
-//
-//        maxText.setText(String.valueOf(maxValue));
-//        maxText.setX(pcpAxis.getCenterX() - (maxText.getLayoutBounds().getWidth() / 2d));
-//        maxText.setY(getTopY() - 2d);
     }
-
 
     private Dialog<Pair<Double, Double>> createSelectionRangeInputDialog (double minValue, double maxValue) {
         Dialog<Pair<Double, Double>> dialog = new Dialog<>();

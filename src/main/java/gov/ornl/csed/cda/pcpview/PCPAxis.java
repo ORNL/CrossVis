@@ -41,7 +41,6 @@ public class PCPAxis {
     public final static Paint DEFAULT_QUERY_HISTOGRAM_FILL = new Color(Color.STEELBLUE.getRed(), Color.STEELBLUE.getGreen(), Color.STEELBLUE.getBlue(), 0.8d);
     public final static Paint DEFAULT_HISTOGRAM_STROKE = Color.DARKGRAY;
 
-
     public final static double DEFAULT_NAME_LABEL_HEIGHT = 30d;
     public final static double DEFAULT_NAME_TEXT_SIZE = 12d;
     public final static double DEFAULT_CONTEXT_HEIGHT = 20d;
@@ -51,7 +50,6 @@ public class PCPAxis {
 
     private DataModel dataModel;
     private Column column;
-//    private int dataModelIndex;
 
     private double centerX;
     private Rectangle bounds;
@@ -109,10 +107,10 @@ public class PCPAxis {
     private ArrayList<PCPAxisSelection> axisSelectionList = new ArrayList<>();
 
     // dragging variables
-    Point2D dragStartPoint;
-    Point2D dragEndPoint;
-    PCPAxisSelection draggingSelection;
-    boolean dragging = false;
+    private Point2D dragStartPoint;
+    private Point2D dragEndPoint;
+    private PCPAxisSelection draggingSelection;
+    private boolean dragging = false;
 
     private PCPView pcpView;
 
@@ -130,8 +128,8 @@ public class PCPAxis {
         focusTopY = 0d;
         focusBottomY = 0d;
 
-        nameText = new Text(column.getName());
-        // TODO: bind the name to the column name property
+        nameText = new Text();
+        nameText.textProperty().bindBidirectional(column.nameProperty());
         Tooltip tooltip = new Tooltip();
         tooltip.textProperty().bindBidirectional(column.nameProperty());
         Tooltip.install(nameText, tooltip);
@@ -210,11 +208,19 @@ public class PCPAxis {
     private void registerListeners() {
         PCPAxis thisPCPAxis = this;
 
-        nameText.setOnMousePressed(new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-//                dragAnchorX = event.getSceneX();
+        nameText.textProperty().addListener((observable, oldValue, newValue) -> {
+            nameText.setX(bounds.getX() + ((bounds.getWidth() - nameText.getLayoutBounds().getWidth()) / 2.));
+            nameText.setY(bounds.getY() + nameText.getLayoutBounds().getHeight());
+        });
 
+        nameText.setOnMouseClicked(event -> {
+//            log.debug("Mouse Clicked on axis '" + column.getName() + "' click count is " + event.getClickCount());
+            if (event.getClickCount() == 2) {
+                if (dataModel.getHighlightedColumn() == column) {
+                    dataModel.setHighlightedColumn(null);
+                } else {
+                    dataModel.setHighlightedColumn(column);
+                }
             }
         });
 
@@ -255,6 +261,7 @@ public class PCPAxis {
         nameText.setOnMouseReleased(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
+                log.debug("nameText mouse released event");
                 if (dragging) {
                     pane.getChildren().remove(dragImageView);
                     for (Node node : pane.getChildren()) {
@@ -286,7 +293,10 @@ public class PCPAxis {
         verticalBar.setOnMouseDragged(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                dragging = true;
+                if (!dragging) {
+                    dragging = true;
+                }
+
                 dragEndPoint = new Point2D(event.getX(), event.getY());
 
                 double selectionMaxY = Math.min(dragStartPoint.getY(), dragEndPoint.getY());
@@ -304,7 +314,8 @@ public class PCPAxis {
                         column.getSummaryStats().getMax(), column.getSummaryStats().getMin());
 
                 if (draggingSelection == null) {
-                    ColumnSelectionRange selectionRange = dataModel.addColumnSelectionRangeToActiveQuery(column, minSelectionValue, maxSelectionValue);
+//                    ColumnSelectionRange selectionRange = dataModel.addColumnSelectionRangeToActiveQuery(column, minSelectionValue, maxSelectionValue);
+                    ColumnSelectionRange selectionRange = new ColumnSelectionRange(column, minSelectionValue, maxSelectionValue);
                     draggingSelection = new PCPAxisSelection(thisPCPAxis, selectionRange, selectionMinY, selectionMaxY, pane, dataModel);
                 } else {
                     draggingSelection.update(minSelectionValue, maxSelectionValue, selectionMinY, selectionMaxY);
@@ -318,9 +329,10 @@ public class PCPAxis {
             public void handle(MouseEvent event) {
                 if (draggingSelection != null) {
                     axisSelectionList.add(draggingSelection);
+                    dataModel.addColumnSelectionRangeToActiveQuery(draggingSelection.getColumnSelectionRange());
                     dragging = false;
                     draggingSelection = null;
-                    dataModel.setQueriedTuples();
+//                    dataModel.setQueriedTuples();
                 }
             }
         });
@@ -338,10 +350,10 @@ public class PCPAxis {
 
     public void setHighlighted(boolean highlighted) {
         if (highlighted) {
-            nameText.setFont(Font.font(nameText.getFont().getFamily(), FontWeight.BOLD, DEFAULT_TEXT_SIZE));
+            nameText.setFont(Font.font(nameText.getFont().getFamily(), FontWeight.BOLD, DEFAULT_NAME_TEXT_SIZE));
             nameText.setFill(Color.BLUE);
         } else {
-            nameText.setFont(Font.font(nameText.getFont().getFamily(), FontWeight.NORMAL, DEFAULT_TEXT_SIZE));
+            nameText.setFont(Font.font(nameText.getFont().getFamily(), FontWeight.NORMAL, DEFAULT_NAME_TEXT_SIZE));
             nameText.setFill(Color.BLACK);
         }
     }

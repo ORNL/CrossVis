@@ -112,6 +112,7 @@ public class IOUtilities {
 
 		String line = reader.readLine();
 		int line_counter = 0;
+		int numLinesIgnored = 0;
 
 		boolean skip_line = false;
 		while (line != null) {
@@ -158,6 +159,7 @@ public class IOUtilities {
 					System.out.println("DataSet.readCSV(): NumberFormatException caught so skipping record. "
 									+ ex.fillInStackTrace());
 					skip_line = true;
+					numLinesIgnored++;
 					break;
 				}
 			}
@@ -166,7 +168,8 @@ public class IOUtilities {
 				log.debug("Row ignored because it has "
 						+ (columns.size() - tuple.getElementCount())
 						+ " column values missing.");
-				skip_line = true;
+                numLinesIgnored++;
+                skip_line = true;
 			}
 
 			if (!skip_line) {
@@ -180,5 +183,7 @@ public class IOUtilities {
 		reader.close();
 
 		dataModel.setData(tuples, columns);
+
+		log.debug("Finished reading CSV file '" + f.getName() + "': Read " + tuples.size() + " rows with " + columns.size() + " columns; " + numLinesIgnored + " rows ignored.");
 	}
 }

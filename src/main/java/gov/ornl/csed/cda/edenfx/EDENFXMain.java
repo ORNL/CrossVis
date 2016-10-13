@@ -52,7 +52,7 @@ import java.util.prefs.Preferences;
 /**
  * Created by csg on 8/29/16.
  */
-public class EDENFXMain extends Application {
+public class EDENFXMain extends Application implements DataModelListener {
     private static final Logger log = LoggerFactory.getLogger(EDENFXMain.class);
 
     private PCPView pcpView;
@@ -103,6 +103,7 @@ public class EDENFXMain extends Application {
         displayModeMap.put("Parallel Coordinates Lines", PCPView.DISPLAY_MODE.PCP_LINES);
 
         dataModel = new DataModel();
+        dataModel.addDataModelListener(this);
     }
 
     private void createQueryTableView() {
@@ -140,9 +141,17 @@ public class EDENFXMain extends Application {
             }
         });
 
+//        TableColumn<ColumnSelectionRange, Number> minColumn = new TableColumn<>("Minimum Value");
+//        minColumn.setMinWidth(200);
+//        minColumn.setCellValueFactory(new PropertyValueFactory<ColumnSelectionRange, Number>("minValue"));
+//        minColumn.setCellFactory(TextFieldTableCell.<ColumnSelectionRange, Number>forTableColumn(new NumberStringConverter()));
+//        minColumn.setEditable(true);
+
         TableColumn<Column, String> nameColumn = new TableColumn<>("Variable Name");
-        nameColumn.setMinWidth(140);
+        nameColumn.setMinWidth(180);
         nameColumn.setCellValueFactory(new PropertyValueFactory<Column, String>("name"));
+        nameColumn.setCellFactory(TextFieldTableCell.forTableColumn());
+        nameColumn.setEditable(true);
 
         TableColumn<Column, Boolean> enabledColumn = new TableColumn<>("Visible");
         enabledColumn.setMinWidth(20);
@@ -173,6 +182,7 @@ public class EDENFXMain extends Application {
 
 //                                    dataModel.enableColumn(dataModel.getColumn(rowNumber));
                                     Column column = columnTableView.getItems().get(rowNumber);
+
                                     dataModel.enableColumn(column);
                                     log.debug("Set column '" + column.getName() + "' to enabled");
                                 } else {
@@ -607,7 +617,7 @@ public class EDENFXMain extends Application {
         setDataTableColumns();
         setDataTableItems();
 
-        dataModel.addDataModelListener(new DataModelListener() {
+     /*   dataModel.addDataModelListener(new DataModelListener() {
             @Override
             public void dataModelChanged(DataModel dataModel) {
                 updatePercentSelected();
@@ -697,7 +707,7 @@ public class EDENFXMain extends Application {
                 setDataTableItems();
             }
         });
-
+*/
         displayModeMenu.setDisable(false);
     }
 
@@ -732,5 +742,91 @@ public class EDENFXMain extends Application {
                 dataTableView.getColumns().add(tableColumn);
             }
         }
+    }
+
+    @Override
+    public void dataModelReset(DataModel dataModel) {
+        removeAllQueriesMI.setDisable(!dataModel.getActiveQuery().hasColumnSelections());
+        setDataTableItems();
+        updatePercentSelected();
+    }
+
+    @Override
+    public void dataModelQueryCleared(DataModel dataModel) {
+        removeAllQueriesMI.setDisable(!dataModel.getActiveQuery().hasColumnSelections());
+        setDataTableItems();
+        updatePercentSelected();
+    }
+
+    @Override
+    public void dataModelQueryColumnCleared(DataModel dataModel, Column column) {
+        removeAllQueriesMI.setDisable(!dataModel.getActiveQuery().hasColumnSelections());
+        setDataTableItems();
+        updatePercentSelected();
+    }
+
+    @Override
+    public void dataModelColumnSelectionAdded(DataModel dataModel, ColumnSelectionRange columnSelectionRange) {
+        removeAllQueriesMI.setDisable(!dataModel.getActiveQuery().hasColumnSelections());
+        setDataTableItems();
+        updatePercentSelected();
+    }
+
+    @Override
+    public void dataModelColumnSelectionRemoved(DataModel dataModel, ColumnSelectionRange columnSelectionRange) {
+        removeAllQueriesMI.setDisable(!dataModel.getActiveQuery().hasColumnSelections());
+        setDataTableItems();
+        updatePercentSelected();
+    }
+
+    @Override
+    public void dataModelColumnSelectionChanged(DataModel dataModel, ColumnSelectionRange columnSelectionRange) {
+//        removeAllQueriesMI.setDisable(!dataModel.getActiveQuery().hasColumnSelections());
+        setDataTableItems();
+        updatePercentSelected();
+    }
+
+    @Override
+    public void dataModelHighlightedColumnChanged(DataModel dataModel, Column oldHighlightedColumn, Column newHighlightedColumn) {
+        if (newHighlightedColumn != null) {
+            columnTableView.getSelectionModel().select(newHighlightedColumn);
+        } else {
+            columnTableView.getSelectionModel().clearSelection();
+        }
+    }
+
+    @Override
+    public void dataModelTuplesAdded(DataModel dataModel, ArrayList<Tuple> newTuples) {
+        updatePercentSelected();
+    }
+
+    @Override
+    public void dataModelTuplesRemoved(DataModel dataModel, int numTuplesRemoved) {
+        updatePercentSelected();
+    }
+
+    @Override
+    public void dataModelColumnDisabled(DataModel dataModel, Column disabledColumn) {
+
+    }
+
+    @Override
+    public void dataModelColumnsDisabled(DataModel dataModel, ArrayList<Column> disabledColumns) {
+
+    }
+
+    @Override
+    public void dataModelColumnEnabled(DataModel dataModel, Column enabledColumn) {
+
+    }
+
+    @Override
+    public void dataModelColumnOrderChanged(DataModel dataModel) {
+
+    }
+
+    @Override
+    public void dataModelColumnNameChanged(DataModel dataModel, Column column) {
+
     }
 }
