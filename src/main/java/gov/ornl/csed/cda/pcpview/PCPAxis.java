@@ -37,9 +37,15 @@ public class PCPAxis {
     public final static Logger log = LoggerFactory.getLogger(PCPAxis.class);
 
     public final static int DEFAULT_MAX_HISTOGRAM_BIN_WIDTH = 30;
-    public final static Paint DEFAULT_HISTOGRAM_FILL = new Color(Color.DARKGRAY.getRed(), Color.DARKGRAY.getGreen(), Color.DARKGRAY.getBlue(), 0.8d);
-    public final static Paint DEFAULT_QUERY_HISTOGRAM_FILL = new Color(Color.STEELBLUE.getRed(), Color.STEELBLUE.getGreen(), Color.STEELBLUE.getBlue(), 0.8d);
-    public final static Paint DEFAULT_HISTOGRAM_STROKE = Color.DARKGRAY;
+    public final static Color DEFAULT_HISTOGRAM_FILL = new Color(Color.DARKGRAY.getRed(), Color.DARKGRAY.getGreen(), Color.DARKGRAY.getBlue(), 0.8d);
+    public final static Color DEFAULT_QUERY_HISTOGRAM_FILL = new Color(Color.STEELBLUE.getRed(), Color.STEELBLUE.getGreen(), Color.STEELBLUE.getBlue(), 0.8d);
+    public final static Color DEFAULT_HISTOGRAM_STROKE = Color.DARKGRAY;
+
+    public final static Color DEFAULT_OVERALL_DISPERSION_FILL = DEFAULT_HISTOGRAM_FILL;
+    public final static Color DEFAULT_QUERY_DISPERSION_FILL = DEFAULT_QUERY_HISTOGRAM_FILL;
+    public final static Color DEFAULT_DISPERSION_STROKE = DEFAULT_HISTOGRAM_STROKE;
+    public final static Color DEFAULT_OVERALL_TYPICAL_STROKE = DEFAULT_DISPERSION_STROKE.darker();
+    public final static Color DEFAULT_QUERY_TYPICAL_STROKE = DEFAULT_OVERALL_TYPICAL_STROKE;
 
     public final static double DEFAULT_NAME_LABEL_HEIGHT = 30d;
     public final static double DEFAULT_NAME_TEXT_SIZE = 12d;
@@ -96,9 +102,15 @@ public class PCPAxis {
     private Group queryHistogramBinRectangleGroup;
     private ArrayList<Rectangle> queryHistogramBinRectangleList;
 
-    private Paint histogramFill = DEFAULT_HISTOGRAM_FILL;
-    private Paint queryHistogramFill = DEFAULT_QUERY_HISTOGRAM_FILL;
-    private Paint histogramStroke = DEFAULT_HISTOGRAM_STROKE;
+    private Color histogramFill = DEFAULT_HISTOGRAM_FILL;
+    private Color histogramStroke = DEFAULT_HISTOGRAM_STROKE;
+    private Color queryHistogramFill = DEFAULT_QUERY_HISTOGRAM_FILL;
+
+    private Color overallDispersionFill = DEFAULT_OVERALL_DISPERSION_FILL;
+    private Color queryDispersionFill = DEFAULT_QUERY_DISPERSION_FILL;
+    private Color dispersionStroke = DEFAULT_DISPERSION_STROKE;
+    private Color overallTypicalStroke = DEFAULT_OVERALL_TYPICAL_STROKE;
+    private Color queryTypicalStroke = DEFAULT_QUERY_TYPICAL_STROKE;
 
     private int maxHistogramBinWidth = DEFAULT_MAX_HISTOGRAM_BIN_WIDTH;
 
@@ -170,28 +182,40 @@ public class PCPAxis {
                 bottomFocusCrossBarLine, nameText, minValueText, maxValueText, focusMinValueText, focusMaxValueText);
 
         overallDispersionRectangle = new Rectangle();
-        overallDispersionRectangle.setFill(Color.LIGHTSTEELBLUE);
+//        overallDispersionRectangle.setFill(Color.LIGHTSTEELBLUE);
+        overallDispersionRectangle.setFill(overallDispersionFill);
         overallDispersionRectangle.setSmooth(true);
         overallDispersionRectangle.setStrokeWidth(DEFAULT_STROKE_WIDTH);
 
         overallTypicalLine = makeLine();
-        overallTypicalLine.setStroke(Color.DARKGRAY.darker());
+//        overallTypicalLine.setStroke(Color.DARKGRAY.darker());
+        overallTypicalLine.setStroke(overallTypicalStroke);
         overallSummaryStatisticsGroup = new Group(overallDispersionRectangle, overallTypicalLine);
         overallSummaryStatisticsGroup.setMouseTransparent(true);
         graphicsGroup.getChildren().add(overallSummaryStatisticsGroup);
 
         queryDispersionRectangle = new Rectangle();
-        queryDispersionRectangle.setFill(Color.STEELBLUE);
+//        queryDispersionRectangle.setFill(Color.STEELBLUE);
+        queryDispersionRectangle.setFill(queryDispersionFill);
         queryDispersionRectangle.setSmooth(true);
         queryDispersionRectangle.setStrokeWidth(DEFAULT_STROKE_WIDTH);
 
         queryTypicalLine = makeLine();
-        queryTypicalLine.setStroke(Color.BLACK);
+//        queryTypicalLine.setStroke(Color.BLACK);
+        queryTypicalLine.setStroke(queryTypicalStroke);
         querySummaryStatisticsGroup = new Group(queryDispersionRectangle, queryTypicalLine);
         querySummaryStatisticsGroup.setMouseTransparent(true);
 
         registerListeners();
     }
+
+    public Rectangle getOverallDispersionRectangle() { return overallDispersionRectangle; }
+
+    public Rectangle getQueryDispersionRectangle () { return queryDispersionRectangle; }
+
+    public Line getOverallTypicalLine () { return overallTypicalLine; }
+
+    public Line getQueryTypicalLine () { return queryTypicalLine; }
 
     public Group getHistogramBinRectangleGroup() { return histogramBinRectangleGroup; }
     public Group getQueryHistogramBinRectangleGroup() { return queryHistogramBinRectangleGroup; }
@@ -466,6 +490,11 @@ public class PCPAxis {
             if (dataModel.getActiveQuery().hasColumnSelections()) {
                 // layer query summary statistics
                 SummaryStats queryColumnSummaryStats = dataModel.getActiveQuery().getColumnQuerySummaryStats(column);
+
+//                if (queryColumnSummaryStats == null) {
+//                    log.debug("query stats is null");
+//                }
+//
                 typicalValueY = GraphicsUtil.mapValue(queryColumnSummaryStats.getMean(), column.getSummaryStats().getMin(), column.getSummaryStats().getMax(), getFocusBottomY(), getFocusTopY());
                 queryTypicalLine.setStartX(centerX - 2.);
                 queryTypicalLine.setEndX(centerX + 2.);

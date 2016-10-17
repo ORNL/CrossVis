@@ -32,7 +32,13 @@ public class PCPView extends Region implements DataModelListener {
             Color.STEELBLUE.getGreen(), Color.STEELBLUE.getBlue(), DEFAULT_LINE_OPACITY);
     private final static Color DEFAULT_UNSELECTED_ITEMS_COLOR = new Color(Color.LIGHTGRAY.getRed(),
             Color.LIGHTGRAY.getGreen(), Color.LIGHTGRAY.getBlue(), DEFAULT_LINE_OPACITY);
-    private final static DISPLAY_MODE DEFAULT_DISPLAY_MODE = DISPLAY_MODE.HISTOGRAM;
+
+    public final static Color DEFAULT_OVERALL_SUMMARY_FILL_COLOR = new Color(Color.LIGHTSTEELBLUE.getRed(), Color.LIGHTSTEELBLUE.getGreen(), Color.LIGHTSTEELBLUE.getBlue(), 0.8d);
+    public final static Color DEFAULT_QUERY_SUMMARY_FILL_COLOR = new Color(Color.STEELBLUE.getRed(), Color.STEELBLUE.getGreen(), Color.STEELBLUE.getBlue(), 0.8d);
+    public final static Color DEFAULT_OVERALL_SUMMARY_STROKE_COLOR = Color.DARKGRAY;
+    public final static Color DEFAULT_QUERY_SUMMARY_STROKE_COLOR = Color.DARKGRAY;
+
+    private final static DISPLAY_MODE DEFAULT_DISPLAY_MODE = DISPLAY_MODE.SUMMARY;
 
     private Canvas lineCanvas;
     private GraphicsContext lineGC;
@@ -43,6 +49,12 @@ public class PCPView extends Region implements DataModelListener {
 
     private ObjectProperty<Color> selectedItemsColor;
     private ObjectProperty<Color> unselectedItemsColor;
+
+    private ObjectProperty<Color> overallSummaryFillColor;
+    private ObjectProperty<Color> querySummaryFillColor;
+    private ObjectProperty<Color> overallSummaryStrokeColor;
+    private ObjectProperty<Color> querySummaryStrokeColor;
+
     private ObjectProperty<Color> backgroundColor;
     private ObjectProperty<Color> labelsColor;
 
@@ -65,13 +77,10 @@ public class PCPView extends Region implements DataModelListener {
     private ArrayList<PCPBinSet> PCPBinSetList;
 
     private ObjectProperty<DISPLAY_MODE> displayMode;
-//    private DISPLAY_MODE displayMode = DISPLAY_MODE.PCP_BINS;
-//    private DISPLAY_MODE displayMode = DISPLAY_MODE.HISTOGRAM;
-//    private DISPLAY_MODE displayMode = DISPLAY_MODE.PCP_LINES;
 
     private boolean fitAxisSpacingToWidthEnabled = true;
 
-    public enum DISPLAY_MODE {HISTOGRAM, PCP_LINES, PCP_BINS};
+    public enum DISPLAY_MODE {SUMMARY, HISTOGRAM, PCP_LINES, PCP_BINS};
 
 
     public PCPView() {
@@ -89,34 +98,18 @@ public class PCPView extends Region implements DataModelListener {
     public final DISPLAY_MODE getDisplayMode() { return displayMode.get(); }
 
     public final void setDisplayMode(DISPLAY_MODE newDisplayMode) { displayMode.set(newDisplayMode); }
-//        if (getDisplayMode() != displayMode) {
-//            if ((this.displayMode == DISPLAY_MODE.PCP_LINES) ||
-//                    (this.displayMode == DISPLAY_MODE.PCP_BINS)){
-//                lineGC.clearRect(0, 0, getWidth(), getHeight());
-//            }
-//            this.displayMode = displayMode;
-//
-//            if (displayMode == DISPLAY_MODE.PCP_LINES) {
-//                fillTupleSets();
-//            }
-//
-//            resize();
-//        }
-//    }
 
     public final boolean isShowingSelectedItems() { return showSelectedItems.get(); }
 
     public final void setShowSelectedItems(boolean enabled) { showSelectedItems.set(enabled); }
 
-    public BooleanProperty showSelectedItems() { return showSelectedItems; }
+    public BooleanProperty showSelectedItemsProperty() { return showSelectedItems; }
 
     public final boolean isShowingUnselectedItems() { return showUnselectedItems.get(); }
 
     public final void setShowUnselectedItems(boolean enabled) { showUnselectedItems.set(enabled); }
 
-    public BooleanProperty showUnselectedItems() { return showUnselectedItems; }
-
-//    public DISPLAY_MODE getDisplayMode() { return displayMode; }
+    public BooleanProperty showUnselectedItemsProperty() { return showUnselectedItems; }
 
     public final Color getSelectedItemsColor() { return selectedItemsColor.get(); }
 
@@ -124,7 +117,7 @@ public class PCPView extends Region implements DataModelListener {
         selectedItemsColor.set(color);
     }
 
-    public ObjectProperty<Color> selectedItemsColor() { return selectedItemsColor; }
+    public ObjectProperty<Color> selectedItemsColorProperty() { return selectedItemsColor; }
 
     public final Color getUnselectedItemsColor() { return unselectedItemsColor.get(); }
 
@@ -132,20 +125,32 @@ public class PCPView extends Region implements DataModelListener {
         unselectedItemsColor.set(color);
     }
 
-    public ObjectProperty<Color> unselectedItemsColor() { return unselectedItemsColor; }
+    public ObjectProperty<Color> unselectedItemsColorProperty() { return unselectedItemsColor; }
 
-//    public void setSelectedLinePaint(Paint selectedLinePaint) {
-//        this.selectedLinePaint = selectedLinePaint;
-//        redraw();
-//    }
-//
-//    public Paint getSelectedLinePaint() { return selectedLinePaint; }
-//    public Paint getUnselectedLinePaint() { return unselectedLinePaint; }
-//
-//    public void setUnselectedLinePaint(Paint unselectedLinePaint) {
-//        this.unselectedLinePaint = unselectedLinePaint;
-//        redraw();
-//    }
+    public final Color getOverallSummaryFillColor () { return overallSummaryFillColor.get(); }
+
+    public final void setOverallSummaryFillColor (Color color) { overallSummaryFillColor.set(color); }
+
+    public ObjectProperty<Color> overallSummaryFillColorProperty() { return overallSummaryFillColor; }
+
+    public final Color getQuerySummaryFillColor () { return querySummaryFillColor.get(); }
+
+    public final void setQuerySummaryFillColor (Color color) { querySummaryFillColor.set(color); }
+
+    public ObjectProperty<Color> overallQueryFillColorProperty() { return querySummaryFillColor; }
+
+    public final Color getQuerySummaryStrokeColor () { return querySummaryStrokeColor.get(); }
+
+    public final void setQuerySummaryStrokeColor (Color color) { querySummaryStrokeColor.set(color); }
+
+    public ObjectProperty<Color> querySummaryStrokeColor () { return querySummaryStrokeColor; }
+
+    public final Color getOverallSummaryStrokeColor () { return overallSummaryStrokeColor.get(); }
+
+    public final void setOverallSummaryStrokeColor (Color color) { overallSummaryStrokeColor.set(color); }
+
+    public ObjectProperty<Color> overallSummaryStrokeColor () { return overallSummaryStrokeColor; }
+
 
     private void fillTupleSets() {
         unselectedTupleSet.clear();
@@ -188,6 +193,8 @@ public class PCPView extends Region implements DataModelListener {
             for (PCPBinSet PCPBinSet : PCPBinSetList) {
                 PCPBinSet.layoutBins();
             }
+            redraw();
+        } else if (getDisplayMode() == DISPLAY_MODE.SUMMARY) {
             redraw();
         }
     }
@@ -285,49 +292,6 @@ public class PCPView extends Region implements DataModelListener {
     @Override
     public void dataModelReset(DataModel dataModel) {
         reinitializeLayout();
-//        if (axisList.isEmpty()) {
-//            for (int iaxis = 0; iaxis < dataModel.getColumnCount(); iaxis++) {
-//                PCPAxis pcpAxis = new PCPAxis(this, dataModel.getColumn(iaxis), dataModel, pane);
-//                pane.getChildren().add(pcpAxis.getGraphicsGroup());
-//                axisList.add(pcpAxis);
-//            }
-//        } else {
-//            ArrayList<PCPAxis> newAxisList = new ArrayList<PCPAxis>();
-//            for (int iDstCol = 0; iDstCol < dataModel.getColumnCount(); iDstCol++) {
-//                Column column = dataModel.getColumn(iDstCol);
-//                for (int iSrcCol = 0; iSrcCol < axisList.size(); iSrcCol++) {
-//                    PCPAxis pcpAxis = axisList.get(iSrcCol);
-//                    if (pcpAxis.getColumn() == column) {
-//                        newAxisList.add(pcpAxis);
-//
-//                        log.debug("Axis added to list: " + pcpAxis.getColumn().getName());
-//                        break;
-//                    }
-//                }
-//            }
-//
-//            axisList = newAxisList;
-//        }
-//
-//
-//        // add tuples polylines from data model
-//        tupleList = new ArrayList<>();
-//        for (int iTuple = 0; iTuple < dataModel.getTupleCount(); iTuple++) {
-//            Tuple tuple = dataModel.getTuple(iTuple);
-//            PCPTuple pcpTuple = new PCPTuple(tuple);
-//            tupleList.add(pcpTuple);
-//        }
-//
-//        fillTupleSets();
-//
-//        // create PCPBinSets for axis configuration
-//        PCPBinSetList = new ArrayList<>();
-//        for (int iaxis = 0; iaxis < axisList.size()-1; iaxis++) {
-//            PCPBinSet binSet = new PCPBinSet(axisList.get(iaxis), axisList.get(iaxis+1), dataModel);
-//            PCPBinSetList.add(binSet);
-//        }
-//
-//        resize();
     }
 
     @Override
@@ -726,6 +690,12 @@ public class PCPView extends Region implements DataModelListener {
         selectedTupleSet = new HashSet<>();
         selectedItemsColor = new SimpleObjectProperty<>(DEFAULT_SELECTED_ITEMS_COLOR);
         unselectedItemsColor = new SimpleObjectProperty<>(DEFAULT_UNSELECTED_ITEMS_COLOR);
+
+        overallSummaryFillColor = new SimpleObjectProperty<>(DEFAULT_OVERALL_SUMMARY_FILL_COLOR);
+        overallSummaryStrokeColor = new SimpleObjectProperty<>(DEFAULT_OVERALL_SUMMARY_STROKE_COLOR);
+        querySummaryFillColor = new SimpleObjectProperty<>(DEFAULT_QUERY_SUMMARY_FILL_COLOR);
+        querySummaryStrokeColor = new SimpleObjectProperty<>(DEFAULT_QUERY_SUMMARY_STROKE_COLOR);
+
         showSelectedItems = new SimpleBooleanProperty(true);
         showUnselectedItems = new SimpleBooleanProperty(true);
         displayMode = new SimpleObjectProperty<>(DEFAULT_DISPLAY_MODE);
@@ -770,7 +740,7 @@ public class PCPView extends Region implements DataModelListener {
         }));
 
         displayMode.addListener(((observable, oldValue, newValue) -> {
-            if ((oldValue == DISPLAY_MODE.PCP_LINES) || (oldValue == DISPLAY_MODE.PCP_BINS)) {
+            if ((oldValue == DISPLAY_MODE.PCP_LINES) || (oldValue == DISPLAY_MODE.PCP_BINS) || (oldValue == DISPLAY_MODE.SUMMARY)) {
                 lineGC.clearRect(0, 0, getWidth(), getHeight());
             }
 
@@ -779,19 +749,6 @@ public class PCPView extends Region implements DataModelListener {
             }
 
             resize();
-            //        if (getDisplayMode() != displayMode) {
-//            if ((this.displayMode == DISPLAY_MODE.PCP_LINES) ||
-//                    (this.displayMode == DISPLAY_MODE.PCP_BINS)){
-//                lineGC.clearRect(0, 0, getWidth(), getHeight());
-//            }
-//            this.displayMode = displayMode;
-//
-//            if (displayMode == DISPLAY_MODE.PCP_LINES) {
-//                fillTupleSets();
-//            }
-//
-//            resize();
-//        }
         }));
     }
 
@@ -872,12 +829,13 @@ public class PCPView extends Region implements DataModelListener {
             drawTuplePolylines();
         } else if (getDisplayMode() == DISPLAY_MODE.PCP_BINS) {
             drawPCPBins();
+        } else if (getDisplayMode() == DISPLAY_MODE.SUMMARY) {
+            drawSummaryShapes();
         }
     }
 
     public void clearQuery() {
         dataModel.clearActiveQuery();
-//        dataModel.setQueriedTuples();
 
         // clear all axis selection graphics
         for (PCPAxis pcpAxis : axisList) {
@@ -890,6 +848,52 @@ public class PCPView extends Region implements DataModelListener {
         }
 
         handleQueryChange();
+    }
+
+    private void drawSummaryShapes() {
+        lineCanvas.setCache(false);
+        lineGC.setLineCap(StrokeLineCap.BUTT);
+        lineGC.clearRect(0, 0, getWidth(), getHeight());
+        lineGC.setLineWidth(2);
+        lineGC.setLineWidth(2d);
+
+        for (int iaxis = 1; iaxis < axisList.size(); iaxis++) {
+            PCPAxis axis1 = axisList.get(iaxis);
+            PCPAxis axis0 = axisList.get(iaxis-1);
+
+            double xValues[] = new double[] {axis0.getOverallDispersionRectangle().getLayoutBounds().getMaxX(),
+                                    axis1.getOverallDispersionRectangle().getLayoutBounds().getMinX(),
+                                    axis1.getOverallDispersionRectangle().getLayoutBounds().getMinX(),
+                                    axis0.getOverallDispersionRectangle().getLayoutBounds().getMaxX()};
+            double yValues[] = new double[] {axis0.getOverallDispersionRectangle().getLayoutBounds().getMaxY(),
+                                    axis1.getOverallDispersionRectangle().getLayoutBounds().getMaxY(),
+                                    axis1.getOverallDispersionRectangle().getLayoutBounds().getMinY(),
+                                    axis0.getOverallDispersionRectangle().getLayoutBounds().getMinY()};
+
+            lineGC.setFill(getOverallSummaryFillColor());
+            lineGC.fillPolygon(xValues, yValues, xValues.length);
+            lineGC.setStroke(getOverallSummaryStrokeColor());
+            lineGC.strokePolyline(xValues, yValues, xValues.length);
+
+            if (dataModel.getActiveQuery().hasColumnSelections()) {
+                xValues = new double[] {axis0.getQueryDispersionRectangle().getLayoutBounds().getMaxX(),
+                        axis1.getQueryDispersionRectangle().getLayoutBounds().getMinX(),
+                        axis1.getQueryDispersionRectangle().getLayoutBounds().getMinX(),
+                        axis0.getQueryDispersionRectangle().getLayoutBounds().getMaxX()};
+                yValues = new double[] {axis0.getQueryDispersionRectangle().getLayoutBounds().getMaxY(),
+                        axis1.getQueryDispersionRectangle().getLayoutBounds().getMaxY(),
+                        axis1.getQueryDispersionRectangle().getLayoutBounds().getMinY(),
+                        axis0.getQueryDispersionRectangle().getLayoutBounds().getMinY()};
+
+                lineGC.setFill(getQuerySummaryFillColor());
+                lineGC.fillPolygon(xValues, yValues, xValues.length);
+                lineGC.setStroke(getQuerySummaryStrokeColor());
+                lineGC.strokePolyline(xValues, yValues, xValues.length);
+            }
+        }
+
+        lineCanvas.setCache(true);
+        lineCanvas.setCacheHint(CacheHint.QUALITY);
     }
 
     private void drawPCPBins() {

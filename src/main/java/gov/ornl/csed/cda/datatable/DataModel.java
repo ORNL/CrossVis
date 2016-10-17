@@ -9,6 +9,8 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 public class DataModel {
 	private static final int DEFAULT_NUM_HISTOGRAM_BINS = 50;
@@ -27,6 +29,12 @@ public class DataModel {
 
     // List of tuple elements for disabled columns
     protected ArrayList<Tuple> disabledColumnTuples;
+
+	// Set of queried tuples
+	private HashSet<Tuple> queriedTuples;
+
+	// Set of nonQueried tuples (should be tuples - queried tuples)
+	private HashSet<Tuple> nonQueriedTuples;
 
     // Regression information
 	protected OLSMultipleLinearRegression regression;
@@ -57,8 +65,11 @@ public class DataModel {
 	public DataModel() {
         tuples = new ArrayList<>();
         columns = new ArrayList<>();
+		queriedTuples = new HashSet<>();
+		nonQueriedTuples = new HashSet<>();
         disabledColumnTuples = new ArrayList<>();
         disabledColumns = new ArrayList<>();
+
 		activeQuery = new Query("Q1");
         listeners = new ArrayList<>();
 	}
@@ -327,11 +338,17 @@ public class DataModel {
 	public double[] getColumnQueriedValues(int columnIndex) {
 		Column column = columns.get(columnIndex);
 
-		double[] values = new double[getActiveQuery().getTuples().size()];
+		double[] values = new double[queriedTuples.size()];
+//		double[] values = new double[getActiveQuery().getTuples().size()];
 
-		for (int ituple = 0; ituple < getActiveQuery().getTuples().size(); ituple++) {
-			Tuple tuple = getActiveQuery().getTuples().get(ituple);
-			values[ituple] = tuple.getElement(columnIndex);
+//		for (int ituple = 0; ituple < getActiveQuery().getTuples().size(); ituple++) {
+//			Tuple tuple = getActiveQuery().getTuples().get(ituple);
+//			values[ituple] = tuple.getElement(columnIndex);
+//		}
+
+		int tupleCounter = 0;
+		for (Tuple tuple : queriedTuples) {
+			values[tupleCounter++] = tuple.getElement(columnIndex);
 		}
 
 		return values;
@@ -389,7 +406,10 @@ public class DataModel {
 
 			disabledColumns.add(disabledColumn);
             columns.remove(disabledColumn);
-            clearActiveQueryColumnSelections(disabledColumn);
+
+            getActiveQuery().removeColumnSelectionRanges(disabledColumn);
+            setQueriedTuples();
+//            clearActiveQueryColumnSelections(disabledColumn);
 
             for (Column column : columns) {
                 column.getSummaryStats().getCorrelationCoefficients().remove(disabledColumnIndex);
@@ -444,6 +464,12 @@ public class DataModel {
 
 	public void clearColumnSelectionRange (ColumnSelectionRange selectionRange) {
 		getActiveQuery().removeColumnSelectionRange(selectionRange);
+        if (!getActiveQuery().hasColumnSelections()) {
+            for (Column column : columns) {
+                column.setQueryMeanValue(Double.NaN);
+                column.setQueryStandardDeviationValue(Double.NaN);
+            }
+        }
 		setQueriedTuples();
 		fireColumnSelectionRemoved(selectionRange);
 	}
@@ -452,11 +478,16 @@ public class DataModel {
         int tuplesRemoved = 0;
 
         if (getActiveQuery().hasColumnSelections()) {
-            tuplesRemoved = tuples.size() - getActiveQuery().getTuples().size();
-            tuples.clear();
-            tuples.addAll(getActiveQuery().getTuples());
-            getActiveQuery().clearAllColumnSelections();
-            calculateStatistics();
+//            tuplesRemoved = tuples.size() - getActiveQuery().getTuples().size();
+//            tuples.clear();
+//            tuples.addAll(getActiveQuery().getTuples());
+//            getActiveQuery().clearAllColumnSelections();
+			tuplesRemoved = nonQueriedTuples.size();
+			tuples.clear();
+			tuples.addAll(queriedTuples);
+			getActiveQuery().clear();
+			setQueriedTuples();
+//            calculateStatistics();
             fireTuplesRemoved(tuplesRemoved);
         }
 
@@ -467,10 +498,15 @@ public class DataModel {
         int tuplesRemoved = 0;
 
 		if (getActiveQuery().hasColumnSelections()) {
-            tuplesRemoved = getActiveQuery().getTuples().size();
-            tuples.removeAll(getActiveQuery().getTuples());
-            getActiveQuery().clearAllColumnSelections();
-            calculateStatistics();
+//            tuplesRemoved = getActiveQuery().getTuples().size();
+//            tuples.removeAll(getActiveQuery().getTuples());
+//            getActiveQuery().clearAllColumnSelections();
+//            calculateStatistics();
+			tuplesRemoved = queriedTuples.size();
+			tuples.clear();
+			tuples.addAll(nonQueriedTuples);
+			getActiveQuery().clear();
+			setQueriedTuples();
             fireTuplesRemoved(tuplesRemoved);
         }
 
@@ -498,12 +534,17 @@ public class DataModel {
 
 	public void clearActiveQuery() {
         activeQuery = new Query("Q" + (nextQueryNumber++));
+        for (Column column : columns) {
+            column.setQueryStandardDeviationValue(Double.NaN);
+            column.setQueryMeanValue(Double.NaN);
+        }
         fireQueryCleared();
 	}
 
 	public void clearActiveQueryColumnSelections(Column column) {
 		if (activeQuery != null) {
             getActiveQuery().removeColumnSelectionRanges(column);
+            setQueriedTuples();
 			fireQueryColumnCleared(column);
 		}
 	}
@@ -686,15 +727,23 @@ public class DataModel {
     }
 
     public int getQueriedTupleCount() {
-        return getActiveQuery().getTuples().size();
+//		return getActiveQuery().getTuples().size();
+		return queriedTuples.size();
     }
 
-    public ArrayList<Tuple> getQueriedTuples() {
-        return getActiveQuery().getTuples();
+    public Set<Tuple> getQueriedTuples() {
+//        return getActiveQuery().getTuples();
+		return queriedTuples;
     }
+
+    public Set<Tuple> getNonQueriedTuples() {
+		return nonQueriedTuples;
+	}
 
     private void setQueriedTuples() {
-        getActiveQuery().clearTuples();
+		queriedTuples.clear();
+		nonQueriedTuples.clear();
+//        getActiveQuery().clearTuples();
 
         if (getTupleCount() == 0) {
             return;
@@ -708,8 +757,6 @@ public class DataModel {
                 for (int icolumn = 0; icolumn < columns.size(); icolumn++) {
                     Column column = columns.get(icolumn);
                     ArrayList<ColumnSelectionRange> columnSelectionRanges = getActiveQuery().getColumnSelectionRanges(column);
-//					ColumnSelection columnSelection = getActiveQuery().getColumnSelection(column);
-//					if (columnSelection != null && !columnSelection.getColumnSelectionRanges().isEmpty()) {
                     if ((columnSelectionRanges != null) && (!columnSelectionRanges.isEmpty())) {
                         boolean insideSelection = false;
 
@@ -729,8 +776,11 @@ public class DataModel {
                 }
 
                 if (currentTuple.getQueryFlag()) {
-                    getActiveQuery().addTuple(currentTuple);
-                }
+					queriedTuples.add(currentTuple);
+//                    getActiveQuery().addTuple(currentTuple);
+                } else {
+					nonQueriedTuples.add(currentTuple);
+				}
             }
 
             calculateQueryStatistics();
@@ -738,10 +788,12 @@ public class DataModel {
         } else {
             for (Tuple tuple : tuples) {
                 tuple.setQueryFlag(true);
+				queriedTuples.add(tuple);
             }
         }
 
-        log.debug("after setQueriedTuples() number of queried tuples is " + getActiveQuery().getTuples().size());
+        log.debug("After setQueriedTuples() with " + tuples.size() + " total tuples: Queried tuples set size is " + queriedTuples.size() + ", nonQueried tuples set size is " + nonQueriedTuples.size());
+//        log.debug("after setQueriedTuples() number of queried tuples is " + getActiveQuery().getTuples().size() + " queryTuplesSet size " + queriedTuples.size() + " nonQueriedTuplesSet size " + nonQueriedTuples.size());
     }
 
     // get index of column and remove all tuple elements at this index
@@ -795,6 +847,9 @@ public class DataModel {
 
             SummaryStats columnSummaryStats = new SummaryStats();
             getActiveQuery().setColumnQuerySummaryStats(column, columnSummaryStats);
+
+			column.setQueryMeanValue(stats.getMean());
+			column.setQueryStandardDeviationValue(stats.getStandardDeviation());
 
             columnSummaryStats.setMean(stats.getMean());
             columnSummaryStats.setMedian(stats.getPercentile(50));

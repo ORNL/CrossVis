@@ -35,12 +35,15 @@ import org.controlsfx.control.StatusBar;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Optional;
+import java.util.Set;
 import java.util.prefs.Preferences;
 
 /**
@@ -66,6 +69,8 @@ public class EDENFXMain extends Application implements DataModelListener {
     private TableView<ColumnSelectionRange> queryTableView;
     private TableView<Tuple> dataTableView;
     private MenuItem removeAllQueriesMI;
+    private MenuItem exportSelectedDataMI;
+    private MenuItem exportUnselectedDataMI;
 
     // toggle group for toolbar buttons to change display mode of PCPView
     private ToggleGroup displayModeMenuGroup;
@@ -92,6 +97,7 @@ public class EDENFXMain extends Application implements DataModelListener {
 
         decimalFormat = new DecimalFormat("###.0%");
         displayModeMap = new HashMap<>();
+        displayModeMap.put("Summary", PCPView.DISPLAY_MODE.SUMMARY);
         displayModeMap.put("Histograms", PCPView.DISPLAY_MODE.HISTOGRAM);
         displayModeMap.put("Parallel Coordinates Bins", PCPView.DISPLAY_MODE.PCP_BINS);
         displayModeMap.put("Parallel Coordinates Lines", PCPView.DISPLAY_MODE.PCP_LINES);
@@ -205,14 +211,20 @@ public class EDENFXMain extends Application implements DataModelListener {
         TableColumn<Column, Double> maxColumn = new TableColumn<>("Max");
         maxColumn.setCellValueFactory(new PropertyValueFactory<Column, Double>("maxValue"));
 
-        TableColumn<Column, Double> stdevColumn = new TableColumn<>("St. Dev.");
-        stdevColumn.setCellValueFactory(new PropertyValueFactory<Column, Double>("standardDeviationValue"));
-
         TableColumn<Column, Double> meanColumn = new TableColumn<>("Mean");
         meanColumn.setCellValueFactory(new PropertyValueFactory<Column, Double>("meanValue"));
 
+        TableColumn<Column, Double> stdevColumn = new TableColumn<>("St. Dev.");
+        stdevColumn.setCellValueFactory(new PropertyValueFactory<Column, Double>("standardDeviationValue"));
 
-        columnTableView.getColumns().addAll(enabledColumn, nameColumn, minColumn, maxColumn, meanColumn, stdevColumn);
+        TableColumn<Column, Double> queryMeanColumn = new TableColumn<>("Query Mean");
+        queryMeanColumn.setCellValueFactory(new PropertyValueFactory<Column, Double>("queryMeanValue"));
+
+        TableColumn<Column, Double> queryStdevColumn = new TableColumn<>("Query St. Dev.");
+        queryStdevColumn.setCellValueFactory(new PropertyValueFactory<Column, Double>("queryStandardDeviationValue"));
+
+        columnTableView.getColumns().addAll(enabledColumn, nameColumn, minColumn, maxColumn, meanColumn, stdevColumn,
+                queryMeanColumn, queryStdevColumn);
     }
 
     private ToolBar createToolBar(Stage stage) {
@@ -241,13 +253,15 @@ public class EDENFXMain extends Application implements DataModelListener {
             displayModeButtonGroup.selectToggle(binDisplayModeButton);
         } else if (pcpView.getDisplayMode() == PCPView.DISPLAY_MODE.PCP_LINES) {
             displayModeButtonGroup.selectToggle(lineDisplayModeButton);
+        } else if (pcpView.getDisplayMode() == PCPView.DISPLAY_MODE.SUMMARY) {
+            displayModeButtonGroup.selectToggle(summaryDisplayModeButton);
         }
 
         displayModeButtonGroup.selectedToggleProperty().addListener((observable, oldValue, newValue) -> {
             log.debug("Button DisplayMode Group changed");
             if (newValue != null) {
                 if (newValue == summaryDisplayModeButton) {
-                    pcpView.setDisplayMode(PCPView.DISPLAY_MODE.HISTOGRAM);
+                    pcpView.setDisplayMode(PCPView.DISPLAY_MODE.SUMMARY);
                     displayModeMenuGroup.selectToggle(summaryDisplayModeMenuItem);
                 } else if (newValue == histogramDisplayModeButton) {
                     pcpView.setDisplayMode(PCPView.DISPLAY_MODE.HISTOGRAM);
@@ -269,9 +283,9 @@ public class EDENFXMain extends Application implements DataModelListener {
         // make toggle buttons for showing/hiding selected/unselected items
         ToggleButton showUnselectedButton = new ToggleButton("U");
         showUnselectedButton.setTooltip(new Tooltip("Show Unselected Items"));
-        showUnselectedButton.selectedProperty().bindBidirectional(pcpView.showUnselectedItems());
+        showUnselectedButton.selectedProperty().bindBidirectional(pcpView.showUnselectedItemsProperty());
         ToggleButton showSelectedButton = new ToggleButton("S");
-        showSelectedButton.selectedProperty().bindBidirectional(pcpView.showSelectedItems());
+        showSelectedButton.selectedProperty().bindBidirectional(pcpView.showSelectedItemsProperty());
         showSelectedButton.setTooltip(new Tooltip("Show Selected Items"));
 
         // create selected items color modification UI components
@@ -279,7 +293,7 @@ public class EDENFXMain extends Application implements DataModelListener {
         selectedItemsColorBox.setAlignment(Pos.CENTER);
 
         ColorPicker selectedItemsColorPicker = new ColorPicker();
-        selectedItemsColorPicker.valueProperty().bindBidirectional(pcpView.selectedItemsColor());
+        selectedItemsColorPicker.valueProperty().bindBidirectional(pcpView.selectedItemsColorProperty());
         selectedItemsColorPicker.getStyleClass().add("button");
         selectedItemsColorBox.getChildren().addAll(new Label(" Selected Color: "), selectedItemsColorPicker);
 
@@ -289,11 +303,11 @@ public class EDENFXMain extends Application implements DataModelListener {
 
         ColorPicker unselectedItemsColorPicker = new ColorPicker();
         unselectedItemsColorPicker.getStyleClass().add("button");
-        unselectedItemsColorPicker.valueProperty().bindBidirectional(pcpView.unselectedItemsColor());
+        unselectedItemsColorPicker.valueProperty().bindBidirectional(pcpView.unselectedItemsColorProperty());
         unselectedItemsColorBox.getChildren().addAll(new Label(" Unselected Color: "), unselectedItemsColorPicker);
 
         // add all items to layout
-        toolBar.getItems().addAll(histogramDisplayModeButton, binDisplayModeButton, lineDisplayModeButton, new Separator(),
+        toolBar.getItems().addAll(summaryDisplayModeButton, histogramDisplayModeButton, binDisplayModeButton, lineDisplayModeButton, new Separator(),
                 showUnselectedButton, showSelectedButton, new Separator(), selectedItemsColorBox, unselectedItemsColorBox);
 
         return toolBar;
@@ -467,7 +481,7 @@ public class EDENFXMain extends Application implements DataModelListener {
             @Override
             public void handle(ActionEvent event) {
                 FileChooser fileChooser = new FileChooser();
-                String lastCSVDirectoryPath = preferences.get(EDENFXPreferenceKeys.LAST_CSV_EXPORT_DIRECTORY, "");
+                String lastCSVDirectoryPath = preferences.get(EDENFXPreferenceKeys.LAST_CSV_READ_DIRECTORY, "");
                 if (!lastCSVDirectoryPath.isEmpty()) {
                     fileChooser.setInitialDirectory(new File(lastCSVDirectoryPath));
                 }
@@ -479,9 +493,70 @@ public class EDENFXMain extends Application implements DataModelListener {
                         displayModeMenu.setDisable(false);
                         fitPCPAxesToWidthCheckMI.setDisable(false);
                         changeAxisSpacingMI.setDisable(pcpView.getFitAxisSpacingToWidthEnabled());
+                        preferences.put(EDENFXPreferenceKeys.LAST_CSV_READ_DIRECTORY, csvFile.getParentFile().getAbsolutePath());
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
+                }
+            }
+        });
+
+        exportSelectedDataMI = new MenuItem("Export Selected Data...");
+        exportSelectedDataMI.setAccelerator(new KeyCodeCombination(KeyCode.S, KeyCombination.META_DOWN));
+        exportSelectedDataMI.setOnAction(event -> {
+            if (dataModel.getQueriedTuples().isEmpty()) {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Export Error");
+                alert.setHeaderText(null);
+                alert.setContentText("No tuples are currently selected.  Export operation canceled.");
+                alert.showAndWait();
+                return;
+            }
+
+            FileChooser fileChooser = new FileChooser();
+            String lastExportDirectoryPath = preferences.get(EDENFXPreferenceKeys.LAST_CSV_EXPORT_DIRECTORY, "");
+            if (!lastExportDirectoryPath.isEmpty()) {
+                fileChooser.setInitialDirectory(new File(lastExportDirectoryPath));
+            }
+            fileChooser.setTitle("Export Selected Data to CSV File");
+            File csvFile = fileChooser.showSaveDialog(stage);
+            if (csvFile != null) {
+                try {
+                    exportDataToCSV(csvFile, true);
+                    preferences.put(EDENFXPreferenceKeys.LAST_CSV_EXPORT_DIRECTORY, csvFile.getParentFile().getAbsolutePath());
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        });
+
+        exportUnselectedDataMI = new MenuItem("Export Unselected Data...");
+        exportUnselectedDataMI.setAccelerator(new KeyCodeCombination(KeyCode.U, KeyCombination.META_DOWN));
+        exportUnselectedDataMI.setOnAction(event -> {
+            if (dataModel.getQueriedTuples().isEmpty()) {
+                Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+                alert.setTitle("No Tuples Selected");
+                alert.setHeaderText(null);
+                alert.setContentText("No selections are set so all tuples will be exported.  Export all data?");
+                Optional<ButtonType> result = alert.showAndWait();
+                if (result.get() == ButtonType.CANCEL) {
+                    return;
+                }
+            }
+
+            FileChooser fileChooser = new FileChooser();
+            String lastExportDirectoryPath = preferences.get(EDENFXPreferenceKeys.LAST_CSV_EXPORT_DIRECTORY, "");
+            if (!lastExportDirectoryPath.isEmpty()) {
+                fileChooser.setInitialDirectory(new File(lastExportDirectoryPath));
+            }
+            fileChooser.setTitle("Export Unselected Data to CSV File");
+            File csvFile = fileChooser.showSaveDialog(stage);
+            if (csvFile != null) {
+                try {
+                    exportDataToCSV(csvFile, false);
+                    preferences.put(EDENFXPreferenceKeys.LAST_CSV_EXPORT_DIRECTORY, csvFile.getParentFile().getAbsolutePath());
+                } catch (IOException ex) {
+                    ex.printStackTrace();
                 }
             }
         });
@@ -491,6 +566,11 @@ public class EDENFXMain extends Application implements DataModelListener {
         displayModeMenuGroup = new ToggleGroup();
 //        displayModeMenuItemMap = new HashMap<>();
 
+        summaryDisplayModeMenuItem = new RadioMenuItem("Summary");
+        summaryDisplayModeMenuItem.setToggleGroup(displayModeMenuGroup);
+        if (pcpView.getDisplayMode() == PCPView.DISPLAY_MODE.SUMMARY) {
+            summaryDisplayModeMenuItem.setSelected(true);
+        }
         histogramDisplayModeMenuItem = new RadioMenuItem("Histograms");
         histogramDisplayModeMenuItem.setToggleGroup(displayModeMenuGroup);
 //        displayModeMenu.getItems().add(item);
@@ -512,7 +592,7 @@ public class EDENFXMain extends Application implements DataModelListener {
         if (pcpView.getDisplayMode() == PCPView.DISPLAY_MODE.PCP_LINES) {
             lineDisplayModeMenuItem.setSelected(true);
         }
-        displayModeMenu.getItems().addAll(histogramDisplayModeMenuItem, binDisplayModeMenuItem, lineDisplayModeMenuItem);
+        displayModeMenu.getItems().addAll(summaryDisplayModeMenuItem, histogramDisplayModeMenuItem, binDisplayModeMenuItem, lineDisplayModeMenuItem);
         viewMenu.getItems().add(displayModeMenu);
 
         // create listener for display mode menu group
@@ -529,6 +609,8 @@ public class EDENFXMain extends Application implements DataModelListener {
                         displayModeButtonGroup.selectToggle(binDisplayModeButton);
                     } else if (newDisplayMode == PCPView.DISPLAY_MODE.PCP_LINES) {
                         displayModeButtonGroup.selectToggle(lineDisplayModeButton);
+                    } else if (newDisplayMode == PCPView.DISPLAY_MODE.SUMMARY) {
+                        displayModeButtonGroup.selectToggle(summaryDisplayModeButton);
                     }
 
                     pcpView.setDisplayMode(newDisplayMode);
@@ -578,9 +660,69 @@ public class EDENFXMain extends Application implements DataModelListener {
         });
 
         edenfxMenu.getItems().addAll(exitMI);
-        fileMenu.getItems().addAll(openCSVMI);
+        fileMenu.getItems().addAll(openCSVMI, exportSelectedDataMI, exportUnselectedDataMI);
 
         return menuBar;
+    }
+
+    private void exportDataToCSV (File csvFile, boolean exportQueriedData) throws IOException {
+        BufferedWriter writer = new BufferedWriter(new FileWriter(csvFile));
+
+        // write header line with column names
+        StringBuffer headerLine = new StringBuffer();
+        for (int icol = 0; icol < dataModel.getColumnCount(); icol++) {
+            Column column = dataModel.getColumn(icol);
+            if (headerLine.length() == 0) {
+                headerLine.append(column.getName());
+            } else {
+                headerLine.append(", " + column.getName());
+            }
+        }
+
+        writer.write(headerLine.toString().trim() + "\n");
+
+        // get data
+        Set<Tuple> tuples = null;
+        if (exportQueriedData) {
+            tuples = dataModel.getQueriedTuples();
+        } else {
+            tuples = dataModel.getNonQueriedTuples();
+        }
+
+        // write to csv file
+//        for (int ituple = 0; ituple < tuples.size(); ituple++) {
+//            Tuple tuple = tuples.get(ituple);
+        int tupleCounter = 0;
+        for (Tuple tuple : tuples) {
+            StringBuffer lineBuffer = new StringBuffer();
+            for (int i = 0; i < tuple.getElementCount(); i++) {
+                if (lineBuffer.length() == 0) {
+                    lineBuffer.append(tuple.getElement(i));
+                } else {
+                    lineBuffer.append(", " + tuple.getElement(i));
+                }
+            }
+
+            if (tupleCounter == 0) {
+                writer.write(lineBuffer.toString().trim());
+            } else {
+                writer.write("\n" + lineBuffer.toString().trim());
+            }
+
+            tupleCounter++;
+        }
+
+        writer.close();
+
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        if (exportQueriedData) {
+            alert.setTitle("Selected Data Exported");
+        } else {
+            alert.setTitle("Unselected Data Exported");
+        }
+        alert.setHeaderText(null);
+        alert.setContentText("Successfully exported " + tuples.size() + " tuples to '" + csvFile.getName() + "'");
+        alert.showAndWait();
     }
 
     private void updatePercentSelected() {
@@ -706,16 +848,16 @@ public class EDENFXMain extends Application implements DataModelListener {
     }
 
     private void setDataTableItems() {
-        ObservableList<Tuple> tableTuples;
-        dataTableView.getItems().clear();
-
-        if (dataModel.getActiveQuery().hasColumnSelections()) {
-            tableTuples = FXCollections.observableArrayList(dataModel.getActiveQuery().getTuples());
-        } else {
-            tableTuples = FXCollections.observableArrayList(dataModel.getTuples());
-        }
-
-        dataTableView.setItems(tableTuples);
+//        ObservableList<Tuple> tableTuples;
+//        dataTableView.getItems().clear();
+//
+//        if (dataModel.getActiveQuery().hasColumnSelections()) {
+//            tableTuples = FXCollections.observableArrayList(dataModel.getActiveQuery().getTuples());
+//        } else {
+//            tableTuples = FXCollections.observableArrayList(dataModel.getTuples());
+//        }
+//
+//        dataTableView.setItems(tableTuples);
     }
 
     private void setDataTableColumns() {

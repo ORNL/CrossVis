@@ -19,6 +19,8 @@ public class Column implements Serializable {
     private DoubleProperty minValue;
     private DoubleProperty maxValue;
     private DoubleProperty standardDeviationValue;
+    private DoubleProperty queryMeanValue;
+    private DoubleProperty queryStandardDeviationValue;
 
     public Column(String name) {
         this.name = new SimpleStringProperty(name);
@@ -27,7 +29,21 @@ public class Column implements Serializable {
         minValue = new SimpleDoubleProperty(Double.NaN);
         maxValue = new SimpleDoubleProperty(Double.NaN);
         standardDeviationValue = new SimpleDoubleProperty(Double.NaN);
+        queryMeanValue = new SimpleDoubleProperty(Double.NaN);
+        queryStandardDeviationValue = new SimpleDoubleProperty(Double.NaN);
     }
+
+    public final double getQueryMeanValue() { return queryMeanValue.get(); }
+
+    public final void setQueryMeanValue(double value) { queryMeanValue.set(value); }
+
+    public DoubleProperty queryMeanValueProperty() { return queryMeanValue; }
+
+    public final double getQueryStandardDeviationValue() { return queryStandardDeviationValue.get(); }
+
+    public final void setQueryStandardDeviationValue (double value) { queryStandardDeviationValue.set(value); }
+
+    public DoubleProperty queryStandardDeviationValueProperty() { return queryStandardDeviationValue; }
 
     public SummaryStats getFocusSummaryStats () {
         return focusSummaryStats;

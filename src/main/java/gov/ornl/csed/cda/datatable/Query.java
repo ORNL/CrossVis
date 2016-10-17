@@ -15,14 +15,14 @@ import java.util.List;
 public class Query {
     private String id;
     private ListProperty<ColumnSelectionRange> columnSelectionRangeList;
-    private ArrayList<Tuple> tuples;
+//    private ArrayList<Tuple> tuples;
     private HashMap<Column, SummaryStats> columnQuerySummaryStatsMap;
     private int maxHistogram2DBinCount;
 
     public Query(String id) {
         this.id = id;
         columnSelectionRangeList = new SimpleListProperty<>(FXCollections.observableArrayList());
-        tuples = new ArrayList<>();
+//        tuples = new ArrayList<>();
         columnQuerySummaryStatsMap = new HashMap<>();
         maxHistogram2DBinCount = 0;
     }
@@ -60,24 +60,29 @@ public class Query {
         this.id = id;
     }
 
-    public void addTuple(Tuple tuple) {
-        tuples.add(tuple);
-    }
+//    public void addTuple(Tuple tuple) {
+//        tuples.add(tuple);
+//    }
 
-    public void clearTuples() {
-        tuples.clear();
-        columnQuerySummaryStatsMap.clear();
-    }
+//    public void clearTuples() {
+//        tuples.clear();
+//        columnQuerySummaryStatsMap.clear();
+//    }
 
-    public ArrayList<Tuple> getTuples() {
-        return tuples;
-    }
+//    public ArrayList<Tuple> getTuples() {
+//        return tuples;
+//    }
 
-    public void clearAllColumnSelections() {
+    public void clear () {
         columnSelectionRangeList.clear();
-        tuples.clear();
         columnQuerySummaryStatsMap.clear();
     }
+
+//    public void clearAllColumnSelections() {
+//        columnSelectionRangeList.clear();
+//        tuples.clear();
+//        columnQuerySummaryStatsMap.clear();
+//    }
 
 //    public void clearColumnSelection(Column column) {
 //        ArrayList<ColumnSelectionRange> selectionsToRemove = new ArrayList<>();
