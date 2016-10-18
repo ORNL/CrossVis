@@ -533,6 +533,7 @@ public class EDENFXMain extends Application implements DataModelListener {
         exportUnselectedDataMI = new MenuItem("Export Unselected Data...");
         exportUnselectedDataMI.setAccelerator(new KeyCodeCombination(KeyCode.U, KeyCombination.META_DOWN));
         exportUnselectedDataMI.setOnAction(event -> {
+//            boolean exportSelectedData = false;
             if (dataModel.getQueriedTuples().isEmpty()) {
                 Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
                 alert.setTitle("No Tuples Selected");
@@ -541,6 +542,8 @@ public class EDENFXMain extends Application implements DataModelListener {
                 Optional<ButtonType> result = alert.showAndWait();
                 if (result.get() == ButtonType.CANCEL) {
                     return;
+//                } else {
+//                    exportSelectedData = true;
                 }
             }
 

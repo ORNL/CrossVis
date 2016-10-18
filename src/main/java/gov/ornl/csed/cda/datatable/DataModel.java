@@ -214,6 +214,7 @@ public class DataModel {
 		this.highlightedColumn = null;
 
 		calculateStatistics();
+		setQueriedTuples();
 
 		fireDataModelReset();
 	}
@@ -787,8 +788,8 @@ public class DataModel {
 //			fireQueryChanged();
         } else {
             for (Tuple tuple : tuples) {
-                tuple.setQueryFlag(true);
-				queriedTuples.add(tuple);
+                tuple.setQueryFlag(false);
+				nonQueriedTuples.add(tuple);
             }
         }
 

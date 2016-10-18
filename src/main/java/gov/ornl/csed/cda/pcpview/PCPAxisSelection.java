@@ -68,7 +68,7 @@ public class PCPAxisSelection {
         });
         this.selectionRange.minValueProperty().addListener(((observable, oldValue, newValue) -> {
             log.debug("Got change notification from ColumnSelectionRange min value property");
-            relayout();;
+            relayout();
         }));
 
         double top = Math.min(minValueY, maxValueY);
@@ -425,6 +425,7 @@ public class PCPAxisSelection {
                     dragging = false;
 
                     // update column selection range min/max properties
+//                    selectionRange.setValues(draggingMinValue.get(), draggingMaxValue.get());
                     selectionRange.setMaxValue(draggingMaxValue.get());
                     selectionRange.setMinValue(draggingMinValue.get());
 

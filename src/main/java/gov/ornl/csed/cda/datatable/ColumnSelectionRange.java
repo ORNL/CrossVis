@@ -18,7 +18,7 @@ public class ColumnSelectionRange {
 
     public final Column getColumn() { return column.get(); }
 
-    public final void setColumn(Column column) { this.column.set(column); }
+//    public final void setColumn(Column column) { this.column.set(column); }
 
     public ObjectProperty<Column> columnProperty() { return column; }
 
