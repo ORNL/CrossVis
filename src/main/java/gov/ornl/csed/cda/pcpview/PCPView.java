@@ -1,10 +1,7 @@
 package gov.ornl.csed.cda.pcpview;
 
 import gov.ornl.csed.cda.datatable.*;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.*;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.CacheHint;
@@ -39,6 +36,8 @@ public class PCPView extends Region implements DataModelListener {
     public final static Color DEFAULT_QUERY_SUMMARY_STROKE_COLOR = Color.DARKGRAY;
 
     private final static DISPLAY_MODE DEFAULT_DISPLAY_MODE = DISPLAY_MODE.SUMMARY;
+
+    private DoubleProperty drawingProgressProperty;
 
     private Canvas lineCanvas;
     private GraphicsContext lineGC;
@@ -338,12 +337,20 @@ public class PCPView extends Region implements DataModelListener {
 
     @Override
     public void dataModelTuplesAdded(DataModel dataModel, ArrayList<Tuple> newTuples) {
-
+        reinitializeLayout();
     }
 
     @Override
     public void dataModelTuplesRemoved(DataModel dataModel, int numTuplesRemoved) {
+        // clear
+        for (PCPAxis pcpAxis : axisList) {
+            for (PCPAxisSelection pcpAxisSelection : pcpAxis.getAxisSelectionList()) {
+                pane.getChildren().remove(pcpAxisSelection.getGraphicsGroup());
+            }
+            pcpAxis.getAxisSelectionList().clear();
+        }
 
+        reinitializeLayout();
     }
 
     @Override
@@ -699,9 +706,15 @@ public class PCPView extends Region implements DataModelListener {
         showSelectedItems = new SimpleBooleanProperty(true);
         showUnselectedItems = new SimpleBooleanProperty(true);
         displayMode = new SimpleObjectProperty<>(DEFAULT_DISPLAY_MODE);
+
+        drawingProgressProperty = new SimpleDoubleProperty(0d);
     }
 
-    private void initGraphics() {
+    public double getDrawingProgress() { return drawingProgressProperty.get(); }
+
+    public DoubleProperty drawingProgressProperty() { return drawingProgressProperty; }
+
+        private void initGraphics() {
         lineCanvas = new Canvas(getWidth(), getHeight());
         lineGC = lineCanvas.getGraphicsContext2D();
 
@@ -963,23 +976,33 @@ public class PCPView extends Region implements DataModelListener {
         lineGC.setLineWidth(2);
         lineGC.setLineWidth(2d);
 
+//        drawingProgressProperty().set(0d);
+
         if ((isShowingUnselectedItems()) && (unselectedTupleSet != null) && (!unselectedTupleSet.isEmpty())) {
             lineGC.setStroke(getUnselectedItemsColor());
+//            int tuplesDrawn = 0;
+
             for (PCPTuple pcpTuple : unselectedTupleSet) {
                 for (int i = 1; i < pcpTuple.getXPoints().length; i++) {
                     lineGC.strokeLine(axisList.get(i-1).getBarRightX(), pcpTuple.getYPoints()[i-1],
                             axisList.get(i).getBarLeftX(), pcpTuple.getYPoints()[i]);
+//                    drawingProgressProperty().set((double)tuplesDrawn / unselectedTupleSet.size());
                 }
+//                tuplesDrawn++;
             }
         }
 
         if ((isShowingSelectedItems()) && (selectedTupleSet != null) && (!selectedTupleSet.isEmpty())) {
             lineGC.setStroke(getSelectedItemsColor());
+//            int tuplesDrawn = 0;
+
             for (PCPTuple pcpTuple : selectedTupleSet) {
                 for (int i = 1; i < pcpTuple.getXPoints().length; i++) {
                     lineGC.strokeLine(axisList.get(i-1).getBarRightX(), pcpTuple.getYPoints()[i-1],
                             axisList.get(i).getBarLeftX(), pcpTuple.getYPoints()[i]);
+//                    drawingProgressProperty().set((double)tuplesDrawn / selectedTupleSet.size());
                 }
+//                tuplesDrawn++;
             }
         }
 

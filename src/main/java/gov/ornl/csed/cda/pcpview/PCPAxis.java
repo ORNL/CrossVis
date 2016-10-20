@@ -140,8 +140,8 @@ public class PCPAxis {
         focusTopY = 0d;
         focusBottomY = 0d;
 
-        nameText = new Text();
-        nameText.textProperty().bindBidirectional(column.nameProperty());
+        nameText = new Text(column.getName());
+//        nameText.textProperty().bindBidirectional(column.nameProperty());
         Tooltip tooltip = new Tooltip();
         tooltip.textProperty().bindBidirectional(column.nameProperty());
         Tooltip.install(nameText, tooltip);
@@ -420,8 +420,17 @@ public class PCPAxis {
         bottomFocusCrossBarLine.setStartX(centerX - (DEFAULT_BAR_WIDTH / 2.));
         bottomFocusCrossBarLine.setEndX(centerX + (DEFAULT_BAR_WIDTH / 2.));
 
+        nameText.setText(column.getName());
+        if (nameText.getLayoutBounds().getWidth() > bounds.getWidth()) {
+            // truncate the column name to fit axis bounds
+            while (nameText.getLayoutBounds().getWidth() > bounds.getWidth()) {
+                nameText.setText(nameText.getText().substring(0, nameText.getText().length() - 1));
+            }
+        }
+
 //        nameText.setFont(new Font(DEFAULT_TEXT_SIZE));
 //        adjustTextSize(nameText, width, DEFAULT_TEXT_SIZE);
+
         nameText.setX(bounds.getX() + ((width - nameText.getLayoutBounds().getWidth()) / 2.));
         nameText.setY(bounds.getY() + nameText.getLayoutBounds().getHeight());
 //        nameText.setY(barTopY - (DEFAULT_NAME_LABEL_HEIGHT / 2.));

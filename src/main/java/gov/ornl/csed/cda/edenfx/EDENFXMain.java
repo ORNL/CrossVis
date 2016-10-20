@@ -90,12 +90,16 @@ public class EDENFXMain extends Application implements DataModelListener {
     private ProgressBar percentSelectedProgress;
     private DecimalFormat decimalFormat;
     private StatusBar statusBar;
+    private MenuItem removeSelectedDataMenuItem;
+    private MenuItem removeUnselectedDataMenuItem;
+
+    private CheckMenuItem enableDataTableUpdatesCheckMenuItem;
 
     @Override
     public void init() {
         preferences = Preferences.userNodeForPackage(this.getClass());
 
-        decimalFormat = new DecimalFormat("###.0%");
+        decimalFormat = new DecimalFormat("##0.0%");
         displayModeMap = new HashMap<>();
         displayModeMap.put("Summary", PCPView.DISPLAY_MODE.SUMMARY);
         displayModeMap.put("Histograms", PCPView.DISPLAY_MODE.HISTOGRAM);
@@ -330,10 +334,17 @@ public class EDENFXMain extends Application implements DataModelListener {
         stage.setOnShown(event -> {
             FileChooser fileChooser = new FileChooser();
             fileChooser.setTitle("Open CSV File");
+
+            String lastCSVDirectoryPath = preferences.get(EDENFXPreferenceKeys.LAST_CSV_READ_DIRECTORY, "");
+            if (!lastCSVDirectoryPath.isEmpty()) {
+                fileChooser.setInitialDirectory(new File(lastCSVDirectoryPath));
+            }
+
             File file = fileChooser.showOpenDialog(stage);
             if (file != null) {
                 try {
                     openCSVFile(file);
+                    preferences.put(EDENFXPreferenceKeys.LAST_CSV_READ_DIRECTORY, file.getParentFile().getAbsolutePath());
                     displayModeMenu.setDisable(false);
                     fitPCPAxesToWidthCheckMI.setDisable(false);
                     changeAxisSpacingMI.setDisable(pcpView.getFitAxisSpacingToWidthEnabled());
@@ -356,6 +367,7 @@ public class EDENFXMain extends Application implements DataModelListener {
         ToolBar toolBar = createToolBar(stage);
 
         createStatusBar();
+//        statusBar.progressProperty().bindBidirectional(pcpView.drawingProgressProperty());
 
         MenuBar menuBar = createMenuBar(stage);
 //        menuBar.setUseSystemMenuBar(true);
@@ -395,7 +407,7 @@ public class EDENFXMain extends Application implements DataModelListener {
         rootNode.setBottom(statusBar);
 //        rootNode.setLeft(settingsPane);
 
-        Scene scene = new Scene(rootNode, 1000, 500, true, SceneAntialiasing.BALANCED);
+        Scene scene = new Scene(rootNode, 1400, 800, true, SceneAntialiasing.BALANCED);
 
         stage.setTitle("EDEN.FX Alpha Version");
         stage.setScene(scene);
@@ -645,6 +657,23 @@ public class EDENFXMain extends Application implements DataModelListener {
         axisLayoutMenu.getItems().addAll(fitPCPAxesToWidthCheckMI, changeAxisSpacingMI);
         viewMenu.getItems().add(axisLayoutMenu);
 
+        Menu removeDataMenu = new Menu("Remove Data");
+        // create menu item to remove selected data
+        removeSelectedDataMenuItem = new MenuItem("Remove Selected Data");
+        removeSelectedDataMenuItem.setOnAction(event -> {
+            int removedTuples = dataModel.removeSelectedTuples();
+            log.debug("Removed " + removedTuples + " tuples");
+        });
+
+        // create menu item to keep selected data and remove unselected data
+        removeUnselectedDataMenuItem = new MenuItem("Remove Unselected Data");
+        removeUnselectedDataMenuItem.setOnAction(event -> {
+            int removedTuples = dataModel.removeUnselectedTuples();
+            log.debug("Removed " + removedTuples + " tuples");
+        });
+        removeDataMenu.getItems().addAll(removeSelectedDataMenuItem, removeUnselectedDataMenuItem);
+        viewMenu.getItems().add(removeDataMenu);
+
         // create menu item to remove all active queries
         removeAllQueriesMI = new MenuItem("Remove All Range Queries");
         removeAllQueriesMI.setDisable(true);
@@ -653,6 +682,18 @@ public class EDENFXMain extends Application implements DataModelListener {
         });
         viewMenu.getItems().add(removeAllQueriesMI);
 
+        // create menu item to enabled/disable data table updates
+        enableDataTableUpdatesCheckMenuItem = new CheckMenuItem("Enable Data Table Updates");
+        enableDataTableUpdatesCheckMenuItem.setSelected(true);
+        enableDataTableUpdatesCheckMenuItem.selectedProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue != null && newValue) {
+                // refresh data table based on current state of the data model
+                setDataTableItems();
+            } else {
+                dataTableView.getItems().clear();
+            }
+        });
+        viewMenu.getItems().add(enableDataTableUpdatesCheckMenuItem);
 
         MenuItem exitMI = new MenuItem("Quit Falcon");
         exitMI.setAccelerator(new KeyCodeCombination(KeyCode.Q, KeyCombination.META_DOWN));
@@ -851,16 +892,18 @@ public class EDENFXMain extends Application implements DataModelListener {
     }
 
     private void setDataTableItems() {
-//        ObservableList<Tuple> tableTuples;
-//        dataTableView.getItems().clear();
-//
-//        if (dataModel.getActiveQuery().hasColumnSelections()) {
-//            tableTuples = FXCollections.observableArrayList(dataModel.getActiveQuery().getTuples());
-//        } else {
-//            tableTuples = FXCollections.observableArrayList(dataModel.getTuples());
-//        }
-//
-//        dataTableView.setItems(tableTuples);
+        if (enableDataTableUpdatesCheckMenuItem.isSelected()) {
+            ObservableList<Tuple> tableTuples;
+            dataTableView.getItems().clear();
+
+            if (dataModel.getActiveQuery().hasColumnSelections()) {
+                tableTuples = FXCollections.observableArrayList(dataModel.getQueriedTuples());
+            } else {
+                tableTuples = FXCollections.observableArrayList(dataModel.getTuples());
+            }
+
+            dataTableView.setItems(tableTuples);
+        }
     }
 
     private void setDataTableColumns() {
