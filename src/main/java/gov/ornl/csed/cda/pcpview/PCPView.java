@@ -1,6 +1,7 @@
 package gov.ornl.csed.cda.pcpview;
 
 import gov.ornl.csed.cda.datatable.*;
+import javafx.animation.AnimationTimer;
 import javafx.beans.property.*;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
@@ -17,6 +18,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.concurrent.ArrayBlockingQueue;
 
 /**
  * Created by csg on 8/22/16.
@@ -79,8 +81,11 @@ public class PCPView extends Region implements DataModelListener {
 
     private boolean fitAxisSpacingToWidthEnabled = true;
 
-    public enum DISPLAY_MODE {SUMMARY, HISTOGRAM, PCP_LINES, PCP_BINS};
+    // drawing timers
+    TupleDrawingAnimationTimer selectedTuplesTimer;
+    TupleDrawingAnimationTimer unselectedTuplesTimer;
 
+    public enum DISPLAY_MODE {SUMMARY, HISTOGRAM, PCP_LINES, PCP_BINS};
 
     public PCPView() {
         backgroundPaint = Color.TRANSPARENT;
@@ -969,44 +974,76 @@ public class PCPView extends Region implements DataModelListener {
     }
 
     private void drawTuplePolylines() {
-        lineCanvas.setCache(false);
+//        lineCanvas.setCache(false);
         lineGC.setLineCap(StrokeLineCap.BUTT);
         lineGC.clearRect(0, 0, getWidth(), getHeight());
 //        lineGC.setGlobalAlpha(lineOpacity);
         lineGC.setLineWidth(2);
         lineGC.setLineWidth(2d);
 
-//        drawingProgressProperty().set(0d);
-
         if ((isShowingUnselectedItems()) && (unselectedTupleSet != null) && (!unselectedTupleSet.isEmpty())) {
-            lineGC.setStroke(getUnselectedItemsColor());
-//            int tuplesDrawn = 0;
-
-            for (PCPTuple pcpTuple : unselectedTupleSet) {
-                for (int i = 1; i < pcpTuple.getXPoints().length; i++) {
-                    lineGC.strokeLine(axisList.get(i-1).getBarRightX(), pcpTuple.getYPoints()[i-1],
-                            axisList.get(i).getBarLeftX(), pcpTuple.getYPoints()[i]);
-//                    drawingProgressProperty().set((double)tuplesDrawn / unselectedTupleSet.size());
-                }
-//                tuplesDrawn++;
+            if (unselectedTuplesTimer != null && unselectedTuplesTimer.isRunning()) {
+                unselectedTuplesTimer.stop();
             }
+
+            unselectedTuplesTimer = new TupleDrawingAnimationTimer(lineCanvas, unselectedTupleSet, axisList, getUnselectedItemsColor(), 100);
+            unselectedTuplesTimer.start();
+//            lineGC.setStroke(getUnselectedItemsColor());
+//
+//            for (PCPTuple pcpTuple : unselectedTupleSet) {
+//                for (int i = 1; i < pcpTuple.getXPoints().length; i++) {
+//                    lineGC.strokeLine(axisList.get(i-1).getBarRightX(), pcpTuple.getYPoints()[i-1],
+//                            axisList.get(i).getBarLeftX(), pcpTuple.getYPoints()[i]);
+//                }
+//            }
         }
 
         if ((isShowingSelectedItems()) && (selectedTupleSet != null) && (!selectedTupleSet.isEmpty())) {
-            lineGC.setStroke(getSelectedItemsColor());
-//            int tuplesDrawn = 0;
-
-            for (PCPTuple pcpTuple : selectedTupleSet) {
-                for (int i = 1; i < pcpTuple.getXPoints().length; i++) {
-                    lineGC.strokeLine(axisList.get(i-1).getBarRightX(), pcpTuple.getYPoints()[i-1],
-                            axisList.get(i).getBarLeftX(), pcpTuple.getYPoints()[i]);
-//                    drawingProgressProperty().set((double)tuplesDrawn / selectedTupleSet.size());
-                }
-//                tuplesDrawn++;
+            if (selectedTuplesTimer != null && selectedTuplesTimer.isRunning()) {
+                selectedTuplesTimer.stop();
             }
+
+            selectedTuplesTimer = new TupleDrawingAnimationTimer(lineCanvas, selectedTupleSet, axisList, getSelectedItemsColor(), 100);
+            selectedTuplesTimer.start();
+//            final ArrayBlockingQueue<PCPTuple> drawingQueue = new ArrayBlockingQueue<>(selectedTupleSet.size(), true, selectedTupleSet);
+
+
+//            selectedTuplesTimer = new AnimationTimer() {
+//                public ArrayBlockingQueue<PCPTuple> tupleQueue = new ArrayBlockingQueue<>(selectedTupleSet.size(), true, selectedTupleSet);;
+//
+//                @Override
+//                public void handle(long now) {
+//                    log.debug("starting frame");
+//                    lineGC.setStroke(getSelectedItemsColor());
+//                    for (int lineCounter = 0; lineCounter < 100; lineCounter++) {
+//                        PCPTuple pcpTuple = tupleQueue.poll();
+//                        if (pcpTuple == null) {
+//                            log.debug("Stopped");
+//                            stop();
+//                            break;
+//                        } else {
+//                            for (int i = 1; i < pcpTuple.getXPoints().length; i++) {
+//                                lineGC.strokeLine(axisList.get(i-1).getBarRightX(), pcpTuple.getYPoints()[i-1],
+//                                        axisList.get(i).getBarLeftX(), pcpTuple.getYPoints()[i]);
+//                            }
+//                        }
+//                    }
+//                    log.debug("finished frame");
+//                }
+//            };
+//            selectedTuplesTimer.start();
+
+//            lineGC.setStroke(getSelectedItemsColor());
+//
+//            for (PCPTuple pcpTuple : selectedTupleSet) {
+//                for (int i = 1; i < pcpTuple.getXPoints().length; i++) {
+//                    lineGC.strokeLine(axisList.get(i-1).getBarRightX(), pcpTuple.getYPoints()[i-1],
+//                            axisList.get(i).getBarLeftX(), pcpTuple.getYPoints()[i]);
+//                }
+//            }
         }
 
-        lineCanvas.setCache(true);
-        lineCanvas.setCacheHint(CacheHint.QUALITY);
+//        lineCanvas.setCache(true);
+//        lineCanvas.setCacheHint(CacheHint.QUALITY);
     }
 }
