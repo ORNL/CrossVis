@@ -25,8 +25,10 @@ public class TupleDrawingAnimationTimer extends AnimationTimer {
     private int maxTuplesPerFrame;
     private ArrayList<PCPAxis> axisList;
     private BooleanProperty running;
+    public long id;
 
     public TupleDrawingAnimationTimer (Canvas canvas, Collection<PCPTuple> tuples, ArrayList<PCPAxis> axisList, Color tupleColor, int maxTuplesPerFrame) {
+        id = System.currentTimeMillis();
         this.canvas = canvas;
         this.axisList = axisList;
         this.tupleColor = tupleColor;
@@ -42,12 +44,13 @@ public class TupleDrawingAnimationTimer extends AnimationTimer {
 
     @Override
     public void handle(long now) {
+//        log.debug("Drawing frame");
         canvas.getGraphicsContext2D().setStroke(tupleColor);
 
         for (int ituple = 0; ituple < maxTuplesPerFrame; ituple++) {
             PCPTuple pcpTuple = tupleQueue.poll();
             if (pcpTuple == null) {
-                log.debug("Stopping Timer");
+                log.debug("Stopping Timer normally (id: " + id + ")");
                 this.stop();
                 break;
             } else {
@@ -57,17 +60,19 @@ public class TupleDrawingAnimationTimer extends AnimationTimer {
                 }
             }
         }
+//        log.debug("Finished Frame");
     }
 
     @Override
     public void start() {
+        log.debug("Started TupleDrawingAnimationTimer with id " + id);
         super.start();
-        running.set(false);
+        running.set(true);
     }
 
     @Override
     public void stop() {
         super.stop();
-        running.set(true);
+        running.set(false);
     }
 }

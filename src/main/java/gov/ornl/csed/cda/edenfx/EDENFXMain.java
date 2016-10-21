@@ -14,6 +14,7 @@ import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
 import javafx.scene.SceneAntialiasing;
 import javafx.scene.control.*;
@@ -28,6 +29,7 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.util.Callback;
 import javafx.util.converter.NumberStringConverter;
@@ -407,7 +409,9 @@ public class EDENFXMain extends Application implements DataModelListener {
         rootNode.setBottom(statusBar);
 //        rootNode.setLeft(settingsPane);
 
-        Scene scene = new Scene(rootNode, 1400, 800, true, SceneAntialiasing.BALANCED);
+        Rectangle2D screenVisualBounds = Screen.getPrimary().getVisualBounds();
+
+        Scene scene = new Scene(rootNode, screenVisualBounds.getWidth() - 20, 800, true, SceneAntialiasing.BALANCED);
 
         stage.setTitle("EDEN.FX Alpha Version");
         stage.setScene(scene);

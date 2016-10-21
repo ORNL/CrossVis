@@ -16,6 +16,7 @@ import javafx.scene.shape.StrokeLineCap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -41,8 +42,10 @@ public class PCPView extends Region implements DataModelListener {
 
     private DoubleProperty drawingProgressProperty;
 
-    private Canvas lineCanvas;
-    private GraphicsContext lineGC;
+    private Canvas selectedCanvas;
+    private Canvas unselectedCanvas;
+//    private Canvas lineCanvas;
+//    private GraphicsContext lineGC;
 
     private Paint backgroundPaint;
     private Paint borderPaint;
@@ -255,7 +258,10 @@ public class PCPView extends Region implements DataModelListener {
 
     private void initializeLayout() {
         pane.getChildren().clear();
-        pane.getChildren().add(lineCanvas);
+
+        pane.getChildren().add(selectedCanvas);
+        pane.getChildren().add(unselectedCanvas);
+//        pane.getChildren().add(lineCanvas);
 
         // add axis lines to the pane
         axisList.clear();
@@ -719,13 +725,19 @@ public class PCPView extends Region implements DataModelListener {
 
     public DoubleProperty drawingProgressProperty() { return drawingProgressProperty; }
 
-        private void initGraphics() {
-        lineCanvas = new Canvas(getWidth(), getHeight());
-        lineGC = lineCanvas.getGraphicsContext2D();
+    private void initGraphics() {
+//        lineCanvas = new Canvas(getWidth(), getHeight());
+//        lineGC = lineCanvas.getGraphicsContext2D();
 
-        pane = new Pane(lineCanvas);
+//        pane = new Pane(lineCanvas);
 //        pane.setBackground(new Background(new BackgroundFill(backgroundPaint, new CornerRadii(1024), Insets.EMPTY)));
 //        pane.setBorder(new Border(new BorderStroke(borderPaint, BorderStrokeStyle.SOLID, new CornerRadii(1024), new BorderWidths(borderWidth))));
+
+        selectedCanvas = new Canvas(getWidth(), getHeight());
+        unselectedCanvas = new Canvas(getWidth(), getHeight());
+
+        pane = new Pane();
+        pane.getChildren().addAll(unselectedCanvas, selectedCanvas);
 
         getChildren().add(pane);
     }
@@ -733,13 +745,6 @@ public class PCPView extends Region implements DataModelListener {
     private void registerListeners() {
         widthProperty().addListener(o -> resize());
         heightProperty().addListener(o -> resize());
-
-        lineCanvas.setOnMouseClicked(new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                System.out.println("Clicked in the polyline canvas");
-            }
-        });
 
         selectedItemsColor.addListener((observable, oldValue, newValue) -> {
             redraw();
@@ -759,7 +764,9 @@ public class PCPView extends Region implements DataModelListener {
 
         displayMode.addListener(((observable, oldValue, newValue) -> {
             if ((oldValue == DISPLAY_MODE.PCP_LINES) || (oldValue == DISPLAY_MODE.PCP_BINS) || (oldValue == DISPLAY_MODE.SUMMARY)) {
-                lineGC.clearRect(0, 0, getWidth(), getHeight());
+//                lineGC.clearRect(0, 0, getWidth(), getHeight());
+                selectedCanvas.getGraphicsContext2D().clearRect(0, 0, getWidth(), getHeight());
+                unselectedCanvas.getGraphicsContext2D().clearRect(0, 0, getWidth(), getHeight());
             }
 
             if (newValue == DISPLAY_MODE.PCP_LINES) {
@@ -803,8 +810,15 @@ public class PCPView extends Region implements DataModelListener {
                 pane.setPrefSize(width, getHeight());
                 pane.setMinWidth(width);
 
-                lineCanvas.setWidth(width);
-                lineCanvas.setHeight(getHeight());
+//                selectedCanvas.resize(width, getHeight());
+//                unselectedCanvas.resize(width, getHeight());
+//                lineCanvas.setWidth(width);
+//                lineCanvas.setHeight(getHeight());
+
+                selectedCanvas.setWidth(width);
+                selectedCanvas.setHeight(getHeight());
+                unselectedCanvas.setWidth(width);
+                unselectedCanvas.setHeight(getHeight());
 
                 if (axisList != null) {
                     double left = getInsets().getLeft() + (axisSpacing / 2.);
@@ -840,10 +854,20 @@ public class PCPView extends Region implements DataModelListener {
     }
 
     private void redraw() {
-        pane.setBackground(new Background(new BackgroundFill(backgroundPaint, new CornerRadii(1024), Insets.EMPTY)));
-        pane.setBorder(new Border(new BorderStroke(borderPaint, BorderStrokeStyle.SOLID, new CornerRadii(1024), new BorderWidths(borderWidth))));
+//        pane.setBackground(new Background(new BackgroundFill(backgroundPaint, new CornerRadii(1024), Insets.EMPTY)));
+//        pane.setBorder(new Border(new BorderStroke(borderPaint, BorderStrokeStyle.SOLID, new CornerRadii(1024), new BorderWidths(borderWidth))));
 
         if (getDisplayMode() == DISPLAY_MODE.PCP_LINES) {
+            if (selectedTuplesTimer != null && selectedTuplesTimer.isRunning()) {
+                selectedTuplesTimer.stop();
+                log.debug("STOPPED selectedTuplesTimer  (id: " + selectedTuplesTimer.id + ")");
+            }
+
+            if (unselectedTuplesTimer != null && unselectedTuplesTimer.isRunning()) {
+                unselectedTuplesTimer.stop();
+                log.debug("STOPPED unselectedTuplesTimer  (id: " + selectedTuplesTimer.id + ")");
+            }
+
             drawTuplePolylines();
         } else if (getDisplayMode() == DISPLAY_MODE.PCP_BINS) {
             drawPCPBins();
@@ -869,6 +893,7 @@ public class PCPView extends Region implements DataModelListener {
     }
 
     private void drawSummaryShapes() {
+        /*
         lineCanvas.setCache(false);
         lineGC.setLineCap(StrokeLineCap.BUTT);
         lineGC.clearRect(0, 0, getWidth(), getHeight());
@@ -912,28 +937,40 @@ public class PCPView extends Region implements DataModelListener {
 
         lineCanvas.setCache(true);
         lineCanvas.setCacheHint(CacheHint.QUALITY);
+        */
     }
 
     private void drawPCPBins() {
-        lineCanvas.setCache(false);
-        lineGC.setLineCap(StrokeLineCap.BUTT);
-        lineGC.clearRect(0, 0, getWidth(), getHeight());
-//        lineGC.setGlobalAlpha(lineOpacity);
-        lineGC.setLineWidth(2);
-        lineGC.setLineWidth(2d);
+//        lineCanvas.setCache(false);
+//        lineGC.setLineCap(StrokeLineCap.BUTT);
+//        lineGC.clearRect(0, 0, getWidth(), getHeight());
+////        lineGC.setGlobalAlpha(lineOpacity);
+//        lineGC.setLineWidth(2);
+//        lineGC.setLineWidth(2d);
+
+        selectedCanvas.getGraphicsContext2D().setLineCap(StrokeLineCap.BUTT);
+        selectedCanvas.getGraphicsContext2D().clearRect(0, 0, getWidth(), getHeight());
+        selectedCanvas.getGraphicsContext2D().setLineWidth(2d);
+
+        unselectedCanvas.getGraphicsContext2D().setLineCap(StrokeLineCap.BUTT);
+        unselectedCanvas.getGraphicsContext2D().clearRect(0, 0, getWidth(), getHeight());
+        unselectedCanvas.getGraphicsContext2D().setLineWidth(2d);
 
         if ((PCPBinSetList != null) && (!PCPBinSetList.isEmpty())) {
-
             if (dataModel.getActiveQuery().hasColumnSelections()) {
                 if (isShowingUnselectedItems()) {
                     for (PCPBinSet binSet : PCPBinSetList) {
                         for (PCPBin bin : binSet.getBins()) {
                             Color binColor = new Color(getUnselectedItemsColor().getRed(), getUnselectedItemsColor().getGreen(),
                                     getUnselectedItemsColor().getBlue(), bin.fillColor.getOpacity());
-                            lineGC.setFill(binColor);
+//                            lineGC.setFill(binColor);
+                            unselectedCanvas.getGraphicsContext2D().setFill(binColor);
+
                             double xValues[] = new double[]{bin.left, bin.right, bin.right, bin.left};
                             double yValues[] = new double[]{bin.leftTop, bin.rightTop, bin.rightBottom, bin.leftBottom};
-                            lineGC.fillPolygon(xValues, yValues, xValues.length);
+
+                            unselectedCanvas.getGraphicsContext2D().fillPolygon(xValues, yValues, xValues.length);
+//                            lineGC.fillPolygon(xValues, yValues, xValues.length);
                         }
                     }
                 }
@@ -945,10 +982,15 @@ public class PCPView extends Region implements DataModelListener {
                                 //                        lineGC.setFill(bin.queryFillColor);
                                 Color binColor = new Color(getSelectedItemsColor().getRed(), getSelectedItemsColor().getGreen(),
                                         getSelectedItemsColor().getBlue(), bin.queryFillColor.getOpacity());
-                                lineGC.setFill(binColor);
+//                                lineGC.setFill(binColor);
+
+                                selectedCanvas.getGraphicsContext2D().setFill(binColor);
+
                                 double xValues[] = new double[]{bin.left, bin.right, bin.right, bin.left};
                                 double yValues[] = new double[]{bin.leftQueryTop, bin.rightQueryTop, bin.rightQueryBottom, bin.leftQueryBottom};
-                                lineGC.fillPolygon(xValues, yValues, xValues.length);
+//                                lineGC.fillPolygon(xValues, yValues, xValues.length);
+
+                                selectedCanvas.getGraphicsContext2D().fillPolygon(xValues, yValues, xValues.length);
                             }
                         }
                     }
@@ -959,34 +1001,47 @@ public class PCPView extends Region implements DataModelListener {
                         for (PCPBin bin : binSet.getBins()) {
                             Color binColor = new Color(getSelectedItemsColor().getRed(), getSelectedItemsColor().getGreen(),
                                     getSelectedItemsColor().getBlue(), bin.fillColor.getOpacity());
-                            lineGC.setFill(binColor);
+//                            lineGC.setFill(binColor);
+
+                            selectedCanvas.getGraphicsContext2D().setFill(binColor);
+
                             double xValues[] = new double[]{bin.left, bin.right, bin.right, bin.left};
                             double yValues[] = new double[]{bin.leftTop, bin.rightTop, bin.rightBottom, bin.leftBottom};
-                            lineGC.fillPolygon(xValues, yValues, xValues.length);
+//                            lineGC.fillPolygon(xValues, yValues, xValues.length);
+
+                            selectedCanvas.getGraphicsContext2D().fillPolygon(xValues, yValues, xValues.length);
                         }
                     }
                 }
             }
         }
 
-        lineCanvas.setCache(true);
-        lineCanvas.setCacheHint(CacheHint.QUALITY);
+//        lineCanvas.setCache(true);
+//        lineCanvas.setCacheHint(CacheHint.QUALITY);
     }
 
     private void drawTuplePolylines() {
-//        lineCanvas.setCache(false);
-        lineGC.setLineCap(StrokeLineCap.BUTT);
-        lineGC.clearRect(0, 0, getWidth(), getHeight());
-//        lineGC.setGlobalAlpha(lineOpacity);
-        lineGC.setLineWidth(2);
-        lineGC.setLineWidth(2d);
+////        lineCanvas.setCache(false);
+//        lineGC.setLineCap(StrokeLineCap.BUTT);
+//        lineGC.clearRect(0, 0, getWidth(), getHeight());
+////        lineGC.setGlobalAlpha(lineOpacity);
+//        lineGC.setLineWidth(2);
+//        lineGC.setLineWidth(2d);
+
+        selectedCanvas.getGraphicsContext2D().setLineCap(StrokeLineCap.BUTT);
+        selectedCanvas.getGraphicsContext2D().clearRect(0, 0, getWidth(), getHeight());
+        selectedCanvas.getGraphicsContext2D().setLineWidth(2d);
+
+        unselectedCanvas.getGraphicsContext2D().setLineCap(StrokeLineCap.BUTT);
+        unselectedCanvas.getGraphicsContext2D().clearRect(0, 0, getWidth(), getHeight());
+        unselectedCanvas.getGraphicsContext2D().setLineWidth(2d);
 
         if ((isShowingUnselectedItems()) && (unselectedTupleSet != null) && (!unselectedTupleSet.isEmpty())) {
             if (unselectedTuplesTimer != null && unselectedTuplesTimer.isRunning()) {
                 unselectedTuplesTimer.stop();
             }
 
-            unselectedTuplesTimer = new TupleDrawingAnimationTimer(lineCanvas, unselectedTupleSet, axisList, getUnselectedItemsColor(), 100);
+            unselectedTuplesTimer = new TupleDrawingAnimationTimer(unselectedCanvas, unselectedTupleSet, axisList, getUnselectedItemsColor(), 100);
             unselectedTuplesTimer.start();
 //            lineGC.setStroke(getUnselectedItemsColor());
 //
@@ -1003,7 +1058,7 @@ public class PCPView extends Region implements DataModelListener {
                 selectedTuplesTimer.stop();
             }
 
-            selectedTuplesTimer = new TupleDrawingAnimationTimer(lineCanvas, selectedTupleSet, axisList, getSelectedItemsColor(), 100);
+            selectedTuplesTimer = new TupleDrawingAnimationTimer(selectedCanvas, selectedTupleSet, axisList, getSelectedItemsColor(), 100);
             selectedTuplesTimer.start();
 //            final ArrayBlockingQueue<PCPTuple> drawingQueue = new ArrayBlockingQueue<>(selectedTupleSet.size(), true, selectedTupleSet);
 
