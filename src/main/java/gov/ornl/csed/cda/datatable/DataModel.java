@@ -1,6 +1,5 @@
 package gov.ornl.csed.cda.datatable;
 
-import javafx.beans.property.SimpleObjectProperty;
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.apache.commons.math3.stat.regression.OLSMultipleLinearRegression;
@@ -56,7 +55,7 @@ public class DataModel {
 	private int nextQueryNumber = 2;
 
     // The number of histogram bins to use
-	private int histogramBinSize = DEFAULT_NUM_HISTOGRAM_BINS;
+	private int numHistogramBins = DEFAULT_NUM_HISTOGRAM_BINS;
 
     // Current maximum 2D histogram bin count (the max count of all 2D histograms)
     private int maxHistogram2DBinCount = 0;
@@ -74,6 +73,21 @@ public class DataModel {
         listeners = new ArrayList<>();
 	}
 
+	public int getNumHistogramBins() {
+		return numHistogramBins;
+	}
+
+	public void setNumHistogramBins(int numBins) {
+		if (numBins != numHistogramBins) {
+			numHistogramBins = numBins;
+			calculateStatistics();
+			if (activeQuery.hasColumnSelections()) {
+				calculateQueryStatistics();
+			}
+
+			fireNumHistogramBinsChanged();
+		}
+	}
 	public final Query getActiveQuery() { return activeQuery; }
 
 	public int getMaxHistogram2DBinCount() { return maxHistogram2DBinCount; }
@@ -197,9 +211,9 @@ public class DataModel {
 			return;
 		}
 
-        histogramBinSize = (int)Math.floor(Math.sqrt(tuples.size()));
-        if (histogramBinSize > MAX_NUM_HISTOGRAM_BINS) {
-            histogramBinSize = MAX_NUM_HISTOGRAM_BINS;
+        numHistogramBins = (int)Math.floor(Math.sqrt(tuples.size()));
+        if (numHistogramBins > MAX_NUM_HISTOGRAM_BINS) {
+            numHistogramBins = MAX_NUM_HISTOGRAM_BINS;
         }
 
 		highlightedColumn = null;
@@ -898,7 +912,7 @@ public class DataModel {
             Histogram histogram;
             if (column.isContinuous()) {
                 histogram = new Histogram(column.getName(), data[icolumn],
-                        histogramBinSize, column.getSummaryStats().getMin(),
+						numHistogramBins, column.getSummaryStats().getMin(),
                         column.getSummaryStats().getMax());
             } else {
                 int numBins = column.getSummaryStats().getHistogram().getNumBins();
@@ -930,7 +944,7 @@ public class DataModel {
                 // TODO: This could be optimized to reduce some computational complexity
                 // TODO: The code current calculates a redundant 2D histogram for each pair of variables
                 Histogram2D histogram2D = column.getSummaryStats().getHistogram2DList().get(iy);
-                Histogram2D queryHistogram2D = new Histogram2D("", data[ix], data[iy], histogramBinSize,
+                Histogram2D queryHistogram2D = new Histogram2D("", data[ix], data[iy], numHistogramBins,
                         histogram2D.getXMinValue(), histogram2D.getXMaxValue(), histogram2D.getYMinValue(), histogram2D.getYMaxValue());
                 histogram2DArrayList.add(queryHistogram2D);
 
@@ -1019,7 +1033,7 @@ public class DataModel {
             Histogram histogram;
             if (column.isContinuous()) {
                 histogram = new Histogram(column.getName(), data[icolumn],
-                        histogramBinSize, column.getSummaryStats().getMin(),
+						numHistogramBins, column.getSummaryStats().getMin(),
                         column.getSummaryStats().getMax());
             } else {
                 int numBins = ((int)column.getSummaryStats().getMax() - (int)column.getSummaryStats().getMin()) + 1;
@@ -1043,7 +1057,7 @@ public class DataModel {
                 // calculate 2D histograms
                 // TODO: This could be optimized to reduce some computational complexity
                 // TODO: The code current calculates a redundant 2D histogram for each pair of variables
-                Histogram2D histogram2D = new Histogram2D("", data[ix], data[iy], histogramBinSize);
+                Histogram2D histogram2D = new Histogram2D("", data[ix], data[iy], numHistogramBins);
                 histogram2DArrayList.add(histogram2D);
 
                 if (histogram2D.getMaxBinCount() > column.getSummaryStats().getMaxHistogram2DCount()) {
@@ -1059,6 +1073,12 @@ public class DataModel {
             }
         }
     }
+
+    public void fireNumHistogramBinsChanged() {
+		for (DataModelListener listener : listeners) {
+			listener.dataModelNumHistogramBinsChanged(this);
+		}
+	}
 
 	private void fireColumnDisabled(Column column) {
 		for (DataModelListener listener : listeners) {

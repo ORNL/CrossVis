@@ -96,6 +96,7 @@ public class EDENFXMain extends Application implements DataModelListener {
     private MenuItem removeUnselectedDataMenuItem;
 
     private CheckMenuItem enableDataTableUpdatesCheckMenuItem;
+    private MenuItem changeHistogramBinCountMenuItem;
 
     @Override
     public void init() {
@@ -413,7 +414,7 @@ public class EDENFXMain extends Application implements DataModelListener {
 
         Scene scene = new Scene(rootNode, screenVisualBounds.getWidth() - 20, 800, true, SceneAntialiasing.BALANCED);
 
-        stage.setTitle("EDEN.FX Alpha Version");
+        stage.setTitle("EDEN.FX");
         stage.setScene(scene);
         stage.show();
     }
@@ -425,6 +426,64 @@ public class EDENFXMain extends Application implements DataModelListener {
 
     public static void main (String args[]) {
         launch(args);
+    }
+
+    private void changeNumHistogramBins() {
+        Dialog<Integer> numHistogramBinsDialog = new Dialog<>();
+        numHistogramBinsDialog.setTitle("Number of Histogram Bins");
+        numHistogramBinsDialog.setHeaderText("Set the number of histogram bins.");
+
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setPadding(new Insets(20, 150, 10, 10));
+
+        Spinner<Integer> spinner = new Spinner<>();
+        spinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(2, (int)pcpView.getPCPVerticalBarHeight(), dataModel.getNumHistogramBins()));
+        spinner.setEditable(true);
+
+        grid.add(new Label("Number of Histogram Bins: "), 0, 0);
+        grid.add(spinner, 1, 0);
+
+        numHistogramBinsDialog.getDialogPane().setContent(grid);
+
+        Platform.runLater(() -> spinner.requestFocus());
+
+        numHistogramBinsDialog.getDialogPane().getButtonTypes().addAll(ButtonType.APPLY, ButtonType.OK, ButtonType.CANCEL);
+
+        final Button buttonApply = (Button)numHistogramBinsDialog.getDialogPane().lookupButton(ButtonType.APPLY);
+        buttonApply.setDisable(true);
+        buttonApply.addEventFilter(ActionEvent.ACTION, event -> {
+            int numHistogramBins = spinner.getValue();
+            if (numHistogramBins != dataModel.getNumHistogramBins()) {
+                dataModel.setNumHistogramBins(numHistogramBins);
+            }
+            event.consume();
+        });
+
+        final Button buttonOK = (Button)numHistogramBinsDialog.getDialogPane().lookupButton(ButtonType.OK);
+        buttonOK.setDisable(true);
+
+        spinner.valueProperty().addListener((observable, oldValue, newValue) -> {
+            if (spinner.getValue() != dataModel.getNumHistogramBins()) {
+                buttonApply.setDisable(false);
+                buttonOK.setDisable(false);
+            }
+        });
+
+        numHistogramBinsDialog.setResultConverter(dialogButton -> {
+            if (dialogButton == ButtonType.OK) {
+                return spinner.getValue();
+            }
+            return null;
+        });
+
+        Optional<Integer> result = numHistogramBinsDialog.showAndWait();
+
+        result.ifPresent(numHistogramBins -> {
+            System.out.println("new numHistogramBins is " + numHistogramBins);
+            dataModel.setNumHistogramBins(numHistogramBins);
+        });
     }
 
     private void changeAxisSpacing() {
@@ -699,6 +758,14 @@ public class EDENFXMain extends Application implements DataModelListener {
         });
         viewMenu.getItems().add(enableDataTableUpdatesCheckMenuItem);
 
+        // change histogram bin count menu item
+        changeHistogramBinCountMenuItem = new MenuItem("Change Number of Histogram Bins...");
+        changeHistogramBinCountMenuItem.setOnAction(event -> {
+            changeNumHistogramBins();
+        });
+        viewMenu.getItems().add(changeHistogramBinCountMenuItem);
+
+
         MenuItem exitMI = new MenuItem("Quit Falcon");
         exitMI.setAccelerator(new KeyCodeCombination(KeyCode.Q, KeyCombination.META_DOWN));
         exitMI.setOnAction(new EventHandler<ActionEvent>() {
@@ -922,7 +989,11 @@ public class EDENFXMain extends Application implements DataModelListener {
                 tableColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<Tuple, Double>, ObservableValue<Double>>() {
                     public ObservableValue<Double> call(TableColumn.CellDataFeatures<Tuple, Double> t) {
                         int columnIndex = dataModel.getColumnIndex(column);
+                        if (columnIndex == -1) {
+                            log.debug("Weird!");
+                        }
                         return new ReadOnlyObjectWrapper(t.getValue().getElement(columnIndex));
+
                     }
                 });
                 dataTableView.getColumns().add(tableColumn);
@@ -992,8 +1063,16 @@ public class EDENFXMain extends Application implements DataModelListener {
     }
 
     @Override
-    public void dataModelColumnDisabled(DataModel dataModel, Column disabledColumn) {
+    public void dataModelNumHistogramBinsChanged(DataModel dataModel) {}
 
+    @Override
+    public void dataModelColumnDisabled(DataModel dataModel, Column disabledColumn) {
+        // reset the data table columns
+        dataTableView.getItems().clear();
+        dataTableView.getColumns().clear();
+        setDataTableColumns();
+        setDataTableItems();
+        updatePercentSelected();
     }
 
     @Override
