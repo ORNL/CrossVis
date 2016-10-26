@@ -50,7 +50,7 @@ public class TupleDrawingAnimationTimer extends AnimationTimer {
         for (int ituple = 0; ituple < maxTuplesPerFrame; ituple++) {
             PCPTuple pcpTuple = tupleQueue.poll();
             if (pcpTuple == null) {
-                log.debug("Stopping Timer normally (id: " + id + ")");
+//                log.debug("Stopping Timer normally (id: " + id + ")");
                 this.stop();
                 break;
             } else {
@@ -65,7 +65,7 @@ public class TupleDrawingAnimationTimer extends AnimationTimer {
 
     @Override
     public void start() {
-        log.debug("Started TupleDrawingAnimationTimer with id " + id);
+//        log.debug("Started TupleDrawingAnimationTimer with id " + id);
         super.start();
         running.set(true);
     }

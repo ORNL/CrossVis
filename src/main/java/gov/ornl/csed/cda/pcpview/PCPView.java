@@ -37,6 +37,7 @@ public class PCPView extends Region implements DataModelListener {
     public final static Color DEFAULT_QUERY_SUMMARY_FILL_COLOR = new Color(Color.STEELBLUE.getRed(), Color.STEELBLUE.getGreen(), Color.STEELBLUE.getBlue(), 0.8d);
     public final static Color DEFAULT_OVERALL_SUMMARY_STROKE_COLOR = Color.DARKGRAY;
     public final static Color DEFAULT_QUERY_SUMMARY_STROKE_COLOR = Color.DARKGRAY;
+    public final static Color DEFAULT_BACKGROUND_COLOR = Color.WHITE;
 
     private final static DISPLAY_MODE DEFAULT_DISPLAY_MODE = DISPLAY_MODE.SUMMARY;
 
@@ -46,10 +47,10 @@ public class PCPView extends Region implements DataModelListener {
     private Canvas unselectedCanvas;
 //    private Canvas lineCanvas;
 //    private GraphicsContext lineGC;
-
-    private Paint backgroundPaint;
-    private Paint borderPaint;
-    private double borderWidth;
+//
+//    private Color backgroundPaint;
+//    private Paint borderPaint;
+//    private double borderWidth;
 
     private ObjectProperty<Color> selectedItemsColor;
     private ObjectProperty<Color> unselectedItemsColor;
@@ -91,13 +92,38 @@ public class PCPView extends Region implements DataModelListener {
     public enum DISPLAY_MODE {SUMMARY, HISTOGRAM, PCP_LINES, PCP_BINS};
 
     public PCPView() {
-        backgroundPaint = Color.TRANSPARENT;
-        borderPaint = Color.TRANSPARENT;
-        borderWidth = 0d;
+//        backgroundPaint = Color.TRANSPARENT;
+//        borderPaint = Color.TRANSPARENT;
+//        borderWidth = 0d;
 
         init();
         initGraphics();
         registerListeners();
+    }
+
+    public Color getBackgroundColor() {
+        return backgroundColor.get();
+    }
+
+    public ObjectProperty<Color> backgroundColorProperty() {
+        return backgroundColor;
+    }
+
+    public void setBackgroundColor(Color newBackgroundColor) {
+        this.backgroundColor.set(newBackgroundColor);
+        pane.setBackground(new Background(new BackgroundFill(backgroundColor.get(), new CornerRadii(0), Insets.EMPTY)));
+    }
+
+    public Color getLabelsColor() {
+        return labelsColor.get();
+    }
+
+    public ObjectProperty<Color> labelsColorProperty() {
+        return labelsColor;
+    }
+
+    public void setLabelsColor(Color labelsColor) {
+        this.labelsColor.set(labelsColor);
     }
 
     public ObjectProperty<DISPLAY_MODE> displayModeProperty() { return displayMode; }
@@ -301,6 +327,13 @@ public class PCPView extends Region implements DataModelListener {
 
     @Override
     public void dataModelReset(DataModel dataModel) {
+        if (axisList != null && !axisList.isEmpty()) {
+            for (PCPAxis pcpAxis : axisList) {
+                pane.getChildren().removeAll(pcpAxis.getGraphicsGroup(), pcpAxis.getHistogramBinRectangleGroup(), pcpAxis.getQueryHistogramBinRectangleGroup());
+            }
+            axisList.clear();
+        }
+
         reinitializeLayout();
     }
 
@@ -760,7 +793,11 @@ public class PCPView extends Region implements DataModelListener {
         selectedCanvas = new Canvas(getWidth(), getHeight());
         unselectedCanvas = new Canvas(getWidth(), getHeight());
 
+        labelsColor = new SimpleObjectProperty<>(PCPAxis.DEFAULT_LABEL_COLOR);
+        backgroundColor = new SimpleObjectProperty<>(DEFAULT_BACKGROUND_COLOR);
+
         pane = new Pane();
+        pane.setBackground(new Background(new BackgroundFill(backgroundColor.get(), new CornerRadii(0), Insets.EMPTY)));
         pane.getChildren().addAll(unselectedCanvas, selectedCanvas);
 
         getChildren().add(pane);
@@ -769,6 +806,18 @@ public class PCPView extends Region implements DataModelListener {
     private void registerListeners() {
         widthProperty().addListener(o -> resize());
         heightProperty().addListener(o -> resize());
+
+        backgroundColor.addListener((observable, oldValue, newValue) -> {
+            pane.setBackground(new Background(new BackgroundFill(backgroundColor.get(), new CornerRadii(0), Insets.EMPTY)));
+        });
+
+        labelsColor.addListener((observable, oldValue, newValue) -> {
+            if (newValue != null) {
+                for (PCPAxis pcpAxis : axisList) {
+                    pcpAxis.setLabelColor(newValue);
+                }
+            }
+        });
 
         selectedItemsColor.addListener((observable, oldValue, newValue) -> {
             redraw();

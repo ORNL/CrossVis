@@ -12,6 +12,7 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.effect.GaussianBlur;
+import javafx.scene.effect.Glow;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseEvent;
@@ -37,15 +38,17 @@ public class PCPAxis {
     public final static Logger log = LoggerFactory.getLogger(PCPAxis.class);
 
     public final static int DEFAULT_MAX_HISTOGRAM_BIN_WIDTH = 30;
-    public final static Color DEFAULT_HISTOGRAM_FILL = new Color(Color.DARKGRAY.getRed(), Color.DARKGRAY.getGreen(), Color.DARKGRAY.getBlue(), 0.8d);
+    public final static Color DEFAULT_HISTOGRAM_FILL = new Color(Color.LIGHTSTEELBLUE.getRed(), Color.LIGHTSTEELBLUE.getGreen(), Color.LIGHTSTEELBLUE.getBlue(), 0.8d);
     public final static Color DEFAULT_QUERY_HISTOGRAM_FILL = new Color(Color.STEELBLUE.getRed(), Color.STEELBLUE.getGreen(), Color.STEELBLUE.getBlue(), 0.8d);
     public final static Color DEFAULT_HISTOGRAM_STROKE = Color.DARKGRAY;
 
     public final static Color DEFAULT_OVERALL_DISPERSION_FILL = DEFAULT_HISTOGRAM_FILL;
     public final static Color DEFAULT_QUERY_DISPERSION_FILL = DEFAULT_QUERY_HISTOGRAM_FILL;
     public final static Color DEFAULT_DISPERSION_STROKE = DEFAULT_HISTOGRAM_STROKE;
-    public final static Color DEFAULT_OVERALL_TYPICAL_STROKE = DEFAULT_DISPERSION_STROKE.darker();
-    public final static Color DEFAULT_QUERY_TYPICAL_STROKE = DEFAULT_OVERALL_TYPICAL_STROKE;
+    public final static Color DEFAULT_OVERALL_TYPICAL_STROKE = Color.DARKBLUE.darker();
+    public final static Color DEFAULT_QUERY_TYPICAL_STROKE = Color.DARKBLUE;
+
+    public final static Color DEFAULT_LABEL_COLOR = Color.BLACK;
 
     public final static double DEFAULT_NAME_LABEL_HEIGHT = 30d;
     public final static double DEFAULT_NAME_TEXT_SIZE = 12d;
@@ -112,7 +115,9 @@ public class PCPAxis {
     private Color overallTypicalStroke = DEFAULT_OVERALL_TYPICAL_STROKE;
     private Color queryTypicalStroke = DEFAULT_QUERY_TYPICAL_STROKE;
 
-    private int maxHistogramBinWidth = DEFAULT_MAX_HISTOGRAM_BIN_WIDTH;
+    private Color labelColor = DEFAULT_LABEL_COLOR;
+
+    private double maxHistogramBinWidth = DEFAULT_MAX_HISTOGRAM_BIN_WIDTH;
 
     private Pane pane;
 
@@ -147,6 +152,7 @@ public class PCPAxis {
         Tooltip.install(nameText, tooltip);
         nameText.setFont(new Font(DEFAULT_NAME_TEXT_SIZE));
         nameText.setSmooth(true);
+        nameText.setFill(labelColor);
 
 //        columnNameColumn.setCellValueFactory(new PropertyValueFactory<ColumnSelectionRange, String>("column"));
         minValueText = new Text();
@@ -207,6 +213,19 @@ public class PCPAxis {
         querySummaryStatisticsGroup.setMouseTransparent(true);
 
         registerListeners();
+    }
+
+    public void setLabelColor(Color labelColor) {
+        if (this.labelColor != labelColor) {
+            this.labelColor = labelColor;
+            nameText.setFill(labelColor);
+            minValueText.setFill(labelColor);
+            maxValueText.setFill(labelColor);
+        }
+    }
+
+    public Color getLabelColor() {
+        return labelColor;
     }
 
     public Rectangle getOverallDispersionRectangle() { return overallDispersionRectangle; }
@@ -375,10 +394,12 @@ public class PCPAxis {
     public void setHighlighted(boolean highlighted) {
         if (highlighted) {
             nameText.setFont(Font.font(nameText.getFont().getFamily(), FontWeight.BOLD, DEFAULT_NAME_TEXT_SIZE));
-            nameText.setFill(Color.BLUE);
+            nameText.setEffect(new Glow());
+//            nameText.setFill(Color.BLUE);
         } else {
             nameText.setFont(Font.font(nameText.getFont().getFamily(), FontWeight.NORMAL, DEFAULT_NAME_TEXT_SIZE));
-            nameText.setFill(Color.BLACK);
+//            nameText.setFill(Color.BLACK);
+            nameText.setEffect(null);
         }
     }
 
@@ -394,6 +415,8 @@ public class PCPAxis {
         barBottomY = bounds.getY() + bounds.getHeight() - maxValueText.getLayoutBounds().getHeight();
         focusTopY = topY + DEFAULT_NAME_LABEL_HEIGHT + contextRegionHeight;
         focusBottomY = barBottomY - contextRegionHeight;
+
+        maxHistogramBinWidth = bounds.getWidth() / 2;
 
         verticalBar.setX(centerX - (DEFAULT_BAR_WIDTH / 2.));
         verticalBar.setY(barTopY);

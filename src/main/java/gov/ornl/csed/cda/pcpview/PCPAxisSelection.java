@@ -63,11 +63,11 @@ public class PCPAxisSelection {
         this.dataModel = dataModel;
 
         this.selectionRange.maxValueProperty().addListener((observable, oldValue, newValue) -> {
-            log.debug("Got change notification from ColumnSelectionRange max value property");
+//            log.debug("Got change notification from ColumnSelectionRange max value property");
             relayout();
         });
         this.selectionRange.minValueProperty().addListener(((observable, oldValue, newValue) -> {
-            log.debug("Got change notification from ColumnSelectionRange min value property");
+//            log.debug("Got change notification from ColumnSelectionRange min value property");
             relayout();
         }));
 

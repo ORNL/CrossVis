@@ -1,5 +1,6 @@
 package gov.ornl.csed.cda.edenfx;
 
+import com.sun.javafx.application.LauncherImpl;
 import gov.ornl.csed.cda.datatable.*;
 import gov.ornl.csed.cda.pcpview.PCPView;
 import javafx.application.Application;
@@ -15,6 +16,8 @@ import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
+import javafx.scene.Group;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.SceneAntialiasing;
 import javafx.scene.control.*;
@@ -28,6 +31,8 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
 import javafx.stage.FileChooser;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
@@ -97,6 +102,7 @@ public class EDENFXMain extends Application implements DataModelListener {
 
     private CheckMenuItem enableDataTableUpdatesCheckMenuItem;
     private MenuItem changeHistogramBinCountMenuItem;
+
 
     @Override
     public void init() {
@@ -191,13 +197,13 @@ public class EDENFXMain extends Application implements DataModelListener {
                                     Column column = columnTableView.getItems().get(rowNumber);
 
                                     dataModel.enableColumn(column);
-                                    log.debug("Set column '" + column.getName() + "' to enabled");
+//                                    log.debug("Set column '" + column.getName() + "' to enabled");
                                 } else {
                                     // disable an enabled column
                                     // get the column name; disable column in data model
                                     Column column = columnTableView.getItems().get(rowNumber);
                                     dataModel.disableColumn(column);
-                                    log.debug("Set column '" + column.getName() + "' to disabled");
+//                                    log.debug("Set column '" + column.getName() + "' to disabled");
 //                                    sm.clearSelection(rowNumber);
 //                                    log.debug("Would set column " + dataModel.getColumn(rowNumber) + " to disabled");
 //                                    dataModel.disableColumn(dataModel.getColumn(rowNumber));
@@ -265,7 +271,7 @@ public class EDENFXMain extends Application implements DataModelListener {
         }
 
         displayModeButtonGroup.selectedToggleProperty().addListener((observable, oldValue, newValue) -> {
-            log.debug("Button DisplayMode Group changed");
+//            log.debug("Button DisplayMode Group changed");
             if (newValue != null) {
                 if (newValue == summaryDisplayModeButton) {
                     pcpView.setDisplayMode(PCPView.DISPLAY_MODE.SUMMARY);
@@ -302,7 +308,7 @@ public class EDENFXMain extends Application implements DataModelListener {
         ColorPicker selectedItemsColorPicker = new ColorPicker();
         selectedItemsColorPicker.valueProperty().bindBidirectional(pcpView.selectedItemsColorProperty());
         selectedItemsColorPicker.getStyleClass().add("button");
-        selectedItemsColorBox.getChildren().addAll(new Label(" Selected Color: "), selectedItemsColorPicker);
+        selectedItemsColorBox.getChildren().addAll(new Label(" Selected Items: "), selectedItemsColorPicker);
 
         // create unselected items color modification UI components
         HBox unselectedItemsColorBox = new HBox();
@@ -311,11 +317,29 @@ public class EDENFXMain extends Application implements DataModelListener {
         ColorPicker unselectedItemsColorPicker = new ColorPicker();
         unselectedItemsColorPicker.getStyleClass().add("button");
         unselectedItemsColorPicker.valueProperty().bindBidirectional(pcpView.unselectedItemsColorProperty());
-        unselectedItemsColorBox.getChildren().addAll(new Label(" Unselected Color: "), unselectedItemsColorPicker);
+        unselectedItemsColorBox.getChildren().addAll(new Label(" Unselected Items: "), unselectedItemsColorPicker);
+
+        // create unselected items color modification UI components
+        HBox backgroundColorBox = new HBox();
+        backgroundColorBox.setAlignment(Pos.CENTER);
+
+        ColorPicker backgroundColorPicker = new ColorPicker();
+        backgroundColorPicker.getStyleClass().add("button");
+        backgroundColorPicker.valueProperty().bindBidirectional(pcpView.backgroundColorProperty());
+        backgroundColorBox.getChildren().addAll(new Label(" Background: "), backgroundColorPicker);
+
+        // create label color UI components
+        HBox labelColorBox = new HBox();
+        labelColorBox.setAlignment(Pos.CENTER);
+
+        ColorPicker labelColorPicker = new ColorPicker();
+        labelColorPicker.getStyleClass().add("button");
+        labelColorPicker.valueProperty().bindBidirectional(pcpView.labelsColorProperty());
+        labelColorBox.getChildren().addAll(new Label(" Labels: "), labelColorPicker);
 
         // add all items to layout
         toolBar.getItems().addAll(summaryDisplayModeButton, histogramDisplayModeButton, binDisplayModeButton, lineDisplayModeButton, new Separator(),
-                showUnselectedButton, showSelectedButton, new Separator(), selectedItemsColorBox, unselectedItemsColorBox);
+                showUnselectedButton, showSelectedButton, new Separator(), selectedItemsColorBox, unselectedItemsColorBox, backgroundColorBox, labelColorBox);
 
         return toolBar;
     }
@@ -425,7 +449,8 @@ public class EDENFXMain extends Application implements DataModelListener {
     }
 
     public static void main (String args[]) {
-        launch(args);
+        LauncherImpl.launchApplication(EDENFXMain.class, SplashScreenLoader.class, args);
+//        launch(args);
     }
 
     private void changeNumHistogramBins() {
@@ -677,7 +702,7 @@ public class EDENFXMain extends Application implements DataModelListener {
         displayModeMenuGroup.selectedToggleProperty().addListener(new ChangeListener<Toggle>() {
             @Override
             public void changed(ObservableValue<? extends Toggle> observable, Toggle oldValue, Toggle newValue) {
-                log.debug("Menu Display Mode group changed");
+//                log.debug("Menu Display Mode group changed");
                 if (newValue != null) {
                     RadioMenuItem toggleItem = (RadioMenuItem)newValue;
                     PCPView.DISPLAY_MODE newDisplayMode = displayModeMap.get(toggleItem.getText());
