@@ -590,15 +590,19 @@ public class DataModel {
 
 		fireColumnSelectionAdded(newColumnSelectionRange);
 
-		newColumnSelectionRange.maxValueProperty().addListener((observable, oldValue, newValue) -> {
+		newColumnSelectionRange.rangeValuesProperty().addListener((observable, oldValue, newValue) -> {
 			setQueriedTuples();
 			fireColumnSelectionChanged(newColumnSelectionRange);
 		});
-
-		newColumnSelectionRange.minValueProperty().addListener((observable, oldValue, newValue) -> {
-			setQueriedTuples();
-			fireColumnSelectionChanged(newColumnSelectionRange);
-		});
+//		newColumnSelectionRange.maxValueProperty().addListener((observable, oldValue, newValue) -> {
+//			setQueriedTuples();
+//			fireColumnSelectionChanged(newColumnSelectionRange);
+//		});
+//
+//		newColumnSelectionRange.minValueProperty().addListener((observable, oldValue, newValue) -> {
+//			setQueriedTuples();
+//			fireColumnSelectionChanged(newColumnSelectionRange);
+//		});
 //		return newColumnSelectionRange;
 	}
 

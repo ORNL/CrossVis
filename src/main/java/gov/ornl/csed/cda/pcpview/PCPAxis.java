@@ -351,6 +351,7 @@ public class PCPAxis {
                 if (selectionMaxY == getFocusTopY()) {
                     log.debug("selectionMaxY = " + selectionMaxY + " getFocusTopY() = " + getFocusTopY());
                 }
+
                 double maxSelectionValue = GraphicsUtil.mapValue(selectionMaxY, getFocusTopY(), getFocusBottomY(),
                         column.getSummaryStats().getMax(), column.getSummaryStats().getMin());
                 double minSelectionValue = GraphicsUtil.mapValue(selectionMinY, getFocusTopY(), getFocusBottomY(),

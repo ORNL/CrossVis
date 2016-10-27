@@ -944,18 +944,19 @@ public class PCPView extends Region implements DataModelListener {
     }
 
     private void redraw() {
+        log.debug("redrawing PCPView");
 //        pane.setBackground(new Background(new BackgroundFill(backgroundPaint, new CornerRadii(1024), Insets.EMPTY)));
 //        pane.setBorder(new Border(new BorderStroke(borderPaint, BorderStrokeStyle.SOLID, new CornerRadii(1024), new BorderWidths(borderWidth))));
 
         if (getDisplayMode() == DISPLAY_MODE.PCP_LINES) {
             if (selectedTuplesTimer != null && selectedTuplesTimer.isRunning()) {
                 selectedTuplesTimer.stop();
-                log.debug("STOPPED selectedTuplesTimer  (id: " + selectedTuplesTimer.id + ")");
+//                log.debug("STOPPED selectedTuplesTimer  (id: " + selectedTuplesTimer.id + ")");
             }
 
             if (unselectedTuplesTimer != null && unselectedTuplesTimer.isRunning()) {
                 unselectedTuplesTimer.stop();
-                log.debug("STOPPED unselectedTuplesTimer  (id: " + selectedTuplesTimer.id + ")");
+//                log.debug("STOPPED unselectedTuplesTimer  (id: " + selectedTuplesTimer.id + ")");
             }
 
             drawTuplePolylines();

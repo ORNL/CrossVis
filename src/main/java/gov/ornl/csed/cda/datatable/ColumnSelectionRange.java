@@ -1,36 +1,37 @@
 package gov.ornl.csed.cda.datatable;
 
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.*;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 
 public class ColumnSelectionRange {
-    private ObjectProperty<Column> column;
-    private DoubleProperty minValue;
-    private DoubleProperty maxValue;
+    private Column column;
+    private ListProperty<Double> rangeValues;
+//    private DoubleProperty minValue;
+//    private DoubleProperty maxValue;
 
     public ColumnSelectionRange(Column column, double minValue, double maxValue) {
-        this.column = new SimpleObjectProperty<Column>(column);
-        this.minValue = new SimpleDoubleProperty(minValue);
-        this.maxValue = new SimpleDoubleProperty(maxValue);
+        this.column = column;
+        rangeValues = new SimpleListProperty<>();
+        ObservableList<Double> observableList = FXCollections.observableArrayList(minValue, maxValue);
+        rangeValues.set(observableList);
+        
+//        this.minValue = new SimpleDoubleProperty(minValue);
+//        this.maxValue = new SimpleDoubleProperty(maxValue);
     }
 
-    public final Column getColumn() { return column.get(); }
+    public final Column getColumn() { return column; }
 
-//    public final void setColumn(Column column) { this.column.set(column); }
+    public final double getMinValue() { return rangeValues.get(0); }
 
-    public ObjectProperty<Column> columnProperty() { return column; }
+    public final void setMinValue(double minValue) { rangeValues.set(0, minValue); }
 
-    public final double getMinValue() { return minValue.get(); }
+    public final double getMaxValue() { return rangeValues.get(1); }
 
-    public final void setMinValue(double minValue) { this.minValue.set(minValue); }
+    public final void setMaxValue(double maxValue) { rangeValues.set(1, maxValue); }
 
-    public DoubleProperty minValueProperty() { return minValue; }
-
-    public final double getMaxValue() { return maxValue.get(); }
-
-    public final void setMaxValue(double maxValue) { this.maxValue.set(maxValue); }
-
-    public DoubleProperty maxValueProperty() { return maxValue; }
+    public final void setRangeValues(double minValue, double maxValue) {
+        rangeValues.setAll(minValue, maxValue);
+    }
+    public ListProperty<Double> rangeValuesProperty() {return rangeValues; }
 }

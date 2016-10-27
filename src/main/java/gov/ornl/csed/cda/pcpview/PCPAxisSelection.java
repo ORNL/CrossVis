@@ -62,15 +62,6 @@ public class PCPAxisSelection {
         this.pane = pane;
         this.dataModel = dataModel;
 
-        this.selectionRange.maxValueProperty().addListener((observable, oldValue, newValue) -> {
-//            log.debug("Got change notification from ColumnSelectionRange max value property");
-            relayout();
-        });
-        this.selectionRange.minValueProperty().addListener(((observable, oldValue, newValue) -> {
-//            log.debug("Got change notification from ColumnSelectionRange min value property");
-            relayout();
-        }));
-
         double top = Math.min(minValueY, maxValueY);
         double bottom = Math.max(minValueY, maxValueY);
         rectangle = new Rectangle(pcpAxis.getVerticalBar().getX(), top, pcpAxis.getVerticalBar().getWidth(), bottom - top);
@@ -95,9 +86,9 @@ public class PCPAxisSelection {
         bottomCrossbar.setStroke(topCrossbar.getStroke());
         bottomCrossbar.setStrokeWidth(topCrossbar.getStrokeWidth());
 
-//        minText = new Text(String.valueOf(selectionRange.getMinValue()));
-        minText = new Text();
-        minText.textProperty().bindBidirectional(getColumnSelectionRange().minValueProperty(), new NumberStringConverter());
+        minText = new Text(String.valueOf(selectionRange.getMinValue()));
+//        minText = new Text());
+//        minText.textProperty().bindBidirectional(getColumnSelectionRange().minValueProperty(), new NumberStringConverter());
         minText.setFont(new Font(DEFAULT_TEXT_SIZE));
         minText.setX(pcpAxis.getCenterX() - (minText.getLayoutBounds().getWidth() / 2d));
         minText.setY(getBottomY() + minText.getLayoutBounds().getHeight());
@@ -105,9 +96,9 @@ public class PCPAxisSelection {
         minText.setFill(DEFAULT_TEXT_FILL);
         minText.setVisible(false);
 
-//        maxText = new Text(String.valueOf(selectionRange.getMaxValue()));
-        maxText = new Text();
-        maxText.textProperty().bindBidirectional(getColumnSelectionRange().maxValueProperty(), new NumberStringConverter());
+        maxText = new Text(String.valueOf(selectionRange.getMaxValue()));
+//        maxText = new Text();
+//        maxText.textProperty().bindBidirectional(getColumnSelectionRange().maxValueProperty(), new NumberStringConverter());
         maxText.setFont(new Font(DEFAULT_TEXT_SIZE));
         maxText.setX(pcpAxis.getCenterX() - (maxText.getLayoutBounds().getWidth() / 2d));
         maxText.setY(getTopY() - 2d);
@@ -121,6 +112,22 @@ public class PCPAxisSelection {
     }
 
     private void registerListeners() {
+//        this.selectionRange.maxValueProperty().addListener((observable, oldValue, newValue) -> {
+////            log.debug("Got change notification from ColumnSelectionRange max value property");
+//            relayout();
+//        });
+//        this.selectionRange.minValueProperty().addListener(((observable, oldValue, newValue) -> {
+////            log.debug("Got change notification from ColumnSelectionRange min value property");
+//            relayout();
+//        }));
+        selectionRange.rangeValuesProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue != null) {
+                minText.setText(newValue.get(0).toString());
+                maxText.setText(newValue.get(1).toString());
+                relayout();
+            }
+        });
+
         rectangle.setOnMouseEntered(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
@@ -200,7 +207,7 @@ public class PCPAxisSelection {
                     dragging = true;
 
                     // unbind range selection max label from selection range max property
-                    maxText.textProperty().unbindBidirectional(getColumnSelectionRange().maxValueProperty());
+//                    maxText.textProperty().unbindBidirectional(getColumnSelectionRange().maxValueProperty());
 
                     // bind range selection max labels to local value during drag operation
                     draggingMaxValue = new SimpleDoubleProperty(getColumnSelectionRange().getMaxValue());
@@ -244,7 +251,7 @@ public class PCPAxisSelection {
                     maxText.textProperty().unbindBidirectional(draggingMaxValue);
 
                     // bind selection range max label to column selection range max property
-                    maxText.textProperty().bindBidirectional(getColumnSelectionRange().maxValueProperty(), new NumberStringConverter());
+//                    maxText.textProperty().bindBidirectional(getColumnSelectionRange().maxValueProperty(), new NumberStringConverter());
 
 //                    dataModel.setQueriedTuples();
                 }
@@ -267,7 +274,7 @@ public class PCPAxisSelection {
                     dragging = true;
 
                     // unbind range selection min labels from selection range min properties
-                    minText.textProperty().unbindBidirectional(getColumnSelectionRange().minValueProperty());
+//                    minText.textProperty().unbindBidirectional(getColumnSelectionRange().minValueProperty());
 
                     // bind range selection min/max labels to local values during drag operation
                     draggingMinValue = new SimpleDoubleProperty(getColumnSelectionRange().getMinValue());
@@ -311,7 +318,7 @@ public class PCPAxisSelection {
                     minText.textProperty().unbindBidirectional(draggingMinValue);
 
                     // bind selection range min labels to column selection range min property
-                    minText.textProperty().bindBidirectional(getColumnSelectionRange().minValueProperty(), new NumberStringConverter());
+//                    minText.textProperty().bindBidirectional(getColumnSelectionRange().minValueProperty(), new NumberStringConverter());
 
 //                    dataModel.setQueriedTuples();
                 }
@@ -374,8 +381,8 @@ public class PCPAxisSelection {
                     dragging = true;
 
                     // unbind range selection min/max labels from selection range min/max properties
-                    minText.textProperty().unbindBidirectional(getColumnSelectionRange().minValueProperty());
-                    maxText.textProperty().unbindBidirectional(getColumnSelectionRange().maxValueProperty());
+//                    minText.textProperty().unbindBidirectional(getColumnSelectionRange().minValueProperty());
+//                    maxText.textProperty().unbindBidirectional(getColumnSelectionRange().maxValueProperty());
 
                     // bind range selection min/max labels to local values during drag operation
                     draggingMinValue = new SimpleDoubleProperty(getColumnSelectionRange().getMinValue());
@@ -426,16 +433,17 @@ public class PCPAxisSelection {
 
                     // update column selection range min/max properties
 //                    selectionRange.setValues(draggingMinValue.get(), draggingMaxValue.get());
-                    selectionRange.setMaxValue(draggingMaxValue.get());
-                    selectionRange.setMinValue(draggingMinValue.get());
+//                    selectionRange.setMaxValue(draggingMaxValue.get());
+//                    selectionRange.setMinValue(draggingMinValue.get());
+                    selectionRange.setRangeValues(draggingMinValue.get(), draggingMaxValue.get());
 
                     // unbind selection range min/max labels from dragging min/max range values
                     minText.textProperty().unbindBidirectional(draggingMinValue);
                     maxText.textProperty().unbindBidirectional(draggingMaxValue);
 
                     // bind selection range min/max labels to column selection range min/max properties
-                    minText.textProperty().bindBidirectional(getColumnSelectionRange().minValueProperty(), new NumberStringConverter());
-                    maxText.textProperty().bindBidirectional(getColumnSelectionRange().maxValueProperty(), new NumberStringConverter());
+//                    minText.textProperty().bindBidirectional(getColumnSelectionRange().minValueProperty(), new NumberStringConverter());
+//                    maxText.textProperty().bindBidirectional(getColumnSelectionRange().maxValueProperty(), new NumberStringConverter());
 
 //                    dataModel.setQueriedTuples();
                 } else {
