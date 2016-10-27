@@ -1,8 +1,11 @@
 package gov.ornl.csed.cda.edenfx;
 
 import com.sun.javafx.application.LauncherImpl;
+import com.sun.javafx.tk.Toolkit;
 import gov.ornl.csed.cda.datatable.*;
+import gov.ornl.csed.cda.experiments.fxcanvas.FadeApp;
 import gov.ornl.csed.cda.pcpview.PCPView;
+import javafx.animation.FadeTransition;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyObjectWrapper;
@@ -10,6 +13,8 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.concurrent.Task;
+import javafx.concurrent.Worker;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
@@ -24,6 +29,9 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
+import javafx.scene.effect.DropShadow;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
@@ -36,7 +44,9 @@ import javafx.scene.shape.Rectangle;
 import javafx.stage.FileChooser;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 import javafx.util.Callback;
+import javafx.util.Duration;
 import javafx.util.converter.NumberStringConverter;
 import org.controlsfx.control.StatusBar;
 import org.slf4j.Logger;
@@ -58,6 +68,10 @@ import java.util.prefs.Preferences;
  */
 public class EDENFXMain extends Application implements DataModelListener {
     private static final Logger log = LoggerFactory.getLogger(EDENFXMain.class);
+
+    public static final String SPLASH_IMAGE = "http://fxexperience.com/wp-content/uploads/2010/06/logo.png";
+    private static final int SPLASH_WIDTH = 676;
+    private static final int SPLASH_HEIGHT = 227;
 
     private PCPView pcpView;
     private DataModel dataModel;
@@ -103,9 +117,34 @@ public class EDENFXMain extends Application implements DataModelListener {
     private CheckMenuItem enableDataTableUpdatesCheckMenuItem;
     private MenuItem changeHistogramBinCountMenuItem;
 
+    private ProgressBar loadProgress;
+    private Label loadProgressText;
+    private VBox splashLayout;
+
+    private Stage mainStage;
 
     @Override
     public void init() {
+        ImageView splash = new ImageView(new Image(SPLASH_IMAGE));
+
+        loadProgress = new ProgressBar();
+        loadProgress.setPrefWidth(SPLASH_WIDTH - 20);
+        loadProgressText = new Label("Loading EDENFX . . .");
+        splashLayout = new VBox();
+        splashLayout.getChildren().addAll(splash, loadProgress, loadProgressText);
+        splashLayout.setStyle(
+                "-fx-padding: 5; " +
+                        "-fx-background-color: cornsilk; " +
+                        "-fx-border-width:5; " +
+                        "-fx-border-color: " +
+                        "linear-gradient(" +
+                        "to bottom, " +
+                        "chocolate, " +
+                        "derive(chocolate, 50%)" +
+                        ");"
+        );
+        splashLayout.setEffect(new DropShadow());
+
         preferences = Preferences.userNodeForPackage(this.getClass());
 
         decimalFormat = new DecimalFormat("##0.0%");
@@ -357,29 +396,146 @@ public class EDENFXMain extends Application implements DataModelListener {
     }
 
     @Override
-    public void start(Stage stage) throws Exception {
-        stage.setOnShown(event -> {
-            FileChooser fileChooser = new FileChooser();
-            fileChooser.setTitle("Open CSV File");
-
-            String lastCSVDirectoryPath = preferences.get(EDENFXPreferenceKeys.LAST_CSV_READ_DIRECTORY, "");
-            if (!lastCSVDirectoryPath.isEmpty()) {
-                fileChooser.setInitialDirectory(new File(lastCSVDirectoryPath));
-            }
-
-            File file = fileChooser.showOpenDialog(stage);
-            if (file != null) {
-                try {
-                    openCSVFile(file);
-                    preferences.put(EDENFXPreferenceKeys.LAST_CSV_READ_DIRECTORY, file.getParentFile().getAbsolutePath());
-                    displayModeMenu.setDisable(false);
-                    fitPCPAxesToWidthCheckMI.setDisable(false);
-                    changeAxisSpacingMI.setDisable(pcpView.getFitAxisSpacingToWidthEnabled());
-                } catch (IOException e) {
-                    e.printStackTrace();
+    public void start(final Stage initStage) throws Exception {
+        final Task<Integer> startUpTask = new Task<Integer>() {
+            @Override
+            public Integer call() throws InterruptedException {
+                updateMessage("Initializing . . . ");
+                for (int i = 0; i < 10; i++) {
+                    Thread.sleep(400);
+                    updateProgress(i+1, 10);
                 }
+                Thread.sleep(400);
+                updateMessage("Finished initializing.");
+
+                return 1;
+            }
+        };
+
+        showSplash(initStage, startUpTask, () -> showMainStage());
+        new Thread(startUpTask).start();
+    }
+
+    private void showSplash(final Stage initStage, Task<?> task, InitCompletionHandler initCompletionHandler) {
+        loadProgressText.textProperty().bind(task.messageProperty());
+        task.stateProperty().addListener((observableValue, oldState, newState) -> {
+            if (newState == Worker.State.SUCCEEDED) {
+                loadProgress.progressProperty().unbind();
+                loadProgress.setProgress(1);
+                initStage.toFront();
+                FadeTransition fadeSplash = new FadeTransition(Duration.seconds(1.2), splashLayout);
+                fadeSplash.setFromValue(1d);
+                fadeSplash.setToValue(0d);
+                fadeSplash.setOnFinished(actionEvent -> initStage.hide());
+                fadeSplash.play();
+
+                initCompletionHandler.complete();
             }
         });
+
+        Scene splashScene = new Scene(splashLayout, Color.TRANSPARENT);
+        final Rectangle2D bounds = Screen.getPrimary().getBounds();
+        initStage.setScene(splashScene);
+        initStage.setX(bounds.getMinX() + bounds.getWidth() / 2 - SPLASH_WIDTH / 2);
+        initStage.setY(bounds.getMinY() + bounds.getHeight() / 2 - SPLASH_HEIGHT / 2);
+        initStage.initStyle(StageStyle.TRANSPARENT);
+        initStage.setAlwaysOnTop(true);
+        initStage.show();
+    }
+
+    public interface InitCompletionHandler {
+        void complete();
+    }
+
+    private void showMainStage () {
+        mainStage = new Stage(StageStyle.DECORATED);
+
+        pcpView = new PCPView();
+        pcpView.setDataModel(dataModel);
+        pcpView.setPrefHeight(400);
+        pcpView.setAxisSpacing(100);
+        pcpView.setPadding(new Insets(10));
+
+        pcpScrollPane = new ScrollPane(pcpView);
+        pcpScrollPane.setFitToHeight(true);
+        pcpScrollPane.setFitToWidth(pcpView.getFitAxisSpacingToWidthEnabled());
+
+        ToolBar toolBar = createToolBar(mainStage);
+
+        createStatusBar();
+//        statusBar.progressProperty().bindBidirectional(pcpView.drawingProgressProperty());
+
+        MenuBar menuBar = createMenuBar(mainStage);
+//        menuBar.setUseSystemMenuBar(true);
+        createColumnTableView();
+        createQueryTableView();
+        dataTableView = new TableView<>();
+
+        // create table tab pane
+        tabPane = new TabPane();
+        Tab columnTableTab = new Tab(" Column Table ");
+        columnTableTab.setClosable(false);
+        columnTableTab.setContent(columnTableView);
+
+        Tab dataTableTab = new Tab(" Data Table ");
+        dataTableTab.setClosable(false);
+        dataTableTab.setContent(dataTableView);
+
+        Tab queryTableTab = new Tab(" Query Table ");
+        queryTableTab.setClosable(false);
+        queryTableTab.setContent(queryTableView);
+
+        tabPane.getTabs().addAll(columnTableTab, dataTableTab, queryTableTab);
+
+        SplitPane middleSplit = new SplitPane();
+        middleSplit.setOrientation(Orientation.VERTICAL);
+        middleSplit.getItems().addAll(pcpScrollPane, tabPane);
+        middleSplit.setResizableWithParent(pcpScrollPane, false);
+        middleSplit.setDividerPositions(0.7);
+
+        VBox topContainer = new VBox();
+        topContainer.getChildren().add(menuBar);
+        topContainer.getChildren().add(toolBar);
+
+        BorderPane rootNode = new BorderPane();
+        rootNode.setCenter(middleSplit);
+        rootNode.setTop(topContainer);
+        rootNode.setBottom(statusBar);
+//        rootNode.setLeft(settingsPane);
+
+        Rectangle2D screenVisualBounds = Screen.getPrimary().getVisualBounds();
+
+        Scene scene = new Scene(rootNode, screenVisualBounds.getWidth() - 20, 800, true, SceneAntialiasing.BALANCED);
+
+        mainStage.setTitle("EDEN.FX");
+        mainStage.setScene(scene);
+        mainStage.show();
+    }
+    /*
+    @Override
+    public void start(Stage stage) throws Exception {
+//        stage.setOnShown(event -> {
+//            FileChooser fileChooser = new FileChooser();
+//            fileChooser.setTitle("Open CSV File");
+//
+//            String lastCSVDirectoryPath = preferences.get(EDENFXPreferenceKeys.LAST_CSV_READ_DIRECTORY, "");
+//            if (!lastCSVDirectoryPath.isEmpty()) {
+//                fileChooser.setInitialDirectory(new File(lastCSVDirectoryPath));
+//            }
+//
+//            File file = fileChooser.showOpenDialog(stage);
+//            if (file != null) {
+//                try {
+//                    openCSVFile(file);
+//                    preferences.put(EDENFXPreferenceKeys.LAST_CSV_READ_DIRECTORY, file.getParentFile().getAbsolutePath());
+//                    displayModeMenu.setDisable(false);
+//                    fitPCPAxesToWidthCheckMI.setDisable(false);
+//                    changeAxisSpacingMI.setDisable(pcpView.getFitAxisSpacingToWidthEnabled());
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//        });
 
         pcpView = new PCPView();
         pcpView.setDataModel(dataModel);
@@ -442,6 +598,7 @@ public class EDENFXMain extends Application implements DataModelListener {
         stage.setScene(scene);
         stage.show();
     }
+    */
 
     @Override
     public void stop() {
@@ -449,8 +606,8 @@ public class EDENFXMain extends Application implements DataModelListener {
     }
 
     public static void main (String args[]) {
-        LauncherImpl.launchApplication(EDENFXMain.class, SplashScreenLoader.class, args);
-//        launch(args);
+//        LauncherImpl.launchApplication(EDENFXMain.class, SplashScreenLoader.class, args);
+        launch(args);
     }
 
     private void changeNumHistogramBins() {
