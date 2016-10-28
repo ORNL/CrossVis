@@ -69,9 +69,13 @@ import java.util.prefs.Preferences;
 public class EDENFXMain extends Application implements DataModelListener {
     private static final Logger log = LoggerFactory.getLogger(EDENFXMain.class);
 
-    public static final String SPLASH_IMAGE = "http://fxexperience.com/wp-content/uploads/2010/06/logo.png";
-    private static final int SPLASH_WIDTH = 676;
-    private static final int SPLASH_HEIGHT = 227;
+    public static final String SPLASH_IMAGE = "EDENFX-SplashScreen.png";
+    private static final int SPLASH_WIDTH = 600;
+    private static final int SPLASH_HEIGHT = 350;
+
+//    public static final String SPLASH_IMAGE = "http://fxexperience.com/wp-content/uploads/2010/06/logo.png";
+//    private static final int SPLASH_WIDTH = 676;
+//    private static final int SPLASH_HEIGHT = 227;
 
     private PCPView pcpView;
     private DataModel dataModel;
@@ -130,18 +134,14 @@ public class EDENFXMain extends Application implements DataModelListener {
         loadProgress = new ProgressBar();
         loadProgress.setPrefWidth(SPLASH_WIDTH - 20);
         loadProgressText = new Label("Loading EDENFX . . .");
+        loadProgressText.setTextFill(Color.WHITESMOKE);
         splashLayout = new VBox();
         splashLayout.getChildren().addAll(splash, loadProgress, loadProgressText);
         splashLayout.setStyle(
                 "-fx-padding: 5; " +
-                        "-fx-background-color: cornsilk; " +
+                        "-fx-background-color: black; " +
                         "-fx-border-width:5; " +
-                        "-fx-border-color: " +
-                        "linear-gradient(" +
-                        "to bottom, " +
-                        "chocolate, " +
-                        "derive(chocolate, 50%)" +
-                        ");"
+                        "-fx-border-color: black;"
         );
         splashLayout.setEffect(new DropShadow());
 
@@ -401,11 +401,11 @@ public class EDENFXMain extends Application implements DataModelListener {
             @Override
             public Integer call() throws InterruptedException {
                 updateMessage("Initializing . . . ");
-                for (int i = 0; i < 10; i++) {
-                    Thread.sleep(400);
+                for (int i = 0; i < 20; i++) {
+                    Thread.sleep(150);
                     updateProgress(i+1, 10);
                 }
-                Thread.sleep(400);
+                Thread.sleep(100);
                 updateMessage("Finished initializing.");
 
                 return 1;
@@ -418,12 +418,13 @@ public class EDENFXMain extends Application implements DataModelListener {
 
     private void showSplash(final Stage initStage, Task<?> task, InitCompletionHandler initCompletionHandler) {
         loadProgressText.textProperty().bind(task.messageProperty());
+        loadProgress.progressProperty().bind(task.progressProperty());
         task.stateProperty().addListener((observableValue, oldState, newState) -> {
             if (newState == Worker.State.SUCCEEDED) {
                 loadProgress.progressProperty().unbind();
                 loadProgress.setProgress(1);
                 initStage.toFront();
-                FadeTransition fadeSplash = new FadeTransition(Duration.seconds(1.2), splashLayout);
+                FadeTransition fadeSplash = new FadeTransition(Duration.seconds(1.0), splashLayout);
                 fadeSplash.setFromValue(1d);
                 fadeSplash.setToValue(0d);
                 fadeSplash.setOnFinished(actionEvent -> initStage.hide());
