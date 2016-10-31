@@ -36,7 +36,7 @@ public class PCPView extends Region implements DataModelListener {
     public final static Color DEFAULT_OVERALL_SUMMARY_FILL_COLOR = new Color(Color.LIGHTSTEELBLUE.getRed(), Color.LIGHTSTEELBLUE.getGreen(), Color.LIGHTSTEELBLUE.getBlue(), 0.8d);
     public final static Color DEFAULT_QUERY_SUMMARY_FILL_COLOR = new Color(Color.STEELBLUE.getRed(), Color.STEELBLUE.getGreen(), Color.STEELBLUE.getBlue(), 0.8d);
     public final static Color DEFAULT_OVERALL_SUMMARY_STROKE_COLOR = Color.DARKGRAY;
-    public final static Color DEFAULT_QUERY_SUMMARY_STROKE_COLOR = Color.DARKGRAY;
+    public final static Color DEFAULT_QUERY_SUMMARY_STROKE_COLOR = Color.DARKGRAY.darker();
     public final static Color DEFAULT_BACKGROUND_COLOR = Color.WHITE;
 
     private final static DISPLAY_MODE DEFAULT_DISPLAY_MODE = DISPLAY_MODE.SUMMARY;
@@ -992,10 +992,12 @@ public class PCPView extends Region implements DataModelListener {
         selectedCanvas.getGraphicsContext2D().setLineCap(StrokeLineCap.BUTT);
         selectedCanvas.getGraphicsContext2D().clearRect(0, 0, getWidth(), getHeight());
         selectedCanvas.getGraphicsContext2D().setLineWidth(2d);
+        selectedCanvas.getGraphicsContext2D().setLineDashes(2d, 2d);
 
         unselectedCanvas.getGraphicsContext2D().setLineCap(StrokeLineCap.BUTT);
         unselectedCanvas.getGraphicsContext2D().clearRect(0, 0, getWidth(), getHeight());
         unselectedCanvas.getGraphicsContext2D().setLineWidth(2d);
+        unselectedCanvas.getGraphicsContext2D().setLineDashes(2d, 2d);
 
         for (int iaxis = 1; iaxis < axisList.size(); iaxis++) {
             PCPAxis axis1 = axisList.get(iaxis);
@@ -1135,10 +1137,12 @@ public class PCPView extends Region implements DataModelListener {
         selectedCanvas.getGraphicsContext2D().setLineCap(StrokeLineCap.BUTT);
         selectedCanvas.getGraphicsContext2D().clearRect(0, 0, getWidth(), getHeight());
         selectedCanvas.getGraphicsContext2D().setLineWidth(2d);
+        selectedCanvas.getGraphicsContext2D().setLineDashes(null);
 
         unselectedCanvas.getGraphicsContext2D().setLineCap(StrokeLineCap.BUTT);
         unselectedCanvas.getGraphicsContext2D().clearRect(0, 0, getWidth(), getHeight());
         unselectedCanvas.getGraphicsContext2D().setLineWidth(2d);
+        unselectedCanvas.getGraphicsContext2D().setLineDashes(null);
 
         if ((isShowingUnselectedItems()) && (unselectedTupleSet != null) && (!unselectedTupleSet.isEmpty())) {
             if (unselectedTuplesTimer != null && unselectedTuplesTimer.isRunning()) {
