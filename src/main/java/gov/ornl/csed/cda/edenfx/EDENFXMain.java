@@ -170,13 +170,19 @@ public class EDENFXMain extends Application implements DataModelListener {
         minColumn.setMinWidth(200);
         minColumn.setCellValueFactory(new PropertyValueFactory<ColumnSelectionRange, Number>("minValue"));
         minColumn.setCellFactory(TextFieldTableCell.<ColumnSelectionRange, Number>forTableColumn(new NumberStringConverter()));
-        minColumn.setEditable(true);
+        minColumn.setOnEditCommit((TableColumn.CellEditEvent<ColumnSelectionRange, Number> t) -> {
+            t.getRowValue().setMinValue(t.getNewValue().doubleValue());
+        });
+//        minColumn.setEditable(true);
 
         TableColumn<ColumnSelectionRange, Number> maxColumn = new TableColumn<>("Maximum Value");
         maxColumn.setMinWidth(200);
         maxColumn.setCellValueFactory(new PropertyValueFactory<ColumnSelectionRange, Number>("maxValue"));
         maxColumn.setCellFactory(TextFieldTableCell.<ColumnSelectionRange, Number>forTableColumn(new NumberStringConverter()));
-        maxColumn.setEditable(true);
+        maxColumn.setOnEditCommit((TableColumn.CellEditEvent<ColumnSelectionRange, Number> t) -> {
+            t.getRowValue().setMaxValue(t.getNewValue().doubleValue());
+        });
+//        maxColumn.setEditable(true);
 
         queryTableView.getColumns().addAll(columnNameColumn, minColumn, maxColumn);
     }

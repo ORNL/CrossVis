@@ -73,7 +73,7 @@
                             <Title>${project.artifactId}</Title>
                             <Version>${project.version}</Version>
                             <Vendor>${project.organization.name}</Vendor>
-                            <SplashScreen-Image>EDENFX-SplashScreen.png</SplashScreen-Image>
+                            <!--<SplashScreen-Image>EDENFX-SplashScreen.png</SplashScreen-Image>-->
                         </manifestEntries>
                     </archive>
 				</configuration>
