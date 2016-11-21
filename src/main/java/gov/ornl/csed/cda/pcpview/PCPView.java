@@ -327,6 +327,7 @@ public class PCPView extends Region implements DataModelListener {
 
     @Override
     public void dataModelReset(DataModel dataModel) {
+        log.debug("In PCPView.dataModelReset()");
         if (axisList != null && !axisList.isEmpty()) {
             for (PCPAxis pcpAxis : axisList) {
                 pane.getChildren().removeAll(pcpAxis.getGraphicsGroup(), pcpAxis.getHistogramBinRectangleGroup(), pcpAxis.getQueryHistogramBinRectangleGroup());
@@ -944,7 +945,7 @@ public class PCPView extends Region implements DataModelListener {
     }
 
     private void redraw() {
-        log.debug("redrawing PCPView");
+//        log.debug("redrawing PCPView");
 //        pane.setBackground(new Background(new BackgroundFill(backgroundPaint, new CornerRadii(1024), Insets.EMPTY)));
 //        pane.setBorder(new Border(new BorderStroke(borderPaint, BorderStrokeStyle.SOLID, new CornerRadii(1024), new BorderWidths(borderWidth))));
 
@@ -965,6 +966,7 @@ public class PCPView extends Region implements DataModelListener {
         } else if (getDisplayMode() == DISPLAY_MODE.SUMMARY) {
             drawSummaryShapes();
         }
+//        log.debug("finished redrawing PCPView");
     }
 
     public void clearQuery() {
@@ -1003,42 +1005,64 @@ public class PCPView extends Region implements DataModelListener {
             PCPAxis axis1 = axisList.get(iaxis);
             PCPAxis axis0 = axisList.get(iaxis-1);
 
-            double xValues[] = new double[] {axis0.getOverallDispersionRectangle().getLayoutBounds().getMaxX(),
-                                    axis1.getOverallDispersionRectangle().getLayoutBounds().getMinX(),
-                                    axis1.getOverallDispersionRectangle().getLayoutBounds().getMinX(),
-                                    axis0.getOverallDispersionRectangle().getLayoutBounds().getMaxX()};
-            double yValues[] = new double[] {axis0.getOverallDispersionRectangle().getLayoutBounds().getMaxY(),
-                                    axis1.getOverallDispersionRectangle().getLayoutBounds().getMaxY(),
-                                    axis1.getOverallDispersionRectangle().getLayoutBounds().getMinY(),
-                                    axis0.getOverallDispersionRectangle().getLayoutBounds().getMinY()};
+            if (!(Double.isNaN(axis0.getOverallTypicalLine().getEndY())) &&
+                    !(Double.isNaN(axis1.getOverallTypicalLine().getStartY()))) {
 
-            unselectedCanvas.getGraphicsContext2D().setFill(getOverallSummaryFillColor());
-            unselectedCanvas.getGraphicsContext2D().fillPolygon(xValues, yValues, xValues.length);
+                double xValues[] = new double[] {axis0.getOverallDispersionRectangle().getLayoutBounds().getMaxX(),
+                        axis1.getOverallDispersionRectangle().getLayoutBounds().getMinX(),
+                        axis1.getOverallDispersionRectangle().getLayoutBounds().getMinX(),
+                        axis0.getOverallDispersionRectangle().getLayoutBounds().getMaxX()};
+                double yValues[] = new double[] {axis0.getOverallDispersionRectangle().getLayoutBounds().getMaxY(),
+                        axis1.getOverallDispersionRectangle().getLayoutBounds().getMaxY(),
+                        axis1.getOverallDispersionRectangle().getLayoutBounds().getMinY(),
+                        axis0.getOverallDispersionRectangle().getLayoutBounds().getMinY()};
+//            double xValues[] = new double[] {axis0.getOverallDispersionRectangle().getX() + axis0.getOverallDispersionRectangle().getWidth(),
+//                                    axis1.getOverallDispersionRectangle().getX(),
+//                                    axis1.getOverallDispersionRectangle().getX(),
+//                                    axis0.getOverallDispersionRectangle().getX() + axis0.getOverallDispersionRectangle().getWidth()};
+//            double yValues[] = new double[] {axis0.getOverallDispersionRectangle().getY() + axis0.getOverallDispersionRectangle().getHeight(),
+//                                    axis1.getOverallDispersionRectangle().getY() + axis1.getOverallDispersionRectangle().getHeight(),
+//                                    axis1.getOverallDispersionRectangle().getY(),
+//                                    axis0.getOverallDispersionRectangle().getY()};
+
+                unselectedCanvas.getGraphicsContext2D().setFill(getOverallSummaryFillColor());
+
+                unselectedCanvas.getGraphicsContext2D().fillPolygon(xValues, yValues, xValues.length);
 //            unselectedCanvas.getGraphicsContext2D().setStroke(getOverallSummaryStrokeColor());
 //            unselectedCanvas.getGraphicsContext2D().strokePolyline(xValues, yValues, xValues.length);
 
-            unselectedCanvas.getGraphicsContext2D().setStroke(getOverallSummaryStrokeColor());
-            unselectedCanvas.getGraphicsContext2D().strokeLine(axis0.getBarRightX(), axis0.getOverallTypicalLine().getEndY(),
-                    axis1.getBarLeftX(), axis1.getOverallTypicalLine().getStartY());
+                unselectedCanvas.getGraphicsContext2D().setStroke(getOverallSummaryStrokeColor());
+                unselectedCanvas.getGraphicsContext2D().strokeLine(axis0.getBarRightX(), axis0.getOverallTypicalLine().getEndY(),
+                        axis1.getBarLeftX(), axis1.getOverallTypicalLine().getStartY());
+            }
 
             if (dataModel.getActiveQuery().hasColumnSelections()) {
-                xValues = new double[] {axis0.getQueryDispersionRectangle().getLayoutBounds().getMaxX(),
-                        axis1.getQueryDispersionRectangle().getLayoutBounds().getMinX(),
-                        axis1.getQueryDispersionRectangle().getLayoutBounds().getMinX(),
-                        axis0.getQueryDispersionRectangle().getLayoutBounds().getMaxX()};
-                yValues = new double[] {axis0.getQueryDispersionRectangle().getLayoutBounds().getMaxY(),
-                        axis1.getQueryDispersionRectangle().getLayoutBounds().getMaxY(),
-                        axis1.getQueryDispersionRectangle().getLayoutBounds().getMinY(),
-                        axis0.getQueryDispersionRectangle().getLayoutBounds().getMinY()};
+                if (!(Double.isNaN(axis0.getQueryTypicalLine().getEndY())) &&
+                        !(Double.isNaN(axis1.getQueryTypicalLine().getStartY()))) {
 
-                selectedCanvas.getGraphicsContext2D().setFill(getQuerySummaryFillColor());
-                selectedCanvas.getGraphicsContext2D().fillPolygon(xValues, yValues, xValues.length);
-//                selectedCanvas.getGraphicsContext2D().setStroke(getQuerySummaryStrokeColor());
-//                selectedCanvas.getGraphicsContext2D().strokePolyline(xValues, yValues, xValues.length);
 
-                selectedCanvas.getGraphicsContext2D().setStroke(getQuerySummaryStrokeColor());
-                selectedCanvas.getGraphicsContext2D().strokeLine(axis0.getBarRightX(), axis0.getQueryTypicalLine().getEndY(),
-                        axis1.getBarLeftX(), axis1.getQueryTypicalLine().getStartY());
+//                    double xValues [] = new double[]{axis0.getQueryDispersionRectangle().getLayoutBounds().getMaxX(),
+//                            axis1.getQueryDispersionRectangle().getLayoutBounds().getMinX(),
+//                            axis1.getQueryDispersionRectangle().getLayoutBounds().getMinX(),
+//                            axis0.getQueryDispersionRectangle().getLayoutBounds().getMaxX()};
+                    double xValues[] = new double[] {axis0.getOverallDispersionRectangle().getLayoutBounds().getMaxX(),
+                            axis1.getOverallDispersionRectangle().getLayoutBounds().getMinX(),
+                            axis1.getOverallDispersionRectangle().getLayoutBounds().getMinX(),
+                            axis0.getOverallDispersionRectangle().getLayoutBounds().getMaxX()};
+                    double yValues [] = new double[]{axis0.getQueryDispersionRectangle().getLayoutBounds().getMaxY(),
+                            axis1.getQueryDispersionRectangle().getLayoutBounds().getMaxY(),
+                            axis1.getQueryDispersionRectangle().getLayoutBounds().getMinY(),
+                            axis0.getQueryDispersionRectangle().getLayoutBounds().getMinY()};
+
+                    selectedCanvas.getGraphicsContext2D().setFill(getQuerySummaryFillColor());
+                    selectedCanvas.getGraphicsContext2D().fillPolygon(xValues, yValues, xValues.length);
+                    //                selectedCanvas.getGraphicsContext2D().setStroke(getQuerySummaryStrokeColor());
+                    //                selectedCanvas.getGraphicsContext2D().strokePolyline(xValues, yValues, xValues.length);
+
+                    selectedCanvas.getGraphicsContext2D().setStroke(getQuerySummaryStrokeColor());
+                    selectedCanvas.getGraphicsContext2D().strokeLine(axis0.getBarRightX(), axis0.getQueryTypicalLine().getEndY(),
+                            axis1.getBarLeftX(), axis1.getQueryTypicalLine().getStartY());
+                }
             }
         }
 

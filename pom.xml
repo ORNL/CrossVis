@@ -124,8 +124,8 @@
                                 <argument>./target</argument>
                                 <argument>-outfile</argument>
                                 <argument>EDENFX-v${project.version}</argument>
-                                <argument>-BjvmOptions=-Xmx8g</argument>
-                                <argument>-BjvmOptions=-Xms8g</argument>
+                                <argument>-BjvmOptions=-Xmx12g</argument>
+                                <argument>-BjvmOptions=-Xms12g</argument>
                                 <argument>-v</argument>
 								<argument>-BappVersion=${project.version}</argument>
                             </arguments>

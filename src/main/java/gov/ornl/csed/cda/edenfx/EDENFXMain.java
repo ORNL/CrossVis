@@ -192,10 +192,10 @@ public class EDENFXMain extends Application implements DataModelListener {
         columnTableView.setEditable(true);
         columnTableView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue != null) {
-                log.debug("Column '" + newValue.getName() + "' selected in column table");
+//                log.debug("Column '" + newValue.getName() + "' selected in column table");
                 dataModel.setHighlightedColumn(newValue);
-            } else {
-                log.debug("SelectedItemProperty changed and new value is null");
+//            } else {
+//                log.debug("SelectedItemProperty changed and new value is null");
             }
         });
 
@@ -936,7 +936,7 @@ public class EDENFXMain extends Application implements DataModelListener {
 
         // create menu item to enabled/disable data table updates
         enableDataTableUpdatesCheckMenuItem = new CheckMenuItem("Enable Data Table Updates");
-        enableDataTableUpdatesCheckMenuItem.setSelected(true);
+        enableDataTableUpdatesCheckMenuItem.setSelected(false);
         enableDataTableUpdatesCheckMenuItem.selectedProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue != null && newValue) {
                 // refresh data table based on current state of the data model
@@ -1045,7 +1045,10 @@ public class EDENFXMain extends Application implements DataModelListener {
             dataModel.clear();
         }
 
+        long start = System.currentTimeMillis();
         IOUtilities.readCSV(f, dataModel);
+        long elasped = System.currentTimeMillis() - start;
+        log.debug("Reading file data took " + elasped + "ms");
 
         columnTableView.getItems().clear();
         columnTableView.setItems(FXCollections.observableArrayList(dataModel.getColumns()));
@@ -1053,101 +1056,13 @@ public class EDENFXMain extends Application implements DataModelListener {
         queryTableView.getItems().clear();
         queryTableView.setItems(dataModel.getActiveQuery().columnSelectionRangeList());
         
-//        dataTableView.getItems().clear();
         setDataTableColumns();
+
+        start = System.currentTimeMillis();
         setDataTableItems();
+        elasped = System.currentTimeMillis() - start;
+        log.debug("Setting data table items took " + elasped + "ms");
 
-     /*   dataModel.addDataModelListener(new DataModelListener() {
-            @Override
-            public void dataModelChanged(DataModel dataModel) {
-                updatePercentSelected();
-            }
-
-            @Override
-            public void queryChanged(DataModel dataModel) {
-                log.debug("EDENFXMain queryChanged: " + dataModel.getActiveQuery().hasColumnSelections());
-                removeAllQueriesMI.setDisable(!dataModel.getActiveQuery().hasColumnSelections());
-                setDataTableItems();
-
-                updatePercentSelected();
-//                double percentSelected = (double)dataModel.getQueriedTupleCount() / dataModel.getTupleCount();
-//                percentSelectedProgress.setProgress(percentSelected);
-//                statusBar.setText(" " + dataModel.getQueriedTupleCount() + " of " + dataModel.getTupleCount() + " tuples selected (" + decimalFormat.format(percentSelected) + ")");
-//                if (dataModel.getActiveQuery().hasColumnSelections()) {
-//                    queryTableView.setItems(FXCollections.observableArrayList(dataModel.getActiveQuery().getAllColumnSelectionRanges()));
-//                } else {
-//                    queryTableView.getItems().clear();
-//                }
-            }
-
-            @Override
-            public void dataModelColumnSelectionAdded(DataModel dataModel, ColumnSelectionRange columnSelectionRange) {
-                removeAllQueriesMI.setDisable(!dataModel.getActiveQuery().hasColumnSelections());
-                setDataTableItems();
-                updatePercentSelected();
-//                if (dataModel.getActiveQuery().hasColumnSelections()) {
-//                    queryTableView.setItems(FXCollections.observableArrayList(dataModel.getActiveQuery().getAllColumnSelectionRanges()));
-//                } else {
-//                    queryTableView.getItems().clear();
-//                }
-            }
-
-            @Override
-            public void dataModelColumnSelectionRemoved(DataModel dataModel, ColumnSelectionRange columnSelectionRange) {
-                removeAllQueriesMI.setDisable(!dataModel.getActiveQuery().hasColumnSelections());
-                setDataTableItems();
-                updatePercentSelected();
-//                if (dataModel.getActiveQuery().hasColumnSelections()) {
-//                    queryTableView.setItems(FXCollections.observableArrayList(dataModel.getActiveQuery().getAllColumnSelectionRanges()));
-//                } else {
-//                    queryTableView.getItems().clear();
-//                }
-            }
-
-            @Override
-            public void highlightedColumnChanged(DataModel dataModel) {
-
-            }
-
-            @Override
-            public void tuplesAdded(DataModel dataModel, ArrayList<Tuple> newTuples) {
-
-            }
-
-            @Override
-            public void columnDisabled(DataModel dataModel, Column disabledColumn) {
-                for (int i = 0; i < dataTableView.getColumns().size(); i++) {
-                    if (dataTableView.getColumns().get(i).getText().equals(disabledColumn.getName())) {
-                        dataTableView.getItems().clear();
-                        dataTableView.getColumns().remove(i);
-
-                        setDataTableItems();
-                        break;
-                    }
-                }
-            }
-
-            @Override
-            public void columnsDisabled(DataModel dataModel, ArrayList<Column> disabledColumns) {
-
-            }
-
-            @Override
-            public void columnEnabled(DataModel dataModel, Column enabledColumn) {
-                int columnIndex = dataModel.getColumnIndex(enabledColumn);
-                TableColumn<Tuple, Double> tableColumn = new TableColumn<>(enabledColumn.getName());
-                tableColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<Tuple, Double>, ObservableValue<Double>>() {
-                    public ObservableValue<Double> call(TableColumn.CellDataFeatures<Tuple, Double> t) {
-                        return new ReadOnlyObjectWrapper(t.getValue().getElement(columnIndex));
-                    }
-                });
-                log.debug("Adding column to column table at index " + columnIndex);
-                dataTableView.getColumns().add(columnIndex, tableColumn);
-
-                setDataTableItems();
-            }
-        });
-*/
         displayModeMenu.setDisable(false);
     }
 
@@ -1228,6 +1143,10 @@ public class EDENFXMain extends Application implements DataModelListener {
     @Override
     public void dataModelColumnSelectionChanged(DataModel dataModel, ColumnSelectionRange columnSelectionRange) {
 //        removeAllQueriesMI.setDisable(!dataModel.getActiveQuery().hasColumnSelections());
+//        log.debug("dataModel column selection changed");
+//        int rowIndex = queryTableView.getItems().indexOf(columnSelectionRange);
+        queryTableView.refresh();
+        columnTableView.refresh();
         setDataTableItems();
         updatePercentSelected();
     }
@@ -1261,7 +1180,9 @@ public class EDENFXMain extends Application implements DataModelListener {
         dataTableView.getColumns().clear();
         setDataTableColumns();
         setDataTableItems();
+
         updatePercentSelected();
+        columnTableView.refresh();
     }
 
     @Override

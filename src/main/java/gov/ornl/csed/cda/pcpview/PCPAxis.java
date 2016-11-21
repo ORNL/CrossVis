@@ -508,7 +508,8 @@ public class PCPAxis {
                 double binWidth = GraphicsUtil.mapValue(histogram.getBinCount(i), 0, histogram.getMaxBinCount(), DEFAULT_BAR_WIDTH + 2, DEFAULT_BAR_WIDTH + 2 + maxHistogramBinWidth);
                 double x = left + ((width - binWidth) / 2.);
                 Rectangle rectangle = new Rectangle(x, y, binWidth, binHeight);
-                rectangle.setStroke(histogramStroke);
+//                rectangle.setStroke(histogramStroke);
+                rectangle.setStroke(histogramFill.darker());
                 rectangle.setFill(histogramFill);
                 histogramBinRectangleList.add(rectangle);
                 histogramBinRectangleGroup.getChildren().add(rectangle);
@@ -558,8 +559,10 @@ public class PCPAxis {
                         double binWidth = GraphicsUtil.mapValue(queryHistogram.getBinCount(i), 0, histogram.getMaxBinCount(), DEFAULT_BAR_WIDTH + 2, DEFAULT_BAR_WIDTH + 2 + maxHistogramBinWidth);
                         double x = left + ((width - binWidth) / 2.);
                         Rectangle rectangle = new Rectangle(x, y, binWidth, binHeight);
-                        rectangle.setStroke(histogramStroke);
+//                        rectangle.setStroke(histogramStroke);
+                        rectangle.setStroke(queryHistogramFill.darker());
                         rectangle.setFill(queryHistogramFill);
+
                         queryHistogramBinRectangleList.add(rectangle);
                         queryHistogramBinRectangleGroup.getChildren().add(rectangle);
                     }

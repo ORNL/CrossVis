@@ -182,8 +182,10 @@ public class IOUtilities {
 
 		reader.close();
 
+		log.debug("Finished reading CSV file '" + f.getName() + "': Read " + tuples.size() + " rows with " + columns.size() + " columns; " + numLinesIgnored + " rows ignored.");
+
 		dataModel.setData(tuples, columns);
 
-		log.debug("Finished reading CSV file '" + f.getName() + "': Read " + tuples.size() + " rows with " + columns.size() + " columns; " + numLinesIgnored + " rows ignored.");
+		log.debug("Finished setting data in datamodel");
 	}
 }

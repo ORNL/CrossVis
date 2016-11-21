@@ -414,6 +414,9 @@ public class DataModel {
             removeTupleElementsForColumn(disabledColumn);
 			disabledColumn.setEnabled(false);
 
+			disabledColumn.setQueryMeanValue(Double.NaN);
+			disabledColumn.setQueryStandardDeviationValue(Double.NaN);
+
 			if (disabledColumn == this.highlightedColumn) {
 				highlightedColumn = null;
 //                fireHighlightedColumnChanged();
@@ -501,6 +504,7 @@ public class DataModel {
 			tuples.clear();
 			tuples.addAll(queriedTuples);
 			getActiveQuery().clear();
+			calculateStatistics();
 			setQueriedTuples();
 //            calculateStatistics();
             fireTuplesRemoved(tuplesRemoved);
@@ -521,6 +525,7 @@ public class DataModel {
 			tuples.clear();
 			tuples.addAll(nonQueriedTuples);
 			getActiveQuery().clear();
+			calculateStatistics();
 			setQueriedTuples();
             fireTuplesRemoved(tuplesRemoved);
         }
@@ -809,6 +814,10 @@ public class DataModel {
                 tuple.setQueryFlag(false);
 				nonQueriedTuples.add(tuple);
             }
+            for (Column column : columns) {
+				column.setQueryMeanValue(Double.NaN);
+				column.setQueryStandardDeviationValue(Double.NaN);
+			}
         }
 
         log.debug("After setQueriedTuples() with " + tuples.size() + " total tuples: Queried tuples set size is " + queriedTuples.size() + ", nonQueried tuples set size is " + nonQueriedTuples.size());
