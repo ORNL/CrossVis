@@ -382,9 +382,18 @@ public class EDENFXMain extends Application implements DataModelListener {
         labelColorPicker.valueProperty().bindBidirectional(pcpView.labelsColorProperty());
         labelColorBox.getChildren().addAll(new Label(" Labels: "), labelColorPicker);
 
+        // create name text rotation spinner
+        HBox nameTextRotationBox = new HBox();
+        nameTextRotationBox.setAlignment(Pos.CENTER);
+
+        Spinner<Double> nameTextRotationSpinner = new Spinner<Double>(-30., 30., pcpView.getNameTextRotation());
+        pcpView.nameTextRotationProperty().bind(nameTextRotationSpinner.valueProperty());
+        nameTextRotationSpinner.setEditable(true);
+        nameTextRotationBox.getChildren().addAll(new Label(" Name Label Rotation: "), nameTextRotationSpinner);
+
         // add all items to layout
         toolBar.getItems().addAll(summaryDisplayModeButton, histogramDisplayModeButton, binDisplayModeButton, lineDisplayModeButton, new Separator(),
-                showUnselectedButton, showSelectedButton, new Separator(), selectedItemsColorBox, unselectedItemsColorBox, backgroundColorBox, labelColorBox);
+                showUnselectedButton, showSelectedButton, new Separator(), selectedItemsColorBox, unselectedItemsColorBox, backgroundColorBox, labelColorBox, nameTextRotationBox);
 
         return toolBar;
     }

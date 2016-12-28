@@ -2,6 +2,9 @@ package gov.ornl.csed.cda.pcpview;
 
 import gov.ornl.csed.cda.datatable.*;
 import gov.ornl.csed.cda.util.GraphicsUtil;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.ReadOnlyDoubleProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.event.EventHandler;
 import javafx.geometry.Point2D;
 import javafx.geometry.Rectangle2D;
@@ -79,6 +82,7 @@ public class PCPAxis {
 
     // axis column name label
     private Text nameText;
+    private DoubleProperty nameTextRotation;
 
     // value labels
     private Text maxValueText;
@@ -145,6 +149,8 @@ public class PCPAxis {
         focusTopY = 0d;
         focusBottomY = 0d;
 
+        nameTextRotation = new SimpleDoubleProperty(0.0);
+
         nameText = new Text(column.getName());
 //        nameText.textProperty().bindBidirectional(column.nameProperty());
         Tooltip tooltip = new Tooltip();
@@ -153,6 +159,7 @@ public class PCPAxis {
         nameText.setFont(new Font(DEFAULT_NAME_TEXT_SIZE));
         nameText.setSmooth(true);
         nameText.setFill(labelColor);
+        nameText.rotateProperty().bindBidirectional(nameTextRotation);
 
 //        columnNameColumn.setCellValueFactory(new PropertyValueFactory<ColumnSelectionRange, String>("column"));
         minValueText = new Text();
@@ -214,6 +221,13 @@ public class PCPAxis {
 
         registerListeners();
     }
+
+    public final double getNameTextRotation() { return nameTextRotation.get(); }
+
+    public final void setNameTextRotation(double value) { nameTextRotation.set(value); }
+
+    public DoubleProperty nameTextRotationProperty() { return nameTextRotation; }
+
 
     public void setLabelColor(Color labelColor) {
         if (this.labelColor != labelColor) {
@@ -457,6 +471,7 @@ public class PCPAxis {
 
         nameText.setX(bounds.getX() + ((width - nameText.getLayoutBounds().getWidth()) / 2.));
         nameText.setY(bounds.getY() + nameText.getLayoutBounds().getHeight());
+        nameText.setRotate(getNameTextRotation());
 //        nameText.setY(barTopY - (DEFAULT_NAME_LABEL_HEIGHT / 2.));
 //        nameText.setRotate(-10.);
 

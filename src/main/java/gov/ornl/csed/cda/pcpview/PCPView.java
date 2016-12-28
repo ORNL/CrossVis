@@ -33,10 +33,10 @@ public class PCPView extends Region implements DataModelListener {
     private final static Color DEFAULT_UNSELECTED_ITEMS_COLOR = new Color(Color.LIGHTGRAY.getRed(),
             Color.LIGHTGRAY.getGreen(), Color.LIGHTGRAY.getBlue(), DEFAULT_LINE_OPACITY);
 
-    public final static Color DEFAULT_OVERALL_SUMMARY_FILL_COLOR = new Color(Color.LIGHTSTEELBLUE.getRed(), Color.LIGHTSTEELBLUE.getGreen(), Color.LIGHTSTEELBLUE.getBlue(), 0.8d);
-    public final static Color DEFAULT_QUERY_SUMMARY_FILL_COLOR = new Color(Color.STEELBLUE.getRed(), Color.STEELBLUE.getGreen(), Color.STEELBLUE.getBlue(), 0.8d);
-    public final static Color DEFAULT_OVERALL_SUMMARY_STROKE_COLOR = Color.DARKGRAY;
-    public final static Color DEFAULT_QUERY_SUMMARY_STROKE_COLOR = Color.DARKGRAY.darker();
+    public final static Color DEFAULT_OVERALL_SUMMARY_FILL_COLOR = new Color(Color.LIGHTSTEELBLUE.getRed(), Color.LIGHTSTEELBLUE.getGreen(), Color.LIGHTSTEELBLUE.getBlue(), 0.6d);
+    public final static Color DEFAULT_QUERY_SUMMARY_FILL_COLOR = new Color(Color.STEELBLUE.getRed(), Color.STEELBLUE.getGreen(), Color.STEELBLUE.getBlue(), 0.6d);
+    public final static Color DEFAULT_OVERALL_SUMMARY_STROKE_COLOR = Color.DARKGRAY.darker();
+    public final static Color DEFAULT_QUERY_SUMMARY_STROKE_COLOR = Color.BLACK;
     public final static Color DEFAULT_BACKGROUND_COLOR = Color.WHITE;
 
     private final static DISPLAY_MODE DEFAULT_DISPLAY_MODE = DISPLAY_MODE.SUMMARY;
@@ -91,7 +91,10 @@ public class PCPView extends Region implements DataModelListener {
 
     public enum DISPLAY_MODE {SUMMARY, HISTOGRAM, PCP_LINES, PCP_BINS};
 
+    private DoubleProperty nameTextRotation;
+
     public PCPView() {
+        nameTextRotation = new SimpleDoubleProperty(0.0);
 //        backgroundPaint = Color.TRANSPARENT;
 //        borderPaint = Color.TRANSPARENT;
 //        borderWidth = 0d;
@@ -99,6 +102,18 @@ public class PCPView extends Region implements DataModelListener {
         init();
         initGraphics();
         registerListeners();
+    }
+
+    public void setNameTextRotation(double rotation) {
+        nameTextRotation.set(rotation);
+    }
+
+    public double getNameTextRotation() {
+        return nameTextRotation.get();
+    }
+
+    public DoubleProperty nameTextRotationProperty() {
+        return nameTextRotation;
     }
 
     public Color getBackgroundColor() {
@@ -241,6 +256,7 @@ public class PCPView extends Region implements DataModelListener {
         if (axisList.isEmpty()) {
             for (int iaxis = 0; iaxis < dataModel.getColumnCount(); iaxis++) {
                 PCPAxis pcpAxis = new PCPAxis(this, dataModel.getColumn(iaxis), dataModel, pane);
+                pcpAxis.nameTextRotationProperty().bind(nameTextRotationProperty());
                 pane.getChildren().add(pcpAxis.getGraphicsGroup());
                 axisList.add(pcpAxis);
             }
@@ -293,6 +309,7 @@ public class PCPView extends Region implements DataModelListener {
         axisList.clear();
         for (int iaxis = 0; iaxis < dataModel.getColumnCount(); iaxis++) {
             PCPAxis pcpAxis = new PCPAxis(this, dataModel.getColumn(iaxis), dataModel, pane);
+            pcpAxis.nameTextRotationProperty().bind(nameTextRotationProperty());
             pane.getChildren().add(pcpAxis.getGraphicsGroup());
             axisList.add(pcpAxis);
         }
@@ -321,6 +338,7 @@ public class PCPView extends Region implements DataModelListener {
 
     private void addAxis(Column column) {
         PCPAxis pcpAxis = new PCPAxis(this, column, dataModel, pane);
+        pcpAxis.nameTextRotationProperty().bind(nameTextRotationProperty());
         pane.getChildren().add(pcpAxis.getGraphicsGroup());
         axisList.add(pcpAxis);
     }
