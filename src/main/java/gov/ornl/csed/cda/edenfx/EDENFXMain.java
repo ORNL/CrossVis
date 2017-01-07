@@ -756,7 +756,10 @@ public class EDENFXMain extends Application implements DataModelListener {
                 FileChooser fileChooser = new FileChooser();
                 String lastCSVDirectoryPath = preferences.get(EDENFXPreferenceKeys.LAST_CSV_READ_DIRECTORY, "");
                 if (!lastCSVDirectoryPath.isEmpty()) {
-                    fileChooser.setInitialDirectory(new File(lastCSVDirectoryPath));
+                    File lastCSVDirectory = new File(lastCSVDirectoryPath);
+                    if (lastCSVDirectory != null && lastCSVDirectory.exists() && lastCSVDirectory.canRead()) {
+                        fileChooser.setInitialDirectory(new File(lastCSVDirectoryPath));
+                    }
                 }
                 fileChooser.setTitle("Open CSV File");
                 File csvFile = fileChooser.showOpenDialog(stage);
@@ -789,7 +792,10 @@ public class EDENFXMain extends Application implements DataModelListener {
             FileChooser fileChooser = new FileChooser();
             String lastExportDirectoryPath = preferences.get(EDENFXPreferenceKeys.LAST_CSV_EXPORT_DIRECTORY, "");
             if (!lastExportDirectoryPath.isEmpty()) {
-                fileChooser.setInitialDirectory(new File(lastExportDirectoryPath));
+                File lastExportDirectory = new File(lastExportDirectoryPath);
+                if (lastExportDirectory != null && lastExportDirectory.exists() && lastExportDirectory.canRead()) {
+                    fileChooser.setInitialDirectory(new File(lastExportDirectoryPath));
+                }
             }
             fileChooser.setTitle("Export Selected Data to CSV File");
             File csvFile = fileChooser.showSaveDialog(stage);
@@ -823,7 +829,11 @@ public class EDENFXMain extends Application implements DataModelListener {
             FileChooser fileChooser = new FileChooser();
             String lastExportDirectoryPath = preferences.get(EDENFXPreferenceKeys.LAST_CSV_EXPORT_DIRECTORY, "");
             if (!lastExportDirectoryPath.isEmpty()) {
-                fileChooser.setInitialDirectory(new File(lastExportDirectoryPath));
+                File lastExportDirectory = new File(lastExportDirectoryPath);
+                if (lastExportDirectory != null && lastExportDirectory.exists() && lastExportDirectory.canRead()) {
+                    fileChooser.setInitialDirectory(new File(lastExportDirectoryPath));
+                }
+//                fileChooser.setInitialDirectory(new File(lastExportDirectoryPath));
             }
             fileChooser.setTitle("Export Unselected Data to CSV File");
             File csvFile = fileChooser.showSaveDialog(stage);

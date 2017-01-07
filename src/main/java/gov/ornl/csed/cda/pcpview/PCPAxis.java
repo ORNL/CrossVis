@@ -5,12 +5,15 @@ import gov.ornl.csed.cda.util.GraphicsUtil;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ReadOnlyDoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
+import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Point2D;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.SnapshotParameters;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.Tooltip;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.effect.DropShadow;
@@ -271,7 +274,7 @@ public class PCPAxis {
         });
 
         nameText.setOnMouseClicked(event -> {
-//            log.debug("Mouse Clicked on axis '" + column.getName() + "' click count is " + event.getClickCount());
+            log.debug("Mouse Clicked on axis '" + column.getName() + "' click count is " + event.getClickCount());
             if (event.getClickCount() == 2) {
                 if (dataModel.getHighlightedColumn() == column) {
                     dataModel.setHighlightedColumn(null);
@@ -312,6 +315,32 @@ public class PCPAxis {
 //                log.debug("dragImage.getFitWidth() = " + dragImageView.getFitWidth() + " dragImage.getWidth() = " + dragImage.getWidth());
 //                log.debug("dragImageView.getLayoutBounds().getWidth() = " + dragImageView.getLayoutBounds().getWidth());
                 dragImageView.setX(event.getX() - (dragImageView.getLayoutBounds().getWidth() / 2d));
+            }
+        });
+
+        nameText.setOnMousePressed(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                if (event.isSecondaryButtonDown()) {
+                    log.debug("Popup trigger");
+                    final ContextMenu contextMenu = new ContextMenu();
+                    MenuItem hideMenuItem = new MenuItem("Hide Axis");
+                    MenuItem closeMenuItem = new MenuItem("Close Popup");
+                    contextMenu.getItems().addAll(hideMenuItem, closeMenuItem);
+                    hideMenuItem.setOnAction(new EventHandler<ActionEvent>() {
+                        @Override
+                        public void handle(ActionEvent event) {
+                            dataModel.disableColumn(column);
+                        }
+                    });
+                    closeMenuItem.setOnAction(new EventHandler<ActionEvent>() {
+                        @Override
+                        public void handle(ActionEvent event) {
+                            contextMenu.hide();
+                        }
+                    });
+                    contextMenu.show(pcpView, event.getScreenX(), event.getScreenY());
+                }
             }
         });
 
