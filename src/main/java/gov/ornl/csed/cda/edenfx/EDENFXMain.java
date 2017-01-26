@@ -1136,6 +1136,8 @@ public class EDENFXMain extends Application implements DataModelListener {
         removeAllQueriesMI.setDisable(!dataModel.getActiveQuery().hasColumnSelections());
         setDataTableItems();
         updatePercentSelected();
+        queryTableView.getItems().clear();
+        queryTableView.setItems(dataModel.getActiveQuery().columnSelectionRangeList());
     }
 
     @Override
