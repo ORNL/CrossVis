@@ -73,10 +73,6 @@ public class EDENFXMain extends Application implements DataModelListener {
     private static final int SPLASH_WIDTH = 600;
     private static final int SPLASH_HEIGHT = 350;
 
-//    public static final String SPLASH_IMAGE = "http://fxexperience.com/wp-content/uploads/2010/06/logo.png";
-//    private static final int SPLASH_WIDTH = 676;
-//    private static final int SPLASH_HEIGHT = 227;
-
     private PCPView pcpView;
     private DataModel dataModel;
 
@@ -974,7 +970,7 @@ public class EDENFXMain extends Application implements DataModelListener {
         viewMenu.getItems().add(changeHistogramBinCountMenuItem);
 
 
-        MenuItem exitMI = new MenuItem("Quit Falcon");
+        MenuItem exitMI = new MenuItem("Quit EDEN.fx");
         exitMI.setAccelerator(new KeyCodeCombination(KeyCode.Q, KeyCombination.META_DOWN));
         exitMI.setOnAction(new EventHandler<ActionEvent>() {
             public void handle(ActionEvent event) {
