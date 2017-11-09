@@ -1,5 +1,6 @@
 package gov.ornl.csed.cda.pcpview;
 
+import gov.ornl.csed.cda.datatable.QuantitativeColumn;
 import gov.ornl.csed.cda.datatable.Tuple;
 import gov.ornl.csed.cda.util.GraphicsUtil;
 import javafx.scene.paint.Color;
@@ -31,15 +32,15 @@ public class PCPTuple {
 
     public Tuple getTuple () { return tuple; }
 
-    public void layout(ArrayList<PCPAxis> axisList) {
+    public void layout(ArrayList<PCPQuantitativeAxis> axisList) {
         xPoints = new double[tuple.getElementCount()];
         yPoints = new double[tuple.getElementCount()];
 
         for (int i = 0; i < tuple.getElementCount(); i++) {
             double value = tuple.getElement(i);
-            PCPAxis axis = axisList.get(i);
-            double yPosition = GraphicsUtil.mapValue(value, axis.getColumn().getSummaryStats().getMin(),
-                    axis.getColumn().getSummaryStats().getMax(), axis.getFocusBottomY(), axis.getFocusTopY());
+            PCPQuantitativeAxis axis = axisList.get(i);
+            double yPosition = GraphicsUtil.mapValue(value, ((QuantitativeColumn)axis.getColumn()).getSummaryStats().getMin(),
+                    ((QuantitativeColumn)axis.getColumn()).getSummaryStats().getMax(), axis.getFocusBottomY(), axis.getFocusTopY());
             xPoints[i] = axis.getCenterX();
             yPoints[i] = yPosition;
         }

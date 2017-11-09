@@ -1,25 +1,17 @@
 package gov.ornl.csed.cda.pcpview;
 
 import gov.ornl.csed.cda.datatable.*;
-import javafx.animation.AnimationTimer;
 import javafx.beans.property.*;
-import javafx.event.EventHandler;
 import javafx.geometry.Insets;
-import javafx.scene.CacheHint;
 import javafx.scene.canvas.Canvas;
-import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
-import javafx.scene.paint.Paint;
 import javafx.scene.shape.StrokeLineCap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.awt.*;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.concurrent.ArrayBlockingQueue;
 
 /**
  * Created by csg on 8/22/16.
@@ -75,7 +67,8 @@ public class PCPView extends Region implements DataModelListener {
 
     private DataModel dataModel;
 
-    private ArrayList<PCPAxis> axisList;
+    PCPTemporalAxis temporalAxis;
+    private ArrayList<PCPQuantitativeAxis> axisList;
     private ArrayList<PCPTuple> tupleList;
     private HashSet<PCPTuple> unselectedTupleSet;
     private HashSet<PCPTuple> selectedTupleSet;
@@ -199,7 +192,6 @@ public class PCPView extends Region implements DataModelListener {
 
     public ObjectProperty<Color> overallSummaryStrokeColor () { return overallSummaryStrokeColor; }
 
-
     private void fillTupleSets() {
         unselectedTupleSet.clear();
         selectedTupleSet.clear();
@@ -225,7 +217,7 @@ public class PCPView extends Region implements DataModelListener {
         double pcpHeight = getHeight() - (getInsets().getTop() + getInsets().getBottom());
 
         for (int iaxis = 0; iaxis < axisList.size(); iaxis++) {
-            PCPAxis pcpAxis = axisList.get(iaxis);
+            PCPQuantitativeAxis pcpAxis = axisList.get(iaxis);
             pcpAxis.layout(left + (iaxis * axisSpacing), top, axisSpacing, pcpHeight);
 
             if (getDisplayMode() == DISPLAY_MODE.HISTOGRAM) {
@@ -254,18 +246,24 @@ public class PCPView extends Region implements DataModelListener {
 
     private void reinitializeLayout() {
         if (axisList.isEmpty()) {
-            for (int iaxis = 0; iaxis < dataModel.getColumnCount(); iaxis++) {
-                PCPAxis pcpAxis = new PCPAxis(this, dataModel.getColumn(iaxis), dataModel, pane);
+            if (dataModel.hasTemporalColumn()) {
+                temporalAxis = new PCPTemporalAxis(this, dataModel.getTemporalColumn(), dataModel, pane);
+                temporalAxis.nameTextRotationProperty().bind(nameTextRotationProperty());
+                pane.getChildren().add(temporalAxis.getGraphicsGroup());
+            }
+
+            for (int iaxis = 0; iaxis < dataModel.getQuantitativeColumnCount(); iaxis++) {
+                PCPQuantitativeAxis pcpAxis = new PCPQuantitativeAxis(this, dataModel.getColumn(iaxis), dataModel, pane);
                 pcpAxis.nameTextRotationProperty().bind(nameTextRotationProperty());
                 pane.getChildren().add(pcpAxis.getGraphicsGroup());
                 axisList.add(pcpAxis);
             }
         } else {
-            ArrayList<PCPAxis> newAxisList = new ArrayList<PCPAxis>();
-            for (int iDstCol = 0; iDstCol < dataModel.getColumnCount(); iDstCol++) {
+            ArrayList<PCPQuantitativeAxis> newAxisList = new ArrayList<PCPQuantitativeAxis>();
+            for (int iDstCol = 0; iDstCol < dataModel.getQuantitativeColumnCount(); iDstCol++) {
                 Column column = dataModel.getColumn(iDstCol);
                 for (int iSrcCol = 0; iSrcCol < axisList.size(); iSrcCol++) {
-                    PCPAxis pcpAxis = axisList.get(iSrcCol);
+                    PCPQuantitativeAxis pcpAxis = axisList.get(iSrcCol);
                     if (pcpAxis.getColumn() == column) {
                         newAxisList.add(pcpAxis);
 
@@ -307,8 +305,8 @@ public class PCPView extends Region implements DataModelListener {
 
         // add axis lines to the pane
         axisList.clear();
-        for (int iaxis = 0; iaxis < dataModel.getColumnCount(); iaxis++) {
-            PCPAxis pcpAxis = new PCPAxis(this, dataModel.getColumn(iaxis), dataModel, pane);
+        for (int iaxis = 0; iaxis < dataModel.getQuantitativeColumnCount(); iaxis++) {
+            PCPQuantitativeAxis pcpAxis = new PCPQuantitativeAxis(this, dataModel.getColumn(iaxis), dataModel, pane);
             pcpAxis.nameTextRotationProperty().bind(nameTextRotationProperty());
             pane.getChildren().add(pcpAxis.getGraphicsGroup());
             axisList.add(pcpAxis);
@@ -337,7 +335,7 @@ public class PCPView extends Region implements DataModelListener {
     }
 
     private void addAxis(QuantitativeColumn column) {
-        PCPAxis pcpAxis = new PCPAxis(this, column, dataModel, pane);
+        PCPQuantitativeAxis pcpAxis = new PCPQuantitativeAxis(this, column, dataModel, pane);
         pcpAxis.nameTextRotationProperty().bind(nameTextRotationProperty());
         pane.getChildren().add(pcpAxis.getGraphicsGroup());
         axisList.add(pcpAxis);
@@ -346,7 +344,7 @@ public class PCPView extends Region implements DataModelListener {
     @Override
     public void dataModelReset(DataModel dataModel) {
         if (axisList != null && !axisList.isEmpty()) {
-            for (PCPAxis pcpAxis : axisList) {
+            for (PCPQuantitativeAxis pcpAxis : axisList) {
                 pane.getChildren().removeAll(pcpAxis.getGraphicsGroup(), pcpAxis.getHistogramBinRectangleGroup(), pcpAxis.getQueryHistogramBinRectangleGroup());
             }
             axisList.clear();
@@ -383,11 +381,11 @@ public class PCPView extends Region implements DataModelListener {
     @Override
     public void dataModelHighlightedColumnChanged(DataModel dataModel, QuantitativeColumn oldHighlightedColumn, QuantitativeColumn newHighlightedColumn) {
         if (dataModel.getHighlightedColumn() == null) {
-            for (PCPAxis pcpAxis : axisList) {
+            for (PCPQuantitativeAxis pcpAxis : axisList) {
                 pcpAxis.setHighlighted(false);
             }
         } else {
-            for (PCPAxis pcpAxis : axisList) {
+            for (PCPQuantitativeAxis pcpAxis : axisList) {
                 if (pcpAxis.getColumn() == newHighlightedColumn) {
                     pcpAxis.setHighlighted(true);
                 } else if (pcpAxis.getColumn() == oldHighlightedColumn) {
@@ -405,7 +403,7 @@ public class PCPView extends Region implements DataModelListener {
     @Override
     public void dataModelTuplesRemoved(DataModel dataModel, int numTuplesRemoved) {
         // clear
-        for (PCPAxis pcpAxis : axisList) {
+        for (PCPQuantitativeAxis pcpAxis : axisList) {
             for (PCPAxisSelection pcpAxisSelection : pcpAxis.getAxisSelectionList()) {
                 pane.getChildren().remove(pcpAxisSelection.getGraphicsGroup());
             }
@@ -423,7 +421,7 @@ public class PCPView extends Region implements DataModelListener {
             double pcpHeight = getHeight() - (getInsets().getTop() + getInsets().getBottom());
 
             for (int iaxis = 0; iaxis < axisList.size(); iaxis++) {
-                PCPAxis pcpAxis = axisList.get(iaxis);
+                PCPQuantitativeAxis pcpAxis = axisList.get(iaxis);
                 pcpAxis.layout(left + (iaxis * axisSpacing), top, axisSpacing, pcpHeight);
 
                 if (getDisplayMode() == DISPLAY_MODE.HISTOGRAM) {
@@ -442,7 +440,7 @@ public class PCPView extends Region implements DataModelListener {
     @Override
     public void dataModelColumnDisabled(DataModel dataModel, QuantitativeColumn disabledColumn) {
         for (int iaxis = 0; iaxis < axisList.size(); iaxis++) {
-            PCPAxis pcpAxis = axisList.get(iaxis);
+            PCPQuantitativeAxis pcpAxis = axisList.get(iaxis);
             if (pcpAxis.getColumn() == disabledColumn) {
                 axisList.remove(pcpAxis);
 
@@ -547,7 +545,7 @@ public class PCPView extends Region implements DataModelListener {
 //                // add axis lines to the pane
 //                axisList.clear();
 //                for (int iaxis = 0; iaxis < dataModel.getColumnCount(); iaxis++) {
-//                    PCPAxis pcpAxis = new PCPAxis(pcpView, dataModel.getColumn(iaxis), iaxis, dataModel, pane);
+//                    PCPQuantitativeAxis pcpAxis = new PCPQuantitativeAxis(pcpView, dataModel.getColumn(iaxis), iaxis, dataModel, pane);
 //                    pane.getChildren().add(pcpAxis.getGraphicsGroup());
 //                    axisList.add(pcpAxis);
 //                }
@@ -556,16 +554,16 @@ public class PCPView extends Region implements DataModelListener {
 
                 if (axisList.isEmpty()) {
                     for (int iaxis = 0; iaxis < dataModel.getColumnCount(); iaxis++) {
-                        PCPAxis pcpAxis = new PCPAxis(pcpView, dataModel.getColumn(iaxis), dataModel, pane);
+                        PCPQuantitativeAxis pcpAxis = new PCPQuantitativeAxis(pcpView, dataModel.getColumn(iaxis), dataModel, pane);
                         pane.getChildren().add(pcpAxis.getGraphicsGroup());
                         axisList.add(pcpAxis);
                     }
                 } else {
-                    ArrayList<PCPAxis> newAxisList = new ArrayList<PCPAxis>();
+                    ArrayList<PCPQuantitativeAxis> newAxisList = new ArrayList<PCPQuantitativeAxis>();
                     for (int iDstCol = 0; iDstCol < dataModel.getColumnCount(); iDstCol++) {
                         Column column = dataModel.getColumn(iDstCol);
                         for (int iSrcCol = 0; iSrcCol < axisList.size(); iSrcCol++) {
-                            PCPAxis pcpAxis = axisList.get(iSrcCol);
+                            PCPQuantitativeAxis pcpAxis = axisList.get(iSrcCol);
                             if (pcpAxis.getColumn() == column) {
                                 newAxisList.add(pcpAxis);
 
@@ -637,11 +635,11 @@ public class PCPView extends Region implements DataModelListener {
             @Override
             public void highlightedColumnChanged(DataModel dataModel) {
                 if (dataModel.getHighlightedColumn() == null) {
-                    for (PCPAxis pcpAxis : axisList) {
+                    for (PCPQuantitativeAxis pcpAxis : axisList) {
                         pcpAxis.setHighlighted(false);
                     }
                 } else {
-                    for (PCPAxis pcpAxis : axisList) {
+                    for (PCPQuantitativeAxis pcpAxis : axisList) {
                         if (pcpAxis.getColumn() == dataModel.getHighlightedColumn()) {
                             pcpAxis.setHighlighted(true);
                         } else {
@@ -660,7 +658,7 @@ public class PCPView extends Region implements DataModelListener {
             @Override
             public void columnDisabled(DataModel dataModel, Column disabledColumn) {
                 for (int iaxis = 0; iaxis < axisList.size(); iaxis++) {
-                    PCPAxis pcpAxis = axisList.get(iaxis);
+                    PCPQuantitativeAxis pcpAxis = axisList.get(iaxis);
                     if (pcpAxis.getColumn() == disabledColumn) {
                         axisList.remove(pcpAxis);
 
@@ -700,7 +698,7 @@ public class PCPView extends Region implements DataModelListener {
 //                pane.getChildren().clear();
 //                initializeLayout();
 //                for (int iaxis = 0; iaxis < axisList.size(); iaxis++) {
-//                    PCPAxis pcpAxis = axisList.get(iaxis);
+//                    PCPQuantitativeAxis pcpAxis = axisList.get(iaxis);
 //                    if (pcpAxis.getColumn() == disabledColumn) {
 //                        axisList.remove(pcpAxis);
 //                        pane.getChildren().remove(pcpAxis.getGraphicsGroup());
@@ -746,12 +744,12 @@ public class PCPView extends Region implements DataModelListener {
             public void columnEnabled(DataModel dataModel, Column enabledColumn) {
                 // add axis lines to the pane
                 addAxis(enabledColumn);
-//                PCPAxis pcpAxis = new PCPAxis(this, enabledColumn, dataModel.getColumnIndex(enabledColumn), dataModel, pane);
+//                PCPQuantitativeAxis pcpAxis = new PCPQuantitativeAxis(this, enabledColumn, dataModel.getColumnIndex(enabledColumn), dataModel, pane);
 //                pane.getChildren().add(pcpAxis.getGraphicsGroup());
 //                axisList.add(pcpAxis);
 //                axisList.clear();
 //                for (int iaxis = 0; iaxis < dataModel.getColumnCount(); iaxis++) {
-//                    PCPAxis pcpAxis = new PCPAxis(dataModel.getColumn(iaxis), iaxis, dataModel, pane);
+//                    PCPQuantitativeAxis pcpAxis = new PCPQuantitativeAxis(dataModel.getColumn(iaxis), iaxis, dataModel, pane);
 //                    pane.getChildren().add(pcpAxis.getGraphicsGroup());
 //                    axisList.add(pcpAxis);
 //                }
@@ -812,7 +810,7 @@ public class PCPView extends Region implements DataModelListener {
         selectedCanvas = new Canvas(getWidth(), getHeight());
         unselectedCanvas = new Canvas(getWidth(), getHeight());
 
-        labelsColor = new SimpleObjectProperty<>(PCPAxis.DEFAULT_LABEL_COLOR);
+        labelsColor = new SimpleObjectProperty<>(PCPQuantitativeAxis.DEFAULT_LABEL_COLOR);
         backgroundColor = new SimpleObjectProperty<>(DEFAULT_BACKGROUND_COLOR);
 
         pane = new Pane();
@@ -832,7 +830,7 @@ public class PCPView extends Region implements DataModelListener {
 
         labelsColor.addListener((observable, oldValue, newValue) -> {
             if (newValue != null) {
-                for (PCPAxis pcpAxis : axisList) {
+                for (PCPQuantitativeAxis pcpAxis : axisList) {
                     pcpAxis.setLabelColor(newValue);
                 }
             }
@@ -884,7 +882,7 @@ public class PCPView extends Region implements DataModelListener {
 
     public int getAxisSpacing () {return (int)axisSpacing;}
 
-    public final PCPAxis getAxis(int index) {
+    public final PCPQuantitativeAxis getAxis(int index) {
         return axisList.get(index);
     }
 
@@ -910,9 +908,9 @@ public class PCPView extends Region implements DataModelListener {
             if (fitAxisSpacingToWidthEnabled) {
                 width = getWidth();
                 pcpWidth = width - (getInsets().getLeft() + getInsets().getRight());
-                axisSpacing = pcpWidth / dataModel.getColumnCount();
+                axisSpacing = pcpWidth / dataModel.getTotalColumnCount();
             } else {
-                pcpWidth = axisSpacing * dataModel.getColumnCount();
+                pcpWidth = axisSpacing * dataModel.getTotalColumnCount();
                 width = (getInsets().getLeft() + getInsets().getRight()) + pcpWidth;
             }
 
@@ -932,12 +930,20 @@ public class PCPView extends Region implements DataModelListener {
                 unselectedCanvas.setWidth(width);
                 unselectedCanvas.setHeight(getHeight());
 
+                double left = getInsets().getLeft() + (axisSpacing / 2.);
+                double top = getInsets().getTop();
+
+                if (temporalAxis != null) {
+                    temporalAxis.layout(left, top, axisSpacing, pcpHeight);
+                    left += axisSpacing;
+                }
+
                 if (axisList != null) {
-                    double left = getInsets().getLeft() + (axisSpacing / 2.);
-                    double top = getInsets().getTop();
+//                    double left = getInsets().getLeft() + (axisSpacing / 2.);
+//                    double top = getInsets().getTop();
 
                     for (int iaxis = 0; iaxis < axisList.size(); iaxis++) {
-                        PCPAxis pcpAxis = axisList.get(iaxis);
+                        PCPQuantitativeAxis pcpAxis = axisList.get(iaxis);
                         pcpAxis.layout(left + (iaxis * axisSpacing), top, axisSpacing, pcpHeight);
 
                         if (getDisplayMode() == DISPLAY_MODE.HISTOGRAM) {
@@ -960,6 +966,8 @@ public class PCPView extends Region implements DataModelListener {
                         }
                     }
                 }
+
+
                 redraw();
             }
         }
@@ -994,7 +1002,7 @@ public class PCPView extends Region implements DataModelListener {
         dataModel.clearActiveQuery();
 
         // clear all axis selection graphics
-        for (PCPAxis pcpAxis : axisList) {
+        for (PCPQuantitativeAxis pcpAxis : axisList) {
             if (!pcpAxis.getAxisSelectionList().isEmpty()) {
                 for (PCPAxisSelection pcpAxisSelection : pcpAxis.getAxisSelectionList()) {
                     pane.getChildren().remove(pcpAxisSelection.getGraphicsGroup());
@@ -1023,8 +1031,8 @@ public class PCPView extends Region implements DataModelListener {
         unselectedCanvas.getGraphicsContext2D().setLineDashes(2d, 2d);
 
         for (int iaxis = 1; iaxis < axisList.size(); iaxis++) {
-            PCPAxis axis1 = axisList.get(iaxis);
-            PCPAxis axis0 = axisList.get(iaxis-1);
+            PCPQuantitativeAxis axis1 = axisList.get(iaxis);
+            PCPQuantitativeAxis axis0 = axisList.get(iaxis-1);
 
             if (!(Double.isNaN(axis0.getOverallTypicalLine().getEndY())) &&
                     !(Double.isNaN(axis1.getOverallTypicalLine().getStartY()))) {

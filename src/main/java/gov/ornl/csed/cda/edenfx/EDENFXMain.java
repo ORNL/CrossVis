@@ -990,7 +990,7 @@ public class EDENFXMain extends Application implements DataModelListener {
 
         // write header line with column names
         StringBuffer headerLine = new StringBuffer();
-        for (int icol = 0; icol < dataModel.getColumnCount(); icol++) {
+        for (int icol = 0; icol < dataModel.getQuantitativeColumnCount(); icol++) {
             Column column = dataModel.getColumn(icol);
             if (headerLine.length() == 0) {
                 headerLine.append(column.getName());
@@ -1114,7 +1114,7 @@ public class EDENFXMain extends Application implements DataModelListener {
                 dataTableView.getColumns().add(tableColumn);
             }
 
-            for (int icol = 0; icol < dataModel.getColumnCount(); icol++) {
+            for (int icol = 0; icol < dataModel.getQuantitativeColumnCount(); icol++) {
                 QuantitativeColumn column = dataModel.getColumn(icol);
                 TableColumn<Tuple, Double> tableColumn = new TableColumn<>(column.getName());
                 tableColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<Tuple, Double>, ObservableValue<Double>>() {

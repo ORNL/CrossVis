@@ -2,6 +2,7 @@ package gov.ornl.csed.cda.pcpview;
 
 import gov.ornl.csed.cda.datatable.ColumnSelectionRange;
 import gov.ornl.csed.cda.datatable.DataModel;
+import gov.ornl.csed.cda.datatable.QuantitativeColumn;
 import gov.ornl.csed.cda.util.GraphicsUtil;
 import javafx.application.Platform;
 import javafx.beans.property.DoubleProperty;
@@ -38,7 +39,7 @@ public class PCPAxisSelection {
     public final static Color DEFAULT_SELECTION_RECTANGLE_FILL_COLOR = new Color(Color.YELLOW.getRed(), Color.YELLOW.getGreen(), Color.YELLOW.getBlue(), 0.2);
 
     private DataModel dataModel;
-    private PCPAxis pcpAxis;
+    private PCPQuantitativeAxis pcpAxis;
     private Pane pane;
     private ColumnSelectionRange selectionRange;
 
@@ -56,7 +57,7 @@ public class PCPAxisSelection {
     private DoubleProperty draggingMinValue;
     private DoubleProperty draggingMaxValue;
 
-    public PCPAxisSelection(PCPAxis pcpAxis, ColumnSelectionRange selectionRange, double minValueY, double maxValueY, Pane pane, DataModel dataModel) {
+    public PCPAxisSelection(PCPQuantitativeAxis pcpAxis, ColumnSelectionRange selectionRange, double minValueY, double maxValueY, Pane pane, DataModel dataModel) {
         this.pcpAxis = pcpAxis;
         this.selectionRange = selectionRange;
         this.pane = pane;
@@ -228,7 +229,8 @@ public class PCPAxisSelection {
                 }
 
                 draggingMaxValue.set(GraphicsUtil.mapValue(topY, pcpAxis.getFocusTopY(), pcpAxis.getFocusBottomY(),
-                        pcpAxis.getColumn().getSummaryStats().getMax(), pcpAxis.getColumn().getSummaryStats().getMin()));
+                        ((QuantitativeColumn)pcpAxis.getColumn()).getSummaryStats().getMax(),
+                        ((QuantitativeColumn)pcpAxis.getColumn()).getSummaryStats().getMin()));
 
                 layoutGraphics(getBottomY(), topY);
 //                double maxSelectionValue = GraphicsUtil.mapValue(topY, pcpAxis.getFocusTopY(), pcpAxis.getFocusBottomY(),
@@ -295,7 +297,8 @@ public class PCPAxisSelection {
                 }
 
                 draggingMinValue.set(GraphicsUtil.mapValue(bottomY, pcpAxis.getFocusTopY(), pcpAxis.getFocusBottomY(),
-                        pcpAxis.getColumn().getSummaryStats().getMax(), pcpAxis.getColumn().getSummaryStats().getMin()));
+                        ((QuantitativeColumn)pcpAxis.getColumn()).getSummaryStats().getMax(),
+                        ((QuantitativeColumn)pcpAxis.getColumn()).getSummaryStats().getMin()));
                 layoutGraphics(bottomY, getTopY());
 
 //                double minSelectionValue = GraphicsUtil.mapValue(bottomY, pcpAxis.getFocusTopY(), pcpAxis.getFocusBottomY(),
@@ -358,13 +361,17 @@ public class PCPAxisSelection {
                         maxValue = Math.max(minValue, maxValue);
 
                         // clamp within the bounds of the focus range
-                        minValue = minValue < getPCPAxis().getColumn().getSummaryStats().getMin() ? getPCPAxis().getColumn().getSummaryStats().getMin() : minValue;
-                        maxValue = maxValue > getPCPAxis().getColumn().getSummaryStats().getMax() ? getPCPAxis().getColumn().getSummaryStats().getMax() : maxValue;
+                        minValue = minValue < ((QuantitativeColumn)getPCPAxis().getColumn()).getSummaryStats().getMin() ? ((QuantitativeColumn)getPCPAxis().getColumn()).getSummaryStats().getMin() : minValue;
+                        maxValue = maxValue > ((QuantitativeColumn)getPCPAxis().getColumn()).getSummaryStats().getMax() ? ((QuantitativeColumn)getPCPAxis().getColumn()).getSummaryStats().getMax() : maxValue;
 
                         // find the y positions for the min and max
-                        double topY = GraphicsUtil.mapValue(maxValue, pcpAxis.getColumn().getSummaryStats().getMin(), pcpAxis.getColumn().getSummaryStats().getMax(),
+                        double topY = GraphicsUtil.mapValue(maxValue,
+                                ((QuantitativeColumn)pcpAxis.getColumn()).getSummaryStats().getMin(),
+                                ((QuantitativeColumn)pcpAxis.getColumn()).getSummaryStats().getMax(),
                                 pcpAxis.getFocusBottomY(), pcpAxis.getFocusTopY());
-                        double bottomY = GraphicsUtil.mapValue(minValue, pcpAxis.getColumn().getSummaryStats().getMin(), pcpAxis.getColumn().getSummaryStats().getMax(),
+                        double bottomY = GraphicsUtil.mapValue(minValue,
+                                ((QuantitativeColumn)pcpAxis.getColumn()).getSummaryStats().getMin(),
+                                ((QuantitativeColumn)pcpAxis.getColumn()).getSummaryStats().getMax(),
                                 pcpAxis.getFocusBottomY(), pcpAxis.getFocusTopY());
 
                         // update display and data model values
@@ -410,9 +417,11 @@ public class PCPAxisSelection {
                 }
 
                 draggingMaxValue.set(GraphicsUtil.mapValue(topY, pcpAxis.getFocusTopY(), pcpAxis.getFocusBottomY(),
-                        pcpAxis.getColumn().getSummaryStats().getMax(), pcpAxis.getColumn().getSummaryStats().getMin()));
+                        ((QuantitativeColumn)pcpAxis.getColumn()).getSummaryStats().getMax(),
+                        ((QuantitativeColumn)pcpAxis.getColumn()).getSummaryStats().getMin()));
                 draggingMinValue.set(GraphicsUtil.mapValue(bottomY, pcpAxis.getFocusTopY(), pcpAxis.getFocusBottomY(),
-                        pcpAxis.getColumn().getSummaryStats().getMax(), pcpAxis.getColumn().getSummaryStats().getMin()));
+                        ((QuantitativeColumn)pcpAxis.getColumn()).getSummaryStats().getMax(),
+                        ((QuantitativeColumn)pcpAxis.getColumn()).getSummaryStats().getMin()));
 
                 layoutGraphics(bottomY, topY);
 //                double maxSelectionValue = GraphicsUtil.mapValue(topY, pcpAxis.getFocusTopY(), pcpAxis.getFocusBottomY(),
@@ -457,9 +466,13 @@ public class PCPAxisSelection {
     }
 
     public void relayout() {
-        double topY = GraphicsUtil.mapValue(selectionRange.getMaxValue(), pcpAxis.getColumn().getSummaryStats().getMin(), pcpAxis.getColumn().getSummaryStats().getMax(),
+        double topY = GraphicsUtil.mapValue(selectionRange.getMaxValue(),
+                ((QuantitativeColumn)pcpAxis.getColumn()).getSummaryStats().getMin(),
+                ((QuantitativeColumn)pcpAxis.getColumn()).getSummaryStats().getMax(),
                 pcpAxis.getFocusBottomY(), pcpAxis.getFocusTopY());
-        double bottomY = GraphicsUtil.mapValue(selectionRange.getMinValue(), pcpAxis.getColumn().getSummaryStats().getMin(), pcpAxis.getColumn().getSummaryStats().getMax(),
+        double bottomY = GraphicsUtil.mapValue(selectionRange.getMinValue(),
+                ((QuantitativeColumn)pcpAxis.getColumn()).getSummaryStats().getMin(),
+                ((QuantitativeColumn)pcpAxis.getColumn()).getSummaryStats().getMax(),
                 pcpAxis.getFocusBottomY(), pcpAxis.getFocusTopY());
         layoutGraphics(bottomY, topY);
     }
@@ -560,7 +573,7 @@ public class PCPAxisSelection {
         return selectionRange;
     }
 
-    public PCPAxis getPCPAxis () { return pcpAxis; }
+    public PCPQuantitativeAxis getPCPAxis () { return pcpAxis; }
 
     public Pane getPane() { return pane; }
 }

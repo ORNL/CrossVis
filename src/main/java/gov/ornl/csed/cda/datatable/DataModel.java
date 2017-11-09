@@ -304,41 +304,41 @@ public class DataModel {
 //        }
 //    }
 
-	public OLSMultipleLinearRegression calculateOLSMultipleLinearRegression(
-			QuantitativeColumn yColumn) {
-		regression = new OLSMultipleLinearRegression();
-		regressionYColumn = yColumn;
-
-		int yItemIndex = getColumnIndex(highlightedColumn);
-
-		double[] y = new double[getTupleCount()];
-		double[][] x = new double[getTupleCount()][getColumnCount() - 1];
-
-		for (int i = 0; i < tuples.size(); i++) {
-			Tuple tuple = tuples.get(i);
-			y[i] = tuple.getElement(yItemIndex);
-
-			for (int j = 0, k = 0; j < getColumnCount(); j++) {
-				if (j == yItemIndex) {
-					continue;
-				}
-				x[i][k++] = tuple.getElement(j);
-			}
-		}
-
-		regression.newSampleData(y, x);
-
-		log.info("Regression results:");
-		log.info("rSquared: " + regression.calculateRSquared()
-				+ " rSquaredAdj: " + regression.calculateAdjustedRSquared());
-		double[] beta = regression.estimateRegressionParameters();
-		for (int i = 0; i < beta.length; i++) {
-			log.info("b[" + i + "]: " + beta[i]);
-		}
-
-//		fireDataModelChanged();
-		return regression;
-	}
+//	public OLSMultipleLinearRegression calculateOLSMultipleLinearRegression(
+//			QuantitativeColumn yColumn) {
+//		regression = new OLSMultipleLinearRegression();
+//		regressionYColumn = yColumn;
+//
+//		int yItemIndex = getColumnIndex(highlightedColumn);
+//
+//		double[] y = new double[getTupleCount()];
+//		double[][] x = new double[getTupleCount()][getColumnCount() - 1];
+//
+//		for (int i = 0; i < tuples.size(); i++) {
+//			Tuple tuple = tuples.get(i);
+//			y[i] = tuple.getElement(yItemIndex);
+//
+//			for (int j = 0, k = 0; j < getColumnCount(); j++) {
+//				if (j == yItemIndex) {
+//					continue;
+//				}
+//				x[i][k++] = tuple.getElement(j);
+//			}
+//		}
+//
+//		regression.newSampleData(y, x);
+//
+//		log.info("Regression results:");
+//		log.info("rSquared: " + regression.calculateRSquared()
+//				+ " rSquaredAdj: " + regression.calculateAdjustedRSquared());
+//		double[] beta = regression.estimateRegressionParameters();
+//		for (int i = 0; i < beta.length; i++) {
+//			log.info("b[" + i + "]: " + beta[i]);
+//		}
+//
+////		fireDataModelChanged();
+//		return regression;
+//	}
 
 	public double[] getColumnValues(int columnIndex) {
 		QuantitativeColumn column = columns.get(columnIndex);
@@ -390,6 +390,10 @@ public class DataModel {
 	    return temporalColumn;
     }
 
+    public boolean hasTemporalColumn() {
+		return temporalColumn != null;
+	}
+
 	public QuantitativeColumn getColumn(int idx) {
 		return columns.get(idx);
 	}
@@ -411,9 +415,17 @@ public class DataModel {
 		return tuples.size();
 	}
 
-	public int getColumnCount() {
+	public int getQuantitativeColumnCount() {
 		return columns.size();
 	}
+
+	public int getTotalColumnCount() {
+	    if (temporalColumn == null) {
+	        return columns.size();
+        }
+
+        return 1 + columns.size();
+    }
 
 	public void disableColumn(QuantitativeColumn disabledColumn) {
 		if (!disabledColumns.contains(disabledColumn)) {

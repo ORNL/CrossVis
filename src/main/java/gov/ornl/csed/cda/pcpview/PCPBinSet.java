@@ -2,6 +2,7 @@ package gov.ornl.csed.cda.pcpview;
 
 import gov.ornl.csed.cda.datatable.DataModel;
 import gov.ornl.csed.cda.datatable.Histogram2D;
+import gov.ornl.csed.cda.datatable.QuantitativeColumn;
 import gov.ornl.csed.cda.util.GraphicsUtil;
 import javafx.scene.paint.*;
 
@@ -24,15 +25,15 @@ public class PCPBinSet {
     private Color maxQueryCountFillColor;
     private Color minQueryCountFillColor;
 
-    private PCPAxis leftAxis;
-    private PCPAxis rightAxis;
+    private PCPQuantitativeAxis leftAxis;
+    private PCPQuantitativeAxis rightAxis;
     private DataModel dataModel;
 
     private int binsWithQueries;
 
     private ArrayList<PCPBin> bins;
 
-    public PCPBinSet(PCPAxis leftAxis, PCPAxis rightAxis, DataModel dataModel) {
+    public PCPBinSet(PCPQuantitativeAxis leftAxis, PCPQuantitativeAxis rightAxis, DataModel dataModel) {
         this.leftAxis = leftAxis;
         this.rightAxis = rightAxis;
         this.dataModel = dataModel;
@@ -54,10 +55,10 @@ public class PCPBinSet {
         bins = new ArrayList<>();
         binsWithQueries = 0;
 
-        Histogram2D histogram2D = leftAxis.getColumn().getSummaryStats().getHistogram2DList().get(rightAxis.getColumnDataModelIndex());
+        Histogram2D histogram2D = ((QuantitativeColumn)leftAxis.getColumn()).getSummaryStats().getHistogram2DList().get(rightAxis.getColumnDataModelIndex());
         Histogram2D queryHistogram2D = null;
         if (dataModel.getActiveQuery().hasColumnSelections()) {
-            queryHistogram2D = dataModel.getActiveQuery().getColumnQuerySummaryStats(leftAxis.getColumn()).getHistogram2DList().get(rightAxis.getColumnDataModelIndex());
+            queryHistogram2D = dataModel.getActiveQuery().getColumnQuerySummaryStats((QuantitativeColumn)leftAxis.getColumn()).getHistogram2DList().get(rightAxis.getColumnDataModelIndex());
         }
 
         double leftX = leftAxis.getCenterX();

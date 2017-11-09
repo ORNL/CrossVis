@@ -3,8 +3,12 @@ package gov.ornl.csed.cda.datatable;
 import javafx.beans.property.SimpleObjectProperty;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 
 public class TemporalColumn extends Column {
+
+    private SimpleObjectProperty<LocalDateTime> startLocalDateTime;
+    private SimpleObjectProperty<LocalDateTime> endLocalDateTime;
 
     private SimpleObjectProperty<Instant> startInstant;
     private SimpleObjectProperty<Instant> endInstant;
@@ -15,6 +19,7 @@ public class TemporalColumn extends Column {
 
     public void setStartInstant(Instant startInstant) {
         startInstantProperty().set(startInstant);
+        startLocalDateTimeProperty().set(LocalDateTime.from(startInstant));
     }
 
     public Instant getStartInstant() {
@@ -28,8 +33,16 @@ public class TemporalColumn extends Column {
         return startInstant;
     }
 
+    public SimpleObjectProperty<LocalDateTime> startLocalDateTimeProperty() {
+        if (startLocalDateTime == null) {
+            startLocalDateTime = new SimpleObjectProperty<>(this, "startLocalDateTime");
+        }
+        return startLocalDateTime;
+    }
+
     public void setEndInstant(Instant endInstant) {
         endInstantProperty().set(endInstant);
+        endLocalDateTimeProperty().set(LocalDateTime.from(endInstant));
     }
 
     public Instant getEndInstant() {
@@ -41,5 +54,12 @@ public class TemporalColumn extends Column {
             endInstant = new SimpleObjectProperty<>(this, "endInstant");
         }
         return endInstant;
+    }
+
+    public SimpleObjectProperty<LocalDateTime> endLocalDateTimeProperty() {
+        if (endLocalDateTime == null) {
+            endLocalDateTime = new SimpleObjectProperty<>(this, "endLocalDateTime");
+        }
+        return endLocalDateTime;
     }
 }
