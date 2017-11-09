@@ -1,10 +1,10 @@
 package gov.ornl.csed.cda.datatable;
 
 public class ColumnSortRecord implements Comparable<ColumnSortRecord> {
-	public Column column;
+	public QuantitativeColumn column;
 	public double sortValue;
 
-	public ColumnSortRecord(Column column, double sortValue) {
+	public ColumnSortRecord(QuantitativeColumn column, double sortValue) {
 		this.column = column;
 		this.sortValue = sortValue;
 	}

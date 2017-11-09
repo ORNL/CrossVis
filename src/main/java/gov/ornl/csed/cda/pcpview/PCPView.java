@@ -336,7 +336,7 @@ public class PCPView extends Region implements DataModelListener {
         resize();
     }
 
-    private void addAxis(Column column) {
+    private void addAxis(QuantitativeColumn column) {
         PCPAxis pcpAxis = new PCPAxis(this, column, dataModel, pane);
         pcpAxis.nameTextRotationProperty().bind(nameTextRotationProperty());
         pane.getChildren().add(pcpAxis.getGraphicsGroup());
@@ -345,7 +345,6 @@ public class PCPView extends Region implements DataModelListener {
 
     @Override
     public void dataModelReset(DataModel dataModel) {
-        log.debug("In PCPView.dataModelReset()");
         if (axisList != null && !axisList.isEmpty()) {
             for (PCPAxis pcpAxis : axisList) {
                 pane.getChildren().removeAll(pcpAxis.getGraphicsGroup(), pcpAxis.getHistogramBinRectangleGroup(), pcpAxis.getQueryHistogramBinRectangleGroup());
@@ -362,7 +361,7 @@ public class PCPView extends Region implements DataModelListener {
     }
 
     @Override
-    public void dataModelQueryColumnCleared(DataModel dataModel, Column column) {
+    public void dataModelQueryColumnCleared(DataModel dataModel, QuantitativeColumn column) {
         handleQueryChange();
     }
 
@@ -382,7 +381,7 @@ public class PCPView extends Region implements DataModelListener {
     }
 
     @Override
-    public void dataModelHighlightedColumnChanged(DataModel dataModel, Column oldHighlightedColumn, Column newHighlightedColumn) {
+    public void dataModelHighlightedColumnChanged(DataModel dataModel, QuantitativeColumn oldHighlightedColumn, QuantitativeColumn newHighlightedColumn) {
         if (dataModel.getHighlightedColumn() == null) {
             for (PCPAxis pcpAxis : axisList) {
                 pcpAxis.setHighlighted(false);
@@ -441,7 +440,7 @@ public class PCPView extends Region implements DataModelListener {
     }
 
     @Override
-    public void dataModelColumnDisabled(DataModel dataModel, Column disabledColumn) {
+    public void dataModelColumnDisabled(DataModel dataModel, QuantitativeColumn disabledColumn) {
         for (int iaxis = 0; iaxis < axisList.size(); iaxis++) {
             PCPAxis pcpAxis = axisList.get(iaxis);
             if (pcpAxis.getColumn() == disabledColumn) {
@@ -483,12 +482,12 @@ public class PCPView extends Region implements DataModelListener {
     }
 
     @Override
-    public void dataModelColumnsDisabled(DataModel dataModel, ArrayList<Column> disabledColumns) {
+    public void dataModelColumnsDisabled(DataModel dataModel, ArrayList<QuantitativeColumn> disabledColumns) {
 
     }
 
     @Override
-    public void dataModelColumnEnabled(DataModel dataModel, Column enabledColumn) {
+    public void dataModelColumnEnabled(DataModel dataModel, QuantitativeColumn enabledColumn) {
         // add axis lines to the pane
         addAxis(enabledColumn);
 
@@ -518,9 +517,10 @@ public class PCPView extends Region implements DataModelListener {
     }
 
     @Override
-    public void dataModelColumnNameChanged(DataModel dataModel, Column column) { }
+    public void dataModelColumnNameChanged(DataModel dataModel, QuantitativeColumn column) { }
 
     public void setDataModel (DataModel dataModel) {
+        log.debug("In setDataModel()");
         this.dataModel = dataModel;
         dataModel.addDataModelListener(this);
         resize();
@@ -901,6 +901,7 @@ public class PCPView extends Region implements DataModelListener {
     }
 
     private void resize() {
+        log.debug("in resize()");
         if (dataModel != null && !dataModel.isEmpty()) {
             double pcpHeight = getHeight() - (getInsets().getTop() + getInsets().getBottom());
             double pcpWidth;
@@ -914,6 +915,8 @@ public class PCPView extends Region implements DataModelListener {
                 pcpWidth = axisSpacing * dataModel.getColumnCount();
                 width = (getInsets().getLeft() + getInsets().getRight()) + pcpWidth;
             }
+
+            log.debug("pcpHeight: " + pcpHeight + " pcpWidth: " + pcpWidth);
 
             if (pcpWidth > 0 && pcpHeight > 0) {
                 pane.setPrefSize(width, getHeight());
@@ -963,7 +966,7 @@ public class PCPView extends Region implements DataModelListener {
     }
 
     private void redraw() {
-//        log.debug("redrawing PCPView");
+        log.debug("redrawing PCPView");
 //        pane.setBackground(new Background(new BackgroundFill(backgroundPaint, new CornerRadii(1024), Insets.EMPTY)));
 //        pane.setBorder(new Border(new BorderStroke(borderPaint, BorderStrokeStyle.SOLID, new CornerRadii(1024), new BorderWidths(borderWidth))));
 

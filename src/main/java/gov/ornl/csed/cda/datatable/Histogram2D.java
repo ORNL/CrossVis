@@ -1,15 +1,13 @@
 package gov.ornl.csed.cda.datatable;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.Arrays;
+import java.util.logging.Logger;
 
 /**
  * Created by csg on 8/31/16.
  */
 public class Histogram2D {
-    private final static Logger log = LoggerFactory.getLogger(Histogram2D.class);
+    private final static Logger log = Logger.getLogger(Histogram2D.class.getName());
     private final static double EPSILON = 0.000001;
 
     private String name;
@@ -183,13 +181,13 @@ public class Histogram2D {
             double xValue = xData[i];
             int xBinIndex = (int)((xValue - xMinValue) / xBinSize);
             if (xBinIndex < 0) {
-                log.debug("xBinIndex is < 0 so ignoring this value");
+                log.info("xBinIndex is < 0 so ignoring this value");
                 continue;
             } else if (xBinIndex >= numBins) {
                 if ((Math.abs(xValue - xMaxValue)) <= EPSILON) {
                     xBinIndex = numBins - 1;
                 } else {
-                    log.debug("xBinindex is >= numBins so ignoring this value");
+                    log.info("xBinindex is >= numBins so ignoring this value");
                     continue;
                 }
             }
@@ -197,13 +195,13 @@ public class Histogram2D {
             double yValue = yData[i];
             int yBinIndex = (int)((yValue - yMinValue) / yBinSize);
             if (yBinIndex < 0) {
-                log.debug("yBinIndex is < 0 so ignoring this value");
+                log.info("yBinIndex is < 0 so ignoring this value");
                 continue;
             } else if (yBinIndex >= numBins) {
                 if ((Math.abs(yValue - yMaxValue)) <= EPSILON) {
                     yBinIndex = numBins - 1;
                 } else {
-                    log.debug("yBinIndex is >= numBins so ignoring this value");
+                    log.info("yBinIndex is >= numBins so ignoring this value");
                     continue;
                 }
             }
@@ -229,7 +227,7 @@ public class Histogram2D {
             for (int ix = 0; ix < histogram.getNumBins(); ix++) {
                 line += histogram.getBinCount(ix, iy) + " ";
             }
-            log.debug(line);
+            log.info(line);
         }
     }
 }

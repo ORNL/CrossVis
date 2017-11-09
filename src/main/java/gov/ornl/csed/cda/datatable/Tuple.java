@@ -1,9 +1,13 @@
 package gov.ornl.csed.cda.datatable;
+
 import java.io.Serializable;
+import java.time.Instant;
 import java.util.ArrayList;
 
 public class Tuple implements Serializable {
 	private ArrayList<Double> elements = new ArrayList<>();
+	private Instant instant;
+
 	private boolean queryFlag = true;
 	private int orderFactor = 0;
 
@@ -48,22 +52,14 @@ public class Tuple implements Serializable {
 		elements.set(newElementIndex, tmp);
 	}
 
-	// public void addScatterplotPoint(int x, int y) {
-	// scatterplotPoints.add(new Point(x, y));
-	// }
-	//
-	// public Point getScatterplotPoint(int idx) {
-	// return scatterplotPoints.get(idx);
-	// }
-	//
-	// public int getScatterplotPointCount() {
-	// return scatterplotPoints.size();
-	// }
-	//
-	// public ArrayList<Point> getScatterplotPoints() {
-	// return scatterplotPoints;
-	// }
-	//
+	public void setInstant(Instant instant) {
+	    this.instant = Instant.from(instant);
+    }
+
+    public Instant getInstant() {
+	    return instant;
+    }
+
 	public void setElement(int idx, double value) {
 		elements.set(idx, value);
 	}
@@ -108,30 +104,6 @@ public class Tuple implements Serializable {
 		return orderFactor;
 	}
 
-	//
-	// public int getValueYPosition (int index) {
-	// return ((Integer)yPositions.get(index)).intValue();
-	// }
-	//
-	// public void addValueYPosition (int position) {
-	// yPositions.add(position);
-	// }
-	//
-	// public int getValueXPosition (int index) {
-	// return ((Integer)xPositions.get(index)).intValue();
-	// }
-	//
-	// public void addValueXPosition (int position) {
-	// //xPositions.ensureCapacity(index+1);
-	// xPositions.add(position);
-	// }
-	//
-	// public void clearPositions () {
-	// xPositions.clear();
-	// yPositions.clear();
-	// scatterplotPoints.clear();
-	// }
-	//
 	public int compareTo(Object object) {
 		int otherOrderFactor = ((Tuple) object).getOrderFactor();
 		if (orderFactor < otherOrderFactor) {
@@ -141,21 +113,4 @@ public class Tuple implements Serializable {
 		}
 		return 0;
 	}
-
-	// // TODO move outside this function into the PCPanel.
-	// public Path2D.Float getPCPolyline() {
-	// Path2D.Float path = new Path2D.Float();
-	// // path.moveTo(screen_x, screen_y);
-	//
-	// for (int i = 0; i < xPositions.size(); i++) {
-	// int x = ((Number)xPositions.get(i)).intValue();
-	// int y = ((Number)yPositions.get(i)).intValue();
-	// if (i == 0) {
-	// path.moveTo(x, y);
-	// } else {
-	// path.lineTo(x, y);
-	// }
-	// }
-	// return path;
-	// }
 }

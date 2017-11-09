@@ -16,7 +16,7 @@ public class Query {
     private String id;
     private ListProperty<ColumnSelectionRange> columnSelectionRangeList;
 //    private ArrayList<Tuple> tuples;
-    private HashMap<Column, SummaryStats> columnQuerySummaryStatsMap;
+    private HashMap<QuantitativeColumn, SummaryStats> columnQuerySummaryStatsMap;
     private int maxHistogram2DBinCount;
 
     public Query(String id) {
@@ -44,11 +44,11 @@ public class Query {
         return true;
     }
 
-    public SummaryStats getColumnQuerySummaryStats(Column column) {
+    public SummaryStats getColumnQuerySummaryStats(QuantitativeColumn column) {
         return columnQuerySummaryStatsMap.get(column);
     }
 
-    public void setColumnQuerySummaryStats(Column column, SummaryStats querySummaryStats) {
+    public void setColumnQuerySummaryStats(QuantitativeColumn column, SummaryStats querySummaryStats) {
         columnQuerySummaryStatsMap.put(column, querySummaryStats);
     }
 
@@ -84,7 +84,7 @@ public class Query {
 //        columnQuerySummaryStatsMap.clear();
 //    }
 
-//    public void clearColumnSelection(Column column) {
+//    public void clearColumnSelection(QuantitativeColumn column) {
 //        ArrayList<ColumnSelectionRange> selectionsToRemove = new ArrayList<>();
 //
 //        for (ColumnSelectionRange selection : columnSelectionRangeList) {
@@ -96,7 +96,7 @@ public class Query {
 //        columnSelectionRangeList.removeAll(selectionsToRemove);
 //    }
 
-    public ArrayList<ColumnSelectionRange> getColumnSelectionRanges (Column column) {
+    public ArrayList<ColumnSelectionRange> getColumnSelectionRanges (QuantitativeColumn column) {
         ArrayList<ColumnSelectionRange> rangeList = new ArrayList<>();
 
         for (ColumnSelectionRange columnSelectionRange : columnSelectionRangeList) {
@@ -125,7 +125,7 @@ public class Query {
         return false;
     }
 
-    public ArrayList<ColumnSelectionRange> removeColumnSelectionRanges(Column column) {
+    public ArrayList<ColumnSelectionRange> removeColumnSelectionRanges(QuantitativeColumn column) {
         if (!columnSelectionRangeList.isEmpty()) {
             ArrayList<ColumnSelectionRange> removedRanges = new ArrayList<>();
 

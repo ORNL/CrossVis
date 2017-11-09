@@ -57,6 +57,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Optional;
@@ -189,7 +190,7 @@ public class EDENFXMain extends Application implements DataModelListener {
         columnTableView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue != null) {
 //                log.debug("Column '" + newValue.getName() + "' selected in column table");
-                dataModel.setHighlightedColumn(newValue);
+                dataModel.setHighlightedColumn((QuantitativeColumn)newValue);
 //            } else {
 //                log.debug("SelectedItemProperty changed and new value is null");
             }
@@ -237,13 +238,13 @@ public class EDENFXMain extends Application implements DataModelListener {
 //                                    dataModel.enableColumn(dataModel.getColumn(rowNumber));
                                     Column column = columnTableView.getItems().get(rowNumber);
 
-                                    dataModel.enableColumn(column);
+                                    dataModel.enableColumn((QuantitativeColumn)column);
 //                                    log.debug("Set column '" + column.getName() + "' to enabled");
                                 } else {
                                     // disable an enabled column
                                     // get the column name; disable column in data model
                                     Column column = columnTableView.getItems().get(rowNumber);
-                                    dataModel.disableColumn(column);
+                                    dataModel.disableColumn((QuantitativeColumn)column);
 //                                    log.debug("Set column '" + column.getName() + "' to disabled");
 //                                    sm.clearSelection(rowNumber);
 //                                    log.debug("Would set column " + dataModel.getColumn(rowNumber) + " to disabled");
@@ -1061,7 +1062,7 @@ public class EDENFXMain extends Application implements DataModelListener {
         }
 
         long start = System.currentTimeMillis();
-        IOUtilities.readCSV(f, dataModel);
+        IOUtilities.readCSV(f, null, null, dataModel);
         long elasped = System.currentTimeMillis() - start;
         log.debug("Reading file data took " + elasped + "ms");
 
@@ -1101,9 +1102,20 @@ public class EDENFXMain extends Application implements DataModelListener {
 
         // make a column for each enabled data table column
         if (!dataModel.isEmpty()) {
+            if (dataModel.getTemporalColumn() != null) {
+                TemporalColumn temporalColumn = dataModel.getTemporalColumn();
+                TableColumn<Tuple, Instant> tableColumn = new TableColumn<Tuple, Instant>(temporalColumn.getName());
+                tableColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<Tuple, Instant>, ObservableValue<Instant>>() {
+                    public ObservableValue<Instant> call(TableColumn.CellDataFeatures<Tuple, Instant> t) {
+                        return new ReadOnlyObjectWrapper(t.getValue().getInstant());
+
+                    }
+                });
+                dataTableView.getColumns().add(tableColumn);
+            }
+
             for (int icol = 0; icol < dataModel.getColumnCount(); icol++) {
-                Column column = dataModel.getColumn(icol);
-//                int columnIndex = icol;
+                QuantitativeColumn column = dataModel.getColumn(icol);
                 TableColumn<Tuple, Double> tableColumn = new TableColumn<>(column.getName());
                 tableColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<Tuple, Double>, ObservableValue<Double>>() {
                     public ObservableValue<Double> call(TableColumn.CellDataFeatures<Tuple, Double> t) {
@@ -1137,7 +1149,7 @@ public class EDENFXMain extends Application implements DataModelListener {
     }
 
     @Override
-    public void dataModelQueryColumnCleared(DataModel dataModel, Column column) {
+    public void dataModelQueryColumnCleared(DataModel dataModel, QuantitativeColumn column) {
         removeAllQueriesMI.setDisable(!dataModel.getActiveQuery().hasColumnSelections());
         setDataTableItems();
         updatePercentSelected();
@@ -1169,7 +1181,7 @@ public class EDENFXMain extends Application implements DataModelListener {
     }
 
     @Override
-    public void dataModelHighlightedColumnChanged(DataModel dataModel, Column oldHighlightedColumn, Column newHighlightedColumn) {
+    public void dataModelHighlightedColumnChanged(DataModel dataModel, QuantitativeColumn oldHighlightedColumn, QuantitativeColumn newHighlightedColumn) {
         if (newHighlightedColumn != null) {
             columnTableView.getSelectionModel().select(newHighlightedColumn);
         } else {
@@ -1191,7 +1203,7 @@ public class EDENFXMain extends Application implements DataModelListener {
     public void dataModelNumHistogramBinsChanged(DataModel dataModel) {}
 
     @Override
-    public void dataModelColumnDisabled(DataModel dataModel, Column disabledColumn) {
+    public void dataModelColumnDisabled(DataModel dataModel, QuantitativeColumn disabledColumn) {
         // reset the data table columns
         dataTableView.getItems().clear();
         dataTableView.getColumns().clear();
@@ -1203,12 +1215,12 @@ public class EDENFXMain extends Application implements DataModelListener {
     }
 
     @Override
-    public void dataModelColumnsDisabled(DataModel dataModel, ArrayList<Column> disabledColumns) {
+    public void dataModelColumnsDisabled(DataModel dataModel, ArrayList<QuantitativeColumn> disabledColumns) {
 
     }
 
     @Override
-    public void dataModelColumnEnabled(DataModel dataModel, Column enabledColumn) {
+    public void dataModelColumnEnabled(DataModel dataModel, QuantitativeColumn enabledColumn) {
 
     }
 
@@ -1218,7 +1230,7 @@ public class EDENFXMain extends Application implements DataModelListener {
     }
 
     @Override
-    public void dataModelColumnNameChanged(DataModel dataModel, Column column) {
+    public void dataModelColumnNameChanged(DataModel dataModel, QuantitativeColumn column) {
 
     }
 }

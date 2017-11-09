@@ -3,28 +3,29 @@ package gov.ornl.csed.cda.datatable;
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.apache.commons.math3.stat.regression.OLSMultipleLinearRegression;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.logging.Logger;
 
 public class DataModel {
 	private static final int DEFAULT_NUM_HISTOGRAM_BINS = 50;
     private static final int MAX_NUM_HISTOGRAM_BINS = 100;
 
-    private final static Logger log = LoggerFactory.getLogger(DataModel.class);
+    private final static Logger log = Logger.getLogger(DataModel.class.getName());
+
+    // only one temporal column allowed (can be null)
+    protected TemporalColumn temporalColumn;
 
     // List of enabled tuples
 	protected ArrayList<Tuple> tuples;
 
     // List of enabled columns
-	protected ArrayList<Column> columns;
+	protected ArrayList<QuantitativeColumn> columns;
 
     // List of disabled columns
-	protected ArrayList<Column> disabledColumns;
+	protected ArrayList<QuantitativeColumn> disabledColumns;
 
     // List of tuple elements for disabled columns
     protected ArrayList<Tuple> disabledColumnTuples;
@@ -42,8 +43,8 @@ public class DataModel {
 	private ArrayList<DataModelListener> listeners;
 
     // Special columns
-	private Column highlightedColumn = null;
-	private Column regressionYColumn = null;
+	private QuantitativeColumn highlightedColumn = null;
+	private QuantitativeColumn regressionYColumn = null;
 
     // List of saved queries
 	private ArrayList<Query> savedQueryList;
@@ -88,6 +89,7 @@ public class DataModel {
 			fireNumHistogramBinsChanged();
 		}
 	}
+
 	public final Query getActiveQuery() { return activeQuery; }
 
 	public int getMaxHistogram2DBinCount() { return maxHistogram2DBinCount; }
@@ -100,17 +102,17 @@ public class DataModel {
 		return regression;
 	}
 
-	public Column getOLSMultipleLinearRegressionDependentColumn() {
+	public QuantitativeColumn getOLSMultipleLinearRegressionDependentColumn() {
 		return regressionYColumn;
 	}
 
-	public Column getHighlightedColumn() {
+	public QuantitativeColumn getHighlightedColumn() {
 		return highlightedColumn;
 	}
 
-	public void setHighlightedColumn(Column column) {
+	public void setHighlightedColumn(QuantitativeColumn column) {
         if (column != highlightedColumn) {
-            Column oldHighlightedColumn = highlightedColumn;
+            QuantitativeColumn oldHighlightedColumn = highlightedColumn;
 
             if (column == null) {
                 highlightedColumn = null;
@@ -122,7 +124,7 @@ public class DataModel {
         }
 	}
 
-	public int runMulticollinearityFilter(Column dependentColumn,
+	public int runMulticollinearityFilter(QuantitativeColumn dependentColumn,
 			boolean useQueryCorrelations, double significantCorrelationThreshold) {
 		if (dependentColumn == null) {
 			return -1;
@@ -134,7 +136,7 @@ public class DataModel {
 		}
 
 		ArrayList<ColumnSortRecord> sortedColumnList = new ArrayList<ColumnSortRecord>();
-		for (Column column : columns) {
+		for (QuantitativeColumn column : columns) {
 			if (column == dependentColumn) {
 				continue;
 			}
@@ -160,24 +162,24 @@ public class DataModel {
 		Object sortedRecords[] = sortedColumnList.toArray();
 		Arrays.sort(sortedRecords);
 
-		ArrayList<Column> removeColumnList = new ArrayList<Column>();
+		ArrayList<QuantitativeColumn> removeColumnList = new ArrayList<QuantitativeColumn>();
 
-		log.debug("Sorted enabled columns by correlation coefficients with the dependent column");
+		log.info("Sorted enabled columns by correlation coefficients with the dependent column");
 		for (int i = 0; i < sortedRecords.length; i++) {
 			ColumnSortRecord colRecord = (ColumnSortRecord) sortedRecords[i];
-			log.debug(i + ": " + colRecord.column.getName() + " - " + colRecord.sortValue);
+			log.info(i + ": " + colRecord.column.getName() + " - " + colRecord.sortValue);
 
 			if (removeColumnList.contains(colRecord.column)) {
 				continue;
 			}
 
-			log.debug("Inspecting column '" + colRecord.column.getName());
+			log.info("Inspecting column '" + colRecord.column.getName());
 
 			for (int j = 0; j < columns.size(); j++) {
 				if (j == dependentColumnIdx) {
 					continue;
 				}
-				Column column = columns.get(j);
+				QuantitativeColumn column = columns.get(j);
 				if (removeColumnList.contains(column)) {
 					continue;
 				}
@@ -196,7 +198,7 @@ public class DataModel {
 				}
 
 				if (corrCoef > significantCorrelationThreshold) {
-					log.debug("Removed column '" + column.getName() + "'" + "corrCoef=" + corrCoef);
+					log.info("Removed column '" + column.getName() + "'" + "corrCoef=" + corrCoef);
 					removeColumnList.add(column);
 				}
 			}
@@ -206,7 +208,7 @@ public class DataModel {
 		return removeColumnList.size();
 	}
 
-	public void setData(ArrayList<Tuple> tuples, ArrayList<Column> columns) {
+	public void setData(ArrayList<Tuple> tuples, ArrayList<QuantitativeColumn> columns, TemporalColumn temporalColumn) {
 		if (columns.isEmpty()) {
 			return;
 		}
@@ -222,6 +224,7 @@ public class DataModel {
         disabledColumnTuples.clear();
 		this.columns.clear();
 		this.columns.addAll(columns);
+		this.temporalColumn = temporalColumn;
 		this.disabledColumns.clear();
 		this.regression = null;
 		this.regressionYColumn = null;
@@ -253,7 +256,7 @@ public class DataModel {
 		fireDataModelReset();
 	}
 
-	public void setColumnName(Column column, String name) {
+	public void setColumnName(QuantitativeColumn column, String name) {
 		if (columns.contains(column)) {
 			column.setName(name);
 			fireColumnNameChanged(column);
@@ -263,11 +266,11 @@ public class DataModel {
 		 }
 	}
 
-	public ArrayList<Column> getColumns() {
+	public ArrayList<QuantitativeColumn> getColumns() {
 		return columns;
 	}
 
-//	public void setColumns(ArrayList<Column> columns) {
+//	public void setColumns(ArrayList<QuantitativeColumn> columns) {
 //		highlightedColumn = null;
 //		this.columns.clear();
 //		this.columns.addAll(columns);
@@ -279,7 +282,7 @@ public class DataModel {
 		return tuples;
 	}
 
-//    public void makeColumnDiscrete(Column column) {
+//    public void makeColumnDiscrete(QuantitativeColumn column) {
 //        if (column.isContinuous()) {
 //            column.makeDiscrete();
 //            calculateStatistics();
@@ -290,7 +293,7 @@ public class DataModel {
 //        }
 //    }
 //
-//    public void makeColumnContinuous(Column column) {
+//    public void makeColumnContinuous(QuantitativeColumn column) {
 //        if (column.isDiscrete()) {
 //            column.makeContinuous();
 //            calculateStatistics();
@@ -302,7 +305,7 @@ public class DataModel {
 //    }
 
 	public OLSMultipleLinearRegression calculateOLSMultipleLinearRegression(
-			Column yColumn) {
+			QuantitativeColumn yColumn) {
 		regression = new OLSMultipleLinearRegression();
 		regressionYColumn = yColumn;
 
@@ -325,12 +328,12 @@ public class DataModel {
 
 		regression.newSampleData(y, x);
 
-		log.debug("Regression results:");
-		log.debug("rSquared: " + regression.calculateRSquared()
+		log.info("Regression results:");
+		log.info("rSquared: " + regression.calculateRSquared()
 				+ " rSquaredAdj: " + regression.calculateAdjustedRSquared());
 		double[] beta = regression.estimateRegressionParameters();
 		for (int i = 0; i < beta.length; i++) {
-			log.debug("b[" + i + "]: " + beta[i]);
+			log.info("b[" + i + "]: " + beta[i]);
 		}
 
 //		fireDataModelChanged();
@@ -338,7 +341,7 @@ public class DataModel {
 	}
 
 	public double[] getColumnValues(int columnIndex) {
-		Column column = columns.get(columnIndex);
+		QuantitativeColumn column = columns.get(columnIndex);
 
 		double[] values = new double[tuples.size()];
 
@@ -351,7 +354,7 @@ public class DataModel {
 	}
 
 	public double[] getColumnQueriedValues(int columnIndex) {
-		Column column = columns.get(columnIndex);
+		QuantitativeColumn column = columns.get(columnIndex);
 
 		double[] values = new double[queriedTuples.size()];
 //		double[] values = new double[getActiveQuery().getTuples().size()];
@@ -383,12 +386,16 @@ public class DataModel {
 		return tuples.get(idx);
 	}
 
-	public Column getColumn(int idx) {
+	public TemporalColumn getTemporalColumn() {
+	    return temporalColumn;
+    }
+
+	public QuantitativeColumn getColumn(int idx) {
 		return columns.get(idx);
 	}
 
-	public Column getColumn(String columnName) {
-		for (Column column : columns) {
+	public QuantitativeColumn getColumn(String columnName) {
+		for (QuantitativeColumn column : columns) {
 			if (column.getName().equals(columnName)) {
 				return column;
 			}
@@ -396,7 +403,7 @@ public class DataModel {
 		return null;
 	}
 
-	public int getColumnIndex(Column column) {
+	public int getColumnIndex(QuantitativeColumn column) {
 		return columns.indexOf(column);
 	}
 
@@ -408,7 +415,7 @@ public class DataModel {
 		return columns.size();
 	}
 
-	public void disableColumn(Column disabledColumn) {
+	public void disableColumn(QuantitativeColumn disabledColumn) {
 		if (!disabledColumns.contains(disabledColumn)) {
             int disabledColumnIndex = columns.indexOf(disabledColumn);
             removeTupleElementsForColumn(disabledColumn);
@@ -429,7 +436,7 @@ public class DataModel {
             setQueriedTuples();
 //            clearActiveQueryColumnSelections(disabledColumn);
 
-            for (Column column : columns) {
+            for (QuantitativeColumn column : columns) {
                 column.getSummaryStats().getCorrelationCoefficients().remove(disabledColumnIndex);
                 column.getSummaryStats().getHistogram2DList().remove(disabledColumnIndex);
             }
@@ -438,8 +445,8 @@ public class DataModel {
 		}
 	}
 
-    public void disableColumns(ArrayList<Column> columns) {
-		for (Column column : columns) {
+    public void disableColumns(ArrayList<QuantitativeColumn> columns) {
+		for (QuantitativeColumn column : columns) {
 			if (!disabledColumns.contains(column)) {
                 removeTupleElementsForColumn(column);
 				column.setEnabled(false);
@@ -458,7 +465,7 @@ public class DataModel {
 		fireColumnsDisabled(columns);
 	}
 
-	public void enableColumn(Column column) {
+	public void enableColumn(QuantitativeColumn column) {
 		if (disabledColumns.contains(column)) {
             // move elements from disable column tuples to active tuples list
             addTupleElementsForDisabledColumn(column);
@@ -476,14 +483,14 @@ public class DataModel {
 		return disabledColumns.size();
 	}
 
-	public ArrayList<Column> getDisabledColumns() {
+	public ArrayList<QuantitativeColumn> getDisabledColumns() {
 		return disabledColumns;
 	}
 
 	public void clearColumnSelectionRange (ColumnSelectionRange selectionRange) {
 		getActiveQuery().removeColumnSelectionRange(selectionRange);
         if (!getActiveQuery().hasColumnSelections()) {
-            for (Column column : columns) {
+            for (QuantitativeColumn column : columns) {
                 column.setQueryMeanValue(Double.NaN);
                 column.setQueryStandardDeviationValue(Double.NaN);
             }
@@ -554,14 +561,14 @@ public class DataModel {
 
 	public void clearActiveQuery() {
         activeQuery = new Query("Q" + (nextQueryNumber++));
-        for (Column column : columns) {
+        for (QuantitativeColumn column : columns) {
             column.setQueryStandardDeviationValue(Double.NaN);
             column.setQueryMeanValue(Double.NaN);
         }
         fireQueryCleared();
 	}
 
-	public void clearActiveQueryColumnSelections(Column column) {
+	public void clearActiveQueryColumnSelections(QuantitativeColumn column) {
 		if (activeQuery != null) {
             getActiveQuery().removeColumnSelectionRanges(column);
             setQueriedTuples();
@@ -611,16 +618,16 @@ public class DataModel {
 //		return newColumnSelectionRange;
 	}
 
-    public void orderColumnsByCorrelation (Column compareColumn, boolean useQueryCorrelations) {
+    public void orderColumnsByCorrelation (QuantitativeColumn compareColumn, boolean useQueryCorrelations) {
         int compareColumnIndex = getColumnIndex(compareColumn);
 
-        ArrayList<Column> newColumnList = new ArrayList<Column>();
+        ArrayList<QuantitativeColumn> newColumnList = new ArrayList<QuantitativeColumn>();
         ArrayList<ColumnSortRecord> positiveColumnList = new ArrayList<ColumnSortRecord>();
         ArrayList<ColumnSortRecord> negativeColumnList = new ArrayList<ColumnSortRecord>();
         ArrayList<ColumnSortRecord> nanColumnList = new ArrayList<ColumnSortRecord>();
 
         for (int i = 0; i < columns.size(); i++) {
-            Column column = columns.get(i);
+            QuantitativeColumn column = columns.get(i);
             if (column == compareColumn) {
                 continue;
             }
@@ -677,20 +684,20 @@ public class DataModel {
         changeColumnOrder(newColumnList);
     }
 
-    public void changeColumnOrder(Column column, int newColumnIndex) {
-		ArrayList<Column> newColumnOrder = new ArrayList<>(columns);
+    public void changeColumnOrder(QuantitativeColumn column, int newColumnIndex) {
+		ArrayList<QuantitativeColumn> newColumnOrder = new ArrayList<>(columns);
 		newColumnOrder.remove(newColumnOrder.indexOf(column));
 		newColumnOrder.add(newColumnIndex, column);
 
 		changeColumnOrder(newColumnOrder);
 	}
 
-    public void changeColumnOrder(ArrayList<Column> newColumnOrder) {
+    public void changeColumnOrder(ArrayList<QuantitativeColumn> newColumnOrder) {
         // determine destination indices for new column order
         int dstColumnIndices[] = new int[newColumnOrder.size()];
         for (int i = 0; i < newColumnOrder.size(); i++) {
             // find index of column in new column order
-            Column column = newColumnOrder.get(i);
+            QuantitativeColumn column = newColumnOrder.get(i);
             dstColumnIndices[i] = columns.indexOf(column);
         }
 
@@ -699,7 +706,7 @@ public class DataModel {
 
         // rearrange column correlation coefficients
         for (int iColumn = 0; iColumn < columns.size(); iColumn++) {
-            Column column = columns.get(iColumn);
+            QuantitativeColumn column = columns.get(iColumn);
             ArrayList<Double> corrCoef = column.getSummaryStats().getCorrelationCoefficients();
             ArrayList<Double> newCorrCoef = new ArrayList<Double>();
             for (int iCorrCoef = 0; iCorrCoef < corrCoef.size(); iCorrCoef++) {
@@ -729,7 +736,7 @@ public class DataModel {
         // move query statistics to reflect new column order
         if (getActiveQuery().hasColumnSelections()) {
             for (int iColumn = 0; iColumn < columns.size(); iColumn++) {
-                Column column = columns.get(iColumn);
+                QuantitativeColumn column = columns.get(iColumn);
                 SummaryStats summaryStats = getActiveQuery().getColumnQuerySummaryStats(column);
                 ArrayList<Double> corrCoef = summaryStats.getCorrelationCoefficients();
                 ArrayList<Double> newCorrCoef = new ArrayList<Double>();
@@ -779,7 +786,7 @@ public class DataModel {
                 currentTuple.setQueryFlag(true);
 
                 for (int icolumn = 0; icolumn < columns.size(); icolumn++) {
-                    Column column = columns.get(icolumn);
+                    QuantitativeColumn column = columns.get(icolumn);
                     ArrayList<ColumnSelectionRange> columnSelectionRanges = getActiveQuery().getColumnSelectionRanges(column);
                     if ((columnSelectionRanges != null) && (!columnSelectionRanges.isEmpty())) {
                         boolean insideSelection = false;
@@ -814,19 +821,19 @@ public class DataModel {
                 tuple.setQueryFlag(false);
 				nonQueriedTuples.add(tuple);
             }
-            for (Column column : columns) {
+            for (QuantitativeColumn column : columns) {
 				column.setQueryMeanValue(Double.NaN);
 				column.setQueryStandardDeviationValue(Double.NaN);
 			}
         }
 
-        log.debug("After setQueriedTuples() with " + tuples.size() + " total tuples: Queried tuples set size is " + queriedTuples.size() + ", nonQueried tuples set size is " + nonQueriedTuples.size());
-//        log.debug("after setQueriedTuples() number of queried tuples is " + getActiveQuery().getTuples().size() + " queryTuplesSet size " + queriedTuples.size() + " nonQueriedTuplesSet size " + nonQueriedTuples.size());
+        log.info("After setQueriedTuples() with " + tuples.size() + " total tuples: Queried tuples set size is " + queriedTuples.size() + ", nonQueried tuples set size is " + nonQueriedTuples.size());
+//        log.info("after setQueriedTuples() number of queried tuples is " + getActiveQuery().getTuples().size() + " queryTuplesSet size " + queriedTuples.size() + " nonQueriedTuplesSet size " + nonQueriedTuples.size());
     }
 
     // get index of column and remove all tuple elements at this index
     // add the tuple elements to a list of disabledColumnTuples for later enabling
-    private void removeTupleElementsForColumn(Column column) {
+    private void removeTupleElementsForColumn(QuantitativeColumn column) {
         int columnIndex = columns.indexOf(column);
 
         for (int iTuple = 0; iTuple < tuples.size(); iTuple++) {
@@ -845,7 +852,7 @@ public class DataModel {
         }
     }
 
-    private void addTupleElementsForDisabledColumn(Column column) {
+    private void addTupleElementsForDisabledColumn(QuantitativeColumn column) {
         int columnIndex = disabledColumns.indexOf(column);
         if (columnIndex != -1) {
             for (int iTuple = 0; iTuple < disabledColumnTuples.size(); iTuple++) {
@@ -869,7 +876,7 @@ public class DataModel {
         double[][] data = new double[columns.size()][];
 
         for (int icolumn = 0; icolumn < columns.size(); icolumn++) {
-            Column column = columns.get(icolumn);
+            QuantitativeColumn column = columns.get(icolumn);
             data[icolumn] = getColumnQueriedValues(icolumn);
             DescriptiveStatistics stats = new DescriptiveStatistics(data[icolumn]);
 
@@ -939,7 +946,7 @@ public class DataModel {
 
         getActiveQuery().setMaxHistogram2DBinCount(0);
         for (int ix = 0; ix < columns.size(); ix++) {
-            Column column = columns.get(ix);
+            QuantitativeColumn column = columns.get(ix);
             SummaryStats columnSummaryStats = getActiveQuery().getColumnQuerySummaryStats(column);
 
             ArrayList<Double> coefList = new ArrayList<>();
@@ -979,7 +986,7 @@ public class DataModel {
         double[][] data = new double[columns.size()][];
 
         for (int icolumn = 0; icolumn < columns.size(); icolumn++) {
-            Column column = columns.get(icolumn);
+            QuantitativeColumn column = columns.get(icolumn);
 
             data[icolumn] = getColumnValues(icolumn);
 
@@ -990,7 +997,7 @@ public class DataModel {
 //				}
 //			}
 //
-//			log.debug("Number of NaN values for column " + column.getName() + " is " + nanCounter);
+//			log.info("Number of NaN values for column " + column.getName() + " is " + nanCounter);
 
             // calculate descriptive statistics
             DescriptiveStatistics stats = new DescriptiveStatistics(data[icolumn]);
@@ -1059,7 +1066,7 @@ public class DataModel {
         PearsonsCorrelation pCorr = new PearsonsCorrelation();
 
         for (int ix = 0; ix < columns.size(); ix++) {
-            Column column = columns.get(ix);
+            QuantitativeColumn column = columns.get(ix);
             ArrayList<Histogram2D> histogram2DArrayList = new ArrayList<Histogram2D>();
             ArrayList<Double> coefList = new ArrayList<>();
 
@@ -1093,19 +1100,19 @@ public class DataModel {
 		}
 	}
 
-	private void fireColumnDisabled(Column column) {
+	private void fireColumnDisabled(QuantitativeColumn column) {
 		for (DataModelListener listener : listeners) {
 			listener.dataModelColumnDisabled(this, column);
 		}
 	}
 
-	private void fireColumnsDisabled(ArrayList<Column> disabledColumns) {
+	private void fireColumnsDisabled(ArrayList<QuantitativeColumn> disabledColumns) {
 		for (DataModelListener listener : listeners) {
 			listener.dataModelColumnsDisabled(this, disabledColumns);
 		}
 	}
 
-	private void fireColumnEnabled(Column column) {
+	private void fireColumnEnabled(QuantitativeColumn column) {
 		for (DataModelListener listener : listeners) {
 			listener.dataModelColumnEnabled(this, column);
 		}
@@ -1117,7 +1124,7 @@ public class DataModel {
 		}
 	}
 
-	private void fireColumnNameChanged(Column column) {
+	private void fireColumnNameChanged(QuantitativeColumn column) {
 		for (DataModelListener listener : listeners) {
 			listener.dataModelColumnNameChanged(this, column);
 		}
@@ -1141,7 +1148,7 @@ public class DataModel {
 		}
 	}
 
-	public void fireHighlightedColumnChanged(Column oldHighlightedColumn) {
+	public void fireHighlightedColumnChanged(QuantitativeColumn oldHighlightedColumn) {
 		for (DataModelListener listener : listeners) {
 			listener.dataModelHighlightedColumnChanged(this, oldHighlightedColumn, highlightedColumn);
 		}
@@ -1171,7 +1178,7 @@ public class DataModel {
 		}
 	}
 
-	public void fireQueryColumnCleared(Column column) {
+	public void fireQueryColumnCleared(QuantitativeColumn column) {
         for (DataModelListener listener : listeners) {
             listener.dataModelQueryColumnCleared(this, column);
         }

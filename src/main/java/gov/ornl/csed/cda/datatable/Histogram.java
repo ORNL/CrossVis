@@ -1,7 +1,5 @@
 package gov.ornl.csed.cda.datatable;
 
-import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
-
 import java.util.Arrays;
 
 /**

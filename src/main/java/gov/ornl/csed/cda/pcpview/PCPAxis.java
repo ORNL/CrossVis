@@ -64,7 +64,7 @@ public class PCPAxis {
     public final static double DEFAULT_STROKE_WIDTH = 1.5;
 
     private DataModel dataModel;
-    private Column column;
+    private QuantitativeColumn column;
 
     private double centerX;
     private Rectangle bounds;
@@ -138,7 +138,7 @@ public class PCPAxis {
 
     private PCPView pcpView;
 
-    public PCPAxis(PCPView pcpView, Column column, DataModel dataModel, Pane pane) {
+    public PCPAxis(PCPView pcpView, QuantitativeColumn column, DataModel dataModel, Pane pane) {
         this.pcpView = pcpView;
         this.column = column;
 //        this.dataModelIndex = dataModelIndex;
@@ -625,7 +625,7 @@ public class PCPAxis {
 
     public Rectangle getVerticalBar() { return verticalBar; }
 
-    public Column getColumn() { return column; }
+    public QuantitativeColumn getColumn() { return column; }
     public int getColumnDataModelIndex() { return dataModel.getColumnIndex(getColumn()); }
 
     public double getFocusTopY() { return focusTopY; }

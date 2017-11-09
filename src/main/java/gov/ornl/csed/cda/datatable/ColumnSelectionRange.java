@@ -1,16 +1,17 @@
 package gov.ornl.csed.cda.datatable;
 
-import javafx.beans.property.*;
+import javafx.beans.property.ListProperty;
+import javafx.beans.property.SimpleListProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
 public class ColumnSelectionRange {
-    private Column column;
+    private QuantitativeColumn column;
     private ListProperty<Double> rangeValues;
 //    private DoubleProperty minValue;
 //    private DoubleProperty maxValue;
 
-    public ColumnSelectionRange(Column column, double minValue, double maxValue) {
+    public ColumnSelectionRange(QuantitativeColumn column, double minValue, double maxValue) {
         this.column = column;
         rangeValues = new SimpleListProperty<>();
         ObservableList<Double> observableList = FXCollections.observableArrayList(minValue, maxValue);
@@ -20,7 +21,7 @@ public class ColumnSelectionRange {
 //        this.maxValue = new SimpleDoubleProperty(maxValue);
     }
 
-    public final Column getColumn() { return column; }
+    public final QuantitativeColumn getColumn() { return column; }
 
     public final double getMinValue() { return rangeValues.get(0); }
 

@@ -31,7 +31,7 @@ public class NetFlowIPMapTest {
                 while (st.hasMoreTokens()) {
                     String token = st.nextToken(",");
                     headerLine.add(token.trim());
-//                    Column column = new Column(token.trim());
+//                    QuantitativeColumn column = new QuantitativeColumn(token.trim());
 //                    columns.add(column);
                     token_counter++;
                 }
