@@ -2,23 +2,16 @@ package gov.ornl.csed.cda.pcpview;
 
 import gov.ornl.csed.cda.datatable.DataModel;
 import gov.ornl.csed.cda.datatable.TemporalColumn;
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.scene.Group;
-import javafx.scene.control.Tooltip;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
-import javafx.util.converter.LocalDateStringConverter;
+import javafx.scene.text.TextAlignment;
 import javafx.util.converter.LocalDateTimeStringConverter;
-import javafx.util.converter.NumberStringConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.awt.geom.Rectangle2D;
 
 public class PCPTemporalAxis extends PCPAxis {
     public final static Logger log = LoggerFactory.getLogger(PCPTemporalAxis.class);
@@ -30,6 +23,8 @@ public class PCPTemporalAxis extends PCPAxis {
     public final static double DEFAULT_BAR_WIDTH = 10d;
     public final static double DEFAULT_TEXT_SIZE = 10d;
     public final static double DEFAULT_STROKE_WIDTH = 1.5;
+    
+    public final static double DEFAULT_OVERVIEW_QUERY_BAR_SPACING = 30d;
 
 //    private TemporalColumn column;
 
@@ -39,12 +34,16 @@ public class PCPTemporalAxis extends PCPAxis {
     private Rectangle overviewAxisBar;
     private Line overViewTopCrossBarLine;
     private Line overviewBottomCrossBarLine;
+
+    private Text overviewStartInstantText;
+    private Text overviewEndInstantText;
+
     private Rectangle detailAxisBar;
     private Line detailTopCrossBarLine;
     private Line detailBottomCrossBarLine;
 
-    private Text startInstantText;
-    private Text endInstantText;
+    private Text detailStartInstantText;
+    private Text detailEndInstantText;
 
     public PCPTemporalAxis(PCPView pcpView, TemporalColumn column, DataModel dataModel, Pane pane) {
         super(pcpView, column, dataModel, pane);
@@ -57,15 +56,25 @@ public class PCPTemporalAxis extends PCPAxis {
         barTopY = 0d;
         barBottomY = 0d;
 
-        startInstantText = new Text();
-        startInstantText.textProperty().bindBidirectional(temporalColumn().startLocalDateTimeProperty(), new LocalDateTimeStringConverter());
-        startInstantText.setFont(new Font(DEFAULT_TEXT_SIZE));
-        startInstantText.setSmooth(true);
+        overviewStartInstantText = new Text();
+        overviewStartInstantText.textProperty().bindBidirectional(temporalColumn().startLocalDateTimeProperty(), new LocalDateTimeStringConverter());
+        overviewStartInstantText.setFont(new Font(DEFAULT_TEXT_SIZE));
+        overviewStartInstantText.setSmooth(true);
 
-        endInstantText = new Text();
-        endInstantText.textProperty().bindBidirectional(column.endLocalDateTimeProperty(), new LocalDateTimeStringConverter());
-        endInstantText.setFont(new Font(DEFAULT_TEXT_SIZE));
-        endInstantText.setSmooth(true);
+        overviewEndInstantText = new Text();
+        overviewEndInstantText.textProperty().bindBidirectional(column.endLocalDateTimeProperty(), new LocalDateTimeStringConverter());
+        overviewEndInstantText.setFont(new Font(DEFAULT_TEXT_SIZE));
+        overviewEndInstantText.setSmooth(true);
+
+        detailStartInstantText = new Text();
+        detailStartInstantText.textProperty().bindBidirectional(column.queryStartLocalDateTimeProperty(), new LocalDateTimeStringConverter());
+        detailStartInstantText.setFont(new Font(DEFAULT_TEXT_SIZE));
+        detailStartInstantText.setSmooth(true);
+
+        detailEndInstantText = new Text();
+        detailEndInstantText.textProperty().bindBidirectional(column.queryEndLocalDateTimeProperty(), new LocalDateTimeStringConverter());
+        detailEndInstantText.setFont(new Font(DEFAULT_TEXT_SIZE));
+        detailEndInstantText.setSmooth(true);
 
         overviewAxisBar = new Rectangle();
         overviewAxisBar.setStroke(Color.DARKGRAY);
@@ -73,11 +82,22 @@ public class PCPTemporalAxis extends PCPAxis {
         overviewAxisBar.setSmooth(true);
         overviewAxisBar.setStrokeWidth(DEFAULT_STROKE_WIDTH);
 
+        detailAxisBar = new Rectangle();
+        detailAxisBar.setStroke(Color.DARKGRAY);
+        detailAxisBar.setFill(Color.WHITESMOKE);
+        detailAxisBar.setSmooth(true);
+        detailAxisBar.setStrokeWidth(DEFAULT_STROKE_WIDTH);
+
         overViewTopCrossBarLine = makeLine();
         overviewBottomCrossBarLine = makeLine();
 
-        graphicsGroup.getChildren().addAll(overviewAxisBar, overViewTopCrossBarLine, overviewBottomCrossBarLine,
-                startInstantText, endInstantText);
+        detailTopCrossBarLine = makeLine();
+        detailBottomCrossBarLine = makeLine();
+
+        graphicsGroup.getChildren().addAll(overviewAxisBar, detailAxisBar, overViewTopCrossBarLine,
+                overviewBottomCrossBarLine, detailTopCrossBarLine, detailBottomCrossBarLine,
+                overviewStartInstantText, overviewEndInstantText, detailStartInstantText,
+                detailEndInstantText);
 
         registerListeners();
     }
@@ -96,23 +116,41 @@ public class PCPTemporalAxis extends PCPAxis {
         double left = centerX - (width / 2d);
         bounds = new Rectangle(left, topY, width, height);
         barTopY = topY + DEFAULT_NAME_LABEL_HEIGHT;
-        barBottomY = bounds.getY() + bounds.getHeight() - endInstantText.getLayoutBounds().getHeight();
+        barBottomY = bounds.getY() + bounds.getHeight() - overviewEndInstantText.getLayoutBounds().getHeight();
 
-        overviewAxisBar.setX(centerX - (DEFAULT_BAR_WIDTH / 2d));
+        double overviewBarCenterX = centerX - (DEFAULT_OVERVIEW_QUERY_BAR_SPACING / 2d);
+        double detailBarCenterX = overviewBarCenterX + DEFAULT_OVERVIEW_QUERY_BAR_SPACING;
+        
+        overviewAxisBar.setX(overviewBarCenterX - (DEFAULT_BAR_WIDTH / 2d));
         overviewAxisBar.setY(barTopY);
         overviewAxisBar.setWidth(DEFAULT_BAR_WIDTH);
         overviewAxisBar.setHeight(barBottomY - barTopY);
 
         overViewTopCrossBarLine.setStartY(barTopY);
         overViewTopCrossBarLine.setEndY(barTopY);
-        overViewTopCrossBarLine.setStartX(centerX - (DEFAULT_BAR_WIDTH / 2.));
-        overViewTopCrossBarLine.setEndX(centerX + (DEFAULT_BAR_WIDTH / 2.));
+        overViewTopCrossBarLine.setStartX(overviewBarCenterX - (DEFAULT_BAR_WIDTH / 2.));
+        overViewTopCrossBarLine.setEndX(overviewBarCenterX + (DEFAULT_BAR_WIDTH / 2.));
 
         overviewBottomCrossBarLine.setStartY(barBottomY);
         overviewBottomCrossBarLine.setEndY(barBottomY);
-        overviewBottomCrossBarLine.setStartX(centerX - (DEFAULT_BAR_WIDTH / 2.));
-        overviewBottomCrossBarLine.setEndX(centerX + (DEFAULT_BAR_WIDTH / 2.));
+        overviewBottomCrossBarLine.setStartX(overviewBarCenterX - (DEFAULT_BAR_WIDTH / 2.));
+        overviewBottomCrossBarLine.setEndX(overviewBarCenterX + (DEFAULT_BAR_WIDTH / 2.));
 
+        detailAxisBar.setX(detailBarCenterX - (DEFAULT_BAR_WIDTH / 2d));
+        detailAxisBar.setY(barTopY);
+        detailAxisBar.setWidth(DEFAULT_BAR_WIDTH);
+        detailAxisBar.setHeight(barBottomY - barTopY);
+
+        detailTopCrossBarLine.setStartY(barTopY);
+        detailTopCrossBarLine.setEndY(barTopY);
+        detailTopCrossBarLine.setStartX(detailBarCenterX - (DEFAULT_BAR_WIDTH / 2.));
+        detailTopCrossBarLine.setEndX(detailBarCenterX + (DEFAULT_BAR_WIDTH / 2.));
+
+        detailBottomCrossBarLine.setStartY(barBottomY);
+        detailBottomCrossBarLine.setEndY(barBottomY);
+        detailBottomCrossBarLine.setStartX(detailBarCenterX - (DEFAULT_BAR_WIDTH / 2.));
+        detailBottomCrossBarLine.setEndX(detailBarCenterX + (DEFAULT_BAR_WIDTH / 2.));
+        
         nameText.setText(column.getName());
         if (nameText.getLayoutBounds().getWidth() > bounds.getWidth()) {
             // truncate the column name to fit axis bounds
@@ -130,13 +168,21 @@ public class PCPTemporalAxis extends PCPAxis {
 //        nameText.setY(barTopY - (DEFAULT_NAME_LABEL_HEIGHT / 2.));
 //        nameText.setRotate(-10.);
 
-        startInstantText.setX(bounds.getX() + ((width - startInstantText.getLayoutBounds().getWidth()) / 2.));
-        startInstantText.setY(barBottomY + startInstantText.getLayoutBounds().getHeight());
+//        overviewStartInstantText.setX(bounds.getX() + ((width - overviewStartInstantText.getLayoutBounds().getWidth()) / 2.));
+        overviewStartInstantText.setX(overviewAxisBar.getLayoutBounds().getMaxX() - overviewStartInstantText.getLayoutBounds().getWidth());
+        overviewStartInstantText.setY(barBottomY + overviewStartInstantText.getLayoutBounds().getHeight());
 
-        endInstantText.setX(bounds.getX() + ((width - endInstantText.getLayoutBounds().getWidth()) / 2.));
-        endInstantText.setY(barTopY - 4d);
+//        overviewEndInstantText.setX(bounds.getX() + ((width - overviewEndInstantText.getLayoutBounds().getWidth()) / 2.));
+        overviewEndInstantText.setX(overviewAxisBar.getLayoutBounds().getMaxX() - overviewEndInstantText.getLayoutBounds().getWidth());
+        overviewEndInstantText.setY(barTopY - 4d);
 
-        log.debug("nameText x=" + nameText.getX() + " y=" + nameText.getY() + " text: " + nameText.getText());
-        log.debug("startInstantText x=" + startInstantText.getX() + " y=" + startInstantText.getY() + " text: " + startInstantText.getText());
+        detailStartInstantText.setX(detailAxisBar.getX());
+        detailStartInstantText.setY(barBottomY + detailStartInstantText.getLayoutBounds().getHeight());
+
+//        overviewEndInstantText.setX(bounds.getX() + ((width - overviewEndInstantText.getLayoutBounds().getWidth()) / 2.));
+        detailEndInstantText.setX(detailAxisBar.getX());
+        detailEndInstantText.setY(barTopY - 4d);
+//        log.debug("nameText x=" + nameText.getX() + " y=" + nameText.getY() + " text: " + nameText.getText());
+//        log.debug("overviewStartInstantText x=" + overviewStartInstantText.getX() + " y=" + overviewStartInstantText.getY() + " text: " + overviewStartInstantText.getText());
     }
 }

@@ -885,6 +885,24 @@ public class DataModel {
     }
 
     private void calculateQueryStatistics() {
+        // find start and end of temporal column
+        if (hasTemporalColumn()) {
+            boolean firstIteration = true;
+            for (Tuple tuple : queriedTuples) {
+                if (firstIteration) {
+                    temporalColumn.setQueryStartInstant(tuple.getInstant());
+                    temporalColumn.setQueryEndInstant(tuple.getInstant());
+                    firstIteration = false;
+                } else {
+                    if (tuple.getInstant().isBefore(temporalColumn.getQueryStartInstant())) {
+                        temporalColumn.setQueryStartInstant(tuple.getInstant());
+                    } else if (tuple.getInstant().isAfter(temporalColumn.getQueryEndInstant())) {
+                        temporalColumn.setQueryEndInstant(tuple.getInstant());
+                    }
+                }
+            }
+        }
+
         double[][] data = new double[columns.size()][];
 
         for (int icolumn = 0; icolumn < columns.size(); icolumn++) {
@@ -995,6 +1013,24 @@ public class DataModel {
     }
 
     private void calculateStatistics() {
+		// find start and end of temporal column
+		if (hasTemporalColumn()) {
+			for (int ituple = 0; ituple < tuples.size(); ituple++) {
+				Tuple tuple = tuples.get(ituple);
+
+				if (ituple == 0) {
+					temporalColumn.setStartInstant(tuple.getInstant());
+					temporalColumn.setEndInstant(tuple.getInstant());
+				} else {
+					if (tuple.getInstant().isBefore(temporalColumn.getStartInstant())) {
+						temporalColumn.setStartInstant(tuple.getInstant());
+					} else if (tuple.getInstant().isAfter(temporalColumn.getEndInstant())) {
+						temporalColumn.setEndInstant(tuple.getInstant());
+					}
+				}
+			}
+		}
+
         double[][] data = new double[columns.size()][];
 
         for (int icolumn = 0; icolumn < columns.size(); icolumn++) {

@@ -216,6 +216,11 @@ public class PCPView extends Region implements DataModelListener {
         double top = getInsets().getTop();
         double pcpHeight = getHeight() - (getInsets().getTop() + getInsets().getBottom());
 
+        if (temporalAxis != null) {
+            temporalAxis.layout(left, top, axisSpacing, pcpHeight);
+            left += axisSpacing;
+        }
+
         for (int iaxis = 0; iaxis < axisList.size(); iaxis++) {
             PCPQuantitativeAxis pcpAxis = axisList.get(iaxis);
             pcpAxis.layout(left + (iaxis * axisSpacing), top, axisSpacing, pcpHeight);
@@ -266,8 +271,6 @@ public class PCPView extends Region implements DataModelListener {
                     PCPQuantitativeAxis pcpAxis = axisList.get(iSrcCol);
                     if (pcpAxis.getColumn() == column) {
                         newAxisList.add(pcpAxis);
-
-                        log.debug("Axis added to list: " + pcpAxis.getColumn().getName());
                         break;
                     }
                 }
@@ -939,9 +942,6 @@ public class PCPView extends Region implements DataModelListener {
                 }
 
                 if (axisList != null) {
-//                    double left = getInsets().getLeft() + (axisSpacing / 2.);
-//                    double top = getInsets().getTop();
-
                     for (int iaxis = 0; iaxis < axisList.size(); iaxis++) {
                         PCPQuantitativeAxis pcpAxis = axisList.get(iaxis);
                         pcpAxis.layout(left + (iaxis * axisSpacing), top, axisSpacing, pcpHeight);

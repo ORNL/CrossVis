@@ -4,6 +4,8 @@ import javafx.beans.property.SimpleObjectProperty;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.TimeZone;
 
 public class TemporalColumn extends Column {
 
@@ -12,6 +14,12 @@ public class TemporalColumn extends Column {
 
     private SimpleObjectProperty<Instant> startInstant;
     private SimpleObjectProperty<Instant> endInstant;
+
+    private SimpleObjectProperty<LocalDateTime> queryStartLocalDateTime;
+    private SimpleObjectProperty<LocalDateTime> queryEndLocalDateTime;
+
+    private SimpleObjectProperty<Instant> queryStartInstant;
+    private SimpleObjectProperty<Instant> queryEndInstant;
     
     public TemporalColumn(String name) {
         super(name);
@@ -19,7 +27,7 @@ public class TemporalColumn extends Column {
 
     public void setStartInstant(Instant startInstant) {
         startInstantProperty().set(startInstant);
-        startLocalDateTimeProperty().set(LocalDateTime.from(startInstant));
+        startLocalDateTimeProperty().set(LocalDateTime.ofInstant(startInstant, ZoneOffset.UTC));
     }
 
     public Instant getStartInstant() {
@@ -42,7 +50,7 @@ public class TemporalColumn extends Column {
 
     public void setEndInstant(Instant endInstant) {
         endInstantProperty().set(endInstant);
-        endLocalDateTimeProperty().set(LocalDateTime.from(endInstant));
+        endLocalDateTimeProperty().set(LocalDateTime.ofInstant(endInstant, ZoneOffset.UTC));
     }
 
     public Instant getEndInstant() {
@@ -61,5 +69,51 @@ public class TemporalColumn extends Column {
             endLocalDateTime = new SimpleObjectProperty<>(this, "endLocalDateTime");
         }
         return endLocalDateTime;
+    }
+
+    public void setQueryStartInstant(Instant instant) {
+        queryStartInstantProperty().set(instant);
+        queryStartLocalDateTimeProperty().set(LocalDateTime.ofInstant(instant, ZoneOffset.UTC));
+    }
+
+    public Instant getQueryStartInstant() {
+        return queryStartInstantProperty().get();
+    }
+
+    public SimpleObjectProperty<Instant> queryStartInstantProperty() {
+        if (queryStartInstant == null) {
+            queryStartInstant = new SimpleObjectProperty<>(this, "queryStartInstant");
+        }
+        return startInstant;
+    }
+
+    public SimpleObjectProperty<LocalDateTime> queryStartLocalDateTimeProperty() {
+        if (queryStartLocalDateTime == null) {
+            queryStartLocalDateTime = new SimpleObjectProperty<>(this, "queryStartLocalDateTime");
+        }
+        return queryStartLocalDateTime;
+    }
+
+    public void setQueryEndInstant(Instant instant) {
+        queryEndInstantProperty().set(instant);
+        queryEndLocalDateTimeProperty().set(LocalDateTime.ofInstant(instant, ZoneOffset.UTC));
+    }
+
+    public Instant getQueryEndInstant() {
+        return queryEndInstantProperty().get();
+    }
+
+    public SimpleObjectProperty<Instant> queryEndInstantProperty() {
+        if (queryEndInstant == null) {
+            queryEndInstant = new SimpleObjectProperty<>(this, "queryEndInstant");
+        }
+        return queryEndInstant;
+    }
+
+    public SimpleObjectProperty<LocalDateTime> queryEndLocalDateTimeProperty() {
+        if (queryEndLocalDateTime == null) {
+            queryEndLocalDateTime = new SimpleObjectProperty<>(this, "queryEndLocalDateTime");
+        }
+        return queryEndLocalDateTime;
     }
 }
