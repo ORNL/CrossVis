@@ -566,7 +566,8 @@ public class PCPQuantitativeAxis extends PCPAxis {
             }
             queryHistogramBinRectangleGroup = new Group();
 
-            if (dataModel.getActiveQuery().hasColumnSelections()) {
+            if (dataModel.getActiveQuery().hasColumnSelections() ||
+                    dataModel.getActiveQuery().hasTemporalColumnSelections()) {
                 // layer query summary statistics
                 SummaryStats queryColumnSummaryStats = dataModel.getActiveQuery().getColumnQuerySummaryStats(quantitativeColumn());
 

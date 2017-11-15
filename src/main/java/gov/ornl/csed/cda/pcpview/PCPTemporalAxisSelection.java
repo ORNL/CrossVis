@@ -203,15 +203,15 @@ public class PCPTemporalAxisSelection {
 
                 double topY = getTopY() + deltaY;
 
-                if (topY < pcpAxis.getBarTopY()) {
-                    topY = pcpAxis.getBarTopY();
+                if (topY < pcpAxis.getFocusTopY()) {
+                    topY = pcpAxis.getFocusTopY();
                 }
 
                 if (topY > getBottomY()) {
                     topY = getBottomY();
                 }
 
-                draggingMaxValue.set(GraphicsUtil.mapValue(topY, pcpAxis.getBarTopY(), pcpAxis.getBarBottomY(),
+                draggingMaxValue.set(GraphicsUtil.mapValue(topY, pcpAxis.getFocusTopY(), pcpAxis.getFocusBottomY(),
                         ((TemporalColumn)pcpAxis.getColumn()).getEndInstant(),
                         ((TemporalColumn)pcpAxis.getColumn()).getStartInstant()));
 //                draggingMaxValue.set(GraphicsUtil.mapValue(topY, pcpAxis.getBarTopY(), pcpAxis.getBarBottomY(),
@@ -277,15 +277,15 @@ public class PCPTemporalAxisSelection {
 
                 double bottomY = getBottomY() + deltaY;
 
-                if (bottomY > pcpAxis.getBarBottomY()) {
-                    bottomY = pcpAxis.getBarBottomY();
+                if (bottomY > pcpAxis.getFocusBottomY()) {
+                    bottomY = pcpAxis.getFocusBottomY();
                 }
 
                 if (bottomY < getTopY()) {
                     bottomY = getTopY();
                 }
 
-                draggingMinValue.set(GraphicsUtil.mapValue(bottomY, pcpAxis.getBarTopY(), pcpAxis.getBarBottomY(),
+                draggingMinValue.set(GraphicsUtil.mapValue(bottomY, pcpAxis.getFocusTopY(), pcpAxis.getFocusBottomY(),
                         ((TemporalColumn)pcpAxis.getColumn()).getEndInstant(),
                         ((TemporalColumn)pcpAxis.getColumn()).getStartInstant()));
 //                draggingMinValue.set(GraphicsUtil.mapValue(bottomY, pcpAxis.getBarTopY(), pcpAxis.getBarBottomY(),
@@ -403,23 +403,23 @@ public class PCPTemporalAxisSelection {
                 double topY = getTopY() + deltaY;
                 double bottomY = getBottomY() + deltaY;
 
-                if (topY < pcpAxis.getBarTopY()) {
-                    deltaY = pcpAxis.getBarTopY() - topY;
-                    topY = pcpAxis.getBarTopY();
+                if (topY < pcpAxis.getFocusTopY()) {
+                    deltaY = pcpAxis.getFocusTopY() - topY;
+                    topY = pcpAxis.getFocusTopY();
                     bottomY = bottomY + deltaY;
                 }
 
-                if (bottomY > pcpAxis.getBarBottomY()) {
-                    deltaY = bottomY - pcpAxis.getBarBottomY();
+                if (bottomY > pcpAxis.getFocusBottomY()) {
+                    deltaY = bottomY - pcpAxis.getFocusBottomY();
                     topY = topY - deltaY;
-                    bottomY = pcpAxis.getBarBottomY();
+                    bottomY = pcpAxis.getFocusBottomY();
                 }
 
-                draggingMaxValue.set(GraphicsUtil.mapValue(topY, pcpAxis.getBarTopY(), pcpAxis.getBarBottomY(),
+                draggingMaxValue.set(GraphicsUtil.mapValue(topY, pcpAxis.getFocusTopY(), pcpAxis.getFocusBottomY(),
                         ((TemporalColumn)pcpAxis.getColumn()).getEndInstant(),
                         ((TemporalColumn)pcpAxis.getColumn()).getStartInstant()));
 
-                draggingMinValue.set(GraphicsUtil.mapValue(bottomY, pcpAxis.getBarTopY(), pcpAxis.getBarBottomY(),
+                draggingMinValue.set(GraphicsUtil.mapValue(bottomY, pcpAxis.getFocusTopY(), pcpAxis.getFocusBottomY(),
                         ((TemporalColumn)pcpAxis.getColumn()).getEndInstant(),
                         ((TemporalColumn)pcpAxis.getColumn()).getStartInstant()));
 
@@ -476,11 +476,11 @@ public class PCPTemporalAxisSelection {
         double topY = GraphicsUtil.mapValue(selectionRange.getEndInstant(),
                 ((TemporalColumn)pcpAxis.getColumn()).getStartInstant(),
                 ((TemporalColumn)pcpAxis.getColumn()).getEndInstant(),
-                pcpAxis.getBarBottomY(), pcpAxis.getBarTopY());
+                pcpAxis.getFocusBottomY(), pcpAxis.getFocusTopY());
         double bottomY = GraphicsUtil.mapValue(selectionRange.getStartInstant(),
                 ((TemporalColumn)pcpAxis.getColumn()).getStartInstant(),
                 ((TemporalColumn)pcpAxis.getColumn()).getEndInstant(),
-                pcpAxis.getBarBottomY(), pcpAxis.getBarTopY());
+                pcpAxis.getFocusBottomY(), pcpAxis.getFocusTopY());
         layoutGraphics(bottomY, topY);
     }
 

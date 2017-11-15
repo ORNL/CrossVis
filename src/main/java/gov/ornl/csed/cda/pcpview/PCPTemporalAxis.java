@@ -38,10 +38,16 @@ public class PCPTemporalAxis extends PCPAxis {
 
     private double barTopY;
     private double barBottomY;
+    private double focusTopY;
+    private double focusBottomY;
+
+    private double contextRegionHeight = DEFAULT_CONTEXT_HEIGHT;
 
     private Rectangle axisBar;
     private Line topCrossBarLine;
     private Line bottomCrossBarLine;
+    private Line topFocusCrossBarLine;
+    private Line bottomFocusCrossBarLine;
 
     private Text startInstantText;
     private Text endInstantText;
@@ -65,6 +71,8 @@ public class PCPTemporalAxis extends PCPAxis {
 
         barTopY = 0d;
         barBottomY = 0d;
+        focusTopY = 0d;
+        focusBottomY = 0d;
 
         centerX = 0d;
 
@@ -88,9 +96,11 @@ public class PCPTemporalAxis extends PCPAxis {
 
         topCrossBarLine = makeLine();
         bottomCrossBarLine = makeLine();
+        topFocusCrossBarLine = makeLine();
+        bottomFocusCrossBarLine = makeLine();
 
-        graphicsGroup.getChildren().addAll(axisBar, topCrossBarLine, bottomCrossBarLine, startInstantText,
-                endInstantText);
+        graphicsGroup.getChildren().addAll(axisBar, topCrossBarLine, bottomCrossBarLine, topFocusCrossBarLine,
+                bottomFocusCrossBarLine, startInstantText, endInstantText);
 
         registerListeners();
     }
@@ -99,13 +109,22 @@ public class PCPTemporalAxis extends PCPAxis {
         return axisSelections;
     }
 
-    public double getBarTopY () {
-        return barTopY;
-    }
+    public double getFocusTopY() { return focusTopY; }
+    public double getFocusBottomY() { return focusBottomY; }
+    public double getUpperContextTopY() { return barTopY; }
+    public double getUpperContextBottomY() { return focusTopY; }
+    public double getLowerContextTopY() { return focusBottomY; }
+    public double getLowerContextBottomY() { return barBottomY; }
 
-    public double getBarBottomY() {
-        return barBottomY;
-    }
+    public double getVerticalBarTop() { return barTopY; }
+    public double getVerticalBarBottom() { return barBottomY; }
+//    public double getBarTopY () {
+//        return barTopY;
+//    }
+//
+//    public double getBarBottomY() {
+//        return barBottomY;
+//    }
 
     public double getBarLeftX() { return axisBar.getX(); }
 
@@ -147,11 +166,11 @@ public class PCPTemporalAxis extends PCPAxis {
                 double selectionMaxY = Math.min(dragStartPoint.getY(), dragEndPoint.getY());
                 double selectionMinY = Math.max(dragStartPoint.getY(), dragEndPoint.getY());
 
-                selectionMaxY = selectionMaxY < getBarTopY() ? getBarTopY() : selectionMaxY;
-                selectionMinY = selectionMinY > getBarBottomY() ? getBarBottomY() : selectionMinY;
+                selectionMaxY = selectionMaxY < getFocusTopY() ? getFocusTopY() : selectionMaxY;
+                selectionMinY = selectionMinY > getFocusBottomY() ? getFocusBottomY() : selectionMinY;
 
-                if (selectionMaxY == getBarTopY()) {
-                    log.debug("selectionMaxY = " + selectionMaxY + " getBarTopY() = " + getBarTopY());
+                if (selectionMaxY == getFocusTopY()) {
+                    log.debug("selectionMaxY = " + selectionMaxY + " getBarTopY() = " + getFocusTopY());
                 }
 
 //                Instant start = Instant.now().truncatedTo(ChronoUnit.MINUTES);
@@ -159,9 +178,9 @@ public class PCPTemporalAxis extends PCPAxis {
 //                Instant testInstant = GraphicsUtil.mapValue(getBarBottomY(), getBarTopY(), getBarBottomY(),
 //                        temporalColumn().getEndInstant(), temporalColumn().getStartInstant());
 
-                Instant selectionEndInstant = GraphicsUtil.mapValue(selectionMaxY, getBarTopY(), getBarBottomY(),
+                Instant selectionEndInstant = GraphicsUtil.mapValue(selectionMaxY, getFocusTopY(), getFocusBottomY(),
                         temporalColumn().getEndInstant(), temporalColumn().getStartInstant());
-                Instant selectionStartInstant = GraphicsUtil.mapValue(selectionMinY, getBarTopY(), getBarBottomY(),
+                Instant selectionStartInstant = GraphicsUtil.mapValue(selectionMinY, getFocusTopY(), getFocusBottomY(),
                         temporalColumn().getEndInstant(), temporalColumn().getStartInstant());
 
                 log.debug("selectionMaxY: " + selectionMaxY + "  selectionEndInstant: " + selectionEndInstant);
@@ -200,6 +219,8 @@ public class PCPTemporalAxis extends PCPAxis {
         bounds = new Rectangle(left, topY, width, height);
         barTopY = topY + DEFAULT_NAME_LABEL_HEIGHT;
         barBottomY = bounds.getY() + bounds.getHeight() - endInstantText.getLayoutBounds().getHeight();
+        focusTopY = topY + DEFAULT_NAME_LABEL_HEIGHT + contextRegionHeight;
+        focusBottomY = barBottomY - contextRegionHeight;
 
         axisBar.setX(centerX - (DEFAULT_BAR_WIDTH / 2d));
         axisBar.setY(barTopY);
@@ -215,6 +236,16 @@ public class PCPTemporalAxis extends PCPAxis {
         bottomCrossBarLine.setEndY(barBottomY);
         bottomCrossBarLine.setStartX(centerX - (DEFAULT_BAR_WIDTH / 2.));
         bottomCrossBarLine.setEndX(centerX + (DEFAULT_BAR_WIDTH / 2.));
+
+        topFocusCrossBarLine.setStartY(focusTopY);
+        topFocusCrossBarLine.setEndY(focusTopY);
+        topFocusCrossBarLine.setStartX(centerX - (DEFAULT_BAR_WIDTH / 2.));
+        topFocusCrossBarLine.setEndX(centerX + (DEFAULT_BAR_WIDTH / 2.));
+
+        bottomFocusCrossBarLine.setStartY(focusBottomY);
+        bottomFocusCrossBarLine.setEndY(focusBottomY);
+        bottomFocusCrossBarLine.setStartX(centerX - (DEFAULT_BAR_WIDTH / 2.));
+        bottomFocusCrossBarLine.setEndX(centerX + (DEFAULT_BAR_WIDTH / 2.));
 
         nameText.setText(column.getName());
         if (nameText.getLayoutBounds().getWidth() > bounds.getWidth()) {
@@ -242,5 +273,13 @@ public class PCPTemporalAxis extends PCPAxis {
         endInstantText.setX(axisBar.getLayoutBounds().getMaxX() - endInstantText.getLayoutBounds().getWidth());
         endInstantText.setX(getCenterX() - (endInstantText.getLayoutBounds().getWidth() / 2.));
         endInstantText.setY(barTopY - 4d);
+
+        if (!axisSelections.isEmpty()) {
+            for (PCPTemporalAxisSelection axisSelection : axisSelections) {
+                axisSelection.relayout();
+            }
+        }
+
+
     }
 }

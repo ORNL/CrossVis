@@ -515,6 +515,8 @@ public class DataModel {
 //			temporalColumn.setQueryEndInstant(null);
 //			temporalColumn.setQueryStartInstant(null);
 		}
+		setQueriedTuples();
+		fireTemporalColumnSelectionRemoved(selectionRange);
 	}
 
     public int removeUnselectedTuples() {
