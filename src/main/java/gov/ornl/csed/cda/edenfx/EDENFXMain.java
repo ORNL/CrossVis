@@ -1,9 +1,6 @@
 package gov.ornl.csed.cda.edenfx;
 
-import com.sun.javafx.application.LauncherImpl;
-import com.sun.javafx.tk.Toolkit;
 import gov.ornl.csed.cda.datatable.*;
-import gov.ornl.csed.cda.experiments.fxcanvas.FadeApp;
 import gov.ornl.csed.cda.pcpview.PCPView;
 import javafx.animation.FadeTransition;
 import javafx.application.Application;
@@ -21,8 +18,6 @@ import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
-import javafx.scene.Group;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.SceneAntialiasing;
 import javafx.scene.control.*;
@@ -40,7 +35,6 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Rectangle;
 import javafx.stage.FileChooser;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
@@ -1070,7 +1064,7 @@ public class EDENFXMain extends Application implements DataModelListener {
         columnTableView.setItems(FXCollections.observableArrayList(dataModel.getColumns()));
 
         queryTableView.getItems().clear();
-        queryTableView.setItems(dataModel.getActiveQuery().columnSelectionRangeList());
+        queryTableView.setItems(dataModel.getActiveQuery().columnSelectionRangesProperty());
         
         setDataTableColumns();
 
@@ -1145,7 +1139,7 @@ public class EDENFXMain extends Application implements DataModelListener {
         setDataTableItems();
         updatePercentSelected();
         queryTableView.getItems().clear();
-        queryTableView.setItems(dataModel.getActiveQuery().columnSelectionRangeList());
+        queryTableView.setItems(dataModel.getActiveQuery().columnSelectionRangesProperty());
     }
 
     @Override
@@ -1153,6 +1147,21 @@ public class EDENFXMain extends Application implements DataModelListener {
         removeAllQueriesMI.setDisable(!dataModel.getActiveQuery().hasColumnSelections());
         setDataTableItems();
         updatePercentSelected();
+    }
+
+    @Override
+    public void dataModelTemporalColumnSelectionAdded(DataModel dataModel, TemporalColumnSelectionRange columnSelectionRange) {
+
+    }
+
+    @Override
+    public void dataModelTemporalColumnSelectionRemoved(DataModel dataModel, TemporalColumnSelectionRange columnSelectionRange) {
+
+    }
+
+    @Override
+    public void dataModelTemporalColumnSelectionChanged(DataModel dataModel, TemporalColumnSelectionRange columnSelectionRange) {
+
     }
 
     @Override

@@ -621,7 +621,6 @@ public class PCPQuantitativeAxis extends PCPAxis {
     public double getBarLeftX() { return verticalBar.getX(); }
     public double getBarRightX() { return verticalBar.getX() + verticalBar.getWidth(); }
 
-    public double getCenterX() { return centerX; }
     public Rectangle getBounds() { return bounds; }
 
     public Rectangle getVerticalBar() { return verticalBar; }

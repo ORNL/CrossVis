@@ -1,17 +1,27 @@
 package gov.ornl.csed.cda.pcpview;
 
+import gov.ornl.csed.cda.datatable.ColumnSelectionRange;
 import gov.ornl.csed.cda.datatable.DataModel;
 import gov.ornl.csed.cda.datatable.TemporalColumn;
+import gov.ornl.csed.cda.datatable.TemporalColumnSelectionRange;
+import gov.ornl.csed.cda.util.GraphicsUtil;
+import javafx.event.EventHandler;
+import javafx.geometry.Point2D;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
-import javafx.scene.text.TextAlignment;
 import javafx.util.converter.LocalDateTimeStringConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.time.Instant;
+import java.time.format.FormatStyle;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 
 public class PCPTemporalAxis extends PCPAxis {
     public final static Logger log = LoggerFactory.getLogger(PCPTemporalAxis.class);
@@ -26,24 +36,24 @@ public class PCPTemporalAxis extends PCPAxis {
     
     public final static double DEFAULT_OVERVIEW_QUERY_BAR_SPACING = 30d;
 
-//    private TemporalColumn column;
-
     private double barTopY;
     private double barBottomY;
 
-    private Rectangle overviewAxisBar;
-    private Line overViewTopCrossBarLine;
-    private Line overviewBottomCrossBarLine;
+    private Rectangle axisBar;
+    private Line topCrossBarLine;
+    private Line bottomCrossBarLine;
 
-    private Text overviewStartInstantText;
-    private Text overviewEndInstantText;
+    private Text startInstantText;
+    private Text endInstantText;
 
-    private Rectangle detailAxisBar;
-    private Line detailTopCrossBarLine;
-    private Line detailBottomCrossBarLine;
+    private ArrayList<PCPTemporalAxisSelection> axisSelections = new ArrayList<>();
 
-    private Text detailStartInstantText;
-    private Text detailEndInstantText;
+    // dragging variables
+    private javafx.geometry.Point2D dragStartPoint;
+    private javafx.geometry.Point2D dragEndPoint;
+    private PCPTemporalAxisSelection draggingSelection;
+    private boolean dragging = false;
+
 
     public PCPTemporalAxis(PCPView pcpView, TemporalColumn column, DataModel dataModel, Pane pane) {
         super(pcpView, column, dataModel, pane);
@@ -56,58 +66,131 @@ public class PCPTemporalAxis extends PCPAxis {
         barTopY = 0d;
         barBottomY = 0d;
 
-        overviewStartInstantText = new Text();
-        overviewStartInstantText.textProperty().bindBidirectional(temporalColumn().startLocalDateTimeProperty(), new LocalDateTimeStringConverter());
-        overviewStartInstantText.setFont(new Font(DEFAULT_TEXT_SIZE));
-        overviewStartInstantText.setSmooth(true);
+        centerX = 0d;
 
-        overviewEndInstantText = new Text();
-        overviewEndInstantText.textProperty().bindBidirectional(column.endLocalDateTimeProperty(), new LocalDateTimeStringConverter());
-        overviewEndInstantText.setFont(new Font(DEFAULT_TEXT_SIZE));
-        overviewEndInstantText.setSmooth(true);
+        startInstantText = new Text();
+        startInstantText.textProperty().bindBidirectional(temporalColumn().startLocalDateTimeProperty(),
+                new LocalDateTimeStringConverter(FormatStyle.SHORT, FormatStyle.MEDIUM));
+        startInstantText.setFont(new Font(DEFAULT_TEXT_SIZE));
+        startInstantText.setSmooth(true);
 
-        detailStartInstantText = new Text();
-        detailStartInstantText.textProperty().bindBidirectional(column.queryStartLocalDateTimeProperty(), new LocalDateTimeStringConverter());
-        detailStartInstantText.setFont(new Font(DEFAULT_TEXT_SIZE));
-        detailStartInstantText.setSmooth(true);
+        endInstantText = new Text();
+        endInstantText.textProperty().bindBidirectional(column.endLocalDateTimeProperty(),
+                new LocalDateTimeStringConverter(FormatStyle.SHORT, FormatStyle.MEDIUM));
+        endInstantText.setFont(new Font(DEFAULT_TEXT_SIZE));
+        endInstantText.setSmooth(true);
 
-        detailEndInstantText = new Text();
-        detailEndInstantText.textProperty().bindBidirectional(column.queryEndLocalDateTimeProperty(), new LocalDateTimeStringConverter());
-        detailEndInstantText.setFont(new Font(DEFAULT_TEXT_SIZE));
-        detailEndInstantText.setSmooth(true);
+        axisBar = new Rectangle();
+        axisBar.setStroke(Color.DARKGRAY);
+        axisBar.setFill(Color.WHITESMOKE);
+        axisBar.setSmooth(true);
+        axisBar.setStrokeWidth(DEFAULT_STROKE_WIDTH);
 
-        overviewAxisBar = new Rectangle();
-        overviewAxisBar.setStroke(Color.DARKGRAY);
-        overviewAxisBar.setFill(Color.WHITESMOKE);
-        overviewAxisBar.setSmooth(true);
-        overviewAxisBar.setStrokeWidth(DEFAULT_STROKE_WIDTH);
+        topCrossBarLine = makeLine();
+        bottomCrossBarLine = makeLine();
 
-        detailAxisBar = new Rectangle();
-        detailAxisBar.setStroke(Color.DARKGRAY);
-        detailAxisBar.setFill(Color.WHITESMOKE);
-        detailAxisBar.setSmooth(true);
-        detailAxisBar.setStrokeWidth(DEFAULT_STROKE_WIDTH);
-
-        overViewTopCrossBarLine = makeLine();
-        overviewBottomCrossBarLine = makeLine();
-
-        detailTopCrossBarLine = makeLine();
-        detailBottomCrossBarLine = makeLine();
-
-        graphicsGroup.getChildren().addAll(overviewAxisBar, detailAxisBar, overViewTopCrossBarLine,
-                overviewBottomCrossBarLine, detailTopCrossBarLine, detailBottomCrossBarLine,
-                overviewStartInstantText, overviewEndInstantText, detailStartInstantText,
-                detailEndInstantText);
+        graphicsGroup.getChildren().addAll(axisBar, topCrossBarLine, bottomCrossBarLine, startInstantText,
+                endInstantText);
 
         registerListeners();
     }
+
+    public ArrayList<PCPTemporalAxisSelection> getAxisSelections() {
+        return axisSelections;
+    }
+
+    public double getBarTopY () {
+        return barTopY;
+    }
+
+    public double getBarBottomY() {
+        return barBottomY;
+    }
+
+    public double getBarLeftX() { return axisBar.getX(); }
+
+    public double getBarRightX() { return axisBar.getX() + axisBar.getWidth(); }
 
     private TemporalColumn temporalColumn() {
         return (TemporalColumn)column;
     }
 
-    private void registerListeners() {
+    protected Rectangle getAxisBar() {
+        return axisBar;
+    }
 
+    private void registerListeners() {
+        PCPTemporalAxis thisPCPAxis = this;
+
+        nameText.textProperty().addListener((observable -> {
+            nameText.setX(bounds.getX() + ((bounds.getWidth() - nameText.getLayoutBounds().getWidth()) / 2.));
+            nameText.setY(bounds.getY() + nameText.getLayoutBounds().getHeight());
+        }));
+
+        axisBar.setOnMousePressed(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                dragStartPoint = new Point2D(event.getX(), event.getY());
+                dragEndPoint = new Point2D(event.getX(), event.getY());
+            }
+        });
+
+        axisBar.setOnMouseDragged(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                if (!dragging) {
+                    dragging = true;
+                }
+
+                dragEndPoint = new Point2D(event.getX(), event.getY());
+
+                double selectionMaxY = Math.min(dragStartPoint.getY(), dragEndPoint.getY());
+                double selectionMinY = Math.max(dragStartPoint.getY(), dragEndPoint.getY());
+
+                selectionMaxY = selectionMaxY < getBarTopY() ? getBarTopY() : selectionMaxY;
+                selectionMinY = selectionMinY > getBarBottomY() ? getBarBottomY() : selectionMinY;
+
+                if (selectionMaxY == getBarTopY()) {
+                    log.debug("selectionMaxY = " + selectionMaxY + " getBarTopY() = " + getBarTopY());
+                }
+
+//                Instant start = Instant.now().truncatedTo(ChronoUnit.MINUTES);
+//                Instant end = start.plusSeconds(60);
+//                Instant testInstant = GraphicsUtil.mapValue(getBarBottomY(), getBarTopY(), getBarBottomY(),
+//                        temporalColumn().getEndInstant(), temporalColumn().getStartInstant());
+
+                Instant selectionEndInstant = GraphicsUtil.mapValue(selectionMaxY, getBarTopY(), getBarBottomY(),
+                        temporalColumn().getEndInstant(), temporalColumn().getStartInstant());
+                Instant selectionStartInstant = GraphicsUtil.mapValue(selectionMinY, getBarTopY(), getBarBottomY(),
+                        temporalColumn().getEndInstant(), temporalColumn().getStartInstant());
+
+                log.debug("selectionMaxY: " + selectionMaxY + "  selectionEndInstant: " + selectionEndInstant);
+                log.debug("selectionMinY: " + selectionMinY + "  selectionStartInstant: " + selectionStartInstant);
+
+
+                if (draggingSelection == null) {
+//                    ColumnSelectionRange selectionRange = dataModel.addColumnSelectionRangeToActiveQuery(column, minSelectionValue, maxSelectionValue);
+                    TemporalColumnSelectionRange selectionRange = new TemporalColumnSelectionRange(temporalColumn(), selectionStartInstant, selectionEndInstant);
+                    draggingSelection = new PCPTemporalAxisSelection(thisPCPAxis, selectionRange, selectionMinY, selectionMaxY, pane, dataModel);
+                } else {
+                    draggingSelection.update(selectionStartInstant, selectionEndInstant, selectionMinY, selectionMaxY);
+                }
+
+            }
+        });
+
+        axisBar.setOnMouseReleased(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                if (draggingSelection != null) {
+                    axisSelections.add(draggingSelection);
+                    dataModel.addColumnSelectionRangeToActiveQuery(draggingSelection.getColumnSelectionRange());
+                    dragging = false;
+                    draggingSelection = null;
+//                    dataModel.setQueriedTuples();
+                }
+            }
+        });
     }
 
     @Override
@@ -116,41 +199,23 @@ public class PCPTemporalAxis extends PCPAxis {
         double left = centerX - (width / 2d);
         bounds = new Rectangle(left, topY, width, height);
         barTopY = topY + DEFAULT_NAME_LABEL_HEIGHT;
-        barBottomY = bounds.getY() + bounds.getHeight() - overviewEndInstantText.getLayoutBounds().getHeight();
+        barBottomY = bounds.getY() + bounds.getHeight() - endInstantText.getLayoutBounds().getHeight();
 
-        double overviewBarCenterX = centerX - (DEFAULT_OVERVIEW_QUERY_BAR_SPACING / 2d);
-        double detailBarCenterX = overviewBarCenterX + DEFAULT_OVERVIEW_QUERY_BAR_SPACING;
-        
-        overviewAxisBar.setX(overviewBarCenterX - (DEFAULT_BAR_WIDTH / 2d));
-        overviewAxisBar.setY(barTopY);
-        overviewAxisBar.setWidth(DEFAULT_BAR_WIDTH);
-        overviewAxisBar.setHeight(barBottomY - barTopY);
+        axisBar.setX(centerX - (DEFAULT_BAR_WIDTH / 2d));
+        axisBar.setY(barTopY);
+        axisBar.setWidth(DEFAULT_BAR_WIDTH);
+        axisBar.setHeight(barBottomY - barTopY);
 
-        overViewTopCrossBarLine.setStartY(barTopY);
-        overViewTopCrossBarLine.setEndY(barTopY);
-        overViewTopCrossBarLine.setStartX(overviewBarCenterX - (DEFAULT_BAR_WIDTH / 2.));
-        overViewTopCrossBarLine.setEndX(overviewBarCenterX + (DEFAULT_BAR_WIDTH / 2.));
+        topCrossBarLine.setStartY(barTopY);
+        topCrossBarLine.setEndY(barTopY);
+        topCrossBarLine.setStartX(centerX - (DEFAULT_BAR_WIDTH / 2.));
+        topCrossBarLine.setEndX(centerX + (DEFAULT_BAR_WIDTH / 2.));
 
-        overviewBottomCrossBarLine.setStartY(barBottomY);
-        overviewBottomCrossBarLine.setEndY(barBottomY);
-        overviewBottomCrossBarLine.setStartX(overviewBarCenterX - (DEFAULT_BAR_WIDTH / 2.));
-        overviewBottomCrossBarLine.setEndX(overviewBarCenterX + (DEFAULT_BAR_WIDTH / 2.));
+        bottomCrossBarLine.setStartY(barBottomY);
+        bottomCrossBarLine.setEndY(barBottomY);
+        bottomCrossBarLine.setStartX(centerX - (DEFAULT_BAR_WIDTH / 2.));
+        bottomCrossBarLine.setEndX(centerX + (DEFAULT_BAR_WIDTH / 2.));
 
-        detailAxisBar.setX(detailBarCenterX - (DEFAULT_BAR_WIDTH / 2d));
-        detailAxisBar.setY(barTopY);
-        detailAxisBar.setWidth(DEFAULT_BAR_WIDTH);
-        detailAxisBar.setHeight(barBottomY - barTopY);
-
-        detailTopCrossBarLine.setStartY(barTopY);
-        detailTopCrossBarLine.setEndY(barTopY);
-        detailTopCrossBarLine.setStartX(detailBarCenterX - (DEFAULT_BAR_WIDTH / 2.));
-        detailTopCrossBarLine.setEndX(detailBarCenterX + (DEFAULT_BAR_WIDTH / 2.));
-
-        detailBottomCrossBarLine.setStartY(barBottomY);
-        detailBottomCrossBarLine.setEndY(barBottomY);
-        detailBottomCrossBarLine.setStartX(detailBarCenterX - (DEFAULT_BAR_WIDTH / 2.));
-        detailBottomCrossBarLine.setEndX(detailBarCenterX + (DEFAULT_BAR_WIDTH / 2.));
-        
         nameText.setText(column.getName());
         if (nameText.getLayoutBounds().getWidth() > bounds.getWidth()) {
             // truncate the column name to fit axis bounds
@@ -169,20 +234,13 @@ public class PCPTemporalAxis extends PCPAxis {
 //        nameText.setRotate(-10.);
 
 //        overviewStartInstantText.setX(bounds.getX() + ((width - overviewStartInstantText.getLayoutBounds().getWidth()) / 2.));
-        overviewStartInstantText.setX(overviewAxisBar.getLayoutBounds().getMaxX() - overviewStartInstantText.getLayoutBounds().getWidth());
-        overviewStartInstantText.setY(barBottomY + overviewStartInstantText.getLayoutBounds().getHeight());
+        startInstantText.setX(getCenterX() - (startInstantText.getLayoutBounds().getWidth() / 2.));
+//        startInstantText.setX(axisBar.getLayoutBounds().getMaxX() - startInstantText.getLayoutBounds().getWidth());
+        startInstantText.setY(barBottomY + startInstantText.getLayoutBounds().getHeight());
 
 //        overviewEndInstantText.setX(bounds.getX() + ((width - overviewEndInstantText.getLayoutBounds().getWidth()) / 2.));
-        overviewEndInstantText.setX(overviewAxisBar.getLayoutBounds().getMaxX() - overviewEndInstantText.getLayoutBounds().getWidth());
-        overviewEndInstantText.setY(barTopY - 4d);
-
-        detailStartInstantText.setX(detailAxisBar.getX());
-        detailStartInstantText.setY(barBottomY + detailStartInstantText.getLayoutBounds().getHeight());
-
-//        overviewEndInstantText.setX(bounds.getX() + ((width - overviewEndInstantText.getLayoutBounds().getWidth()) / 2.));
-        detailEndInstantText.setX(detailAxisBar.getX());
-        detailEndInstantText.setY(barTopY - 4d);
-//        log.debug("nameText x=" + nameText.getX() + " y=" + nameText.getY() + " text: " + nameText.getText());
-//        log.debug("overviewStartInstantText x=" + overviewStartInstantText.getX() + " y=" + overviewStartInstantText.getY() + " text: " + overviewStartInstantText.getText());
+        endInstantText.setX(axisBar.getLayoutBounds().getMaxX() - endInstantText.getLayoutBounds().getWidth());
+        endInstantText.setX(getCenterX() - (endInstantText.getLayoutBounds().getWidth() / 2.));
+        endInstantText.setY(barTopY - 4d);
     }
 }

@@ -66,6 +66,10 @@ public abstract class PCPAxis {
 
     }
 
+    public double getCenterX() {
+        return centerX;
+    }
+
     public void setLabelColor(Color labelColor) {
         if (this.labelColor != labelColor) {
             this.labelColor = labelColor;

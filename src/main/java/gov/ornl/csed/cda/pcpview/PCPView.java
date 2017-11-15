@@ -196,7 +196,8 @@ public class PCPView extends Region implements DataModelListener {
         unselectedTupleSet.clear();
         selectedTupleSet.clear();
         if ((tupleList != null) && (!tupleList.isEmpty())) {
-            if (dataModel.getActiveQuery().hasColumnSelections()) {
+            if (dataModel.getActiveQuery().hasColumnSelections() ||
+                    dataModel.getActiveQuery().hasTemporalColumnSelections()) {
                 for (PCPTuple pcpTuple : tupleList) {
                     if (pcpTuple.getTuple().getQueryFlag()) {
                         selectedTupleSet.add(pcpTuple);
@@ -363,6 +364,21 @@ public class PCPView extends Region implements DataModelListener {
 
     @Override
     public void dataModelQueryColumnCleared(DataModel dataModel, QuantitativeColumn column) {
+        handleQueryChange();
+    }
+
+    @Override
+    public void dataModelTemporalColumnSelectionAdded(DataModel dataModel, TemporalColumnSelectionRange columnSelectionRange) {
+        handleQueryChange();
+    }
+
+    @Override
+    public void dataModelTemporalColumnSelectionRemoved(DataModel dataModel, TemporalColumnSelectionRange columnSelectionRange) {
+        handleQueryChange();
+    }
+
+    @Override
+    public void dataModelTemporalColumnSelectionChanged(DataModel dataModel, TemporalColumnSelectionRange columnSelectionRange) {
         handleQueryChange();
     }
 
@@ -956,7 +972,7 @@ public class PCPView extends Region implements DataModelListener {
                     if (getDisplayMode() == DISPLAY_MODE.PCP_LINES) {
                         if (tupleList != null) {
                             for (PCPTuple pcpTuple : tupleList) {
-                                pcpTuple.layout(axisList);
+                                pcpTuple.layout(axisList, temporalAxis);
                             }
                         }
                     } else if (getDisplayMode() == DISPLAY_MODE.PCP_BINS) {
@@ -1202,7 +1218,7 @@ public class PCPView extends Region implements DataModelListener {
                 unselectedTuplesTimer.stop();
             }
 
-            unselectedTuplesTimer = new TupleDrawingAnimationTimer(unselectedCanvas, unselectedTupleSet, axisList, getUnselectedItemsColor(), 100);
+            unselectedTuplesTimer = new TupleDrawingAnimationTimer(unselectedCanvas, unselectedTupleSet, axisList, temporalAxis, getUnselectedItemsColor(), 100);
             unselectedTuplesTimer.start();
 //            lineGC.setStroke(getUnselectedItemsColor());
 //
@@ -1219,7 +1235,7 @@ public class PCPView extends Region implements DataModelListener {
                 selectedTuplesTimer.stop();
             }
 
-            selectedTuplesTimer = new TupleDrawingAnimationTimer(selectedCanvas, selectedTupleSet, axisList, getSelectedItemsColor(), 100);
+            selectedTuplesTimer = new TupleDrawingAnimationTimer(selectedCanvas, selectedTupleSet, axisList, temporalAxis, getSelectedItemsColor(), 100);
             selectedTuplesTimer.start();
 //            final ArrayBlockingQueue<PCPTuple> drawingQueue = new ArrayBlockingQueue<>(selectedTupleSet.size(), true, selectedTupleSet);
 

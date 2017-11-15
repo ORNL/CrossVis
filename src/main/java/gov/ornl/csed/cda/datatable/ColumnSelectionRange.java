@@ -8,17 +8,12 @@ import javafx.collections.ObservableList;
 public class ColumnSelectionRange {
     private QuantitativeColumn column;
     private ListProperty<Double> rangeValues;
-//    private DoubleProperty minValue;
-//    private DoubleProperty maxValue;
 
     public ColumnSelectionRange(QuantitativeColumn column, double minValue, double maxValue) {
         this.column = column;
         rangeValues = new SimpleListProperty<>();
         ObservableList<Double> observableList = FXCollections.observableArrayList(minValue, maxValue);
         rangeValues.set(observableList);
-        
-//        this.minValue = new SimpleDoubleProperty(minValue);
-//        this.maxValue = new SimpleDoubleProperty(maxValue);
     }
 
     public final QuantitativeColumn getColumn() { return column; }

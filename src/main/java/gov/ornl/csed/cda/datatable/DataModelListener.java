@@ -17,6 +17,15 @@ public interface DataModelListener {
     // Called when selections for a particular column are removed from the active query
     public void dataModelQueryColumnCleared(DataModel dataModel, QuantitativeColumn column);
 
+	// Called when a temporal selection is added to the active query
+	public void dataModelTemporalColumnSelectionAdded(DataModel dataModel, TemporalColumnSelectionRange columnSelectionRange);
+
+	// Called when a temporal selection is removed from the active query
+	public void dataModelTemporalColumnSelectionRemoved(DataModel dataModel, TemporalColumnSelectionRange columnSelectionRange);
+
+	// Called when a temporal selection from the active query is modified (min/max range)
+	public void dataModelTemporalColumnSelectionChanged(DataModel dataModel, TemporalColumnSelectionRange columnSelectionRange);
+
 	// Called when a selection is added to the active query
 	public void dataModelColumnSelectionAdded(DataModel dataModel, ColumnSelectionRange columnSelectionRange);
 

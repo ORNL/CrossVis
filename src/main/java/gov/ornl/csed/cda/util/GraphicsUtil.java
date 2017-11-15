@@ -3,6 +3,9 @@ package gov.ornl.csed.cda.util;
 
 import javafx.scene.paint.Color;
 
+import java.time.Duration;
+import java.time.Instant;
+
 /**
  * Created by csg on 3/10/16.
  */
@@ -29,6 +32,19 @@ public class GraphicsUtil {
         return newMin + ((newMax - newMin) * ((value - currentMin) / (currentMax - currentMin)));
 //        double norm = (value - currentMin) / (currentMax - currentMin);
 //        return (norm * (newMax - newMin)) + newMin;
+    }
+
+    public static double mapValue(Instant instant, Instant startInstant, Instant endInstant, double newMin, double newMax) {
+        Duration totalDuration = Duration.between(startInstant, endInstant);
+        Duration instantDuration = Duration.between(startInstant, instant);
+        double norm = (double)instantDuration.toMillis() / (double)totalDuration.toMillis();
+        return newMin + (norm * (newMax - newMin));
+    }
+
+    public static Instant mapValue(double value, double currentMin, double currentMax, Instant newStartInstant, Instant newEndInstant) {
+        double norm = (value - currentMin) / (currentMax - currentMin);
+        long deltaMillis = (long)(norm * Duration.between(newStartInstant, newEndInstant).toMillis());
+        return newStartInstant.plusMillis(deltaMillis);
     }
 
     public static java.awt.Color convertToAWTColor(javafx.scene.paint.Color color) {

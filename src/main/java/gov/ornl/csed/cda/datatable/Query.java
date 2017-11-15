@@ -9,27 +9,34 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-/**
- * Created by csg on 11/25/14.
- */
 public class Query {
     private String id;
-    private ListProperty<ColumnSelectionRange> columnSelectionRangeList;
-//    private ArrayList<Tuple> tuples;
+
+    private ListProperty<TemporalColumnSelectionRange> temporalColumnSelectionRanges;
+
+    private ListProperty<ColumnSelectionRange> columnSelectionRanges;
     private HashMap<QuantitativeColumn, SummaryStats> columnQuerySummaryStatsMap;
     private int maxHistogram2DBinCount;
 
     public Query(String id) {
         this.id = id;
-        columnSelectionRangeList = new SimpleListProperty<>(FXCollections.observableArrayList());
-//        tuples = new ArrayList<>();
+        temporalColumnSelectionRanges = new SimpleListProperty<>(FXCollections.observableArrayList());
+        columnSelectionRanges = new SimpleListProperty<>(FXCollections.observableArrayList());
         columnQuerySummaryStatsMap = new HashMap<>();
         maxHistogram2DBinCount = 0;
     }
 
-    public final ObservableList<ColumnSelectionRange> getColumnsSelectionRangeList() { return columnSelectionRangeList.get(); }
+    public final ObservableList<TemporalColumnSelectionRange> getTemporalColumnSelectionRangeList() {
+        return temporalColumnSelectionRanges.get();
+    }
 
-    public ListProperty<ColumnSelectionRange> columnSelectionRangeList() { return columnSelectionRangeList; }
+    public ListProperty<TemporalColumnSelectionRange> temporalColumnSelectionRangesProperty() {
+        return temporalColumnSelectionRanges;
+    }
+
+    public final ObservableList<ColumnSelectionRange> getColumnSelectionRanges() { return columnSelectionRanges.get(); }
+
+    public ListProperty<ColumnSelectionRange> columnSelectionRangesProperty() { return columnSelectionRanges; }
 
     public int getMaxHistogram2DBinCount() { return maxHistogram2DBinCount; }
 
@@ -38,7 +45,14 @@ public class Query {
     }
 
     public boolean hasColumnSelections() {
-        if (columnSelectionRangeList.isEmpty()) {
+        if (columnSelectionRanges.isEmpty()) {
+            return false;
+        }
+        return true;
+    }
+
+    public boolean hasTemporalColumnSelections() {
+        if (temporalColumnSelectionRanges.isEmpty()) {
             return false;
         }
         return true;
@@ -60,46 +74,16 @@ public class Query {
         this.id = id;
     }
 
-//    public void addTuple(Tuple tuple) {
-//        tuples.add(tuple);
-//    }
-
-//    public void clearTuples() {
-//        tuples.clear();
-//        columnQuerySummaryStatsMap.clear();
-//    }
-
-//    public ArrayList<Tuple> getTuples() {
-//        return tuples;
-//    }
-
     public void clear () {
-        columnSelectionRangeList.clear();
+        columnSelectionRanges.clear();
+        temporalColumnSelectionRanges.clear();
         columnQuerySummaryStatsMap.clear();
     }
-
-//    public void clearAllColumnSelections() {
-//        columnSelectionRangeList.clear();
-//        tuples.clear();
-//        columnQuerySummaryStatsMap.clear();
-//    }
-
-//    public void clearColumnSelection(QuantitativeColumn column) {
-//        ArrayList<ColumnSelectionRange> selectionsToRemove = new ArrayList<>();
-//
-//        for (ColumnSelectionRange selection : columnSelectionRangeList) {
-//            if (selection.getColumn() == column) {
-//                selectionsToRemove.add(selection);
-//            }
-//        }
-//
-//        columnSelectionRangeList.removeAll(selectionsToRemove);
-//    }
 
     public ArrayList<ColumnSelectionRange> getColumnSelectionRanges (QuantitativeColumn column) {
         ArrayList<ColumnSelectionRange> rangeList = new ArrayList<>();
 
-        for (ColumnSelectionRange columnSelectionRange : columnSelectionRangeList) {
+        for (ColumnSelectionRange columnSelectionRange : columnSelectionRanges) {
             if (columnSelectionRange.getColumn() == column) {
                 rangeList.add(columnSelectionRange);
             }
@@ -108,37 +92,63 @@ public class Query {
     }
 
     public List<ColumnSelectionRange> getAllColumnSelectionRanges() {
-        return columnSelectionRangeList;
+        return columnSelectionRanges;
     }
 
     public void addColumnSelectionRange (ColumnSelectionRange columnSelectionRange) {
         //TODO: See if an identical range selection exists or if this selection overlaps with another
         // ignore if identical exists and merge if overlapping selection exists
-        columnSelectionRangeList.add(columnSelectionRange);
+        columnSelectionRanges.add(columnSelectionRange);
+    }
+
+    public void addTemporalColumnSelectionRange (TemporalColumnSelectionRange temporalColumnSelectionRange) {
+        // TODO: See if an identical range selection exists or if the selection overlaps with another
+        // ignore if identical range selection exists and merge if overlapping with another
+        temporalColumnSelectionRanges.add(temporalColumnSelectionRange);
     }
 
     public boolean removeColumnSelectionRange(ColumnSelectionRange columnSelectionRange) {
-        if (!columnSelectionRangeList.isEmpty()) {
-            return columnSelectionRangeList.remove(columnSelectionRange);
+        if (!columnSelectionRanges.isEmpty()) {
+            return columnSelectionRanges.remove(columnSelectionRange);
         }
+        return false;
+    }
 
+    public boolean removeTemporalColumnSelectionRange(TemporalColumnSelectionRange temporalColumnSelectionRange) {
+        if (!temporalColumnSelectionRanges.isEmpty()) {
+            return temporalColumnSelectionRanges.remove(temporalColumnSelectionRange);
+        }
         return false;
     }
 
     public ArrayList<ColumnSelectionRange> removeColumnSelectionRanges(QuantitativeColumn column) {
-        if (!columnSelectionRangeList.isEmpty()) {
+        if (!columnSelectionRanges.isEmpty()) {
             ArrayList<ColumnSelectionRange> removedRanges = new ArrayList<>();
 
-            for (ColumnSelectionRange rangeSelection : columnSelectionRangeList) {
+            for (ColumnSelectionRange rangeSelection : columnSelectionRanges) {
                 if (rangeSelection.getColumn() == column) {
                     removedRanges.add(rangeSelection);
                 }
             }
 
-            columnSelectionRangeList.removeAll(removedRanges);
+            columnSelectionRanges.removeAll(removedRanges);
             return removedRanges;
         }
 
+        return null;
+    }
+
+    public ArrayList<TemporalColumnSelectionRange> removeTemporalColumnSelectionRanges() {
+        if (!temporalColumnSelectionRanges.isEmpty()) {
+            ArrayList<TemporalColumnSelectionRange> removedRanges = new ArrayList<>();
+
+            for (TemporalColumnSelectionRange temporalColumnSelectionRange : temporalColumnSelectionRanges) {
+                removedRanges.add(temporalColumnSelectionRange);
+            }
+
+            temporalColumnSelectionRanges.clear();
+            return removedRanges;
+        }
         return null;
     }
 }

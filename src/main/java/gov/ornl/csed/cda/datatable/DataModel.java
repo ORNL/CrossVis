@@ -3,10 +3,8 @@ package gov.ornl.csed.cda.datatable;
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.apache.commons.math3.stat.regression.OLSMultipleLinearRegression;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+
+import java.util.*;
 import java.util.logging.Logger;
 
 public class DataModel {
@@ -511,6 +509,14 @@ public class DataModel {
 		fireColumnSelectionRemoved(selectionRange);
 	}
 
+	public void clearTemporalColumnSelectionRange (TemporalColumnSelectionRange selectionRange) {
+		getActiveQuery().removeTemporalColumnSelectionRange(selectionRange);
+		if (!getActiveQuery().hasColumnSelections()) {
+//			temporalColumn.setQueryEndInstant(null);
+//			temporalColumn.setQueryStartInstant(null);
+		}
+	}
+
     public int removeUnselectedTuples() {
         int tuplesRemoved = 0;
 
@@ -607,7 +613,6 @@ public class DataModel {
 //	}
 
 	public void addColumnSelectionRangeToActiveQuery(ColumnSelectionRange newColumnSelectionRange) {
-//		ColumnSelectionRange newColumnSelectionRange = new ColumnSelectionRange(column, minValue, maxValue);
 		getActiveQuery().addColumnSelectionRange(newColumnSelectionRange);
 
         setQueriedTuples();
@@ -618,16 +623,16 @@ public class DataModel {
 			setQueriedTuples();
 			fireColumnSelectionChanged(newColumnSelectionRange);
 		});
-//		newColumnSelectionRange.maxValueProperty().addListener((observable, oldValue, newValue) -> {
-//			setQueriedTuples();
-//			fireColumnSelectionChanged(newColumnSelectionRange);
-//		});
-//
-//		newColumnSelectionRange.minValueProperty().addListener((observable, oldValue, newValue) -> {
-//			setQueriedTuples();
-//			fireColumnSelectionChanged(newColumnSelectionRange);
-//		});
-//		return newColumnSelectionRange;
+	}
+
+	public void addColumnSelectionRangeToActiveQuery(TemporalColumnSelectionRange temporalColumnSelectionRange) {
+		getActiveQuery().addTemporalColumnSelectionRange(temporalColumnSelectionRange);
+		setQueriedTuples();
+		fireTemporalColumnSelectionAdded(temporalColumnSelectionRange);
+		temporalColumnSelectionRange.rangeInstantsProperty().addListener((observable, oldValue, newValue) -> {
+			setQueriedTuples();
+			fireTemporalColumnSelectionChanged(temporalColumnSelectionRange);
+		});
 	}
 
     public void orderColumnsByCorrelation (QuantitativeColumn compareColumn, boolean useQueryCorrelations) {
@@ -792,10 +797,32 @@ public class DataModel {
             return;
         }
 
-        if (!getActiveQuery().getAllColumnSelectionRanges().isEmpty()) {
+        if (!getActiveQuery().getAllColumnSelectionRanges().isEmpty() ||
+				!getActiveQuery().getTemporalColumnSelectionRangeList().isEmpty()) {
             for (int ituple = 0; ituple < getTupleCount(); ituple++) {
                 Tuple currentTuple = getTuple(ituple);
                 currentTuple.setQueryFlag(true);
+
+                // get temporal queries
+				if (hasTemporalColumn()) {
+					List<TemporalColumnSelectionRange> temporalColumnSelectionRanges = getActiveQuery().getTemporalColumnSelectionRangeList();
+					if (temporalColumnSelectionRanges != null && !temporalColumnSelectionRanges.isEmpty()) {
+						boolean insideSelection = false;
+
+						for (TemporalColumnSelectionRange selectionRange : temporalColumnSelectionRanges) {
+							if (!((currentTuple.getInstant().isBefore(selectionRange.getStartInstant())) ||
+									currentTuple.getInstant().isAfter(selectionRange.getEndInstant()))) {
+								insideSelection = true;
+								break;
+							}
+						}
+
+						if (!insideSelection) {
+							currentTuple.setQueryFlag(false);
+//							break;
+						}
+					}
+				}
 
                 for (int icolumn = 0; icolumn < columns.size(); icolumn++) {
                     QuantitativeColumn column = columns.get(icolumn);
@@ -886,22 +913,22 @@ public class DataModel {
 
     private void calculateQueryStatistics() {
         // find start and end of temporal column
-        if (hasTemporalColumn()) {
-            boolean firstIteration = true;
-            for (Tuple tuple : queriedTuples) {
-                if (firstIteration) {
-                    temporalColumn.setQueryStartInstant(tuple.getInstant());
-                    temporalColumn.setQueryEndInstant(tuple.getInstant());
-                    firstIteration = false;
-                } else {
-                    if (tuple.getInstant().isBefore(temporalColumn.getQueryStartInstant())) {
-                        temporalColumn.setQueryStartInstant(tuple.getInstant());
-                    } else if (tuple.getInstant().isAfter(temporalColumn.getQueryEndInstant())) {
-                        temporalColumn.setQueryEndInstant(tuple.getInstant());
-                    }
-                }
-            }
-        }
+//        if (hasTemporalColumn()) {
+//            boolean firstIteration = true;
+//            for (Tuple tuple : queriedTuples) {
+//                if (firstIteration) {
+//                    temporalColumn.setQueryStartInstant(tuple.getInstant());
+//                    temporalColumn.setQueryEndInstant(tuple.getInstant());
+//                    firstIteration = false;
+//                } else {
+//                    if (tuple.getInstant().isBefore(temporalColumn.getQueryStartInstant())) {
+//                        temporalColumn.setQueryStartInstant(tuple.getInstant());
+//                    } else if (tuple.getInstant().isAfter(temporalColumn.getQueryEndInstant())) {
+//                        temporalColumn.setQueryEndInstant(tuple.getInstant());
+//                    }
+//                }
+//            }
+//        }
 
         double[][] data = new double[columns.size()][];
 
@@ -1199,6 +1226,24 @@ public class DataModel {
 	public void fireHighlightedColumnChanged(QuantitativeColumn oldHighlightedColumn) {
 		for (DataModelListener listener : listeners) {
 			listener.dataModelHighlightedColumnChanged(this, oldHighlightedColumn, highlightedColumn);
+		}
+	}
+
+	public void fireTemporalColumnSelectionAdded(TemporalColumnSelectionRange columnSelectionRange) {
+		for (DataModelListener listener : listeners) {
+			listener.dataModelTemporalColumnSelectionAdded(this, columnSelectionRange);
+		}
+	}
+
+	public void fireTemporalColumnSelectionRemoved(TemporalColumnSelectionRange columnSelectionRange) {
+		for (DataModelListener listener : listeners) {
+			listener.dataModelTemporalColumnSelectionRemoved(this, columnSelectionRange);
+		}
+	}
+
+	public void fireTemporalColumnSelectionChanged(TemporalColumnSelectionRange columnSelectionRange) {
+		for (DataModelListener listener : listeners) {
+			listener.dataModelTemporalColumnSelectionChanged(this, columnSelectionRange);
 		}
 	}
 

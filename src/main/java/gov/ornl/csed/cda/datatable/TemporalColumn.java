@@ -18,8 +18,8 @@ public class TemporalColumn extends Column {
     private SimpleObjectProperty<LocalDateTime> queryStartLocalDateTime;
     private SimpleObjectProperty<LocalDateTime> queryEndLocalDateTime;
 
-    private SimpleObjectProperty<Instant> queryStartInstant;
-    private SimpleObjectProperty<Instant> queryEndInstant;
+//    private SimpleObjectProperty<Instant> queryStartInstant;
+//    private SimpleObjectProperty<Instant> queryEndInstant;
     
     public TemporalColumn(String name) {
         super(name);
@@ -71,49 +71,49 @@ public class TemporalColumn extends Column {
         return endLocalDateTime;
     }
 
-    public void setQueryStartInstant(Instant instant) {
-        queryStartInstantProperty().set(instant);
-        queryStartLocalDateTimeProperty().set(LocalDateTime.ofInstant(instant, ZoneOffset.UTC));
-    }
-
-    public Instant getQueryStartInstant() {
-        return queryStartInstantProperty().get();
-    }
-
-    public SimpleObjectProperty<Instant> queryStartInstantProperty() {
-        if (queryStartInstant == null) {
-            queryStartInstant = new SimpleObjectProperty<>(this, "queryStartInstant");
-        }
-        return startInstant;
-    }
-
-    public SimpleObjectProperty<LocalDateTime> queryStartLocalDateTimeProperty() {
-        if (queryStartLocalDateTime == null) {
-            queryStartLocalDateTime = new SimpleObjectProperty<>(this, "queryStartLocalDateTime");
-        }
-        return queryStartLocalDateTime;
-    }
-
-    public void setQueryEndInstant(Instant instant) {
-        queryEndInstantProperty().set(instant);
-        queryEndLocalDateTimeProperty().set(LocalDateTime.ofInstant(instant, ZoneOffset.UTC));
-    }
-
-    public Instant getQueryEndInstant() {
-        return queryEndInstantProperty().get();
-    }
-
-    public SimpleObjectProperty<Instant> queryEndInstantProperty() {
-        if (queryEndInstant == null) {
-            queryEndInstant = new SimpleObjectProperty<>(this, "queryEndInstant");
-        }
-        return queryEndInstant;
-    }
-
-    public SimpleObjectProperty<LocalDateTime> queryEndLocalDateTimeProperty() {
-        if (queryEndLocalDateTime == null) {
-            queryEndLocalDateTime = new SimpleObjectProperty<>(this, "queryEndLocalDateTime");
-        }
-        return queryEndLocalDateTime;
-    }
+//    public void setQueryStartInstant(Instant instant) {
+//        queryStartInstantProperty().set(instant);
+//        queryStartLocalDateTimeProperty().set(LocalDateTime.ofInstant(instant, ZoneOffset.UTC));
+//    }
+//
+//    public Instant getQueryStartInstant() {
+//        return queryStartInstantProperty().get();
+//    }
+//
+//    public SimpleObjectProperty<Instant> queryStartInstantProperty() {
+//        if (queryStartInstant == null) {
+//            queryStartInstant = new SimpleObjectProperty<>(this, "queryStartInstant");
+//        }
+//        return startInstant;
+//    }
+//
+//    public SimpleObjectProperty<LocalDateTime> queryStartLocalDateTimeProperty() {
+//        if (queryStartLocalDateTime == null) {
+//            queryStartLocalDateTime = new SimpleObjectProperty<>(this, "queryStartLocalDateTime");
+//        }
+//        return queryStartLocalDateTime;
+//    }
+//
+//    public void setQueryEndInstant(Instant instant) {
+//        queryEndInstantProperty().set(instant);
+//        queryEndLocalDateTimeProperty().set(LocalDateTime.ofInstant(instant, ZoneOffset.UTC));
+//    }
+//
+//    public Instant getQueryEndInstant() {
+//        return queryEndInstantProperty().get();
+//    }
+//
+//    public SimpleObjectProperty<Instant> queryEndInstantProperty() {
+//        if (queryEndInstant == null) {
+//            queryEndInstant = new SimpleObjectProperty<>(this, "queryEndInstant");
+//        }
+//        return queryEndInstant;
+//    }
+//
+//    public SimpleObjectProperty<LocalDateTime> queryEndLocalDateTimeProperty() {
+//        if (queryEndLocalDateTime == null) {
+//            queryEndLocalDateTime = new SimpleObjectProperty<>(this, "queryEndLocalDateTime");
+//        }
+//        return queryEndLocalDateTime;
+//    }
 }
