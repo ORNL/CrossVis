@@ -15,7 +15,7 @@ import prefuse.data.expression.ExpressionAnalyzer;
 /**
  * <p>Column instance that stores values provided by an Expression
  * instance. These expressions can reference other column values within the
- * same table. Values are evaluated when first requested and then cached to
+ * same datamodel. Values are evaluated when first requested and then cached to
  * increase performance. This column maintains listeners for all referenced
  * columns discovered in the expression and for the expression itself,
  * invalidating all cached entries when an update to either occurs.</p>
@@ -44,7 +44,7 @@ public class ExpressionColumn extends AbstractColumn {
     
     /**
      * Create a new ExpressionColumn.
-     * @param table the table this column is a member of
+     * @param table the datamodel this column is a member of
      * @param expr the expression used to provide the column values
      */
     public ExpressionColumn(Table table, Expression expr) {
@@ -74,7 +74,7 @@ public class ExpressionColumn extends AbstractColumn {
         // now get the current set of columns
         m_columns = ExpressionAnalyzer.getReferencedColumns(m_expr);
         
-        // sanity check table and expression
+        // sanity check datamodel and expression
         Iterator iter = m_columns.iterator();
         while ( iter.hasNext() ) {
             String name = (String)iter.next();

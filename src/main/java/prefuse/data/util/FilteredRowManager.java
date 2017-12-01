@@ -8,7 +8,7 @@ import prefuse.util.collections.IntIntTreeMap;
 
 /**
  * RowManager that additionally manages mappings between the managed
- * rows and those of a parent table.
+ * rows and those of a parent datamodel.
  * 
  * @author <a href="http://jheer.org">jeffrey heer</a>
  */
@@ -19,7 +19,7 @@ public class FilteredRowManager extends RowManager {
     
     /**
      * Create a new FilteredRowManager.
-     * @param table the table to manage
+     * @param table the datamodel to manage
      */
     public FilteredRowManager(Table table) {
         super(table);
@@ -81,9 +81,9 @@ public class FilteredRowManager extends RowManager {
     
     /**
      * Given a row managed by this manager, return the corresponding row
-     * in the parent table.
+     * in the parent datamodel.
      * @param childRow a row managed by this manager
-     * @return the parent table row
+     * @return the parent datamodel row
      */
     public int getParentRow(int childRow) {
         if ( childRow >= m_childToParent.getRowCount() ) {
@@ -94,9 +94,9 @@ public class FilteredRowManager extends RowManager {
     }
 
     /**
-     * Given a row in the parent table, return the corresponding row managed
+     * Given a row in the parent datamodel, return the corresponding row managed
      * by this manager.
-     * @param parentRow a row in the parent table
+     * @param parentRow a row in the parent datamodel
      * @return the managed row corresponding to the parent row
      */
     public int getChildRow(int parentRow) {
@@ -107,7 +107,7 @@ public class FilteredRowManager extends RowManager {
     /**
      * Add a mapping between the given managed row and parent row.
      * @param childRow a row managed by this manager
-     * @param parentRow a row in the parent table
+     * @param parentRow a row in the parent datamodel
      */
     public void put(int childRow, int parentRow) {
         // ensure capacity of IntColumn

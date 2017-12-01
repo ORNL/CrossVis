@@ -6,7 +6,7 @@ import prefuse.data.Node;
 import prefuse.data.Table;
 
 /**
- * Edge implementation that reads Edge data from a backing edge table.
+ * Edge implementation that reads Edge data from a backing edge datamodel.
  * 
  * @author <a href="http://jheer.org">jeffrey heer</a>
  */
@@ -18,13 +18,13 @@ public class TableEdge extends TableTuple implements Edge {
     protected Graph m_graph;   
     
     /**
-     * Initialize a new Edge backed by an edge table. This method is used by
+     * Initialize a new Edge backed by an edge datamodel. This method is used by
      * the appropriate TupleManager instance, and should not be called
      * directly by client code, unless by a client-supplied custom
      * TupleManager.
      * @param table the edge Table
      * @param graph the backing Graph
-     * @param row the row in the edge table to which this Node instance
+     * @param row the row in the edge datamodel to which this Node instance
      *  corresponds.
      */
     protected void init(Table table, Graph graph, int row) {

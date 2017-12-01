@@ -7,8 +7,8 @@ import prefuse.data.Table;
 import prefuse.util.collections.IntIterator;
 
 /**
- * An iterator over table rows, providing convenience methods for accessing and
- * manipulating table data.
+ * An iterator over datamodel rows, providing convenience methods for accessing and
+ * manipulating datamodel data.
  * 
  * @author <a href="http://jheer.org">jeffrey heer</a>
  */
@@ -21,9 +21,9 @@ public class TableIterator extends IntIterator {
     protected int m_cur = -1;
 
     /**
-     * Create a new TableIterator using a given iterator over table rows.
+     * Create a new TableIterator using a given iterator over datamodel rows.
      * @param table the Table to iterate over
-     * @param rows the iteration over individual table rows
+     * @param rows the iteration over individual datamodel rows
      */
     public TableIterator(Table table, IntIterator rows) {
         m_table = table;
@@ -35,7 +35,7 @@ public class TableIterator extends IntIterator {
     // Iterator Methods
     
     /**
-     * Returns the next table row.
+     * Returns the next datamodel row.
      * @see prefuse.util.collections.LiteralIterator#nextInt()
      */
     public int nextInt() {
@@ -53,7 +53,7 @@ public class TableIterator extends IntIterator {
     }
 
     /**
-     * Remove the current row, deleting it from the table.
+     * Remove the current row, deleting it from the datamodel.
      * @see java.util.Iterator#remove()
      */
     public void remove() {
@@ -62,7 +62,7 @@ public class TableIterator extends IntIterator {
     }
     
     /**
-     * Tracks table modifications.
+     * Tracks datamodel modifications.
      */
     protected void modify() {
         ++m_modCount;

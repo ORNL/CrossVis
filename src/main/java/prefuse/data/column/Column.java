@@ -8,7 +8,7 @@ import prefuse.data.parser.DataParser;
 
 
 /**
- * Interface for a data column in a table.
+ * Interface for a data column in a datamodel.
  * 
  * @author <a href="http://jheer.org">jeffrey heer</a>
  */

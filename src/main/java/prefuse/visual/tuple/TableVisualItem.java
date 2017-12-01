@@ -23,13 +23,13 @@ import prefuse.visual.VisualTable;
 public class TableVisualItem extends TableTuple implements VisualItem {
 
     /**
-     * Initialize a new TableVisualItem for the given table and row. This
+     * Initialize a new TableVisualItem for the given datamodel and row. This
      * method is used by the appropriate TupleManager instance, and should
      * not be called directly by client code, unless by a client-supplied
      * custom TupleManager.
      * @param table the data Table
      * @param graph ignored by this class
-     * @param row the table row index
+     * @param row the datamodel row index
      */
     protected void init(Table table, Graph graph, int row) {
         m_table = table;

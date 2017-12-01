@@ -281,7 +281,7 @@ public class PrefuseLib {
     
     /**
      * Indicates if a group is a child group, a non-top-level data group in
-     * a set of nested data groups (e.g., the node or edge table of a
+     * a set of nested data groups (e.g., the node or edge datamodel of a
      * graph or tree).
      * @return true if the group is a nested, or child, group
      */

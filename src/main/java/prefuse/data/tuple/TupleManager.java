@@ -10,11 +10,11 @@ import prefuse.util.StringLib;
 import prefuse.util.collections.IntIterator;
 
 /**
- * Manager class for Tuples. There is a unique Tuple for each row of a table.
+ * Manager class for Tuples. There is a unique Tuple for each row of a datamodel.
  * All data structures and Tuples are created lazily, on an as-needed basis.
- * When a row is deleted from the table, it's corresponding Tuple (if created)
+ * When a row is deleted from the datamodel, it's corresponding Tuple (if created)
  * is invalidated before being removed from this data structure, ensuring that
- * any other live references to the Tuple can't be used to corrupt the table.
+ * any other live references to the Tuple can't be used to corrupt the datamodel.
  * 
  * @author <a href="http://jheer.org">jeffrey heer</a>
  */
@@ -132,7 +132,7 @@ public class TupleManager {
     
     /**
      * Return an iterator over the tuples in this manager.
-     * @param rows an iterator over table rows
+     * @param rows an iterator over datamodel rows
      * @return an iterator over the tuples indicated by the input row iterator
      */
     public Iterator iterator(IntIterator rows) {

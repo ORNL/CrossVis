@@ -8,7 +8,7 @@ import prefuse.data.Table;
 import prefuse.util.collections.IntIterator;
 
 /**
- * TableWriter that writes out a text table in the comma-separated-values
+ * TableWriter that writes out a text datamodel in the comma-separated-values
  * format. By default, a header row containing the column names is included
  * in the output.
  * 

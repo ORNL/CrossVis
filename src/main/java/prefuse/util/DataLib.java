@@ -45,7 +45,7 @@ public class DataLib {
     }
 
     /**
-     * Get an array of doubles containing all column values for a given table
+     * Get an array of doubles containing all column values for a given datamodel
      * and field. The {@link Table#canGetDouble(String)} method must return
      * true for the given column name, otherwise an exception will be thrown.
      * @param tuples an iterator over tuples
@@ -78,7 +78,7 @@ public class DataLib {
     }
 
     /**
-     * Get a sorted array containing all column values for a given table and
+     * Get a sorted array containing all column values for a given datamodel and
      * field.
      * @param tuples an iterator over tuples
      * @param field the column / data field name
@@ -112,7 +112,7 @@ public class DataLib {
     }
 
     /**
-     * Get a sorted array containing all column values for a given table and
+     * Get a sorted array containing all column values for a given datamodel and
      * field.
      * @param tuples a TupleSet
      * @param field the column / data field name

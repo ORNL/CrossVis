@@ -62,7 +62,7 @@ public class DatabaseDataSource {
      * Executes a query and returns the results in a Table instance.
      * @param query the text SQL query to execute
      * @param keyField the field to treat as a primary key, ensuring that this
-     *  field is indexed in the resulting table instance.
+     *  field is indexed in the resulting datamodel instance.
      * @return a Table of the query results
      * @throws DataIOException if an error occurs while executing the query 
      * or adding the query results in a prefuse Table.
@@ -76,7 +76,7 @@ public class DatabaseDataSource {
     /**
      * Executes a query and returns the results in a Table instance.
      * @param t the Table to store the results in. If this value is null, a
-     * new table will automatically be created.
+     * new datamodel will automatically be created.
      * @param query the text SQL query to execute
      * @return a Table of the query results
      * @throws DataIOException if an error occurs while executing the query 
@@ -91,9 +91,9 @@ public class DatabaseDataSource {
     /**
      * Executes a query and returns the results in a Table instance.
      * @param t the Table to store the results in. If this value is null, a
-     * new table will automatically be created.
+     * new datamodel will automatically be created.
      * @param query the text SQL query to execute
-     * @param keyField used to determine if the row already exists in the table
+     * @param keyField used to determine if the row already exists in the datamodel
      * @return a Table of the query results
      * @throws DataIOException if an error occurs while executing the query 
      * or adding the query results in a prefuse Table.
@@ -107,9 +107,9 @@ public class DatabaseDataSource {
     /**
      * Executes a query and returns the results in a Table instance.
      * @param t the Table to store the results in. If this value is null, a
-     * new table will automatically be created.
+     * new datamodel will automatically be created.
      * @param query the text SQL query to execute
-     * @param keyField used to determine if the row already exists in the table
+     * @param keyField used to determine if the row already exists in the datamodel
      * @param lock an optional Object to use as a lock when performing data
      *  processing. This lock will be synchronized on whenever the Table is
      *  modified.
@@ -135,7 +135,7 @@ public class DatabaseDataSource {
 
     /**
      * Asynchronously executes a query and stores the results in the given 
-     * table instance. All data processing is done in a separate thread of
+     * datamodel instance. All data processing is done in a separate thread of
      * execution.
      * @param t the Table in which to store the results
      * @param query the query to execute
@@ -146,12 +146,12 @@ public class DatabaseDataSource {
 
     /**
      * Asynchronously executes a query and stores the results in the given 
-     * table instance. All data processing is done in a separate thread of
+     * datamodel instance. All data processing is done in a separate thread of
      * execution.
      * @param t the Table in which to store the results
      * @param query the query to execute
      * @param keyField the primary key field, comparisons on this field are
-     *  performed to recognize data records already present in the table.
+     *  performed to recognize data records already present in the datamodel.
      */
     public void loadData(Table t, String query, String keyField) {
         loadData(t, query, keyField, null, null);
@@ -159,7 +159,7 @@ public class DatabaseDataSource {
     
     /**
      * Asynchronously executes a query and stores the results in the given 
-     * table instance. All data processing is done in a separate thread of
+     * datamodel instance. All data processing is done in a separate thread of
      * execution.
      * @param t the Table in which to store the results
      * @param query the query to execute
@@ -173,12 +173,12 @@ public class DatabaseDataSource {
     
     /**
      * Asynchronously executes a query and stores the results in the given 
-     * table instance. All data processing is done in a separate thread of
+     * datamodel instance. All data processing is done in a separate thread of
      * execution.
      * @param t the Table in which to store the results
      * @param query the query to execute
      * @param keyField the primary key field, comparisons on this field are
-     *  performed to recognize data records already present in the table.
+     *  performed to recognize data records already present in the datamodel.
      * @param lock an optional Object to use as a lock when performing data
      *  processing. This lock will be synchronized on whenever the Table is
      *  modified.
@@ -189,12 +189,12 @@ public class DatabaseDataSource {
     
     /**
      * Asynchronously executes a query and stores the results in the given 
-     * table instance. All data processing is done in a separate thread of
+     * datamodel instance. All data processing is done in a separate thread of
      * execution.
      * @param t the Table in which to store the results
      * @param query the query to execute
      * @param keyField the primary key field, comparisons on this field are
-     *  performed to recognize data records already present in the table.
+     *  performed to recognize data records already present in the datamodel.
      *  A null value will result in no key checking.
      * @param lock an optional Object to use as a lock when performing data
      *  processing. This lock will be synchronized on whenever the Table is
@@ -240,7 +240,7 @@ public class DatabaseDataSource {
     
     /**
      * Process the results of a SQL query, putting retrieved data into a
-     * Table instance. If a null table is provided, a new table with the
+     * Table instance. If a null datamodel is provided, a new datamodel with the
      * appropriate schema will be created.
      * @param t the Table to store results in
      * @param rset the SQL query result set
@@ -257,7 +257,7 @@ public class DatabaseDataSource {
             ResultSetMetaData metadata = rset.getMetaData();
             int ncols = metadata.getColumnCount();
     
-            // create a new table if necessary
+            // create a new datamodel if necessary
             if ( t == null ) {
                 t = getSchema(metadata, m_handler).instantiate();
                 if ( key != null ) {
@@ -270,14 +270,14 @@ public class DatabaseDataSource {
                 }
             }
 
-            // set the lock, lock on the table itself if nothing else provided
+            // set the lock, lock on the datamodel itself if nothing else provided
             lock = (lock==null ? t : lock);
             
             // process the returned rows
             while ( rset.next() )
             {
                 synchronized ( lock ) {
-                    // determine the table row index to use
+                    // determine the datamodel row index to use
                     int row = getExistingRow(t, rset, key);
                     if ( row < 0 ) {
                         row = t.addRow();
@@ -345,7 +345,7 @@ public class DatabaseDataSource {
     
     /**
      * Given the metadata for a SQL result set and a data value handler for that
-     * result set, returns a corresponding schema for a prefuse table.
+     * result set, returns a corresponding schema for a prefuse datamodel.
      * @param metadata the SQL result set metadata
      * @param handler the data value handler
      * @return the schema determined by the metadata and handler
@@ -357,7 +357,7 @@ public class DatabaseDataSource {
         int ncols = metadata.getColumnCount();
         Schema schema = new Schema(ncols);
         
-        // determine the table schema
+        // determine the datamodel schema
         for ( int i=1; i<=ncols; ++i ) {
             String name = metadata.getColumnName(i);
             int sqlType = metadata.getColumnType(i);

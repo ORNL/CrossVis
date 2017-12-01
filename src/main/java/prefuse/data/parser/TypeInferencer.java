@@ -3,7 +3,7 @@ package prefuse.data.parser;
 import java.util.ArrayList;
 
 /**
- * Infers the data types for a table of data by testing each value
+ * Infers the data types for a datamodel of data by testing each value
  * of the data against a bank of parsers and eliminating candidate
  * parsers that do not successfully parse the data. This class leverages
  * the mechanisms of {@link ParserFactory}, but while that class only

@@ -10,7 +10,7 @@ import prefuse.data.parser.ParserFactory;
 
 /**
  * TableReader for Comma Separated Value (CSV) files. CSV files list
- * each row of a table on a line, separating each data column by a line.
+ * each row of a datamodel on a line, separating each data column by a line.
  * Typically the first line of the file is a header row indicating the
  * names of each data column.
  * 
@@ -32,7 +32,7 @@ public class CSVTableReader extends AbstractTextTableReader {
     /**
      * Create a new CSVTableReader.
      * @param parserFactory the ParserFactory to use for parsing text strings
-     * into table values.
+     * into datamodel values.
      */
     public CSVTableReader(ParserFactory parserFactory) {
         super(parserFactory);

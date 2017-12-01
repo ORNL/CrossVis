@@ -10,7 +10,7 @@ import prefuse.data.parser.ParserFactory;
 
 /**
  * TableReader for delimited text files, such as tab-delimited or
- * pipe-delimited text files. Such files typically list one row of table
+ * pipe-delimited text files. Such files typically list one row of datamodel
  * data per line of the file, using a designated character such as a tab
  * (\t) or pipe (|) to demarcate different data columns. This class
  * allows you to select any regular expression as the column
@@ -33,7 +33,7 @@ public class DelimitedTextTableReader extends AbstractTextTableReader {
     /**
      * Create a new DelimitedTextTableReader for reading tab-delimited files.
      * @param parserFactory the ParserFactory to use for parsing text strings
-     * into table values.
+     * into datamodel values.
      */
     public DelimitedTextTableReader(ParserFactory parserFactory) {
         this("\t", parserFactory);
@@ -53,7 +53,7 @@ public class DelimitedTextTableReader extends AbstractTextTableReader {
      * @param delimiterRegex a regular expression string indicating the
      * delimiter to use to separate column values
      * @param pf the ParserFactory to use for parsing text strings
-     * into table values.
+     * into datamodel values.
      */
     public DelimitedTextTableReader(String delimiterRegex, ParserFactory pf) {
         super(pf);

@@ -136,7 +136,7 @@ public class ColumnFactory {
     
     /**
      * Get a new column based on the given expression.
-     * @param t the table the column should be added to
+     * @param t the datamodel the column should be added to
      * @param expr the expression that should provide the column values
      * @return the new column
      */

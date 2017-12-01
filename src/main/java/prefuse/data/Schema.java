@@ -9,7 +9,7 @@ import prefuse.util.PrefuseLib;
  * column names, data types, and default values. New Table
  * instances can be created directly from Schema objects through the use of
  * the {@link #instantiate()} method. If a schema is subsequently changed,
- * instantiated table instances are not affected, keeping their original
+ * instantiated datamodel instances are not affected, keeping their original
  * schema.</p>
  * 
  * <p>Schema instances can be locked to prevent further changes. Any attempt
@@ -106,7 +106,7 @@ public class Schema implements Cloneable {
     }
     
     /**
-     * Lazily construct the lookup table for this schema. Used to
+     * Lazily construct the lookup datamodel for this schema. Used to
      * accelerate name-based lookups of schema information.
      */
     protected void initLookup() {
@@ -542,7 +542,7 @@ public class Schema implements Cloneable {
     
     /**
      * Instantiate this schema as a new Table instance.
-     * @param nrows the number of starting rows in the table
+     * @param nrows the number of starting rows in the datamodel
      * @return a new Table with this schema
      */
     public Table instantiate(int nrows) {

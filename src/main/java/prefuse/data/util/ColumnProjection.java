@@ -7,7 +7,7 @@ import prefuse.data.event.ProjectionListener;
  * Interface for filtering only a subset of a Table columns, computing
  * a projection of the available data fields. Used in conjunction with
  * CascadedTable instances to control what fields are inherited from
- * a parent table.
+ * a parent datamodel.
  * 
  * @author <a href="http://jheer.org">jeffrey heer</a>
  */

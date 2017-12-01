@@ -55,7 +55,7 @@ public class FilterIteratorFactory {
                 iter = t.tuples(ii);
         }
         
-        // optimization fails, scan the entire table
+        // optimization fails, scan the entire datamodel
         if ( iter == null ) {
             iter = new FilterIterator(ts.tuples(), p);
         }
@@ -64,18 +64,18 @@ public class FilterIteratorFactory {
     }
     
     /**
-     * Get a filtered iterator over the rows in the given table,
+     * Get a filtered iterator over the rows in the given datamodel,
      * filtered by the given predicate.
      * @param t the Table to iterate over
      * @param p the filter predicate
-     * @return a filtered iterator over the table rows
+     * @return a filtered iterator over the datamodel rows
      */
     public static IntIterator rows(Table t, Predicate p) {
         // attempt to generate an optimized query plan
         IntIterator iter = null;
         iter = getOptimizedIterator(t, p);
         
-        // optimization fails, scan the entire table
+        // optimization fails, scan the entire datamodel
         if ( iter == null ) {
             iter = new FilterRowIterator(t.rows(), t, p);
         }
@@ -83,7 +83,7 @@ public class FilterIteratorFactory {
     }
     
     /**
-     * Get an optimized iterator over the rows of a table, if possible.
+     * Get an optimized iterator over the rows of a datamodel, if possible.
      * @param t the Table to iterator over
      * @param p the filter predicate
      * @return an optimized iterator, or null if no optimization was found
@@ -217,7 +217,7 @@ public class FilterIteratorFactory {
             return null;
         }
         
-        // if table has index of the right type, use it
+        // if datamodel has index of the right type, use it
         Comparator cmp = cp.getComparator();
         Index index = t.getIndex(col.getColumnName());
         
@@ -325,7 +325,7 @@ public class FilterIteratorFactory {
         l = rp.getLeftExpression();
         r = rp.getRightExpression();
         
-        // if table has index of the right type, use it
+        // if datamodel has index of the right type, use it
         Comparator cmp = rp.getComparator();
         Index index = t.getIndex(col.getColumnName());
         

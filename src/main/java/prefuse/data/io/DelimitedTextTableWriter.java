@@ -8,7 +8,7 @@ import prefuse.data.Table;
 import prefuse.util.collections.IntIterator;
 
 /**
- * TableWriter that writes out a delimited text table, using a designated
+ * TableWriter that writes out a delimited text datamodel, using a designated
  * character string to demarcate data columns. By default, a header row
  * containing the column names is included in the output.
  * 

@@ -14,9 +14,9 @@ public interface GraphListener extends EventListener {
     /**
      * Notification that a graph has changed.
      * @param g the graph that has changed
-     * @param table the particular table within the graph that has changed
-     * @param start the starting row index of the changed table region
-     * @param end the ending row index of the changed table region
+     * @param table the particular datamodel within the graph that has changed
+     * @param start the starting row index of the changed datamodel region
+     * @param end the ending row index of the changed datamodel region
      * @param col the column that has changed, or
      * {@link EventConstants#ALL_COLUMNS} if the operation affects all
      * columns

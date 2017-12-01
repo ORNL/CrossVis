@@ -14,12 +14,12 @@ import prefuse.data.Table;
 public interface TableReader {
 
     /**
-     * Read in a table from the file at the given location. Though
+     * Read in a datamodel from the file at the given location. Though
      * not required by this interface, the String is typically resolved
      * using the {@link prefuse.util.io.IOLib#streamFromString(String)} method,
      * allowing URLs, classpath references, and files on the file system
      * to be accessed.
-     * @param location the location to read the table from
+     * @param location the location to read the datamodel from
      * @return the loaded Table
      * @throws DataIOException
      * @see prefuse.util.io.IOLib#streamFromString(String)
@@ -27,7 +27,7 @@ public interface TableReader {
     public Table readTable(String location) throws DataIOException;
     
     /**
-     * Read in a table from the given URL.
+     * Read in a datamodel from the given URL.
      * @param url the url to read the graph from
      * @return the loaded Table
      * @throws DataIOException
@@ -35,16 +35,16 @@ public interface TableReader {
     public Table readTable(URL url) throws DataIOException;
     
     /**
-     * Read in a table from the given File.
-     * @param f the file to read the table from
+     * Read in a datamodel from the given File.
+     * @param f the file to read the datamodel from
      * @return the loaded Table
      * @throws DataIOException
      */
     public Table readTable(File f) throws DataIOException;
     
     /**
-     * Read in a table from the given InputStream.
-     * @param is the InputStream to read the table from
+     * Read in a datamodel from the given InputStream.
+     * @param is the InputStream to read the datamodel from
      * @return the loaded Table
      * @throws DataIOException
      */

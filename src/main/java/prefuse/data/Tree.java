@@ -39,17 +39,17 @@ public class Tree extends Graph {
     private static final Logger s_logger
         = Logger.getLogger(Tree.class.getName());
     
-    /** Default data field used to denote the source node in an edge table */
+    /** Default data field used to denote the source node in an edge datamodel */
     public static final String DEFAULT_SOURCE_KEY 
         = PrefuseConfig.get("data.tree.sourceKey");
-    /** Default data field used to denote the target node in an edge table */
+    /** Default data field used to denote the target node in an edge datamodel */
     public static final String DEFAULT_TARGET_KEY
         = PrefuseConfig.get("data.tree.targetKey");
     
     // implement as graph with limitations on edge settings
     // catch external modification events and throw exceptions as necessary
     
-    /** The node table row number for the root node of the tree. */
+    /** The node datamodel row number for the root node of the tree. */
     protected int m_root = -1;
     
     // ------------------------------------------------------------------------
@@ -64,10 +64,10 @@ public class Tree extends Graph {
     
     /**
      * Create a new Tree.
-     * @param nodes the backing table to use for node data.
-     * Node instances of this graph will get their data from this table.
-     * @param edges the backing table to use for edge data.
-     * Edge instances of this graph will get their data from this table.
+     * @param nodes the backing datamodel to use for node data.
+     * Node instances of this graph will get their data from this datamodel.
+     * @param edges the backing datamodel to use for edge data.
+     * Edge instances of this graph will get their data from this datamodel.
      */
     public Tree(Table nodes, Table edges) {
         this(nodes, edges, DEFAULT_SOURCE_KEY, DEFAULT_TARGET_KEY);
@@ -75,14 +75,14 @@ public class Tree extends Graph {
 
     /**
      * Create a new Tree.
-     * @param nodes the backing table to use for node data.
-     * Node instances of this graph will get their data from this table.
-     * @param edges the backing table to use for edge data.
-     * Edge instances of this graph will get their data from this table.
+     * @param nodes the backing datamodel to use for node data.
+     * Node instances of this graph will get their data from this datamodel.
+     * @param edges the backing datamodel to use for edge data.
+     * Edge instances of this graph will get their data from this datamodel.
      * @param sourceKey data field used to denote the source node in an edge
-     * table
+     * datamodel
      * @param targetKey data field used to denote the target node in an edge
-     * table
+     * datamodel
      */
     public Tree(Table nodes, Table edges, String sourceKey, String targetKey) {
         this(nodes, edges, DEFAULT_NODE_KEY, sourceKey, targetKey);
@@ -90,16 +90,16 @@ public class Tree extends Graph {
     
     /**
      * Create a new Tree.
-     * @param nodes the backing table to use for node data.
-     * Node instances of this graph will get their data from this table.
-     * @param edges the backing table to use for edge data.
-     * Edge instances of this graph will get their data from this table.
+     * @param nodes the backing datamodel to use for node data.
+     * Node instances of this graph will get their data from this datamodel.
+     * @param edges the backing datamodel to use for edge data.
+     * Edge instances of this graph will get their data from this datamodel.
      * @param nodeKey data field used to uniquely identify a node. If this
-     * field is null, the node table row numbers will be used
+     * field is null, the node datamodel row numbers will be used
      * @param sourceKey data field used to denote the source node in an edge
-     * table
+     * datamodel
      * @param targetKey data field used to denote the target node in an edge
-     * table
+     * datamodel
      */
     public Tree(Table nodes, Table edges, String nodeKey,
             String sourceKey, String targetKey)
@@ -157,7 +157,7 @@ public class Tree extends Graph {
     
     /**
      * Add a new root node to an empty Tree.
-     * @return the node id (node table row number) of the new root node.
+     * @return the node id (node datamodel row number) of the new root node.
      */
     public int addRootRow() {
         if ( getNodeCount() != 0 ) {
@@ -178,7 +178,7 @@ public class Tree extends Graph {
     /**
      * Add a child node to the given parent node. An edge between the two
      * will also be created.
-     * @param parent the parent node id (node table row number)
+     * @param parent the parent node id (node datamodel row number)
      * @return the added child node id
      */
     public int addChild(int parent) {
@@ -200,8 +200,8 @@ public class Tree extends Graph {
     
     /**
      * Add a child edge between the given nodes.
-     * @param parent the parent node id (node table row number)
-     * @param child the child node id (node table row number)
+     * @param parent the parent node id (node datamodel row number)
+     * @param child the child node id (node datamodel row number)
      * @return the added child edge id
      */
     public int addChildEdge(int parent, int child) {
@@ -223,7 +223,7 @@ public class Tree extends Graph {
     /**
      * Remove a child edge from the Tree. The child node and its subtree
      * will also be removed from the Tree.
-     * @param edge the edge id (edge table row number) of the edge to remove
+     * @param edge the edge id (edge datamodel row number) of the edge to remove
      * @return true if the edge and attached subtree is successfully removed,
      * false otherwise
      */
@@ -245,7 +245,7 @@ public class Tree extends Graph {
     
     /**
      * Remove a node and its entire subtree rooted at the node from the tree.
-     * @param node the node id (node table row number) to remove
+     * @param node the node id (node datamodel row number) to remove
      * @return true if the node and its subtree is successfully removed,
      * false otherwise
      */
@@ -271,7 +271,7 @@ public class Tree extends Graph {
     // Tree Accessors
     
     /**
-     * Get the root node id (node table row number).
+     * Get the root node id (node datamodel row number).
      * @return the root node id
      */
     public int getRootRow() {
@@ -288,9 +288,9 @@ public class Tree extends Graph {
 
     /**
      * Get the child node id at the given index.
-     * @param node the parent node id (node table row number)
+     * @param node the parent node id (node datamodel row number)
      * @param idx the child index
-     * @return the child node id (node table row number)
+     * @return the child node id (node datamodel row number)
      */
     public int getChildRow(int node, int idx) {
         int cc = getChildCount(node);
@@ -313,8 +313,8 @@ public class Tree extends Graph {
     /**
      * Get the child index (order number of the child) for the given parent
      * node id and child node id.
-     * @param parent the parent node id (node table row number)
-     * @param child the child node id (node table row number)
+     * @param parent the parent node id (node datamodel row number)
+     * @param child the child node id (node datamodel row number)
      * @return the index of the child, or -1 if the given child node is not
      * actually a child of the given parent node, or either node is
      * invalud.
@@ -340,7 +340,7 @@ public class Tree extends Graph {
     
     /**
      * Get the node id of the first child of the given parent node id.
-     * @param node the parent node id (node table row number)
+     * @param node the parent node id (node datamodel row number)
      * @return the node id of the first child
      */
     public int getFirstChildRow(int node) {
@@ -358,7 +358,7 @@ public class Tree extends Graph {
     
     /**
      * Get the node id of the last child of the given parent node id.
-     * @param node the parent node id (node table row number)
+     * @param node the parent node id (node datamodel row number)
      * @return the node id of the last child
      */
     public int getLastChildRow(int node) {
@@ -376,7 +376,7 @@ public class Tree extends Graph {
     
     /**
      * Get the node id of the previous sibling of the given node id.
-     * @param node a node id (node table row number)
+     * @param node a node id (node datamodel row number)
      * @return the node id of the previous sibling, or -1 if there
      * is no previous sibling.
      */
@@ -401,7 +401,7 @@ public class Tree extends Graph {
     
     /**
      * Get the node id of the next sibling of the given node id.
-     * @param node a node id (node table row number)
+     * @param node a node id (node datamodel row number)
      * @return the node id of the next sibling, or -1 if there
      * is no next sibling.
      */
@@ -427,7 +427,7 @@ public class Tree extends Graph {
     
     /**
      * Get the depth of the given node id in the tree.
-     * @param node a node id (node table row number)
+     * @param node a node id (node datamodel row number)
      * @return the depth of the node in tree. The root node
      * is at a depth level of 0, with each child at a greater
      * depth level. -1 is returned if the input node id is not
@@ -445,7 +445,7 @@ public class Tree extends Graph {
     
     /**
      * Get the number of children of the given node id.
-     * @param node a node id (node table row number)
+     * @param node a node id (node datamodel row number)
      * @return the number of child nodes for the given node
      */
     public int getChildCount(int node) {
@@ -454,8 +454,8 @@ public class Tree extends Graph {
     
     /**
      * Get the edge id of the edge to the given node's parent.
-     * @param node the node id (node table row number)
-     * @return the edge id (edge table row number) of the parent edge
+     * @param node the node id (node datamodel row number)
+     * @return the edge id (edge datamodel row number) of the parent edge
      */
     public int getParentEdge(int node) {
         if ( getInDegree(node) > 0 ) {
@@ -479,7 +479,7 @@ public class Tree extends Graph {
     
     /**
      * Get a node's parent node id
-     * @param node the child node id (node table row number)
+     * @param node the child node id (node datamodel row number)
      * @return the parent node id, or -1 if there is no parent
      */
     public int getParent(int node) {
@@ -503,7 +503,7 @@ public class Tree extends Graph {
     /**
      * Get an iterator over the edge ids for edges connecting child nodes to
      * a given parent
-     * @param node the parent node id (node table row number)
+     * @param node the parent node id (node datamodel row number)
      * @return an iterator over the edge ids for edges conencting child nodes
      * to a given parent
      */
@@ -648,7 +648,7 @@ public class Tree extends Graph {
     // ------------------------------------------------------------------------
     // Tree Linkage Schema (appended to the Graph Linkage Schema)
     
-    /** Links table data field storing the index number of a child node */
+    /** Links datamodel data field storing the index number of a child node */
     protected static final String CHILDINDEX = "_childIndex";
     /** Schema addition to be added onto {@link Graph#LINKS_SCHEMA}. */
     protected static final Schema TREE_LINKS_SCHEMA = new Schema();

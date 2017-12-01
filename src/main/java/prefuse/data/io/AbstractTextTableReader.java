@@ -13,7 +13,7 @@ import prefuse.util.collections.ByteArrayList;
 import prefuse.util.io.IOLib;
 
 /**
- * Abstract base class for TableReader instances that read in a table
+ * Abstract base class for TableReader instances that read in a datamodel
  * from a textual data file.
  * 
  * @author <a href="http://jheer.org">jeffrey heer</a>
@@ -33,7 +33,7 @@ public abstract class AbstractTextTableReader extends AbstractTableReader {
     /**
      * Create a new AbstractTextTableReader.
      * @param parserFactory the ParserFactory to use for parsing text strings
-     * into table values.
+     * into datamodel values.
      */
     public AbstractTextTableReader(ParserFactory parserFactory) {
         m_pfactory = parserFactory;
@@ -41,7 +41,7 @@ public abstract class AbstractTextTableReader extends AbstractTableReader {
     }
     
     /**
-     * Set whether or not the table data file includes a header row.
+     * Set whether or not the datamodel data file includes a header row.
      * @param hasHeaderRow true if the the data file includes a header row,
      * false otherwise.
      */
@@ -109,12 +109,12 @@ public abstract class AbstractTextTableReader extends AbstractTableReader {
             // can't happen
         }
         
-        // create the table
+        // create the datamodel
         int nrows = dim[0];
         int ncols = dim[1];
         final Table table = new Table(nrows, ncols);
         
-        // create the table columns
+        // create the datamodel columns
         for ( int i=0; i < ncols; ++i ) {
             String header;
             if ( m_hasHeader || i < headers.size() ) {
@@ -154,7 +154,7 @@ public abstract class AbstractTextTableReader extends AbstractTableReader {
             }
         };
         
-        // read the data into the table
+        // read the data into the datamodel
         try {
             // prepare the input stream
             if ( is.markSupported() ) {

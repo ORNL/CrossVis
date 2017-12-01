@@ -23,14 +23,14 @@ public class PrefuseTableModel implements TableModel, TableListener {
     
     /**
      * Creates a new PrefuseTableModel
-     * @param table the underlying prefuse table
+     * @param table the underlying prefuse datamodel
      */
     public PrefuseTableModel(Table table) {
     	m_table = table;
     }
     
     /**
-     * Initialize mapping between prefuse table rows and the rows reported
+     * Initialize mapping between prefuse datamodel rows and the rows reported
      * by this model.
      */
     private void initRowMap() {
@@ -42,9 +42,9 @@ public class PrefuseTableModel implements TableModel, TableListener {
     }
     
     /**
-     * Get the prefuse table row for a row index into this table model.
-     * @param rowIndex the row index in this table model
-     * @return the corresponding prefuse table row
+     * Get the prefuse datamodel row for a row index into this datamodel model.
+     * @param rowIndex the row index in this datamodel model
+     * @return the corresponding prefuse datamodel row
      */
     private int getRow(int rowIndex) {
         if ( m_rowmap == null )

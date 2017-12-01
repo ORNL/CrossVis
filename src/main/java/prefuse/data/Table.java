@@ -37,23 +37,23 @@ import prefuse.util.collections.IntIterator;
  * named data field with a specific data type. Table data can be accessed
  * directly using the row number and column name, or rows can be treated
  * in an object-oriented fashion using {@link prefuse.data.Tuple}
- * instances that represent a single row of data in the table. As such,
+ * instances that represent a single row of data in the datamodel. As such,
  * tables implement the {@link prefuse.data.tuple.TupleSet} interface.</p>
  * 
  * <p>Table rows can be inserted or deleted. In any case, none of the other
- * existing table rows are effected by an insertion or deletion. A deleted
+ * existing datamodel rows are effected by an insertion or deletion. A deleted
  * row simply becomes invalid--any subsequent attempts to access the row
  * either directly or through a pre-existing Tuple instance will result
- * in an exception. However, if news rows are later added to the table,
+ * in an exception. However, if news rows are later added to the datamodel,
  * the row number for previously deleted nodes can be reused. In fact, the
  * lower row number currently unused is assigned to the new row. This results
- * in an efficient reuse of the table rows, but carries an important side
+ * in an efficient reuse of the datamodel rows, but carries an important side
  * effect -- rows do not necesarily maintain the order in which they were
- * added once deletions have occurred on the table. If not deletions
- * occur, the ordering of table rows will reflect the order in which
- * rows were added to the table.</p>
+ * added once deletions have occurred on the datamodel. If not deletions
+ * occur, the ordering of datamodel rows will reflect the order in which
+ * rows were added to the datamodel.</p>
  * 
- * <p>Collections of table rows can be accessed using both iterators over
+ * <p>Collections of datamodel rows can be accessed using both iterators over
  * the actual row numbers and iterators over the Tuple instances that
  * encapsulate access to that row. Both types of iteration can also be
  * filtered by providing a {@link prefuse.data.expression.Predicate},
@@ -87,7 +87,7 @@ import prefuse.util.collections.IntIterator;
  */
 public class Table extends AbstractTupleSet implements ColumnListener {
     
-    /** Listeners for changes to this table */
+    /** Listeners for changes to this datamodel */
     protected CopyOnWriteArrayList m_listeners;
     
     /** Locally stored data columns */
@@ -105,7 +105,7 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     /** manager for tuples, which are object representations for rows */
     protected TupleManager m_tuples;
     
-    /** Tracks the number of edits of this table */
+    /** Tracks the number of edits of this datamodel */
     protected int m_modCount = 0;
     
     /** Memoize the index of the last column operated on,
@@ -119,7 +119,7 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     // Constructors
     
     /**
-     * Create a new, empty Table. Rows can be added to the table using
+     * Create a new, empty Table. Rows can be added to the datamodel using
      * the {@link #addRow()} method.
      */
     public Table() {
@@ -129,7 +129,7 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     /**
      * Create a new Table with a given number of rows, and the starting
      * capacity for a given number of columns.
-     * @param nrows the starting number of table rows
+     * @param nrows the starting number of datamodel rows
      * @param ncols the starting capacity for columns 
      */
     public Table(int nrows, int ncols) {
@@ -138,7 +138,7 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     
     /**
      * Create a new Table.
-     * @param nrows the starting number of table rows
+     * @param nrows the starting number of datamodel rows
      * @param ncols the starting capacity for columns 
      * @param tupleType the class of the Tuple instances to use
      */
@@ -158,7 +158,7 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     // Table Metadata
     
     /**
-     * Get the number of columns / data fields in this table.
+     * Get the number of columns / data fields in this datamodel.
      * @return the number of columns 
      */
     public int getColumnCount() {
@@ -185,7 +185,7 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     }
 
     /**
-     * Get the number of rows in the table.
+     * Get the number of rows in the datamodel.
      * @return the number of rows
      */
     public int getRowCount() {
@@ -209,7 +209,7 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     }
     
     /**
-     * Indicates if the value of the given table cell can be changed. 
+     * Indicates if the value of the given datamodel cell can be changed.
      * @param row the row number
      * @param col the column number
      * @return true if the value can be edited/changed, false otherwise
@@ -224,9 +224,9 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     
     /**
      * Get the number of times this Table has been modified. Adding rows,
-     * deleting rows, and updating table cell values all contribute to
+     * deleting rows, and updating datamodel cell values all contribute to
      * this count.
-     * @return the number of modifications to this table
+     * @return the number of modifications to this datamodel
      */
     public int getModificationCount() {
         return m_modCount;
@@ -271,8 +271,8 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     }
     
     /**
-     * Invalidates this table's cached schema. This method should be called
-     * whenever columns are added or removed from this table.
+     * Invalidates this datamodel's cached schema. This method should be called
+     * whenever columns are added or removed from this datamodel.
      */
     protected void invalidateSchema() {
         m_schema = null;
@@ -283,43 +283,43 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     
     /**
      * Get the row value for accessing an underlying Column instance,
-     * corresponding to the given table cell. For basic tables this just
+     * corresponding to the given datamodel cell. For basic tables this just
      * returns the input row value. However, for tables that inherit
-     * data columns from a parent table and present a filtered view on
-     * this data, a mapping between the row numbers of the table and
+     * data columns from a parent datamodel and present a filtered view on
+     * this data, a mapping between the row numbers of the datamodel and
      * the row numbers of the backing data column is needed. In those cases,
      * this method returns the result of that mapping. The method
      * {@link #getTableRow(int, int)} accesses this map in the reverse
      * direction.
-     * @param row the table row to lookup
-     * @param col the table column to lookup
-     * @return the column row number for accessing the desired table cell
+     * @param row the datamodel row to lookup
+     * @param col the datamodel column to lookup
+     * @return the column row number for accessing the desired datamodel cell
      */
     public int getColumnRow(int row, int col) {
         return m_rows.getColumnRow(row, col);
     }
     
     /**
-     * Get the row number for this table given a row number for a backing
+     * Get the row number for this datamodel given a row number for a backing
      * data column and the column number for the data column. For basic
      * tables this just returns the column row value. However, for tables that
-     * inherit data columns from a parent table and present a filtered view on
-     * this data, a mapping between the row numbers of the table and
+     * inherit data columns from a parent datamodel and present a filtered view on
+     * this data, a mapping between the row numbers of the datamodel and
      * the row numbers of the backing data column is needed. In those cases,
      * this method returns the result of this mapping, in the direction of
-     * the backing column rows to the table rows of the cascaded table. The
+     * the backing column rows to the datamodel rows of the cascaded datamodel. The
      * method {@link #getColumnRow(int, int)} accesses this map in the reverse
      * direction.
      * @param colrow the row of the backing data column
-     * @param col the table column to lookup.
-     * @return the table row number for accessing the desired table cell
+     * @param col the datamodel column to lookup.
+     * @return the datamodel row number for accessing the desired datamodel cell
      */
     public int getTableRow(int colrow, int col) {
         return m_rows.getTableRow(colrow, col);
     }
     
     /**
-     * Add a row to this table. All data columns will be notified and will
+     * Add a row to this datamodel. All data columns will be notified and will
      * take on the appropriate default values for the added row.
      * @return the row number of the newly added row
      */
@@ -333,7 +333,7 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     }
     
     /**
-     * Add a given number of rows to this table. All data columns will be
+     * Add a given number of rows to this datamodel. All data columns will be
      * notified and will take on the appropriate default values for the
      * added rows.
      * @param nrows the number of rows to add.
@@ -359,7 +359,7 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     }
     
     /**
-     * Removes a row from this table.
+     * Removes a row from this datamodel.
      * @param row the row to delete
      * @return true if the row was successfully deleted, false if the
      * row was already invalid
@@ -389,7 +389,7 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     }
     
     /**
-     * Clear this table, removing all rows.
+     * Clear this datamodel, removing all rows.
      * @see prefuse.data.tuple.TupleSet#clear()
      */
     public void clear() {
@@ -400,7 +400,7 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     }
     
     /**
-     * Indicates if the given row number corresponds to a valid table row.
+     * Indicates if the given row number corresponds to a valid datamodel row.
      * @param row the row number to check for validity
      * @return true if the row is valid, false if it is not
      */
@@ -468,7 +468,7 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     }
     
     /**
-     * Add a column with the given name and data type to this table.
+     * Add a column with the given name and data type to this datamodel.
      * @param name the data field name for the column
      * @param type the data type, as a Java Class, for the column
      * @see prefuse.data.tuple.TupleSet#addColumn(java.lang.String, java.lang.Class)
@@ -478,7 +478,7 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     }
 
     /**
-     * Add a column with the given name and data type to this table.
+     * Add a column with the given name and data type to this datamodel.
      * @param name the data field name for the column
      * @param type the data type, as a Java Class, for the column
      * @param defaultValue the default value for column data values
@@ -491,7 +491,7 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     }
     
     /**
-     * Add a derived column to this table, using an Expression instance to
+     * Add a derived column to this datamodel, using an Expression instance to
      * dynamically calculate the column data values.
      * @param name the data field name for the column
      * @param expr a String expression in the prefuse expression language, to
@@ -512,7 +512,7 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     }
     
     /**
-     * Add a derived column to this table, using an Expression instance to
+     * Add a derived column to this datamodel, using an Expression instance to
      * dynamically calculate the column data values.
      * @param name the data field name for the column
      * @param expr the Expression that will determine the column values
@@ -523,7 +523,7 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     }
     
     /**
-     * Add a constant column to this table, which returns one constant value
+     * Add a constant column to this datamodel, which returns one constant value
      * for all column rows.
      * @param name the data field name for the column
      * @param type the data type, as a Java Class, for the column
@@ -598,7 +598,7 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     }
     
     /**
-     * Remove a data field from this table
+     * Remove a data field from this datamodel
      * @param field the name of the data field / column to remove
      * @return the removed Column instance
      */
@@ -611,7 +611,7 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     }
     
     /**
-     * Remove a column from this table
+     * Remove a column from this datamodel
      * @param c the column instance to remove
      */
     public void removeColumn(Column c) {
@@ -752,24 +752,24 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     
     /**
      * Get the Tuple instance providing object-oriented access to the given
-     * table row.
-     * @param row the table row
-     * @return the Tuple for the given table row
+     * datamodel row.
+     * @param row the datamodel row
+     * @return the Tuple for the given datamodel row
      */
     public Tuple getTuple(int row) {
         return m_tuples.getTuple(row);
     }
     
     /**
-     * Add a Tuple to this table. If the Tuple is already a member of this
-     * table, nothing is done and null is returned. If the Tuple is not
+     * Add a Tuple to this datamodel. If the Tuple is already a member of this
+     * datamodel, nothing is done and null is returned. If the Tuple is not
      * a member of this Table but has a compatible data schema, as
      * determined by {@link Schema#isAssignableFrom(Schema)}, a new row
      * is created, the Tuple's values are copied, and the new Tuple that
      * is a member of this Table is returned. If the data schemas are not
      * compatible, nothing is done and null is returned.
-     * @param t the Tuple to "add" to this table
-     * @return the actual Tuple instance added to this table, or null if
+     * @param t the Tuple to "add" to this datamodel
+     * @return the actual Tuple instance added to this datamodel, or null if
      * no new Tuple has been added
      * @see prefuse.data.tuple.TupleSet#addTuple(prefuse.data.Tuple)
      */
@@ -792,10 +792,10 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     }
     
     /**
-     * Clears the contents of this table and then attempts to add the given
+     * Clears the contents of this datamodel and then attempts to add the given
      * Tuple instance.
-     * @param t the Tuple to make the sole tuple in thie table
-     * @return the actual Tuple instance added to this table, or null if
+     * @param t the Tuple to make the sole tuple in thie datamodel
+     * @return the actual Tuple instance added to this datamodel, or null if
      * no new Tuple has been added
      * @see prefuse.data.tuple.TupleSet#setTuple(prefuse.data.Tuple)
      */
@@ -805,11 +805,11 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     }
     
     /**
-     * Remove a tuple from this table. If the Tuple is a member of this table,
-     * its row is deleted from the table. Otherwise, nothing is done.
-     * @param t the Tuple to remove from the table
+     * Remove a tuple from this datamodel. If the Tuple is a member of this datamodel,
+     * its row is deleted from the datamodel. Otherwise, nothing is done.
+     * @param t the Tuple to remove from the datamodel
      * @return true if the Tuple row was successfully deleted, false if the
-     * Tuple is invalid or not a member of this table
+     * Tuple is invalid or not a member of this datamodel
      * @see prefuse.data.tuple.TupleSet#removeTuple(prefuse.data.Tuple)
      */
     public boolean removeTuple(Tuple t) {
@@ -822,9 +822,9 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     }
     
     /**
-     * Indicates if this table contains the given Tuple instance.
+     * Indicates if this datamodel contains the given Tuple instance.
      * @param t the Tuple to check for containment
-     * @return true if the Tuple represents a row of this table, false if
+     * @return true if the Tuple represents a row of this datamodel, false if
      * it does not
      * @see prefuse.data.tuple.TupleSet#containsTuple(prefuse.data.Tuple)
      */
@@ -833,7 +833,7 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     }
     
     /**
-     * Get the number of tuples in this table. This is the same as the
+     * Get the number of tuples in this datamodel. This is the same as the
      * value returned by {@link #getRowCount()}.
      * @return the number of tuples, which is the same as the number of rows
      * @see prefuse.data.tuple.TupleSet#getTupleCount()
@@ -843,7 +843,7 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     }
     
     /**
-     * Returns true, as this table supports the addition of new data fields.
+     * Returns true, as this datamodel supports the addition of new data fields.
      * @see prefuse.data.tuple.TupleSet#isAddColumnSupported()
      */
     public boolean isAddColumnSupported() {
@@ -888,7 +888,7 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     
     /**
      * Get the data value at the given row and field as an Object.
-     * @param row the table row to get
+     * @param row the datamodel row to get
      * @param field the data field to retrieve
      * @return the data value as an Object. The concrete type of this
      * Object is dependent on the underlying data column used.
@@ -903,7 +903,7 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     
     /**
      * Set the value of a given row and data field.
-     * @param row the table row to set
+     * @param row the datamodel row to set
      * @param field the data field to set
      * @param val the value for the field. If the concrete type of this
      * Object is not compatible with the underlying data model, an
@@ -1008,7 +1008,7 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     /**
      * Get the data value at the given row and field as an
      * <code>int</code>.
-     * @param row the table row to retrieve
+     * @param row the datamodel row to retrieve
      * @param field the data field to retrieve
      * @see #canGetInt(String)
      */
@@ -1021,7 +1021,7 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     /**
      * Set the data value of the given row and field as an
      * <code>int</code>.
-     * @param row the table row to set
+     * @param row the datamodel row to set
      * @param field the data field to set
      * @param val the value to set
      * @see #canSetInt(String)
@@ -1035,7 +1035,7 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     /**
      * Get the data value at the given row and field as an
      * <code>int</code>.
-     * @param row the table row to retrieve
+     * @param row the datamodel row to retrieve
      * @param col the column number of the data field to retrieve
      * @see #canGetInt(String)
      */
@@ -1047,7 +1047,7 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     /**
      * Set the data value of the given row and field as an
      * <code>int</code>.
-     * @param row the table row to set
+     * @param row the datamodel row to set
      * @param col the column number of the data field to set
      * @param val the value to set
      * @see #canSetInt(String)
@@ -1087,7 +1087,7 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     /**
      * Get the data value at the given row and field as a
      * <code>long</code>.
-     * @param row the table row to retrieve
+     * @param row the datamodel row to retrieve
      * @param field the data field to retrieve
      * @see #canGetLong(String)
      */
@@ -1100,7 +1100,7 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     /**
      * Set the data value of the given row and field as a
      * <code>long</code>.
-     * @param row the table row to set
+     * @param row the datamodel row to set
      * @param field the data field to set
      * @param val the value to set
      * @see #canSetLong(String)
@@ -1114,7 +1114,7 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     /**
      * Get the data value at the given row and field as an
      * <code>long</code>.
-     * @param row the table row to retrieve
+     * @param row the datamodel row to retrieve
      * @param col the column number of the data field to retrieve
      * @see #canGetLong(String)
      */
@@ -1126,7 +1126,7 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     /**
      * Set the data value of the given row and field as an
      * <code>long</code>.
-     * @param row the table row to set
+     * @param row the datamodel row to set
      * @param col the column number of the data field to set
      * @param val the value to set
      * @see #canSetLong(String)
@@ -1166,7 +1166,7 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     /**
      * Get the data value at the given row and field as a
      * <code>float</code>.
-     * @param row the table row to retrieve
+     * @param row the datamodel row to retrieve
      * @param field the data field to retrieve
      * @see #canGetFloat(String)
      */
@@ -1179,7 +1179,7 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     /**
      * Set the data value of the given row and field as a
      * <code>float</code>.
-     * @param row the table row to set
+     * @param row the datamodel row to set
      * @param field the data field to set
      * @param val the value to set
      * @see #canSetFloat(String)
@@ -1193,7 +1193,7 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     /**
      * Get the data value at the given row and field as a
      * <code>float</code>.
-     * @param row the table row to retrieve
+     * @param row the datamodel row to retrieve
      * @param col the column number of the data field to get
      * @see #canGetFloat(String)
      */
@@ -1205,7 +1205,7 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     /**
      * Set the data value of the given row and field as a
      * <code>float</code>.
-     * @param row the table row to set
+     * @param row the datamodel row to set
      * @param col the column number of the data field to set
      * @param val the value to set
      * @see #canSetFloat(String)
@@ -1245,7 +1245,7 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     /**
      * Get the data value at the given row and field as a
      * <code>double</code>.
-     * @param row the table row to retrieve
+     * @param row the datamodel row to retrieve
      * @param field the data field to retrieve
      * @see #canGetDouble(String)
      */
@@ -1258,7 +1258,7 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     /**
      * Set the data value of the given row and field as a
      * <code>double</code>.
-     * @param row the table row to set
+     * @param row the datamodel row to set
      * @param field the data field to set
      * @param val the value to set
      * @see #canSetDouble(String)
@@ -1272,7 +1272,7 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     /**
      * Get the data value at the given row and field as a
      * <code>double</code>.
-     * @param row the table row to retrieve
+     * @param row the datamodel row to retrieve
      * @param col the column number of the data field to get
      * @see #canGetDouble(String)
      */
@@ -1284,7 +1284,7 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     /**
      * Set the data value of the given row and field as a
      * <code>double</code>.
-     * @param row the table row to set
+     * @param row the datamodel row to set
      * @param col the column number of the data field to set
      * @param val the value to set
      * @see #canSetDouble(String)
@@ -1324,7 +1324,7 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     /**
      * Get the data value at the given row and field as a
      * <code>boolean</code>.
-     * @param row the table row to retrieve
+     * @param row the datamodel row to retrieve
      * @param field the data field to retrieve
      * @see #canGetBoolean(String)
      */
@@ -1337,7 +1337,7 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     /**
      * Set the data value of the given row and field as a
      * <code>boolean</code>.
-     * @param row the table row to set
+     * @param row the datamodel row to set
      * @param field the data field to set
      * @param val the value to set
      * @see #canSetBoolean(String)
@@ -1351,7 +1351,7 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     /**
      * Get the data value at the given row and field as a
      * <code>boolean</code>.
-     * @param row the table row to retrieve
+     * @param row the datamodel row to retrieve
      * @param col the column number of the data field to get
      * @see #canGetBoolean(String)
      */
@@ -1363,7 +1363,7 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     /**
      * Set the data value of the given row and field as a
      * <code>boolean</code>.
-     * @param row the table row to set
+     * @param row the datamodel row to set
      * @param col the column number of the data field to set
      * @param val the value to set
      * @see #canSetBoolean(String)
@@ -1403,7 +1403,7 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     /**
      * Get the data value at the given row and field as a
      * <code>String</code>.
-     * @param row the table row to retrieve
+     * @param row the datamodel row to retrieve
      * @param field the data field to retrieve
      * @see #canGetString(String)
      */
@@ -1416,7 +1416,7 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     /**
      * Set the data value of the given row and field as a
      * <code>String</code>.
-     * @param row the table row to set
+     * @param row the datamodel row to set
      * @param field the data field to set
      * @param val the value to set
      * @see #canSetString(String)
@@ -1430,7 +1430,7 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     /**
      * Get the data value at the given row and field as a
      * <code>String</code>.
-     * @param row the table row to retrieve
+     * @param row the datamodel row to retrieve
      * @param col the column number of the data field to retrieve
      * @see #canGetString(String)
      */
@@ -1442,7 +1442,7 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     /**
      * Set the data value of the given row and field as a
      * <code>String</code>.
-     * @param row the table row to set
+     * @param row the datamodel row to set
      * @param col the column number of the data field to set
      * @param val the value to set
      * @see #canSetString(String)
@@ -1482,7 +1482,7 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     /**
      * Get the data value at the given row and field as a
      * <code>Date</code>.
-     * @param row the table row to retrieve
+     * @param row the datamodel row to retrieve
      * @param field the data field to retrieve
      * @see #canGetDate(String)
      */
@@ -1495,7 +1495,7 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     /**
      * Set the data value of the given row and field as a
      * <code>Date</code>.
-     * @param row the table row to set
+     * @param row the datamodel row to set
      * @param field the data field to set
      * @param val the value to set
      * @see #canSetDate(String)
@@ -1509,7 +1509,7 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     /**
      * Get the data value at the given row and field as a
      * <code>Date</code>.
-     * @param row the table row to retrieve
+     * @param row the datamodel row to retrieve
      * @param col the column number of the data field to retrieve
      * @see #canGetDate(String)
      */
@@ -1521,7 +1521,7 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     /**
      * Set the data value of the given row and field as a
      * <code>Date</code>.
-     * @param row the table row to set
+     * @param row the datamodel row to set
      * @param col the column number of the data field to set
      * @param val the value to set
      * @see #canSetDate(String)
@@ -1535,16 +1535,16 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     // Query Operations
     
     /**
-     * Query this table for a filtered, sorted subset of this table. This
-     * operation creates an entirely new table independent of this table.
-     * If a filtered view of this same table is preferred, use the
+     * Query this datamodel for a filtered, sorted subset of this datamodel. This
+     * operation creates an entirely new datamodel independent of this datamodel.
+     * If a filtered view of this same datamodel is preferred, use the
      * {@link CascadedTable} class.
      * @param filter the predicate filter determining which rows to include
-     * in the new table. If this value is null, all rows will be included.
+     * in the new datamodel. If this value is null, all rows will be included.
      * @param sort the sorting criteria determining the order in which
-     * rows are added to the new table. If this value is null, the rows
+     * rows are added to the new datamodel. If this value is null, the rows
      * will not be sorted.
-     * @return a new table meeting the query specification
+     * @return a new datamodel meeting the query specification
      */
     public Table select(Predicate filter, Sort sort) {
         Table t = getSchema().instantiate();
@@ -1556,9 +1556,9 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     }
     
     /**
-     * Removes all table rows that meet the input predicate filter.
+     * Removes all datamodel rows that meet the input predicate filter.
      * @param filter a predicate specifying which rows to remove from
-     * the table.
+     * the datamodel.
      */
     public void remove(Predicate filter) {
         for ( IntIterator ii = rows(filter); ii.hasNext(); )
@@ -1569,25 +1569,25 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     // Iterators
     
     /**
-     * Return a TableIterator over the rows of this table.
-     * @return a TableIterator over this table
+     * Return a TableIterator over the rows of this datamodel.
+     * @return a TableIterator over this datamodel
      */
     public TableIterator iterator() {
         return iterator(rows());
     }
 
     /**
-     * Return a TableIterator over the given rows of this table.
-     * @param rows an iterator over the table rows to visit
-     * @return a TableIterator over this table
+     * Return a TableIterator over the given rows of this datamodel.
+     * @param rows an iterator over the datamodel rows to visit
+     * @return a TableIterator over this datamodel
      */
     public TableIterator iterator(IntIterator rows) {
         return new TableIterator(this, rows);
     }
     
     /**
-     * Get an iterator over the tuples in this table.
-     * @return an iterator over the table tuples
+     * Get an iterator over the tuples in this datamodel.
+     * @return an iterator over the datamodel tuples
      * @see prefuse.data.tuple.TupleSet#tuples()
      */
     public Iterator tuples() {
@@ -1595,57 +1595,57 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     }
     
     /**
-     * Get an iterator over the tuples in this table in reverse order.
-     * @return an iterator over the table tuples in reverse order
+     * Get an iterator over the tuples in this datamodel in reverse order.
+     * @return an iterator over the datamodel tuples in reverse order
      */
     public Iterator tuplesReversed() {
         return m_tuples.iterator(rows(true));
     }
     
     /**
-     * Get an iterator over the tuples for the given rows in this table.
-     * @param rows an iterator over the table rows to visit
-     * @return an iterator over the selected table tuples
+     * Get an iterator over the tuples for the given rows in this datamodel.
+     * @param rows an iterator over the datamodel rows to visit
+     * @return an iterator over the selected datamodel tuples
      */
     public Iterator tuples(IntIterator rows) {
         return m_tuples.iterator(rows);
     }
     
     /**
-     * Get an interator over the row numbers of this table.
-     * @return an iterator over the rows of this table
+     * Get an interator over the row numbers of this datamodel.
+     * @return an iterator over the rows of this datamodel
      */
     public IntIterator rows() {
         return m_rows.rows();
     }
     
     /**
-     * Get a filtered iterator over the row numbers of this table, returning
+     * Get a filtered iterator over the row numbers of this datamodel, returning
      * only the rows whose tuples match the given filter predicate.
      * @param filter the filter predicate to apply
-     * @return a filtered iterator over the rows of this table
+     * @return a filtered iterator over the rows of this datamodel
      */
     public IntIterator rows(Predicate filter) {
         return FilterIteratorFactory.rows(this, filter);
     }
     
     /**
-     * Get an interator over the row numbers of this table.
+     * Get an interator over the row numbers of this datamodel.
      * @param reverse true to iterate in rever order, false for normal order
-     * @return an iterator over the rows of this table
+     * @return an iterator over the rows of this datamodel
      */
     public IntIterator rows(boolean reverse) {
         return m_rows.rows(reverse);
     }
     
     /**
-     * Get an iterator over the rows of this table, sorted by the given data
+     * Get an iterator over the rows of this datamodel, sorted by the given data
      * field. This method will create an index over the field if one does
      * not yet exist.
      * @param field the data field to sort by
      * @param ascend true if the iteration should proceed in an ascending
      * (lowest to highest) sort order, false for a descending order
-     * @return the sorted iterator over rows of this table
+     * @return the sorted iterator over rows of this datamodel
      */
     public IntIterator rowsSortedBy(String field, boolean ascend) {
         Class type = getColumnType(field);
@@ -1655,7 +1655,7 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     }
     
     /**
-     * Return an iterator over a range of rwos in this table, determined
+     * Return an iterator over a range of rwos in this datamodel, determined
      * by a bounded range for a given data field. A new index over the
      * data field will be created if it doesn't already exist.
      * @param field the data field for determining the bounded range
@@ -1664,7 +1664,7 @@ public class Table extends AbstractTupleSet implements ColumnListener {
      * @param indexType indicate the sort order and inclusivity/exclusivity
      * of the range bounds, using the constants of the
      * {@link prefuse.data.util.Index} class.
-     * @return an iterator over a range of table rows, determined by a 
+     * @return an iterator over a range of datamodel rows, determined by a
      * sorted bounded range of a data field
      */
     public IntIterator rangeSortedBy(String field, int lo, int hi, int indexType) {
@@ -1673,7 +1673,7 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     }
     
     /**
-     * Return an iterator over a range of rwos in this table, determined
+     * Return an iterator over a range of rwos in this datamodel, determined
      * by a bounded range for a given data field. A new index over the
      * data field will be created if it doesn't already exist. 
      * @param field the data field for determining the bounded range
@@ -1682,7 +1682,7 @@ public class Table extends AbstractTupleSet implements ColumnListener {
      * @param indexType indicate the sort order and inclusivity/exclusivity
      * of the range bounds, using the constants of the
      * {@link prefuse.data.util.Index} class.
-     * @return an iterator over a range of table rows, determined by a 
+     * @return an iterator over a range of datamodel rows, determined by a
      * sorted bounded range of a data field
      */
     public IntIterator rangeSortedBy(String field, long lo, long hi, int indexType) {
@@ -1691,7 +1691,7 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     }
     
     /**
-     * Return an iterator over a range of rwos in this table, determined
+     * Return an iterator over a range of rwos in this datamodel, determined
      * by a bounded range for a given data field. A new index over the
      * data field will be created if it doesn't already exist.
      * @param field the data field for determining the bounded range
@@ -1700,7 +1700,7 @@ public class Table extends AbstractTupleSet implements ColumnListener {
      * @param indexType indicate the sort order and inclusivity/exclusivity
      * of the range bounds, using the constants of the
      * {@link prefuse.data.util.Index} class.
-     * @return an iterator over a range of table rows, determined by a 
+     * @return an iterator over a range of datamodel rows, determined by a
      * sorted bounded range of a data field
      */
     public IntIterator rangeSortedBy(String field, float lo, float hi, int indexType) {
@@ -1709,7 +1709,7 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     }
     
     /**
-     * Return an iterator over a range of rwos in this table, determined
+     * Return an iterator over a range of rwos in this datamodel, determined
      * by a bounded range for a given data field. A new index over the
      * data field will be created if it doesn't already exist.
      * @param field the data field for determining the bounded range
@@ -1718,7 +1718,7 @@ public class Table extends AbstractTupleSet implements ColumnListener {
      * @param indexType indicate the sort order and inclusivity/exclusivity
      * of the range bounds, using the constants of the
      * {@link prefuse.data.util.Index} class.
-     * @return an iterator over a range of table rows, determined by a 
+     * @return an iterator over a range of datamodel rows, determined by a
      * sorted bounded range of a data field
      */
     public IntIterator rangeSortedBy(String field, double lo, double hi, int indexType) {
@@ -1727,7 +1727,7 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     }
     
     /**
-     * Return an iterator over a range of rwos in this table, determined
+     * Return an iterator over a range of rwos in this datamodel, determined
      * by a bounded range for a given data field. A new index over the
      * data field will be created if it doesn't already exist.
      * @param field the data field for determining the bounded range
@@ -1736,7 +1736,7 @@ public class Table extends AbstractTupleSet implements ColumnListener {
      * @param indexType indicate the sort order and inclusivity/exclusivity
      * of the range bounds, using the constants of the
      * {@link prefuse.data.util.Index} class.
-     * @return an iterator over a range of table rows, determined by a 
+     * @return an iterator over a range of datamodel rows, determined by a
      * sorted bounded range of a data field
      */
     public IntIterator rangeSortedBy(String field, Object lo, Object hi, int indexType) {
@@ -1831,7 +1831,7 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     // -- TableListeners ------------------------------------------------------
     
     /**
-     * Add a table listener to this table.
+     * Add a datamodel listener to this datamodel.
      * @param listnr the listener to add
      */
     public void addTableListener(TableListener listnr) {
@@ -1840,7 +1840,7 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     }
 
     /**
-     * Remove a table listener from this table.
+     * Remove a datamodel listener from this datamodel.
      * @param listnr the listener to remove
      */
     public void removeTableListener(TableListener listnr) {
@@ -1848,20 +1848,20 @@ public class Table extends AbstractTupleSet implements ColumnListener {
     }
     
     /**
-     * Removes all table listeners from this table.
+     * Removes all datamodel listeners from this datamodel.
      */
     public void removeAllTableListeners() {
     	m_listeners.clear();
     }
     
     /**
-     * Fire a table event to notify listeners.
+     * Fire a datamodel event to notify listeners.
      * @param row0 the starting row of the modified range
      * @param row1 the ending row (inclusive) of the modified range
      * @param col the number of the column modified, or
      * {@link prefuse.data.event.EventConstants#ALL_COLUMNS} for operations
      * effecting all columns.
-     * @param type the table modification type, one of
+     * @param type the datamodel modification type, one of
      * {@link prefuse.data.event.EventConstants#INSERT},
      * {@link prefuse.data.event.EventConstants#DELETE}, or
      * {@link prefuse.data.event.EventConstants#UPDATE}.
@@ -1878,7 +1878,7 @@ public class Table extends AbstractTupleSet implements ColumnListener {
         }
         
         if ( !m_listeners.isEmpty() ) {
-            // fire event to all table listeners
+            // fire event to all datamodel listeners
             Object[] lstnrs = m_listeners.getArray();
             for ( int i=0; i<lstnrs.length; ++i ) {
                 ((TableListener)lstnrs[i]).tableChanged(

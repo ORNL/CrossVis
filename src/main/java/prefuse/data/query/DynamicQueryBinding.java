@@ -9,7 +9,7 @@ import prefuse.data.tuple.TupleSet;
  * <p>Abstract base class for dynamic query bindings, which support
  * data queries that can be dynamically edited with direct manipulation
  * user interface components. DynamicQueryBinding instances
- * take a particular field of a table, create a
+ * take a particular field of a datamodel, create a
  * {@link prefuse.data.expression.Predicate} instance for filtering Tuples
  * based on the values of that data field, and bind that Predicate to any
  * number of user interface components that can be used to manipulate the

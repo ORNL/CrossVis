@@ -144,7 +144,7 @@ public class GraphMLWriter extends AbstractGraphWriter {
     }
     
     /**
-     * Print a table schema to a GraphML file
+     * Print a datamodel schema to a GraphML file
      * @param xml the XMLWriter to write to
      * @param group the data group (node or edge) for the schema
      * @param s the schema

@@ -13,10 +13,10 @@ import prefuse.data.expression.Predicate;
 import prefuse.visual.tuple.TableVisualItem;
 
 /**
- * A visual abstraction of a Table data structure. Serves as a backing table
+ * A visual abstraction of a Table data structure. Serves as a backing datamodel
  * for VisualItem tuples. VisualTable dervies from CascadedTable,
- * so can inherit another table's values. Commonly, a VisualTable is used to
- * take a raw data table and "strap" visual properties on top of it.
+ * so can inherit another datamodel's values. Commonly, a VisualTable is used to
+ * take a raw data datamodel and "strap" visual properties on top of it.
  * VisualTables should not be created directly, they are created automatically
  * by adding data to a Visualization, for example by using the
  * {@link Visualization#addTable(String, Table)} method.
@@ -33,9 +33,9 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
     
     /**
      * Create a new VisualTable.
-     * @param parent the parent table whose values this table should inherit
-     * @param vis the Visualization associated with this table
-     * @param group the data group of this table
+     * @param parent the parent datamodel whose values this datamodel should inherit
+     * @param vis the Visualization associated with this datamodel
+     * @param group the data group of this datamodel
      */
     public VisualTable(Table parent, Visualization vis, String group) {
         this(parent, vis, group, null, VisualItem.SCHEMA);
@@ -43,11 +43,11 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
 
     /**
      * Create a new VisualTable.
-     * @param parent the parent table whose values this table should inherit
-     * @param vis the Visualization associated with this table
-     * @param group the data group of this table
-     * @param rowFilter a predicate determing which rows of the parent table
-     * should be inherited by this table and which should be filtered out
+     * @param parent the parent datamodel whose values this datamodel should inherit
+     * @param vis the Visualization associated with this datamodel
+     * @param group the data group of this datamodel
+     * @param rowFilter a predicate determing which rows of the parent datamodel
+     * should be inherited by this datamodel and which should be filtered out
      */
     public VisualTable(Table parent, Visualization vis, String group,
             Predicate rowFilter)
@@ -57,12 +57,12 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
 
     /**
      * Create a new VisualTable.
-     * @param parent the parent table whose values this table should inherit
-     * @param vis the Visualization associated with this table
-     * @param group the data group of this table
-     * @param rowFilter a predicate determing which rows of the parent table
-     * should be inherited by this table and which should be filtered out
-     * @param schema the data schema to use for the table's local columns
+     * @param parent the parent datamodel whose values this datamodel should inherit
+     * @param vis the Visualization associated with this datamodel
+     * @param group the data group of this datamodel
+     * @param rowFilter a predicate determing which rows of the parent datamodel
+     * should be inherited by this datamodel and which should be filtered out
+     * @param schema the data schema to use for the datamodel's local columns
      */
     public VisualTable(Table parent, Visualization vis, String group, 
             Predicate rowFilter, Schema schema)
@@ -71,12 +71,12 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
         init(vis, group, schema);
     }
 
-    // -- non-cascaded visual table -------------------------------------------
+    // -- non-cascaded visual datamodel -------------------------------------------
     
     /**
-     * Create a new VisualTable without a parent table.
-     * @param vis the Visualization associated with this table
-     * @param group the data group of this table
+     * Create a new VisualTable without a parent datamodel.
+     * @param vis the Visualization associated with this datamodel
+     * @param group the data group of this datamodel
      */
     public VisualTable(Visualization vis, String group) {
         super(TableVisualItem.class);
@@ -84,10 +84,10 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
     }
     
     /**
-     * Create a new VisualTable without a parent table.
-     * @param vis the Visualization associated with this table
-     * @param group the data group of this table
-     * @param schema the data schema to use for the table's local columns
+     * Create a new VisualTable without a parent datamodel.
+     * @param vis the Visualization associated with this datamodel
+     * @param group the data group of this datamodel
+     * @param schema the data schema to use for the datamodel's local columns
      */
     public VisualTable(Visualization vis, String group, Schema schema) {
         super(TableVisualItem.class);
@@ -95,10 +95,10 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
     }
 
     /**
-     * Create a new VisualTable without a parent table.
-     * @param vis the Visualization associated with this table
-     * @param group the data group of this table
-     * @param schema the data schema to use for the table's local columns
+     * Create a new VisualTable without a parent datamodel.
+     * @param vis the Visualization associated with this datamodel
+     * @param group the data group of this datamodel
+     * @param schema the data schema to use for the datamodel's local columns
      * @param tupleType the type of Tuple instances to use
      */
     public VisualTable(Visualization vis, String group, Schema schema,
@@ -110,9 +110,9 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
     
     /**
      * Initialize this VisualTable
-     * @param vis the Visualization associated with this table
-     * @param group the data group of this table
-     * @param schema the data schema to use for the table's local columns
+     * @param vis the Visualization associated with this datamodel
+     * @param group the data group of this datamodel
+     * @param schema the data schema to use for the datamodel's local columns
      */
     protected void init(Visualization vis, String group, Schema schema) {
         setVisualization(vis);
@@ -129,11 +129,11 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
     // ------------------------------------------------------------------------
     
     /**
-     * Relay table events. Ensures that updated visual items are invalidated
+     * Relay datamodel events. Ensures that updated visual items are invalidated
      * and that damage reports are issued for deleted items.
      */
     protected void fireTableEvent(int row0, int row1, int col, int type) {
-        // table attributes changed, so we invalidate the bounds
+        // datamodel attributes changed, so we invalidate the bounds
         if ( type==EventConstants.UPDATE )
         {
             if ( col != VisualItem.IDX_VALIDATED ) {
@@ -181,7 +181,7 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
     }
     
     /**
-     * Get the visualization data group name for this table
+     * Get the visualization data group name for this datamodel
      * @return the data group name
      */
     public String getGroup() {
@@ -189,7 +189,7 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
     }
     
     /**
-     * Set the visualization data group name for this table
+     * Set the visualization data group name for this datamodel
      * @return the data group name to use
      */
     public void setGroup(String group) {
@@ -197,18 +197,18 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
     }
     
     /**
-     * Get the VisualItem for the given table row.
-     * @param row a table row index
-     * @return the VisualItem for the given table row
+     * Get the VisualItem for the given datamodel row.
+     * @param row a datamodel row index
+     * @return the VisualItem for the given datamodel row
      */
     public VisualItem getItem(int row) {
         return (VisualItem)getTuple(row);
     }
     
     /**
-     * Add a new row to the table and return the VisualItem for that row. Only
-     * allowed if there is no parent table, otherwise an exception will result.
-     * @return the VisualItem for the newly added table row.
+     * Add a new row to the datamodel and return the VisualItem for that row. Only
+     * allowed if there is no parent datamodel, otherwise an exception will result.
+     * @return the VisualItem for the newly added datamodel row.
      */
     public VisualItem addItem() {
         return getItem(addRow());
@@ -220,7 +220,7 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
     /**
      * Indicates if the given row is currently validated. If not,
      * validateBounds() must be run to update the bounds to a current value.
-     * @param row the table row
+     * @param row the datamodel row
      * @return true if validated, false otherwise
      */
     public boolean isValidated(int row) {
@@ -230,7 +230,7 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
     /**
      * Set the given row's validated flag. This is for internal use by prefuse
      * and, in general, should not be called by application code.
-     * @param row the table row to set
+     * @param row the datamodel row to set
      * @param value the value of the validated flag to set.
      */
     public void setValidated(int row, boolean value) {
@@ -242,7 +242,7 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
      * the visible flag set false will not be drawn by a display. Invisible
      * items are also by necessity not interactive, regardless of the value of
      * the interactive flag.
-     * @param row the table row
+     * @param row the datamodel row
      * @return true if visible, false if invisible
      */
     public boolean isVisible(int row) {
@@ -251,7 +251,7 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
     
     /**
      * Set the given row's visibility.
-     * @param row the table row to set
+     * @param row the datamodel row to set
      * @param value true to make the item visible, false otherwise.
      */
     public void setVisible(int row, boolean value) {
@@ -262,7 +262,7 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
      * Indicates if the start visible flag is set to true. This is the
      * visibility value consulted for the staring value of the visibility
      * field at the beginning of an animated transition.
-     * @param row the table row
+     * @param row the datamodel row
      * @return true if this item starts out visible, false otherwise.
      */
     public boolean isStartVisible(int row) {
@@ -271,7 +271,7 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
     
     /**
      * Set the start visible flag.
-     * @param row the table row to set
+     * @param row the datamodel row to set
      * @param value true to set the start visible flag, false otherwise
      */
     public void setStartVisible(int row, boolean value) {
@@ -282,7 +282,7 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
      * Indictes if the end visible flag is set to true. This is the
      * visibility value consulted for the ending value of the visibility
      * field at the end of an animated transition.
-     * @param row the table row
+     * @param row the datamodel row
      * @return true if this items ends visible, false otherwise.
      */
     public boolean isEndVisible(int row) {
@@ -291,7 +291,7 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
     
     /**
      * Set the end visible flag.
-     * @param row the table row to set
+     * @param row the datamodel row to set
      * @param value true to set the end visible flag, false otherwise
      */
     public void setEndVisible(int row, boolean value) {
@@ -301,7 +301,7 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
     /**
      * Indicates if this item is interactive, meaning it can potentially
      * respond to mouse and keyboard input events.
-     * @param row the table row
+     * @param row the datamodel row
      * @return true if the item is interactive, false otherwise
      */
     public boolean isInteractive(int row) {
@@ -310,7 +310,7 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
 
     /**
      * Set the interactive status of the given row.
-     * @param row the table row to set
+     * @param row the datamodel row to set
      * @param value true for interactive, false for non-interactive
      */
     public void setInteractive(int row, boolean value) {
@@ -320,7 +320,7 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
     /**
      * Indicates the given row is expanded. Only used for items that are
      * part of a graph structure. 
-     * @param row the table row
+     * @param row the datamodel row
      * @return true if expanded, false otherwise
      */
     public boolean isExpanded(int row) {
@@ -329,7 +329,7 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
 
     /**
      * Set the expanded flag.
-     * @param row the table row to set
+     * @param row the datamodel row to set
      * @param value true to set as expanded, false as collapsed.
      */
     public void setExpanded(int row, boolean value) {
@@ -339,7 +339,7 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
     /**
      * Indicates if the given row is fixed, and so will not have its position
      * changed by any layout or distortion actions.
-     * @param row the table row
+     * @param row the datamodel row
      * @return true if the item has a fixed position, false otherwise
      */
     public boolean isFixed(int row) {
@@ -348,7 +348,7 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
 
     /**
      * Sets if the given row is fixed in its position.
-     * @param row the table row to set
+     * @param row the datamodel row to set
      * @param value true to fix the item, false otherwise
      */
     public void setFixed(int row, boolean value) {
@@ -357,7 +357,7 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
     
     /**
      * Indicates if the given row is highlighted.
-     * @param row the table row
+     * @param row the datamodel row
      * @return true for highlighted, false for not highlighted
      */
     public boolean isHighlighted(int row) {
@@ -370,7 +370,7 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
      * set up for an application (e.g., how a
      * {@link prefuse.action.assignment.ColorAction} might assign colors
      * based on the flag).
-     * @param row the table row to set
+     * @param row the datamodel row to set
      * @param value true to highlight the item, false for no highlighting.
      */
     public void setHighlighted(int row, boolean value) {
@@ -379,7 +379,7 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
 
     /**
      * Indicates if the given row currently has the mouse pointer over it.
-     * @param row the table row
+     * @param row the datamodel row
      * @return true if the mouse pointer is over this item, false otherwise
      */
     public boolean isHover(int row) {
@@ -389,7 +389,7 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
     /**
      * Set the hover flag. This is set automatically by the prefuse framework,
      * so should not need to be set explicitly by application code.
-     * @param row the table row to set
+     * @param row the datamodel row to set
      * @param value true to set the hover flag, false otherwise
      */
     public void setHover(int row, boolean value) {
@@ -400,7 +400,7 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
     
     /**
      * Get the current x-coordinate of the given row.
-     * @param row the table row
+     * @param row the datamodel row
      * @return the current x-coordinate
      */
     public double getX(int row) {
@@ -409,7 +409,7 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
     
     /**
      * Set the current x-coordinate of the given row.
-     * @param row the table row to set
+     * @param row the datamodel row to set
      * @param x the new current x-coordinate
      */
     public void setX(int row, double x) {
@@ -418,7 +418,7 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
     
     /**
      * Get the current y-coordinate of the given row.
-     * @param row the table row
+     * @param row the datamodel row
      * @return the current y-coordinate
      */
     public double getY(int row) {
@@ -427,7 +427,7 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
     
     /**
      * Set the current y-coordinate of the given row.
-     * @param row the table row to set
+     * @param row the datamodel row to set
      * @param y the new current y-coordinate
      */
     public void setY(int row, double y) {
@@ -436,7 +436,7 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
     
     /**
      * Get the starting x-coordinate of the given row.
-     * @param row the table row
+     * @param row the datamodel row
      * @return the starting x-coordinate
      */
     public double getStartX(int row) {
@@ -445,7 +445,7 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
     
     /**
      * Set the starting x-coordinate of the given row.
-     * @param row the table row to set
+     * @param row the datamodel row to set
      * @param x the new starting x-coordinate
      */
     public void setStartX(int row, double x) {
@@ -454,7 +454,7 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
     
     /**
      * Get the starting y-coordinate of the given row.
-     * @param row the table row
+     * @param row the datamodel row
      * @return the starting y-coordinate
      */
     public double getStartY(int row) {
@@ -463,7 +463,7 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
     
     /**
      * Set the starting y-coordinate of the given row.
-     * @param row the table row to set
+     * @param row the datamodel row to set
      * @param y the new starting y-coordinate
      */
     public void setStartY(int row, double y) {
@@ -472,7 +472,7 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
     
     /**
      * Get the ending x-coordinate of the given row.
-     * @param row the table row
+     * @param row the datamodel row
      * @return the ending x-coordinate
      */
     public double getEndX(int row) {
@@ -481,7 +481,7 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
     
     /**
      * Set the ending x-coordinate of the given row.
-     * @param row the table row to set
+     * @param row the datamodel row to set
      * @param x the new ending x-coordinate
      */
     public void setEndX(int row, double x) {
@@ -490,7 +490,7 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
     
     /**
      * Get the ending y-coordinate of the given row.
-     * @param row the table row
+     * @param row the datamodel row
      * @return the ending y-coordinate
      */
     public double getEndY(int row) {
@@ -499,7 +499,7 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
 
     /**
      * Set the ending y-coordinate of the given row.
-     * @param row the table row to set
+     * @param row the datamodel row to set
      * @param y the new ending y-coordinate
      */
     public void setEndY(int row, double y) {
@@ -512,7 +512,7 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
      * system -- do <b>NOT</b> directly edit the values in this returned
      * object!! This will corrupt the state of the system.
      * 
-     * @param row the table row
+     * @param row the datamodel row
      * @return the bounding box for the item at the given row
      */
     public Rectangle2D getBounds(int row) {
@@ -524,7 +524,7 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
      * modules when the bounds are validated, or set by processing Actions
      * used in conjunction with Renderers that do not perform bounds
      * management.
-     * @param row the table row to set
+     * @param row the datamodel row to set
      * @param x the minimum x-coordinate
      * @param y the minimum y-coorindate
      * @param w the width of this item
@@ -545,7 +545,7 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
      * an integer containing the red, green, blue, and alpha (transparency)
      * color channels. A color with a zero alpha component is fully
      * transparent and will not be drawn.
-     * @param row the table row
+     * @param row the datamodel row
      * @return the current stroke color, represented as an integer
      * @see prefuse.util.ColorLib
      */
@@ -559,7 +559,7 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
      * integer containing the red, green, blue, and alpha (transparency)
      * color channels. A color with a zero alpha component is fully
      * transparent and will not be drawn.
-     * @param row the table row to set
+     * @param row the datamodel row to set
      * @param color the current stroke color, represented as an integer
      * @see prefuse.util.ColorLib
      */
@@ -573,7 +573,7 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
      * integer containing the red, green, blue, and alpha (transparency)
      * color channels. A color with a zero alpha component is fully
      * transparent and will not be drawn.
-     * @param row the table row
+     * @param row the datamodel row
      * @return the starting stroke color, represented as an integer
      * @see prefuse.util.ColorLib
      */
@@ -587,7 +587,7 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
      * integer containing the red, green, blue, and alpha (transparency)
      * color channels. A color with a zero alpha component is fully
      * transparent and will not be drawn.
-     * @param row the table row to set
+     * @param row the datamodel row to set
      * @param color the starting stroke color, represented as an integer
      * @see prefuse.util.ColorLib
      */
@@ -601,7 +601,7 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
      * integer containing the red, green, blue, and alpha (transparency)
      * color channels. A color with a zero alpha component is fully
      * transparent and will not be drawn.
-     * @param row the table row
+     * @param row the datamodel row
      * @return the ending stroke color, represented as an integer
      * @see prefuse.util.ColorLib
      */
@@ -615,7 +615,7 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
      * integer containing the red, green, blue, and alpha (transparency)
      * color channels. A color with a zero alpha component is fully
      * transparent and will not be drawn.
-     * @param row the table row to set
+     * @param row the datamodel row to set
      * @param color the ending stroke color, represented as an integer
      * @see prefuse.util.ColorLib
      */
@@ -629,7 +629,7 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
      * integer containing the red, green, blue, and alpha (transparency)
      * color channels. A color with a zero alpha component is fully
      * transparent and will not be drawn.
-     * @param row the table row
+     * @param row the datamodel row
      * @return the current fill color, represented as an integer
      * @see prefuse.util.ColorLib
      */
@@ -643,7 +643,7 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
      * integer containing the red, green, blue, and alpha (transparency)
      * color channels. A color with a zero alpha component is fully
      * transparent and will not be drawn.
-     * @param row the table row to set
+     * @param row the datamodel row to set
      * @param color the current fill color, represented as an integer
      * @see prefuse.util.ColorLib
      */
@@ -657,7 +657,7 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
      * integer containing the red, green, blue, and alpha (transparency)
      * color channels. A color with zero alpha component is fully
      * transparent and will not be drawn.
-     * @param row the table row
+     * @param row the datamodel row
      * @return the starting fill color, represented as an integer
      * @see prefuse.util.ColorLib
      */
@@ -671,7 +671,7 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
      * integer containing the red, green, blue, and alpha (transparency)
      * color channels. A color with a zero alpha component is fully
      * transparent and will not be drawn.
-     * @param row the table row to set
+     * @param row the datamodel row to set
      * @param color the starting fill color, represented as an integer
      * @see prefuse.util.ColorLib
      */
@@ -685,7 +685,7 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
      * integer containing the red, green, blue, and alpha (transparency)
      * color channels. A color with zero alpha component is fully
      * transparent and will not be drawn.
-     * @param row the table row
+     * @param row the datamodel row
      * @return the ending fill color, represented as an integer
      * @see prefuse.util.ColorLib
      */
@@ -699,7 +699,7 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
      * integer containing the red, green, blue, and alpha (transparency)
      * color channels. A color with a zero alpha component is fully
      * transparent and will not be drawn.
-     * @param row the table row to set
+     * @param row the datamodel row to set
      * @param color the ending fill color, represented as an integer
      * @see prefuse.util.ColorLib
      */
@@ -713,7 +713,7 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
      * integer containing the red, green, blue, and alpha (transparency)
      * color channels. A color with zero alpha component is fully
      * transparent and will not be drawn.
-     * @param row the table row
+     * @param row the datamodel row
      * @return the current text color, represented as an integer
      * @see prefuse.util.ColorLib
      */
@@ -727,7 +727,7 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
      * integer containing the red, green, blue, and alpha (transparency)
      * color channels. A color with a zero alpha component is fully
      * transparent and will not be drawn.
-     * @param row the table row to set
+     * @param row the datamodel row to set
      * @param color the current text color, represented as an integer
      * @see prefuse.util.ColorLib
      */
@@ -741,7 +741,7 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
      * integer containing the red, green, blue, and alpha (transparency)
      * color channels. A color with zero alpha component is fully
      * transparent and will not be drawn.
-     * @param row the table row
+     * @param row the datamodel row
      * @return the starting text color, represented as an integer
      * @see prefuse.util.ColorLib
      */
@@ -755,7 +755,7 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
      * integer containing the red, green, blue, and alpha (transparency)
      * color channels. A color with a zero alpha component is fully
      * transparent and will not be drawn.
-     * @param row the table row to set
+     * @param row the datamodel row to set
      * @param color the starting text color, represented as an integer
      * @see prefuse.util.ColorLib
      */
@@ -769,7 +769,7 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
      * integer containing the red, green, blue, and alpha (transparency)
      * color channels. A color with zero alpha component is fully
      * transparent and will not be drawn.
-     * @param row the table row
+     * @param row the datamodel row
      * @return the ending text color, represented as an integer
      * @see prefuse.util.ColorLib
      */
@@ -783,7 +783,7 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
      * integer containing the red, green, blue, and alpha (transparency)
      * color channels. A color with a zero alpha component is fully
      * transparent and will not be drawn.
-     * @param row the table row to set
+     * @param row the datamodel row to set
      * @param color the ending text color, represented as an integer
      * @see prefuse.util.ColorLib
      */
@@ -797,7 +797,7 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
      * Get the current size value of the row. Size values are typically used
      * to scale an item, either in one-dimension (e.g., a bar chart length) or
      * two-dimensions (e.g., using pixel area to encode a quantitative value).
-     * @param row the table row
+     * @param row the datamodel row
      * @return the current size value
      */
     public double getSize(int row) {
@@ -808,7 +808,7 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
      * Set the current size value of the row. Size values are typically used
      * to scale an item, either in one-dimension (e.g., a bar chart length) or
      * two-dimensions (e.g., using pixel area to encode a quantitative value).
-     * @param row the table row to set
+     * @param row the datamodel row to set
      * @param size the current size value
      */
     public void setSize(int row, double size) {
@@ -819,7 +819,7 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
      * Get the starting size value of the row. Size values are typically used
      * to scale an item, either in one-dimension (e.g., a bar chart length) or
      * two-dimensions (e.g., using pixel area to encode a quantitative value).
-     * @param row the table row
+     * @param row the datamodel row
      * @return the starting size value
      */
     public double getStartSize(int row) {
@@ -830,7 +830,7 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
      * Set the starting size value of the row. Size values are typically used
      * to scale an item, either in one-dimension (e.g., a bar chart length) or
      * two-dimensions (e.g., using pixel area to encode a quantitative value).
-     * @param row the table row to set
+     * @param row the datamodel row to set
      * @param size the starting size value
      */
     public void setStartSize(int row, double size) {
@@ -841,7 +841,7 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
      * Get the ending size value of the row. Size values are typically used
      * to scale an item, either in one-dimension (e.g., a bar chart length) or
      * two-dimensions (e.g., using pixel area to encode a quantitative value).
-     * @param row the table row
+     * @param row the datamodel row
      * @return the ending size value
      */
     public double getEndSize(int row) {
@@ -852,7 +852,7 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
      * Set the ending size value of the row. Size values are typically used
      * to scale an item, either in one-dimension (e.g., a bar chart length) or
      * two-dimensions (e.g., using pixel area to encode a quantitative value).
-     * @param row the table row to set
+     * @param row the datamodel row to set
      * @param size the ending size value
      */
     public void setEndSize(int row, double size) {
@@ -866,7 +866,7 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
      * included in the {@link prefuse.Constants} class. This value only has an
      * effect if a Renderer that supports different shapes is used
      * (e.g., {@link prefuse.render.ShapeRenderer}.
-     * @param row the table row
+     * @param row the datamodel row
      * @return the current shape value
      */
     public int getShape(int row) {
@@ -878,7 +878,7 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
      * included in the {@link prefuse.Constants} class. This value only has an
      * effect if a Renderer that supports different shapes is used
      * (e.g., {@link prefuse.render.ShapeRenderer}.
-     * @param row the table row to set
+     * @param row the datamodel row to set
      * @param shape the shape value to use
      */
     public void setShape(int row, int shape) {
@@ -909,7 +909,7 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
     /**
      * Get the current font for the row. The font is used as the default
      * typeface for drawing text for this item.
-     * @param row the table row
+     * @param row the datamodel row
      * @return the current font value
      */
     public Font getFont(int row) {
@@ -919,7 +919,7 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
     /**
      * Set the current font for the the row. The font is used as the default
      * typeface for drawing text for this item.
-     * @param row the table row to set
+     * @param row the datamodel row to set
      * @param font the current font value
      */
     public void setFont(int row, Font font) {
@@ -929,7 +929,7 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
     /**
      * Get the starting font for the row. The font is used as the default
      * typeface for drawing text for this item.
-     * @param row the table row
+     * @param row the datamodel row
      * @return the starting font value
      */
     public Font getStartFont(int row) {
@@ -939,7 +939,7 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
     /**
      * Set the starting font for the row. The font is used as the default
      * typeface for drawing text for this item.
-     * @param row the table row to set
+     * @param row the datamodel row to set
      * @param font the starting font value
      */
     public void setStartFont(int row, Font font) {
@@ -949,7 +949,7 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
     /**
      * Get the ending font for the row. The font is used as the default
      * typeface for drawing text for this item.
-     * @param row the table row
+     * @param row the datamodel row
      * @return the ending font value
      */
     public Font getEndFont(int row) {
@@ -959,7 +959,7 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
     /**
      * Set the ending font for the row. The font is used as the default
      * typeface for drawing text for this item.
-     * @param row the table row to set
+     * @param row the datamodel row to set
      * @param font the ending font value
      */
     public void setEndFont(int row, Font font) {
@@ -974,7 +974,7 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
      * item visibility, or influence particular visual encodings. A common
      * example is to use the DOI to store the graph distance of a node from
      * the nearest selected focus node.
-     * @param row the table row
+     * @param row the datamodel row
      * @return the DOI value of this item
      */
     public double getDOI(int row) {
@@ -987,7 +987,7 @@ public class VisualTable extends CascadedTable implements VisualTupleSet {
      * item visibility, or influence particular visual encodings. A common
      * example is to use the DOI to store the graph distance of a node from
      * the nearest selected focus node.
-     * @param row the table row to set
+     * @param row the datamodel row to set
      * @param doi the DOI value of this item
      */
     public void setDOI(int row, double doi) {

@@ -22,10 +22,10 @@ import prefuse.visual.tuple.TableEdgeItem;
  */
 public class SpanningTree extends Tree {
 
-    /** Extra edge table data field recording the id of the source edge
+    /** Extra edge datamodel data field recording the id of the source edge
      * a tree edge represents. */
     public static final String SOURCE_EDGE = "source";
-    /** Edge table schema used by the spanning tree. */
+    /** Edge datamodel schema used by the spanning tree. */
     protected static final Schema EDGE_SCHEMA = new Schema();
     static {
         EDGE_SCHEMA.addColumn(DEFAULT_SOURCE_KEY, int.class, new Integer(-1));

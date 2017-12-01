@@ -183,7 +183,7 @@ public class EDENFXMain extends Application implements DataModelListener {
         columnTableView.setEditable(true);
         columnTableView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue != null) {
-//                log.debug("Column '" + newValue.getName() + "' selected in column table");
+//                log.debug("Column '" + newValue.getName() + "' selected in column datamodel");
                 dataModel.setHighlightedColumn((QuantitativeColumn)newValue);
 //            } else {
 //                log.debug("SelectedItemProperty changed and new value is null");
@@ -478,7 +478,7 @@ public class EDENFXMain extends Application implements DataModelListener {
         createQueryTableView();
         dataTableView = new TableView<>();
 
-        // create table tab pane
+        // create datamodel tab pane
         tabPane = new TabPane();
         Tab columnTableTab = new Tab(" Column Table ");
         columnTableTab.setClosable(false);
@@ -565,7 +565,7 @@ public class EDENFXMain extends Application implements DataModelListener {
         createQueryTableView();
         dataTableView = new TableView<>();
 
-        // create table tab pane
+        // create datamodel tab pane
         tabPane = new TabPane();
         Tab columnTableTab = new Tab(" Column Table ");
         columnTableTab.setClosable(false);
@@ -944,12 +944,12 @@ public class EDENFXMain extends Application implements DataModelListener {
         });
         viewMenu.getItems().add(removeAllQueriesMI);
 
-        // create menu item to enabled/disable data table updates
+        // create menu item to enabled/disable data datamodel updates
         enableDataTableUpdatesCheckMenuItem = new CheckMenuItem("Enable Data Table Updates");
         enableDataTableUpdatesCheckMenuItem.setSelected(false);
         enableDataTableUpdatesCheckMenuItem.selectedProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue != null && newValue) {
-                // refresh data table based on current state of the data model
+                // refresh data datamodel based on current state of the data model
                 setDataTableItems();
             } else {
                 dataTableView.getItems().clear();
@@ -1071,7 +1071,7 @@ public class EDENFXMain extends Application implements DataModelListener {
         start = System.currentTimeMillis();
         setDataTableItems();
         elasped = System.currentTimeMillis() - start;
-        log.debug("Setting data table items took " + elasped + "ms");
+        log.debug("Setting data datamodel items took " + elasped + "ms");
 
         displayModeMenu.setDisable(false);
     }
@@ -1094,7 +1094,7 @@ public class EDENFXMain extends Application implements DataModelListener {
     private void setDataTableColumns() {
         dataTableView.getColumns().clear();
 
-        // make a column for each enabled data table column
+        // make a column for each enabled data datamodel column
         if (!dataModel.isEmpty()) {
             if (dataModel.getTemporalColumn() != null) {
                 TemporalColumn temporalColumn = dataModel.getTemporalColumn();
@@ -1213,7 +1213,7 @@ public class EDENFXMain extends Application implements DataModelListener {
 
     @Override
     public void dataModelColumnDisabled(DataModel dataModel, QuantitativeColumn disabledColumn) {
-        // reset the data table columns
+        // reset the data datamodel columns
         dataTableView.getItems().clear();
         dataTableView.getColumns().clear();
         setDataTableColumns();

@@ -34,7 +34,7 @@ public class JPrefuseTable extends JTable {
     }
     
     /**
-     * Get the table backing this component.
+     * Get the datamodel backing this component.
      * @return a prefuse Table instance
      */
     public Table getTable() {
@@ -42,7 +42,7 @@ public class JPrefuseTable extends JTable {
     }
     
     /**
-     * Get the cell renderer to use for drawing table cells.
+     * Get the cell renderer to use for drawing datamodel cells.
      * @see javax.swing.JTable#getCellRenderer(int, int)
      */
     public TableCellRenderer getCellRenderer(int r, int c) {
@@ -55,7 +55,7 @@ public class JPrefuseTable extends JTable {
      * Create a new window displaying the contents of the input Table as
      * a Swing JTable.
      * @param t the Table instance to display
-     * @return a reference to the JFrame holding the table view
+     * @return a reference to the JFrame holding the datamodel view
      */
     public static JFrame showTableWindow(Table t) {
         JPrefuseTable table = new JPrefuseTable(t);

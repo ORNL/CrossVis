@@ -23,37 +23,37 @@ import prefuse.util.collections.IntIterator;
 
 
 /**
- * <p>Table subclass featuring a "cascaded" table design - a CascadedTable can
- * have a parent table, from which it inherits a potentially filtered set of
+ * <p>Table subclass featuring a "cascaded" datamodel design - a CascadedTable can
+ * have a parent datamodel, from which it inherits a potentially filtered set of
  * rows and columns. Child tables may override the columns of the parent by
  * having a column of the same name as that of the parent, in which case the
  * parent's column will not be accessible.</p>
  * 
- * <p>Table rows of the parent table can be selectively included by providing
+ * <p>Table rows of the parent datamodel can be selectively included by providing
  * a {@link prefuse.data.expression.Predicate} that filters the parent rows.
- * Columns of the parent table can be selectively included by providing
+ * Columns of the parent datamodel can be selectively included by providing
  * a {@link prefuse.data.util.ColumnProjection} indicating the columns to
  * include.</p>
  * 
  * <p>Tuple instances backed by a CascadedTable will be not be equivalent to
- * the tuples backed by the parent table. However, setting a value in a
- * CascadedTable that is inherited from a parent table <em>will</em> update
- * the value in the parent table.</p>
+ * the tuples backed by the parent datamodel. However, setting a value in a
+ * CascadedTable that is inherited from a parent datamodel <em>will</em> update
+ * the value in the parent datamodel.</p>
  * 
  * @author <a href="http://jheer.org">jeffrey heer</a>
  */
 public class CascadedTable extends Table {
 
-    /** Cascaded parent table */ 
+    /** Cascaded parent datamodel */
     protected Table      m_parent;
     /** List of included parent column names */
     protected ArrayList  m_pnames;
     
-    /** ColumnProjection determining which columns of the parent table
-     * are included in this table. */
+    /** ColumnProjection determining which columns of the parent datamodel
+     * are included in this datamodel. */
     protected ColumnProjection m_colFilter;
-    /** Selection Predicate determining which rows of the parent table
-     * are included in this table. */
+    /** Selection Predicate determining which rows of the parent datamodel
+     * are included in this datamodel. */
     protected Predicate    m_rowFilter;
     
     /** An internal listener class */
@@ -64,7 +64,7 @@ public class CascadedTable extends Table {
     
     /**
      * Create a new CascadedTable. By default all rows and columns of the
-     * parent table are included in this one.
+     * parent datamodel are included in this one.
      * @param parent the parent Table to use
      */
     public CascadedTable(Table parent) {
@@ -73,10 +73,10 @@ public class CascadedTable extends Table {
     
     /**
      * Create a new CascadedTable. By default all columns of the parent
-     * table are included in this one.
+     * datamodel are included in this one.
      * @param parent the parent Table to use
      * @param rowFilter a Predicate determining which rows of the parent
-     * table to include in this one.
+     * datamodel to include in this one.
      */
     public CascadedTable(Table parent, Predicate rowFilter) {
         this(parent, rowFilter, null);
@@ -84,10 +84,10 @@ public class CascadedTable extends Table {
     
     /**
      * Create a new CascadedTable. By default all rows of the parent
-     * table are included in this one.
+     * datamodel are included in this one.
      * @param parent the parent Table to use
      * @param colFilter a ColumnProjection determining which columns of the
-     * parent table to include in this one.
+     * parent datamodel to include in this one.
      */
     public CascadedTable(Table parent, ColumnProjection colFilter) {
         this(parent, null, colFilter);
@@ -97,9 +97,9 @@ public class CascadedTable extends Table {
      * Create a new CascadedTable.
      * @param parent the parent Table to use
      * @param rowFilter a Predicate determining which rows of the parent
-     * table to include in this one.
+     * datamodel to include in this one.
      * @param colFilter a ColumnProjection determining which columns of the
-     * parent table to include in this one.
+     * parent datamodel to include in this one.
      */
     public CascadedTable(Table parent, Predicate rowFilter, 
                          ColumnProjection colFilter)
@@ -111,9 +111,9 @@ public class CascadedTable extends Table {
      * Create a new CascadedTable.
      * @param parent the parent Table to use
      * @param rowFilter a Predicate determining which rows of the parent
-     * table to include in this one.
+     * datamodel to include in this one.
      * @param colFilter a ColumnProjection determining which columns of the
-     * parent table to include in this one.
+     * parent datamodel to include in this one.
      * @param tupleType the class type of the Tuple instances to use
      */
     protected CascadedTable(Table parent, Predicate rowFilter, 
@@ -133,14 +133,14 @@ public class CascadedTable extends Table {
     // -- non-cascading version -----------------------------------------------
     
     /**
-     * Create a CascadedTable without a backing parent table.
+     * Create a CascadedTable without a backing parent datamodel.
      */
     protected CascadedTable() {
         this(TableTuple.class);
     }
 
     /**
-     * Create a CascadedTable without a backing parent table.
+     * Create a CascadedTable without a backing parent datamodel.
      * @param tupleType the class type of the Tuple instances to use
      */
     protected CascadedTable(Class tupleType) {
@@ -152,7 +152,7 @@ public class CascadedTable extends Table {
     // Filter Methods
     
     /**
-     * Determines which columns are inherited from the backing parent table.
+     * Determines which columns are inherited from the backing parent datamodel.
      */
     protected void filterColumns() {
         if ( m_parent == null ) return;
@@ -204,10 +204,10 @@ public class CascadedTable extends Table {
     }
     
     /**
-     * Manually trigger a re-filtering of the rows of this table. If the
-     * filtering predicate concerns only items within this table, calling
+     * Manually trigger a re-filtering of the rows of this datamodel. If the
+     * filtering predicate concerns only items within this datamodel, calling
      * this method should be unnecessary. It is only when the filtering
-     * predicate references data outside of this table that a manual
+     * predicate references data outside of this datamodel that a manual
      * re-filtering request may be necessary. For example, filtering
      * valid edges of a graph from a pool of candidate edges will depend
      * on the available nodes.
@@ -238,7 +238,7 @@ public class CascadedTable extends Table {
     
     /**
      * Get the ColumnProjection determining which columns of the
-     * parent table are included in this one.
+     * parent datamodel are included in this one.
      * @return the ColumnProjection of this CascadedTable
      */
     public ColumnProjection getColumnProjection() {
@@ -247,9 +247,9 @@ public class CascadedTable extends Table {
     
     /**
      * Sets the ColumnProjection determining which columns of the
-     * parent table are included in this one.
+     * parent datamodel are included in this one.
      * @param colFilter a ColumnProjection determining which columns of the
-     * parent table to include in this one.
+     * parent datamodel to include in this one.
      */
     public void setColumnProjection(ColumnProjection colFilter) {
         if ( m_colFilter != null ) {
@@ -262,7 +262,7 @@ public class CascadedTable extends Table {
     
     /**
      * Gets ths Predicate determining which rows of the parent
-     * table are included in this one.
+     * datamodel are included in this one.
      * @return the row filtering Predicate of this CascadedTable
      */
     public Predicate getRowFilter() {
@@ -271,9 +271,9 @@ public class CascadedTable extends Table {
     
     /**
      * Sets the Predicate determining which rows of the parent
-     * table are included in this one.
+     * datamodel are included in this one.
      * @param rowFilter a Predicate determining which rows of the parent
-     * table to include in this one.
+     * datamodel to include in this one.
      */
     public void setRowFilter(Predicate rowFilter) {
     	if ( m_rowFilter != null ) {
@@ -296,8 +296,8 @@ public class CascadedTable extends Table {
     }
     
     /**
-     * Get the number of columns explicitly stored by this table (i.e., all
-     * columns that are not inherited from the parent table).
+     * Get the number of columns explicitly stored by this datamodel (i.e., all
+     * columns that are not inherited from the parent datamodel).
      * @return the number of locally stored columns
      */
     public int getLocalColumnCount() {
@@ -308,29 +308,29 @@ public class CascadedTable extends Table {
     // Parent Table Methods
     
     /**
-     * Get the parent table from which this cascaded table inherits values.
-     * @return the parent table
+     * Get the parent datamodel from which this cascaded datamodel inherits values.
+     * @return the parent datamodel
      */
     public Table getParentTable() {
         return m_parent;
     }
     
     /**
-     * Given a row in this table, return the corresponding row in the parent
-     * table.
-     * @param row a row in this table
-     * @return the corresponding row in the parent table
+     * Given a row in this datamodel, return the corresponding row in the parent
+     * datamodel.
+     * @param row a row in this datamodel
+     * @return the corresponding row in the parent datamodel
      */
     public int getParentRow(int row) {
         return ((CascadedRowManager)m_rows).getParentRow(row);
     }
     
     /**
-     * Given a row in the parent table, return the corresponding row, if any,
-     * in this table.
-     * @param prow a row in the parent table
-     * @return the corresponding row in this table, or -1 if the given parent
-     * row is not inherited by this table
+     * Given a row in the parent datamodel, return the corresponding row, if any,
+     * in this datamodel.
+     * @param prow a row in the parent datamodel
+     * @return the corresponding row in this datamodel, or -1 if the given parent
+     * row is not inherited by this datamodel
      */
     public int getChildRow(int prow) {
         return ((CascadedRowManager)m_rows).getChildRow(prow);
@@ -379,7 +379,7 @@ public class CascadedTable extends Table {
      * Internal method for adding a new cascaded row backed by
      * the given parent row.
      * @param prow the parent row to inherit
-     * @return the row number ofr the newly added row in this table
+     * @return the row number ofr the newly added row in this datamodel
      */
     protected int addCascadedRow(int prow) {
         int r = m_rows.addRow();
@@ -392,7 +392,7 @@ public class CascadedTable extends Table {
     }
     
     /**
-     * Internal method for removing a cascaded row from this table.
+     * Internal method for removing a cascaded row from this datamodel.
      * @param row the row to remove
      * @return true if the row was successfully removed, false otherwise
      */
@@ -467,8 +467,8 @@ public class CascadedTable extends Table {
     }
     
     /**
-     * Invalidates this table's cached schema. This method should be called
-     * whenever columns are added or removed from this table.
+     * Invalidates this datamodel's cached schema. This method should be called
+     * whenever columns are added or removed from this datamodel.
      */
     protected void invalidateSchema() {
         super.invalidateSchema();
@@ -479,7 +479,7 @@ public class CascadedTable extends Table {
     // Listener Methods
     
     /**
-     * Internal listener class handling updates from the backing parent table,
+     * Internal listener class handling updates from the backing parent datamodel,
      * the column projection, or the row selection predicate.
      */
     private class Listener
@@ -505,7 +505,7 @@ public class CascadedTable extends Table {
                 // process each update, check if filtered state changes
                 for ( int r=start, cr=-1; r<=end; ++r ) {
                     if ( (cr=rowman.getChildRow(r)) != -1 ) {
-                        // the parent row has a corresponding row in this table
+                        // the parent row has a corresponding row in this datamodel
                         if ( m_rowFilter.getBoolean(m_parent.getTuple(r)) ) {
                             // row still passes the filter, check the column
                             int idx = getColumnNumber(m_parent.getColumnName(col));

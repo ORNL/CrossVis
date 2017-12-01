@@ -5,17 +5,17 @@ import java.util.EventListener;
 import prefuse.data.Table;
 
 /**
- * Listener interface for monitoring changes to a table.
+ * Listener interface for monitoring changes to a datamodel.
  * 
  * @author <a href="http://jheer.org">jeffrey heer</a>
  */
 public interface TableListener extends EventListener {
 
     /**
-     * Notification that a table has changed.
-     * @param t the table that has changed
-     * @param start the starting row index of the changed table region
-     * @param end the ending row index of the changed table region
+     * Notification that a datamodel has changed.
+     * @param t the datamodel that has changed
+     * @param start the starting row index of the changed datamodel region
+     * @param end the ending row index of the changed datamodel region
      * @param col the column that has changed, or
      * {@link EventConstants#ALL_COLUMNS} if the operation affects all
      * columns

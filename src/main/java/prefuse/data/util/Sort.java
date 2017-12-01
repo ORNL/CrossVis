@@ -144,7 +144,7 @@ public class Sort {
             // for Tables, we can get this directly
         	s = ((Table)ts).getSchema();
         } else {
-        	// if non-table tuple set is empty, we punt
+        	// if non-datamodel tuple set is empty, we punt
         	if ( ts.getTupleCount() == 0 )
         		return new NullComparator();
         	// otherwise, use the schema of the first tuple in the set

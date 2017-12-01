@@ -32,8 +32,8 @@ public class RowManager {
     }
     
     /**
-     * Get the table managed by this RowManager.
-     * @return the managed table
+     * Get the datamodel managed by this RowManager.
+     * @return the managed datamodel
      */
     public Table getTable() {
         return m_table;
@@ -43,7 +43,7 @@ public class RowManager {
     // Row Information Methods
     
     /**
-     * Get the lowest-numbered occupied table row.
+     * Get the lowest-numbered occupied datamodel row.
      * @return the minimum row
      */
     public int getMinimumRow() {
@@ -51,7 +51,7 @@ public class RowManager {
     }
 
     /**
-     * Get the highest-numbered occupied table row.
+     * Get the highest-numbered occupied datamodel row.
      * @return the maximum row
      */
     public int getMaximumRow() {
@@ -60,7 +60,7 @@ public class RowManager {
     
     /**
      * Get the total number of occupied rows
-     * @return the number of rows being used by the table
+     * @return the number of rows being used by the datamodel
      */
     public int getRowCount() {
         return 1 + m_curid - m_firstid 
@@ -68,7 +68,7 @@ public class RowManager {
     }
     
     /**
-     * Indicates if a given row value is a valid, occupied row of the table.
+     * Indicates if a given row value is a valid, occupied row of the datamodel.
      * @param row the row index to check
      * @return true if the row is valid and in use by the Table, false if
      * it is an illegal value or is currently free
@@ -135,11 +135,11 @@ public class RowManager {
     /**
      * Given Table row and column indices, return the corresponding row in
      * the underlying data column. This is of use for CascadedTable instances,
-     * which may reveal only a limited set of a parent table's rows and so
-     * must map between table rows and the actual indices of the inherited
+     * which may reveal only a limited set of a parent datamodel's rows and so
+     * must map between datamodel rows and the actual indices of the inherited
      * data columns.
-     * @param row the table row
-     * @param col the table column
+     * @param row the datamodel row
+     * @param col the datamodel column
      * @return the row value for accessing the correct value of the
      * referenced data column.
      */
@@ -148,13 +148,13 @@ public class RowManager {
     }
     
     /**
-     * Given a column row index and a table column index, return the
-     * table row corresponding to the column value. This is of use for
+     * Given a column row index and a datamodel column index, return the
+     * datamodel row corresponding to the column value. This is of use for
      * CascadedTable instances, which may reveal only a limited set of a parent
-     * table's rows and so must map between table rows and the actual indices
+     * datamodel's rows and so must map between datamodel rows and the actual indices
      * of the inherited data columns.
      * @param columnRow the row of the underlying data column
-     * @param col the table column
+     * @param col the datamodel column
      * @return the row value for the Table that corresponds to the
      * given column row
      */
@@ -164,7 +164,7 @@ public class RowManager {
 
     /**
      * Return an iterator over column row indices.
-     * @param col the table column index
+     * @param col the datamodel column index
      * @return an iterator over column row indices corresponding
      * to valid rows of this RowManager
      */
@@ -174,7 +174,7 @@ public class RowManager {
 
     /**
      * Return an iterator over column row indices.
-     * @param col the table column index
+     * @param col the datamodel column index
      * @param reverse indicates the direction to iterate over, true
      * for reverse, false for normal
      * @return an iterator over column row indices corresponding
@@ -186,8 +186,8 @@ public class RowManager {
     
     /**
      * Return an iterator over column row indices.
-     * @param rows an iterator over table row indices
-     * @param col the table column index
+     * @param rows an iterator over datamodel row indices
+     * @param col the datamodel column index
      * @return an iterator over column row indices corresponding
      * to valid rows of this RowManager
      */
@@ -199,18 +199,18 @@ public class RowManager {
     // Iterators
         
     /**
-     * Get an iterator over the table rows.
-     * @return an iterator over the table rows
+     * Get an iterator over the datamodel rows.
+     * @return an iterator over the datamodel rows
      */
     public IntIterator rows() {
         return new RowIterator(false);
     }
     
     /**
-     * Get an iterator over the table rows.
+     * Get an iterator over the datamodel rows.
      * @param reverse indicates the direction to iterate over, true
      * for reverse, false for normal
-     * @return an iterator over the table rows
+     * @return an iterator over the datamodel rows
      */
     public IntIterator rows(boolean reverse) {
         return new RowIterator(reverse);

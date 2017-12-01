@@ -22,14 +22,14 @@ public class VisualGraph extends Graph implements VisualTupleSet {
    
     /**
      * Create a new VisualGraph
-     * @param nodes the visual node table
-     * @param edges the visual edge table
+     * @param nodes the visual node datamodel
+     * @param edges the visual edge datamodel
      * @param directed indicates if graph edges are directed or undirected
-     * @param nodeKey the node table field by which to index the nodes.
+     * @param nodeKey the node datamodel field by which to index the nodes.
      * This value can be null, indicating that just the row indices should be
      * used.
-     * @param sourceKey the edge table field storing source node keys
-     * @param targetKey the edge table field storing target node keys
+     * @param sourceKey the edge datamodel field storing source node keys
+     * @param targetKey the edge datamodel field storing target node keys
      */
     public VisualGraph(VisualTable nodes, VisualTable edges, boolean directed,
             String nodeKey, String sourceKey, String targetKey)

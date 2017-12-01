@@ -34,7 +34,7 @@ public class AxisLayout extends Layout {
     private int m_type = Constants.UNKNOWN;
     
     // visible region of the layout (in item coordinates)
-    // if false, the table will be consulted
+    // if false, the datamodel will be consulted
     private boolean m_modelSet = false;
     private ValuedRangeModel m_model = null;
     private Predicate m_filter = null;

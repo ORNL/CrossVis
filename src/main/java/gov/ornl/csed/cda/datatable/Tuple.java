@@ -1,17 +1,15 @@
 package gov.ornl.csed.cda.datatable;
 
 import java.io.Serializable;
-import java.time.Instant;
 import java.util.ArrayList;
 
 public class Tuple implements Serializable {
-	private ArrayList<Double> elements = new ArrayList<>();
-	private Instant instant;
-
+	private ArrayList<Object> elements;
 	private boolean queryFlag = true;
 	private int orderFactor = 0;
 
 	public Tuple() {
+		elements = new ArrayList<>();
 	}
 
     public Tuple (Tuple copyTuple) {
@@ -20,8 +18,8 @@ public class Tuple implements Serializable {
         }
     }
 
-    public Double[] getElementsAsArray() {
-		Double elementArray [] = new Double[elements.size()];
+    public Object[] getElementsAsArray() {
+		Object elementArray [] = new Object[elements.size()];
         elements.toArray(elementArray);
         return elementArray;
     }
@@ -39,7 +37,7 @@ public class Tuple implements Serializable {
 			return;
 		}
 
-		double tmp = elements.get(currentElementIndex);
+		Object tmp = elements.get(currentElementIndex);
 		if (currentElementIndex < newElementIndex) {
 			for (int i = currentElementIndex; i < newElementIndex; i++) {
 				elements.set(i, elements.get(i + 1));
@@ -52,19 +50,11 @@ public class Tuple implements Serializable {
 		elements.set(newElementIndex, tmp);
 	}
 
-	public void setInstant(Instant instant) {
-	    this.instant = Instant.from(instant);
-    }
-
-    public Instant getInstant() {
-	    return instant;
-    }
-
-	public void setElement(int idx, double value) {
+	public void setElement(int idx, Object value) {
 		elements.set(idx, value);
 	}
 
-	public void addElement(double value) {
+	public void addElement(Object value) {
 		elements.add(value);
 	}
 
@@ -80,7 +70,7 @@ public class Tuple implements Serializable {
 		return false;
 	}
 
-	public double getElement(int idx) {
+	public Object getElement(int idx) {
 		return elements.get(idx);
 	}
 

@@ -279,7 +279,7 @@ public class GraphLib {
     
     /** Label data field included in generated Graphs */
     public static final String LABEL = "label";
-    /** Node table schema used for generated Graphs */
+    /** Node datamodel schema used for generated Graphs */
     public static final Schema LABEL_SCHEMA = new Schema();
     static {
         LABEL_SCHEMA.addColumn(LABEL, String.class, "");

@@ -19,13 +19,13 @@ public class TableNodeItem extends TableVisualItem implements NodeItem {
     protected Graph m_graph;
 
     /**
-     * Initialize a new TableNodeItem for the given graph, table, and row.
+     * Initialize a new TableNodeItem for the given graph, datamodel, and row.
      * This method is used by the appropriate TupleManager instance, and
      * should not be called directly by client code, unless by a
      * client-supplied custom TupleManager.
      * @param table the backing VisualTable
      * @param graph the backing VisualGraph
-     * @param row the row in the node table to which this Node instance
+     * @param row the row in the node datamodel to which this Node instance
      *  corresponds.
      */
     protected void init(Table table, Graph graph, int row) {

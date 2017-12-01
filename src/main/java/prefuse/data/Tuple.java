@@ -4,9 +4,9 @@ import java.util.Date;
 
 
 /**
- * Tuples are objects representing a row of a data table, providing
- * a simplified interface to table data. They maintain a pointer to a
- * corresponding row in a table. When rows are deleted, any live Tuples
+ * Tuples are objects representing a row of a data datamodel, providing
+ * a simplified interface to datamodel data. They maintain a pointer to a
+ * corresponding row in a datamodel. When rows are deleted, any live Tuples
  * for that row become invalidated, and any further attempts to access
  * or set data with that Tuple will result in an exception.
  * 
@@ -28,9 +28,9 @@ public interface Tuple {
     
     /**
      * Returns the row index for this Tuple's backing Table, if it exists.
-     * @return the backing row index, or -1 if there is no backing table
+     * @return the backing row index, or -1 if there is no backing datamodel
      * or if this Tuple has been invalidated (i.e., the Tuple's row was
-     * deleted from the backing table).
+     * deleted from the backing datamodel).
      */
     public int getRow();
     
@@ -63,13 +63,13 @@ public interface Tuple {
     /**
      * Get the column index corresponding to the given data field.
      * @param field the data field to look up
-     * @return the column index of the field within the backing table, or
+     * @return the column index of the field within the backing datamodel, or
      * -1 if no columns with the given name were found
      */
     public int getColumnIndex(String field);
     
     /**
-     * Get the number of columns maintained by the backing table.
+     * Get the number of columns maintained by the backing datamodel.
      * @return the number of columns / data fields.
      */
     public int getColumnCount();

@@ -33,8 +33,8 @@ public class AggregateTable extends VisualTable {
     
     /**
      * Create a new AggregateTable.
-     * @param vis the Visualization associated with the table
-     * @param group the data group the table contents belongs to
+     * @param vis the Visualization associated with the datamodel
+     * @param group the data group the datamodel contents belongs to
      */
     public AggregateTable(Visualization vis, String group) {
         this(vis, group, VisualItem.SCHEMA);
@@ -42,9 +42,9 @@ public class AggregateTable extends VisualTable {
 
     /**
      * Create a new AggregateTable.
-     * @param vis the Visualization associated with the table
-     * @param group the data group the table contents belongs to
-     * @param schema the Schema to use for this table
+     * @param vis the Visualization associated with the datamodel
+     * @param group the data group the datamodel contents belongs to
+     * @param schema the Schema to use for this datamodel
      */
     public AggregateTable(Visualization vis, String group, Schema schema) {
         super(vis, group, schema, TableAggregateItem.class);
@@ -56,7 +56,7 @@ public class AggregateTable extends VisualTable {
     // ------------------------------------------------------------------------
     
     /**
-     * Get the size of the aggregate represented at the given table row.
+     * Get the size of the aggregate represented at the given datamodel row.
      * Returns the number of visual items contained in the aggregation.
      * @return the aggregate size for the given row
      */
@@ -109,9 +109,9 @@ public class AggregateTable extends VisualTable {
     
     /**
      * Clears all aggregates mappings for the aggregate at the given row,
-     * optionally issuing a table update.
-     * @param row the table row of the aggregate
-     * @param update indicates whether or not to fire a table update
+     * optionally issuing a datamodel update.
+     * @param row the datamodel row of the aggregate
+     * @param update indicates whether or not to fire a datamodel update
      */
     protected void clearAggregateMappings(int row, boolean update) {
         Index index = m_aggregated.index(AGGREGATE);
@@ -132,7 +132,7 @@ public class AggregateTable extends VisualTable {
     
     /**
      * Indicates if an item is a member of the aggregate at the given row
-     * @param row the table row of the aggregate
+     * @param row the datamodel row of the aggregate
      * @param member the item to check from containment
      * @return true if the item is in the aggregate, false otherwise
      */
@@ -141,11 +141,11 @@ public class AggregateTable extends VisualTable {
     }
     
     /**
-     * Get the row index to the aggregate mapping table for the given
+     * Get the row index to the aggregate mapping datamodel for the given
      * aggregate and contained VisualItem.
-     * @param row the table row of the aggregate
+     * @param row the datamodel row of the aggregate
      * @param member the VisualItem to look up
-     * @return the row index into the internal aggregate mapping table for the
+     * @return the row index into the internal aggregate mapping datamodel for the
      * mapping between the given aggregate row and given VisualItem
      */
     protected int getAggregatedRow(int row, VisualItem member) {
@@ -167,8 +167,8 @@ public class AggregateTable extends VisualTable {
     }
     
     /**
-     * Get all VisualItems within the aggregate at the given table row.
-     * @param row the table row of the aggregate
+     * Get all VisualItems within the aggregate at the given datamodel row.
+     * @param row the datamodel row of the aggregate
      * @return an iterator over the items in the aggregate
      */
     public Iterator aggregatedTuples(int row) {

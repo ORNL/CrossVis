@@ -20,7 +20,7 @@ public class UniqueRowIterator extends IntIterator {
     
     /**
      * Create a new UniqueRowIterator.
-     * @param iter a source iterator over table rows
+     * @param iter a source iterator over datamodel rows
      */
     public UniqueRowIterator(IntIterator iter) {
         m_iter = iter;

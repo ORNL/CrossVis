@@ -11,7 +11,7 @@ import prefuse.visual.expression.ValidatedPredicate;
 import prefuse.visual.expression.VisiblePredicate;
 
 /**
- * Function table that allows lookup of registered FunctionExpressions
+ * Function datamodel that allows lookup of registered FunctionExpressions
  * by their function name.
  * 
  * @author <a href="http://jheer.org">jeffrey heer</a>
@@ -114,19 +114,19 @@ public class FunctionTable {
     
     /**
      * Indicates if a function of the given name is included in the function
-     * table.
+     * datamodel.
      * @param name the function name
-     * @return true if the function is in the table, false otherwise
+     * @return true if the function is in the datamodel, false otherwise
      */
     public static boolean hasFunction(String name) {
         return s_functionTable.containsKey(name);
     }
     
     /**
-     * Add a function to the function table. It will then become available
+     * Add a function to the function datamodel. It will then become available
      * for use with compiled statements of the prefuse expression language.
      * @param name the name of the function. This name must not already
-     * be registered in the table, i.e. there is no function overloading.
+     * be registered in the datamodel, i.e. there is no function overloading.
      * @param type the Class instance of the function itself
      */
     public static void addFunction(String name, Class type) {

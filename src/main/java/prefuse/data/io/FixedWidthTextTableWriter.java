@@ -9,7 +9,7 @@ import prefuse.util.TypeLib;
 import prefuse.util.collections.IntIterator;
 
 /**
- * TableWriter for fixed-width text files, that encode one row of table
+ * TableWriter for fixed-width text files, that encode one row of datamodel
  * data per line use a fixed number of characters for each data column.
  * Writing such tables requires use of a schema description that describes
  * the fixed-widths for each individual column.
@@ -47,7 +47,7 @@ public class FixedWidthTextTableWriter extends AbstractTableWriter {
     
     /**
      * Get the schema description describing the data columns' fixed widths
-     * @return the fixed-width table schema description
+     * @return the fixed-width datamodel schema description
      */
     public FixedWidthTextTableSchema getFixedWidthSchema() {
         return m_schema;
@@ -55,7 +55,7 @@ public class FixedWidthTextTableWriter extends AbstractTableWriter {
 
     /**
      * Set the schema description describing the data columns' fixed widths
-     * @param schema the fixed-width table schema description
+     * @param schema the fixed-width datamodel schema description
      */
     public void setFixedWidthSchema(FixedWidthTextTableSchema schema) {
         m_schema = schema;

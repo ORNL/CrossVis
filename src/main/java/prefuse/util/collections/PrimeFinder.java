@@ -2,11 +2,11 @@ package prefuse.util.collections;
 
 /**
  * Not of interest for users; only for implementors of hashtables. Used to keep
- * hash table capacities prime numbers.
+ * hash datamodel capacities prime numbers.
  * 
  * <p>
- * Choosing prime numbers as hash table capacities is a good idea to keep them
- * working fast, particularly under hash table expansions.
+ * Choosing prime numbers as hash datamodel capacities is a good idea to keep them
+ * working fast, particularly under hash datamodel expansions.
  * </p>
  * 
  * <p>

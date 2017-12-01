@@ -6,8 +6,8 @@ import prefuse.data.Tuple;
 import prefuse.data.expression.AbstractPredicate;
 
 /**
- * Filtering predicate over a potential edge table that indicates which
- * edges are valid edges according to a backing node table. Useful for
+ * Filtering predicate over a potential edge datamodel that indicates which
+ * edges are valid edges according to a backing node datamodel. Useful for
  * creating a pool of edges for which not all node have been created, and
  * then filtering out the valid edges using the node pool.
  *  
@@ -19,7 +19,7 @@ public class ValidEdgePredicate extends AbstractPredicate {
     
     /**
      * Creates a new ValidEdgePredicate.
-     * @param g the backing graph, the node table of this graph will be used
+     * @param g the backing graph, the node datamodel of this graph will be used
      * to check for valid edges.
      */
     public ValidEdgePredicate(Graph g) {
@@ -29,7 +29,7 @@ public class ValidEdgePredicate extends AbstractPredicate {
     /**
      * Indicates if the given tuple can be used as a valid edge for
      * the nodes of the backing graph.
-     * @param tpl a data tuple from a potential edge table
+     * @param tpl a data tuple from a potential edge datamodel
      * @return true if the tuple contents allow it to serve as a valid
      * edge of between nodes in the backing graph
      */

@@ -13,25 +13,25 @@ import prefuse.data.Table;
 public interface TableWriter {
 
     /**
-     * Write a table to the file with the given filename.
+     * Write a datamodel to the file with the given filename.
      * @param table the Table to write
-     * @param filename the file to write the table to
+     * @param filename the file to write the datamodel to
      * @throws DataWriteException
      */
     public void writeTable(Table table, String filename) throws DataIOException;
     
     /**
-     * Write a table to the given File.
+     * Write a datamodel to the given File.
      * @param table the Table to write
-     * @param f the file to write the table to
+     * @param f the file to write the datamodel to
      * @throws DataWriteException
      */
     public void writeTable(Table table, File f) throws DataIOException;
     
     /**
-     * Write a table from the given OutputStream.
+     * Write a datamodel from the given OutputStream.
      * @param table the Table to write
-     * @param os the OutputStream to write the table to
+     * @param os the OutputStream to write the datamodel to
      * @throws DataWriteException
      */
     public void writeTable(Table table, OutputStream os) throws DataIOException;

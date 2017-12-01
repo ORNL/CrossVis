@@ -16,13 +16,13 @@ public class TableDecoratorItem extends TableVisualItem
     implements DecoratorItem
 {   
     /**
-     * Initialize a new TableDecoratorItem for the given table and row. This
+     * Initialize a new TableDecoratorItem for the given datamodel and row. This
      * method is used by the appropriate TupleManager instance, and should
      * not be called directly by client code, unless by a client-supplied
      * custom TupleManager.
      * @param table the data Table
      * @param graph ignored by this class
-     * @param row the table row index
+     * @param row the datamodel row index
      */
     protected void init(Table table, Graph graph, int row) {
         m_table = table;

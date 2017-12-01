@@ -28,11 +28,11 @@ public abstract class AbstractHashMap {
     protected int distinct;
 
     /**
-     * The table capacity c=table.length always satisfies the invariant
+     * The datamodel capacity c=datamodel.length always satisfies the invariant
      * <tt>c * minLoadFactor <= s <= c * maxLoadFactor</tt>, where s=size()
      * is the number of associations currently contained. The term "c *
      * minLoadFactor" is called the "lowWaterMark", "c * maxLoadFactor" is
-     * called the "highWaterMark". In other words, the table capacity (and
+     * called the "highWaterMark". In other words, the datamodel capacity (and
      * proportionally the memory used by this class) oscillates within these
      * constraints. The terms are precomputed and cached to avoid recalculating
      * them each time put(..) or removeKey(...) is called.
@@ -65,7 +65,7 @@ public abstract class AbstractHashMap {
     }
 
     /**
-     * Chooses a new prime table capacity optimized for growing that
+     * Chooses a new prime datamodel capacity optimized for growing that
      * (approximately) satisfies the invariant
      * <tt>c * minLoadFactor <= size <= c * maxLoadFactor</tt> and has at
      * least one FREE slot for the given size.
@@ -101,7 +101,7 @@ public abstract class AbstractHashMap {
     }
 
     /**
-     * Chooses a new prime table capacity neither favoring shrinking nor
+     * Chooses a new prime datamodel capacity neither favoring shrinking nor
      * growing, that (approximately) satisfies the invariant
      * <tt>c * minLoadFactor <= size <= c * maxLoadFactor</tt> and has at
      * least one FREE slot for the given size.
@@ -112,7 +112,7 @@ public abstract class AbstractHashMap {
     }
 
     /**
-     * Chooses a new prime table capacity optimized for shrinking that
+     * Chooses a new prime datamodel capacity optimized for shrinking that
      * (approximately) satisfies the invariant
      * <tt>c * minLoadFactor <= size <= c * maxLoadFactor</tt> and has at
      * least one FREE slot for the given size.
@@ -172,7 +172,7 @@ public abstract class AbstractHashMap {
 
     /**
      * Initializes the receiver. You will almost certainly need to override this
-     * method in subclasses to initialize the hash table.
+     * method in subclasses to initialize the hash datamodel.
      * 
      * @param initialCapacity
      *            the initial capacity of the receiver.

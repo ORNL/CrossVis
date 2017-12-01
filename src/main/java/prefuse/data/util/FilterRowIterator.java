@@ -7,8 +7,8 @@ import prefuse.data.expression.Predicate;
 import prefuse.util.collections.IntIterator;
 
 /**
- * Iterator over table rows that filters the output by a given predicate. For
- * each table row, the corresponding tuple is checked against the predicate.
+ * Iterator over datamodel rows that filters the output by a given predicate. For
+ * each datamodel row, the corresponding tuple is checked against the predicate.
  * Only rows whose tuples pass the filter are included in this iteration.
  * 
  * @author <a href="http://jheer.org">jeffrey heer</a>
@@ -22,7 +22,7 @@ public class FilterRowIterator extends IntIterator {
     
     /**
      * Create a new FilterRowIterator.
-     * @param rows an iterator over table rows
+     * @param rows an iterator over datamodel rows
      * @param t the whos rows are being iterated over
      * @param p the filter predicate to use
      */

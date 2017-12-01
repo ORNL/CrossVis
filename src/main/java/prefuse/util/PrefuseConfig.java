@@ -29,7 +29,7 @@ import prefuse.util.io.IOLib;
  * asynchronous database worker threads. The default prefuse setting is 5
  * (same as the Java thread default).</li>
  * <li><code>data.filter.optimizeThreshold</code> - the minimum number of items
- * that must be contained in a table for optimized query plans to be
+ * that must be contained in a datamodel for optimized query plans to be
  * considered. The default value is 300.</li>
  * <li><code>util.logdir</code> - the directory in which to write prefuse log
  * files. The default is "null" which defaults logging output to standard

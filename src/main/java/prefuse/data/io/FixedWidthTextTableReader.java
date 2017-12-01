@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import prefuse.data.parser.DataParseException;
 
 /**
- * TableReader for fixed-width text files, that encode one row of table
+ * TableReader for fixed-width text files, that encode one row of datamodel
  * data per line use a fixed number of characters for each data column.
  * Reading such tables requires use of a schema description that describes
  * the fixed-widths for each individual column.
@@ -47,7 +47,7 @@ public class FixedWidthTextTableReader extends AbstractTextTableReader {
     
     /**
      * Get the schema description describing the data columns' fixed widths
-     * @return the fixed-width table schema description
+     * @return the fixed-width datamodel schema description
      */
     public FixedWidthTextTableSchema getFixedWidthSchema() {
         return m_schema;
@@ -55,7 +55,7 @@ public class FixedWidthTextTableReader extends AbstractTextTableReader {
 
     /**
      * Set the schema description describing the data columns' fixed widths
-     * @param schema the fixed-width table schema description
+     * @param schema the fixed-width datamodel schema description
      */
     public void setFixedWidthSchema(FixedWidthTextTableSchema schema) {
         m_schema = schema;

@@ -43,7 +43,7 @@ public class ColumnMetadata implements ColumnListener {
     
     /**
      * Creates a new ColumnMetadata instance.
-     * @param table the backing table
+     * @param table the backing datamodel
      * @param column the name of the column to store metadata for
      */
     public ColumnMetadata(Table table, String column) {
@@ -52,12 +52,12 @@ public class ColumnMetadata implements ColumnListener {
 
     /**
      * Creates a new ColumnMetadata instance.
-     * @param table the backing table
+     * @param table the backing datamodel
      * @param column the name of the column to store metadata for
      * @param cmp a Comparator that determines the default sort order for
      * values in the column
      * @param dynamic indicates if this ColumnMetadata should react to
-     * changes in the underlying table values. If true, computed values
+     * changes in the underlying datamodel values. If true, computed values
      * stored in this metadata object will be invalidated when updates to
      * the column data occur.
      */

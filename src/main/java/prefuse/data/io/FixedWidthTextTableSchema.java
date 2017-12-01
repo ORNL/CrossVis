@@ -13,7 +13,7 @@ import prefuse.util.io.IOLib;
 
 /**
  * Helper class that stores character length counts for each column in
- * a fixed width text table. This class is needed for reading and writing
+ * a fixed width text datamodel. This class is needed for reading and writing
  * fixed width data tables. A schema definition can either be created
  * manually using the {@link #addColumn(String, int)} method or loaded from
  * a tab-delimited text file using the {@link #load(String)} method.

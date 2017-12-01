@@ -577,7 +577,7 @@ public class AxisLabelLayout extends Layout {
     }
     
     /**
-     * Create a new table for representing axis labels.
+     * Create a new datamodel for representing axis labels.
      */
     protected VisualTable getTable() {
         TupleSet ts = m_vis.getGroup(m_group);

@@ -279,7 +279,7 @@ public class Visualization {
     
     /**
      * Add an empty VisualTable to this visualization, using the given data
-     * group name and table schema. This adds a group of VisualItems that do
+     * group name and datamodel schema. This adds a group of VisualItems that do
      * not have a backing data set, useful for creating interactive visual
      * objects that do not represent data. An exception will be thrown if the
      * group name is already in use.
@@ -294,26 +294,26 @@ public class Visualization {
     }
     
     /**
-     * Adds a data table to this visualization, using the given data group
+     * Adds a data datamodel to this visualization, using the given data group
      * name. A visual abstraction of the data will be created and registered
      * with the visualization. An exception will be thrown if the group name
      * is already in use.
      * @param group the data group name for the visualized data
-     * @param table the data table to visualize
+     * @param table the data datamodel to visualize
      */
     public synchronized VisualTable addTable(String group, Table table) {
         return addTable(group, table, (Predicate)null);
     }
     
     /**
-     * Adds a data table to this visualization, using the given data group
+     * Adds a data datamodel to this visualization, using the given data group
      * name. A visual abstraction of the data will be created and registered
      * with the visualization. An exception will be thrown if the group name
      * is already in use.
      * @param group the data group name for the visualized data
-     * @param table the data table to visualize
+     * @param table the data datamodel to visualize
      * @param filter a filter Predicate determining which data Tuples in the
-     * input table are visualized
+     * input datamodel are visualized
      */
     public synchronized VisualTable addTable(
             String group, Table table, Predicate filter)
@@ -324,12 +324,12 @@ public class Visualization {
     }
 
     /**
-     * Adds a data table to this visualization, using the given data group
+     * Adds a data datamodel to this visualization, using the given data group
      * name. A visual abstraction of the data will be created and registered
      * with the visualization. An exception will be thrown if the group name
      * is already in use.
      * @param group the data group name for the visualized data
-     * @param table the data table to visualize
+     * @param table the data datamodel to visualize
      * @param schema the data schema to use for the created VisualTable
      */
     public synchronized VisualTable addTable(
@@ -339,14 +339,14 @@ public class Visualization {
     }
     
     /**
-     * Adds a data table to this visualization, using the given data group
+     * Adds a data datamodel to this visualization, using the given data group
      * name. A visual abstraction of the data will be created and registered
      * with the visualization. An exception will be thrown if the group name
      * is already in use.
      * @param group the data group name for the visualized data
-     * @param table the data table to visualize
+     * @param table the data datamodel to visualize
      * @param filter a filter Predicate determining which data Tuples in the
-     * input table are visualized
+     * input datamodel are visualized
      * @param schema the data schema to use for the created VisualTable
      */
     public synchronized VisualTable addTable(
@@ -358,7 +358,7 @@ public class Visualization {
     }
     
     /**
-     * Add a VisualTable to this visualization, using the table's
+     * Add a VisualTable to this visualization, using the datamodel's
      * pre-set group name. An exception will be thrown if the group
      * name is already in use. This method allows you to insert custom
      * implementations of VisualTable into a Visualization. It is intended
@@ -419,8 +419,8 @@ public class Visualization {
      * @param graph the graph to visualize
      * @param filter a filter Predicate determining which data Tuples in the
      * input graph are visualized
-     * @param nodeSchema the data schema to use for the visual node table
-     * @param edgeSchema the data schema to use for the visual edge table
+     * @param nodeSchema the data schema to use for the visual node datamodel
+     * @param edgeSchema the data schema to use for the visual edge datamodel
      */
     public synchronized VisualGraph addGraph(String group, Graph graph,
             Predicate filter, Schema nodeSchema, Schema edgeSchema)
@@ -493,8 +493,8 @@ public class Visualization {
      * @param tree the tree to visualize
      * @param filter a filter Predicate determining which data Tuples in the
      * input graph are visualized
-     * @param nodeSchema the data schema to use for the visual node table
-     * @param edgeSchema the data schema to use for the visual edge table
+     * @param nodeSchema the data schema to use for the visual node datamodel
+     * @param edgeSchema the data schema to use for the visual edge datamodel
      */
     public synchronized VisualTree addTree(String group, Tree tree,
             Predicate filter, Schema nodeSchema, Schema edgeSchema)
@@ -555,13 +555,13 @@ public class Visualization {
     // -- Derived Tables and Decorators ---------------------------------------
     
     /**
-     * Add a derived table, a VisualTable that is cascaded from an
+     * Add a derived datamodel, a VisualTable that is cascaded from an
      * existing VisualTable. This is useful for creating VisualItems
      * that inherit a set of visual properties from another group of
      * VisualItems. This might be used, for example, in the creation
      * of small multiples where only a few visual attributes vary
      * across the multiples.
-     * @param group the data group to use for the derived table
+     * @param group the data group to use for the derived datamodel
      * @param source the source data group to derive from
      * @param filter a Predicate filter indicating which tuples of the
      * source group should be inheritable by the new group
@@ -585,7 +585,7 @@ public class Visualization {
      * such as providing a label or dedicated interactive control, and are
      * realizeed as {@link prefuse.visual.DecoratorItem} instances that provide
      * access to the decorated item in addition to the standard VisualItem
-     * properties. The generated table is created using the
+     * properties. The generated datamodel is created using the
      * {@link #addDerivedTable(String, String, Predicate, Schema)} method,
      * but with no VisualItem properties inherited from the source group.
      * @param group the data group to use for the decorators
@@ -773,7 +773,7 @@ public class Visualization {
         TupleSet source = getSourceData(group);
         if ( source == null ) return null;
         
-        // first get the source table and row value
+        // first get the source datamodel and row value
         int row = item.getRow();
         Table t = item.getTable();
         while ( t instanceof VisualTable ) {

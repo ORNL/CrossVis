@@ -17,13 +17,13 @@ public class TableEdgeItem extends TableVisualItem implements EdgeItem {
     protected Graph m_graph;
     
     /**
-     * Initialize a new TableEdgeItem for the given graph, table, and row.
+     * Initialize a new TableEdgeItem for the given graph, datamodel, and row.
      * This method is used by the appropriate TupleManager instance, and
      * should not be called directly by client code, unless by a
      * client-supplied custom TupleManager.
      * @param table the backing VisualTable
      * @param graph the backing VisualGraph
-     * @param row the row in the node table to which this Edge instance
+     * @param row the row in the node datamodel to which this Edge instance
      *  corresponds.
      */
     protected void init(Table table, Graph graph, int row) {

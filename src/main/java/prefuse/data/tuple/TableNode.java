@@ -8,7 +8,7 @@ import prefuse.data.Node;
 import prefuse.data.Table;
 
 /**
- * Node implementation that reads Node data from a backing node table.
+ * Node implementation that reads Node data from a backing node datamodel.
  * 
  * @author <a href="http://jheer.org">jeffrey heer</a>
  */
@@ -20,13 +20,13 @@ public class TableNode extends TableTuple implements Node {
     protected Graph m_graph;
     
     /**
-     * Initialize a new Node backed by a node table. This method is used by
+     * Initialize a new Node backed by a node datamodel. This method is used by
      * the appropriate TupleManager instance, and should not be called
      * directly by client code, unless by a client-supplied custom
      * TupleManager.
      * @param table the node Table
      * @param graph the backing Graph
-     * @param row the row in the node table to which this Node instance
+     * @param row the row in the node datamodel to which this Node instance
      *  corresponds.
      */
     protected void init(Table table, Graph graph, int row) {

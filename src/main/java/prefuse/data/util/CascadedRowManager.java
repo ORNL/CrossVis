@@ -5,7 +5,7 @@ import prefuse.data.Table;
 
 /**
  * RowManager instance that additionally takes into account tables which
- * inherit from a parent table but can also have their own, dedicated
+ * inherit from a parent datamodel but can also have their own, dedicated
  * columns.
  * 
  * @author <a href="http://jheer.org">jeffrey heer</a>
@@ -14,7 +14,7 @@ public class CascadedRowManager extends FilteredRowManager {
     
     /**
      * Create a new CascadedRowManager.
-     * @param table the table to manage
+     * @param table the datamodel to manage
      */
     public CascadedRowManager(Table table) {
         super(table);

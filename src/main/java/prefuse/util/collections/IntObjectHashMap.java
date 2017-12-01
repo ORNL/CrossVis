@@ -36,22 +36,22 @@ public class IntObjectHashMap extends AbstractHashMap implements Cloneable {
     protected static final byte REMOVED = 2;
     
     /**
-     * The hash table keys.
+     * The hash datamodel keys.
      */
     protected int table[];
 
     /**
-     * The hash table values.
+     * The hash datamodel values.
      */
     protected Object values[];
 
     /**
-     * The state of each hash table entry (FREE, FULL, REMOVED).
+     * The state of each hash datamodel entry (FREE, FULL, REMOVED).
      */
     protected byte state[];
 
     /**
-     * The number of table entries in state==FREE.
+     * The number of datamodel entries in state==FREE.
      */
     protected int freeEntries;
     
@@ -375,7 +375,7 @@ public class IntObjectHashMap extends AbstractHashMap implements Cloneable {
     }
 
     /**
-     * Rehashes the contents of the receiver into a new table with a smaller or
+     * Rehashes the contents of the receiver into a new datamodel with a smaller or
      * larger capacity. This method is called automatically when the number of
      * keys in the receiver exceeds the high water mark or falls below the low
      * water mark.
@@ -475,7 +475,7 @@ public class IntObjectHashMap extends AbstractHashMap implements Cloneable {
         this.freeEntries = capacity; // delta
 
         // lowWaterMark will be established upon first expansion.
-        // establishing it now (upon instance construction) would immediately make the table shrink upon first put(...).
+        // establishing it now (upon instance construction) would immediately make the datamodel shrink upon first put(...).
         // After all the idea of an "initialCapacity" implies violating lowWaterMarks when an object is young.
         // See ensureCapacity(...)
         this.lowWaterMark = 0;
@@ -489,7 +489,7 @@ public class IntObjectHashMap extends AbstractHashMap implements Cloneable {
      */
     public void trimToSize() {
         // * 1.2 because open addressing's performance exponentially degrades beyond that point
-        // so that even rehashing the table can take very long
+        // so that even rehashing the datamodel can take very long
         int newCapacity = nextPrime((int) (1 + 1.2 * size()));
         if (table.length > newCapacity) {
             rehash(newCapacity);

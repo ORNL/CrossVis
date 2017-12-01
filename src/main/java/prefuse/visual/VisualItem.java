@@ -15,7 +15,7 @@ import prefuse.util.PrefuseLib;
 /**
  * <p>Base interface for representing a visual item, a data object with a
  * visual interactive form. VisualItems are Tuple instances, and so
- * can support any number of data fields in a backing data table. VisualItems
+ * can support any number of data fields in a backing data datamodel. VisualItems
  * also support data fields specific to visualization, such as a location,
  * bounding box, colors, size, and font. The VisualItem interface provides
  * convenience methods for accessing these common visual properties, but

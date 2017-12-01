@@ -22,13 +22,13 @@ public class VisualTree extends Tree implements VisualTupleSet {
     
     /**
      * Create a new VisualTree.
-     * @param nodes the visual node table
-     * @param edges the visual edge table
-     * @param nodeKey the node table field by which to index the nodes.
+     * @param nodes the visual node datamodel
+     * @param edges the visual edge datamodel
+     * @param nodeKey the node datamodel field by which to index the nodes.
      * This value can be null, indicating that just the row indices should be
      * used.
-     * @param sourceKey the edge table field storing source (parent) node keys
-     * @param targetKey the edge table field storing target (child) node keys
+     * @param sourceKey the edge datamodel field storing source (parent) node keys
+     * @param targetKey the edge datamodel field storing target (child) node keys
      */
     public VisualTree(VisualTable nodes, VisualTable edges,
             String nodeKey, String sourceKey, String targetKey)

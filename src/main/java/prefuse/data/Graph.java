@@ -34,21 +34,21 @@ import prefuse.util.collections.IntIterator;
  * </p>
  * 
  * <p>Both nodes and edges are represented by backing data {@link Table}
- * instances storing the data attributes. For edges, this table must
+ * instances storing the data attributes. For edges, this datamodel must
  * also contain a source node field and a target node field. The default
  * column name for these fields are {@link #DEFAULT_SOURCE_KEY} and
  * {@link #DEFAULT_TARGET_KEY}, but these can be configured by the graph
  * constructor. These columns should be integer valued, and contain
- * either the row number for a corresponding node in the node table,
+ * either the row number for a corresponding node in the node datamodel,
  * or another unique identifier for a node. In this second case, the
  * unique identifier must be included as a data field in the node
- * table. This name of this column can be configured using the appropriate
+ * datamodel. This name of this column can be configured using the appropriate
  * graph constructor. The default column name for this field is
  * {@link #DEFAULT_NODE_KEY}, which by default evaluates to null,
  * indicating that no special node key should be used, just the direct
- * node table row numbers. Though the source, target, and node key
+ * node datamodel row numbers. Though the source, target, and node key
  * values completely specify the graph linkage structure, to make
- * graph operations more efficient an additional table is maintained
+ * graph operations more efficient an additional datamodel is maintained
  * internally by the Graph class, storing node indegree and outdegree
  * counts and adjacency lists for the inlinks and outlinks for all nodes.</p>
  * 
@@ -62,7 +62,7 @@ import prefuse.util.collections.IntIterator;
  * special TupleManager instances contained within this Graph. By default, they
  * are not accessible from the backing node or edge tables directly. The reason
  * for this is that these tables might be used in multiple graphs
- * simultaneously. For example, a node data table could be used in a number of
+ * simultaneously. For example, a node data datamodel could be used in a number of
  * different graphs, exploring different possible linkages between those node.
  * In short, use this Graph instance to request iterators over Node or
  * Edge tuples, not the backing data tables.</p>
@@ -87,10 +87,10 @@ public class Graph extends CompositeTupleSet {
     /** Default data field used to uniquely identify a node */
     public static final String DEFAULT_NODE_KEY 
         = PrefuseConfig.get("data.graph.nodeKey");
-    /** Default data field used to denote the source node in an edge table */
+    /** Default data field used to denote the source node in an edge datamodel */
     public static final String DEFAULT_SOURCE_KEY 
         = PrefuseConfig.get("data.graph.sourceKey");
-    /** Default data field used to denote the target node in an edge table */
+    /** Default data field used to denote the target node in an edge datamodel */
     public static final String DEFAULT_TARGET_KEY 
         = PrefuseConfig.get("data.graph.targetKey"); 
     /** Data group name to identify the nodes of this graph */
@@ -114,11 +114,11 @@ public class Graph extends CompositeTupleSet {
     /** The spanning tree over this graph */
     protected SpanningTree m_spanning = null;
     
-    /** The node key field (for the Node table) */
+    /** The node key field (for the Node datamodel) */
     protected String m_nkey;
-    /** The source node key field (for the Edge table) */
+    /** The source node key field (for the Edge datamodel) */
     protected String m_skey;
-    /** The target node key field (for the Edge table) */
+    /** The target node key field (for the Edge datamodel) */
     protected String m_tkey;
     /** Reference to an index over the node key field */
     protected Index m_nidx;
@@ -148,10 +148,10 @@ public class Graph extends CompositeTupleSet {
     }
 
     /**
-     * Create a new Graph using the provided table of node data and
+     * Create a new Graph using the provided datamodel of node data and
      * an empty set of edges.
-     * @param nodes the backing table to use for node data.
-     * Node instances of this graph will get their data from this table.
+     * @param nodes the backing datamodel to use for node data.
+     * Node instances of this graph will get their data from this datamodel.
      * @param directed true for directed edges, false for undirected
      */
     public Graph(Table nodes, boolean directed) {
@@ -160,17 +160,17 @@ public class Graph extends CompositeTupleSet {
     }
  
     /**
-     * Create a new Graph using the provided table of node data and
+     * Create a new Graph using the provided datamodel of node data and
      * an empty set of edges.
-     * @param nodes the backing table to use for node data.
-     * Node instances of this graph will get their data from this table.
+     * @param nodes the backing datamodel to use for node data.
+     * Node instances of this graph will get their data from this datamodel.
      * @param directed true for directed edges, false for undirected
      * @param nodeKey data field used to uniquely identify a node. If this
-     * field is null, the node table row numbers will be used
+     * field is null, the node datamodel row numbers will be used
      * @param sourceKey data field used to denote the source node in an edge
-     * table
+     * datamodel
      * @param targetKey data field used to denote the target node in an edge
-     * table
+     * datamodel
      */
     public Graph(Table nodes, boolean directed, String nodeKey,
             String sourceKey, String targetKey) {
@@ -181,12 +181,12 @@ public class Graph extends CompositeTupleSet {
     }
     
     /**
-     * Create a new Graph, using node table row numbers to uniquely
-     * identify nodes in the edge table's source and target fields.
-     * @param nodes the backing table to use for node data.
-     * Node instances of this graph will get their data from this table.
-     * @param edges the backing table to use for edge data.
-     * Edge instances of this graph will get their data from this table.
+     * Create a new Graph, using node datamodel row numbers to uniquely
+     * identify nodes in the edge datamodel's source and target fields.
+     * @param nodes the backing datamodel to use for node data.
+     * Node instances of this graph will get their data from this datamodel.
+     * @param edges the backing datamodel to use for edge data.
+     * Edge instances of this graph will get their data from this datamodel.
      * @param directed true for directed edges, false for undirected
      */
     public Graph(Table nodes, Table edges, boolean directed) {
@@ -195,17 +195,17 @@ public class Graph extends CompositeTupleSet {
     }
     
     /**
-     * Create a new Graph, using node table row numbers to uniquely
-     * identify nodes in the edge table's source and target fields.
-     * @param nodes the backing table to use for node data.
-     * Node instances of this graph will get their data from this table.
-     * @param edges the backing table to use for edge data.
-     * Edge instances of this graph will get their data from this table.
+     * Create a new Graph, using node datamodel row numbers to uniquely
+     * identify nodes in the edge datamodel's source and target fields.
+     * @param nodes the backing datamodel to use for node data.
+     * Node instances of this graph will get their data from this datamodel.
+     * @param edges the backing datamodel to use for edge data.
+     * Edge instances of this graph will get their data from this datamodel.
      * @param directed true for directed edges, false for undirected
      * @param sourceKey data field used to denote the source node in an edge
-     * table
+     * datamodel
      * @param targetKey data field used to denote the target node in an edge
-     * table
+     * datamodel
      */
     public Graph(Table nodes, Table edges, boolean directed,
             String sourceKey, String targetKey)
@@ -215,17 +215,17 @@ public class Graph extends CompositeTupleSet {
     
     /**
      * Create a new Graph.
-     * @param nodes the backing table to use for node data.
-     * Node instances of this graph will get their data from this table.
-     * @param edges the backing table to use for edge data.
-     * Edge instances of this graph will get their data from this table.
+     * @param nodes the backing datamodel to use for node data.
+     * Node instances of this graph will get their data from this datamodel.
+     * @param edges the backing datamodel to use for edge data.
+     * Edge instances of this graph will get their data from this datamodel.
      * @param directed true for directed edges, false for undirected
      * @param nodeKey data field used to uniquely identify a node. If this
-     * field is null, the node table row numbers will be used
+     * field is null, the node datamodel row numbers will be used
      * @param sourceKey data field used to denote the source node in an edge
-     * table
+     * datamodel
      * @param targetKey data field used to denote the target node in an edge
-     * table
+     * datamodel
      */
     public Graph(Table nodes, Table edges, boolean directed,
             String nodeKey, String sourceKey, String targetKey)
@@ -238,14 +238,14 @@ public class Graph extends CompositeTupleSet {
     
     /**
      * Initialize this Graph instance.
-     * @param nodes the node table
-     * @param edges the edge table
+     * @param nodes the node datamodel
+     * @param edges the edge datamodel
      * @param directed the edge directionality
      * @param nodeKey data field used to uniquely identify a node
      * @param sourceKey data field used to denote the source node in an edge
-     * table
+     * datamodel
      * @param targetKey data field used to denote the target node in an edge
-     * table
+     * datamodel
      */
     protected void init(Table nodes, Table edges, boolean directed, 
             String nodeKey, String sourceKey, String targetKey)
@@ -327,7 +327,7 @@ public class Graph extends CompositeTupleSet {
     /**
      * Updates this graph to use a different edge structure for the same nodes.
      * All other settings will remain the same (e.g., directionality, keys)
-     * @param edges the new edge table.
+     * @param edges the new edge datamodel.
      */
     public void setEdgeTable(Table edges) {
         Table oldEdges = getEdgeTable();
@@ -342,7 +342,7 @@ public class Graph extends CompositeTupleSet {
     // Data Access Optimization
     
     /**
-     * Initialize the link table, which holds adjacency lists for this graph.
+     * Initialize the link datamodel, which holds adjacency lists for this graph.
      */
     protected void initLinkTable() {
         // set up cache of node data
@@ -355,8 +355,8 @@ public class Graph extends CompositeTupleSet {
     }
     
     /**
-     * Instantiate and return the link table.
-     * @return the created link table
+     * Instantiate and return the link datamodel.
+     * @return the created link datamodel
      */
     protected Table createLinkTable() {
         return LINKS_SCHEMA.instantiate(getNodeTable().getMaximumRow()+1);
@@ -449,8 +449,8 @@ public class Graph extends CompositeTupleSet {
     }
     
     /**
-     * Update the link table to accomodate an inserted or deleted node
-     * @param r the node id, also the row number into the link table
+     * Update the link datamodel to accomodate an inserted or deleted node
+     * @param r the node id, also the row number into the link datamodel
      * @param added indicates if a node was added or removed
      */
     protected void updateNodeData(int r, boolean added) {
@@ -474,23 +474,23 @@ public class Graph extends CompositeTupleSet {
     }
     
     /**
-     * Get the data field used to denote the source node in an edge table.
-     * @return the data field used to denote the source node in an edge table.
+     * Get the data field used to denote the source node in an edge datamodel.
+     * @return the data field used to denote the source node in an edge datamodel.
      */
     public String getEdgeSourceField() {
         return m_skey;
     }
     
     /**
-     * Get the data field used to denote the target node in an edge table.
-     * @return the data field used to denote the target node in an edge table.
+     * Get the data field used to denote the target node in an edge datamodel.
+     * @return the data field used to denote the target node in an edge datamodel.
      */
     public String getEdgeTargetField() {
         return m_tkey;
     }
     
     /**
-     * Given a node id (a row number in the node table), get the value of
+     * Given a node id (a row number in the node datamodel), get the value of
      * the node key field.
      * @param node the node id
      * @return the value of the node key field for the given node
@@ -501,9 +501,9 @@ public class Graph extends CompositeTupleSet {
     
     /**
      * Given a value of the node key field, get the node id (the row number
-     * in the node table).
+     * in the node datamodel).
      * @param key a node key field value
-     * @return the node id (the row number in the node table)
+     * @return the node id (the row number in the node datamodel)
      */
     public int getNodeIndex(long key) {
         if ( m_nidx == null ) {
@@ -518,8 +518,8 @@ public class Graph extends CompositeTupleSet {
     // Graph Mutators
     
     /**
-     * Add row to the node table, thereby adding a node to the graph.
-     * @return  the node id (node table row number) of the added node
+     * Add row to the node datamodel, thereby adding a node to the graph.
+     * @return  the node id (node datamodel row number) of the added node
      */
     public int addNodeRow() {
         return getNodeTable().addRow();
@@ -539,7 +539,7 @@ public class Graph extends CompositeTupleSet {
      * and edges from a node to itself are allowed.
      * @param s the source node id
      * @param t the target node id
-     * @return the edge id (edge table row number) of the added edge
+     * @return the edge id (edge datamodel row number) of the added edge
      */
     public int addEdge(int s, int t) {
         // get keys for the nodes
@@ -574,7 +574,7 @@ public class Graph extends CompositeTupleSet {
     
     /**
      * Remove a node from the graph, also removing all incident edges.
-     * @param node the node id (node table row number) of the node to remove
+     * @param node the node id (node datamodel row number) of the node to remove
      * @return true if the node was successfully removed, false if the
      * node id was not found or was not valid
      */
@@ -610,7 +610,7 @@ public class Graph extends CompositeTupleSet {
     
     /**
      * Remove an edge from the graph.
-     * @param edge the edge id (edge table row number) of the edge to remove
+     * @param edge the edge id (edge datamodel row number) of the edge to remove
      * @return true if the edge was successfully removed, false if the
      * edge was not found or was not valid
      */
@@ -630,7 +630,7 @@ public class Graph extends CompositeTupleSet {
     }
     
     /**
-     * Internal method for clearing the edge table, removing all edges.
+     * Internal method for clearing the edge datamodel, removing all edges.
      */
     protected void clearEdges() {
         getEdgeTable().clear();
@@ -676,8 +676,8 @@ public class Graph extends CompositeTupleSet {
     }
     
     /**
-     * Get the backing node table.
-     * @return the table of node values
+     * Get the backing node datamodel.
+     * @return the datamodel of node values
      */
     public Table getNodeTable() {
         return (Table)getSet(NODES);
@@ -693,7 +693,7 @@ public class Graph extends CompositeTupleSet {
     
     /**
      * Get the Node tuple instance corresponding to a node id.
-     * @param n a node id (node table row number)
+     * @param n a node id (node datamodel row number)
      * @return the Node instance corresponding to the node id
      */
     public Node getNode(int n) {
@@ -702,7 +702,7 @@ public class Graph extends CompositeTupleSet {
     
     /**
      * Get the Node tuple corresponding to the input node key field value.
-     * The node key field is used to find the node id (node table row number),
+     * The node key field is used to find the node id (node datamodel row number),
      * which is then used to retrieve the Node tuple.
      * @param key a node key field value
      * @return the requested Node instance
@@ -715,7 +715,7 @@ public class Graph extends CompositeTupleSet {
     /**
      * Get the in-degree of a node, the number of edges for which the node
      * is the target.
-     * @param node the node id (node table row number)
+     * @param node the node id (node datamodel row number)
      * @return the in-degree of the node
      */
     public int getInDegree(int node) {
@@ -736,7 +736,7 @@ public class Graph extends CompositeTupleSet {
     /**
      * Get the out-degree of a node, the number of edges for which the node
      * is the source.
-     * @param node the node id (node table row number)
+     * @param node the node id (node datamodel row number)
      * @return the out-degree of the node
      */
     public int getOutDegree(int node) {
@@ -757,7 +757,7 @@ public class Graph extends CompositeTupleSet {
     /**
      * Get the degree of a node, the number of edges for which a node
      * is either the source or the target.
-     * @param node the node id (node table row number)
+     * @param node the node id (node datamodel row number)
      * @return the total degree of the node
      */
     public int getDegree(int node) {
@@ -822,8 +822,8 @@ public class Graph extends CompositeTupleSet {
     }
 
     /**
-     * Get the backing edge table.
-     * @return the table of edge values
+     * Get the backing edge datamodel.
+     * @return the datamodel of edge values
      */
     public Table getEdgeTable() {
         return (Table)getSet(EDGES);
@@ -838,7 +838,7 @@ public class Graph extends CompositeTupleSet {
 
     /**
      * Get the Edge tuple instance corresponding to an edge id.
-     * @param e an edge id (edge table row number)
+     * @param e an edge id (edge datamodel row number)
      * @return the Node instance corresponding to the node id
      */
     public Edge getEdge(int e) {
@@ -878,10 +878,10 @@ public class Graph extends CompositeTupleSet {
     }
     
     /**
-     * Get the source node id (node table row number) for the given edge
-     * id (edge table row number).
-     * @param edge an edge id (edge table row number)
-     * @return the source node id (node table row number)
+     * Get the source node id (node datamodel row number) for the given edge
+     * id (edge datamodel row number).
+     * @param edge an edge id (edge datamodel row number)
+     * @return the source node id (node datamodel row number)
      */
     public int getSourceNode(int edge) {
         return getNodeIndex(getEdgeTable().getLong(edge, m_skey));
@@ -898,10 +898,10 @@ public class Graph extends CompositeTupleSet {
     }
     
     /**
-     * Get the target node id (node table row number) for the given edge
-     * id (edge table row number).
-     * @param edge an edge id (edge table row number)
-     * @return the target node id (node table row number)
+     * Get the target node id (node datamodel row number) for the given edge
+     * id (edge datamodel row number).
+     * @param edge an edge id (edge datamodel row number)
+     * @return the target node id (node datamodel row number)
      */
     public int getTargetNode(int edge) {
         return getNodeIndex(getEdgeTable().getLong(edge, m_tkey));
@@ -920,8 +920,8 @@ public class Graph extends CompositeTupleSet {
     /**
      * Given an edge id and an incident node id, return the node id for
      * the other node connected to the edge.
-     * @param edge an edge id (edge table row number)
-     * @param node a node id (node table row number). This node id must
+     * @param edge an edge id (edge datamodel row number)
+     * @param node a node id (node datamodel row number). This node id must
      * be connected to the edge
      * @return the adjacent node id
      */
@@ -956,19 +956,19 @@ public class Graph extends CompositeTupleSet {
     // ------------------------------------------------------------------------
     // Iterators
     
-    // -- table row iterators ----
+    // -- datamodel row iterators ----
     
     /**
-     * Get an iterator over all node ids (node table row numbers).
-     * @return an iterator over all node ids (node table row numbers)
+     * Get an iterator over all node ids (node datamodel row numbers).
+     * @return an iterator over all node ids (node datamodel row numbers)
      */
     public IntIterator nodeRows() {
         return getNodeTable().rows();
     }
 
     /**
-     * Get an iterator over all edge ids (edge table row numbers).
-     * @return an iterator over all edge ids (edge table row numbers)
+     * Get an iterator over all edge ids (edge datamodel row numbers).
+     * @return an iterator over all edge ids (edge datamodel row numbers)
      */
     public IntIterator edgeRows() {
         return getEdgeTable().rows();
@@ -976,7 +976,7 @@ public class Graph extends CompositeTupleSet {
     
     /**
      * Get an iterator over all edge ids for edges incident on the given node.
-     * @param node a node id (node table row number)
+     * @param node a node id (node datamodel row number)
      * @return an iterator over all edge ids for edges incident on the given
      * node
      */
@@ -986,7 +986,7 @@ public class Graph extends CompositeTupleSet {
     
     /**
      * Get an iterator edge ids for edges incident on the given node.
-     * @param node a node id (node table row number)
+     * @param node a node id (node datamodel row number)
      * @param direction the directionality of the edges to include. One of
      * {@link #INEDGES} (for in-linking edges),
      * {@link #OUTEDGES} (for out-linking edges), or
@@ -1014,7 +1014,7 @@ public class Graph extends CompositeTupleSet {
     /**
      * Get an iterator over all edges that have the given node as a target.
      * That is, edges that link into the given target node.
-     * @param node a node id (node table row number)
+     * @param node a node id (node datamodel row number)
      * @return an iterator over all edges that have the given node as a target
      */
     public IntIterator inEdgeRows(int node) {
@@ -1024,7 +1024,7 @@ public class Graph extends CompositeTupleSet {
     /**
      * Get an iterator over all edges that have the given node as a source.
      * That is, edges that link out from the given source node.
-     * @param node a node id (node table row number)
+     * @param node a node id (node datamodel row number)
      * @return an iterator over all edges that have the given node as a source
      */
     public IntIterator outEdgeRows(int node) {
@@ -1126,7 +1126,7 @@ public class Graph extends CompositeTupleSet {
      * @see prefuse.data.tuple.TupleSet#removeTuple(prefuse.data.Tuple)
      */
     public boolean removeTuple(Tuple t) {
-        // TODO: check underlying table tuples as well?
+        // TODO: check underlying datamodel tuples as well?
         if ( t instanceof Node ) {
             return removeNode((Node)t);
         } else if ( t instanceof Edge ) {
@@ -1166,7 +1166,7 @@ public class Graph extends CompositeTupleSet {
     /**
      * Return the current spanning tree over this graph. If no spanning tree
      * has been constructed, a SpanningTree rooted at the first valid node
-     * found in the node table will be generated.
+     * found in the node datamodel will be generated.
      * 
      * Spanning trees are generated using an unweighted breadth first search
      * over the graph structure.
@@ -1252,10 +1252,10 @@ public class Graph extends CompositeTupleSet {
     
     /**
      * Fire a graph change event
-     * @param t the backing table where the change occurred (either a
-     * node table or an edge table)
-     * @param first the first modified table row
-     * @param last the last (inclusive) modified table row
+     * @param t the backing datamodel where the change occurred (either a
+     * node datamodel or an edge datamodel)
+     * @param first the first modified datamodel row
+     * @param last the last (inclusive) modified datamodel row
      * @param col the number of the column modified, or
      * {@link prefuse.data.event.EventConstants#ALL_COLUMNS} for operations
      * affecting all columns
@@ -1320,18 +1320,18 @@ public class Graph extends CompositeTupleSet {
         public void tableChanged(Table t, int start, int end, int col, int type) {
             if ( !containsSet(t) )
                 throw new IllegalStateException(
-                     "Graph shouldn't be listening to an unrelated table");
+                     "Graph shouldn't be listening to an unrelated datamodel");
             
             if ( type != EventConstants.UPDATE ) {
                 if ( t == getNodeTable() ) {
-                    // update the linkage structure table
+                    // update the linkage structure datamodel
                     if ( col == EventConstants.ALL_COLUMNS ) {
                         boolean added = type==EventConstants.INSERT;
                         for ( int r=start; r<=end; ++r )
                             updateNodeData(r, added);
                     }
                 } else {
-                    // update the linkage structure table
+                    // update the linkage structure datamodel
                     if ( col == EventConstants.ALL_COLUMNS ) {
                         boolean added = type==EventConstants.INSERT;
                         for ( int r=start; r<=end; ++r )
@@ -1392,15 +1392,15 @@ public class Graph extends CompositeTupleSet {
     // ------------------------------------------------------------------------
     // Graph Linkage Schema
     
-    /** In-degree data field for the links table */
+    /** In-degree data field for the links datamodel */
     protected static final String INDEGREE  = "_indegree";
-    /** Out-degree data field for the links table */
+    /** Out-degree data field for the links datamodel */
     protected static final String OUTDEGREE = "_outdegree";
-    /** In-links adjacency list data field for the links table */
+    /** In-links adjacency list data field for the links datamodel */
     protected static final String INLINKS   = "_inlinks";
-    /** Out-links adjacency list data field for the links table */
+    /** Out-links adjacency list data field for the links datamodel */
     protected static final String OUTLINKS  = "_outlinks";
-    /** Schema used for the internal graph linkage table */
+    /** Schema used for the internal graph linkage datamodel */
     protected static final Schema LINKS_SCHEMA = new Schema();
     static {
         Integer defaultValue = new Integer(0);
