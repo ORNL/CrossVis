@@ -640,13 +640,13 @@ public class PCPView extends Region implements DataModelListener {
             }
 
             @Override
-            public void dataModelColumnSelectionAdded(DataModel dataModel, ColumnSelectionRange columnSelectionRange) {
+            public void dataModelColumnSelectionAdded(DataModel dataModel, DoubleColumnSelectionRange columnSelectionRange) {
                 log.debug("ColumnSelection added");
 //                handleQueryChange();
             }
 
             @Override
-            public void dataModelColumnSelectionRemoved(DataModel dataModel, ColumnSelectionRange columnSelectionRange) {
+            public void dataModelColumnSelectionRemoved(DataModel dataModel, DoubleColumnSelectionRange columnSelectionRange) {
                 log.debug("columnSelectionRange removed");
                 handleQueryChange();
             }

@@ -1,14 +1,13 @@
-package gov.ornl.csed.cda.datatable;
+package gov.ornl.csed.cda.datatable2;
 
 import java.util.Arrays;
 
 /**
  * Created by csg on 1/5/16.
  */
-public class Histogram {
+public class DoubleHistogram extends Histogram {
     private final static double EPSILON = 0.000001;
 
-    private String name;
     private double values[];
     private int numBins;
     private double binSize;
@@ -19,8 +18,9 @@ public class Histogram {
     private double minValue;
     private double maxValue;
 
-    public Histogram(String name, double values[], int numBins) {
-        this.name = name;
+    public DoubleHistogram(String name, double values[], int numBins) {
+        super(name);
+
         this.values = values;
         this.numBins = numBins;
         minValue = Double.NaN;
@@ -29,8 +29,9 @@ public class Histogram {
         calculateStatistics();
     }
 
-    public Histogram(String name, double values[], int numBins, double min, double max) {
-        this.name = name;
+    public DoubleHistogram(String name, double values[], int numBins, double min, double max) {
+        super(name);
+
         this.values = values;
         this.numBins = numBins;
         this.minValue = min;
@@ -87,11 +88,7 @@ public class Histogram {
         return maxBinCount;
     }
 
-    public String getName() {
-        return name;
-    }
-
-    private void calculateStatistics() {
+    public void calculateStatistics() {
         if (Double.isNaN(minValue)) {
             for (double value : values) {
                 if (Double.isNaN(minValue)) {
@@ -147,7 +144,8 @@ public class Histogram {
     public static void main (String args[]) {
         double values[] = new double[] {162, 168, 177, 147, 189, 171, 173, 168, 178,
                 184, 165, 173, 179, 166, 168, 165, 140, 190};
-        Histogram histogram = new Histogram("Test", values, 5, 140, 190);
+
+        DoubleHistogram histogram = new DoubleHistogram("Test", values, 5, 140, 190);
         for (int i = 0; i < histogram.getNumBins(); i++) {
             System.out.println(i + ": " + histogram.getBinCount(i) + " [" + histogram.getBinLowerBound(i) +
             ", " + histogram.getBinUpperBound(i) + "]");

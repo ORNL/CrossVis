@@ -215,8 +215,8 @@ public class PCPTemporalAxisSelection {
                         ((TemporalColumn)pcpAxis.getColumn()).getEndInstant(),
                         ((TemporalColumn)pcpAxis.getColumn()).getStartInstant()));
 //                draggingMaxValue.set(GraphicsUtil.mapValue(topY, pcpAxis.getBarTopY(), pcpAxis.getBarBottomY(),
-//                        ((QuantitativeColumn)pcpAxis.getColumn()).getSummaryStats().getMax(),
-//                        ((QuantitativeColumn)pcpAxis.getColumn()).getSummaryStats().getMin()));
+//                        ((DoubleColumn)pcpAxis.getColumn()).getSummaryStats().getMax(),
+//                        ((DoubleColumn)pcpAxis.getColumn()).getSummaryStats().getMin()));
 
                 layoutGraphics(getBottomY(), topY);
 //                double maxSelectionValue = GraphicsUtil.mapValue(topY, pcpAxis.getFocusTopY(), pcpAxis.getFocusBottomY(),
@@ -289,8 +289,8 @@ public class PCPTemporalAxisSelection {
                         ((TemporalColumn)pcpAxis.getColumn()).getEndInstant(),
                         ((TemporalColumn)pcpAxis.getColumn()).getStartInstant()));
 //                draggingMinValue.set(GraphicsUtil.mapValue(bottomY, pcpAxis.getBarTopY(), pcpAxis.getBarBottomY(),
-//                        ((QuantitativeColumn)pcpAxis.getColumn()).getSummaryStats().getMax(),
-//                        ((QuantitativeColumn)pcpAxis.getColumn()).getSummaryStats().getMin()));
+//                        ((DoubleColumn)pcpAxis.getColumn()).getSummaryStats().getMax(),
+//                        ((DoubleColumn)pcpAxis.getColumn()).getSummaryStats().getMin()));
                 layoutGraphics(bottomY, getTopY());
 
 //                double minSelectionValue = GraphicsUtil.mapValue(bottomY, pcpAxis.getFocusTopY(), pcpAxis.getFocusBottomY(),
@@ -354,17 +354,17 @@ public class PCPTemporalAxisSelection {
 //                        maxValue = Math.max(minValue, maxValue);
 //
 //                        // clamp within the bounds of the focus range
-//                        minValue = minValue < ((QuantitativeColumn)getPCPAxis().getColumn()).getSummaryStats().getMin() ? ((QuantitativeColumn)getPCPAxis().getColumn()).getSummaryStats().getMin() : minValue;
-//                        maxValue = maxValue > ((QuantitativeColumn)getPCPAxis().getColumn()).getSummaryStats().getMax() ? ((QuantitativeColumn)getPCPAxis().getColumn()).getSummaryStats().getMax() : maxValue;
+//                        minValue = minValue < ((DoubleColumn)getPCPAxis().getColumn()).getSummaryStats().getMin() ? ((DoubleColumn)getPCPAxis().getColumn()).getSummaryStats().getMin() : minValue;
+//                        maxValue = maxValue > ((DoubleColumn)getPCPAxis().getColumn()).getSummaryStats().getMax() ? ((DoubleColumn)getPCPAxis().getColumn()).getSummaryStats().getMax() : maxValue;
 //
 //                        // find the y positions for the min and max
 //                        double topY = GraphicsUtil.mapValue(maxValue,
-//                                ((QuantitativeColumn)pcpAxis.getColumn()).getSummaryStats().getMin(),
-//                                ((QuantitativeColumn)pcpAxis.getColumn()).getSummaryStats().getMax(),
+//                                ((DoubleColumn)pcpAxis.getColumn()).getSummaryStats().getMin(),
+//                                ((DoubleColumn)pcpAxis.getColumn()).getSummaryStats().getMax(),
 //                                pcpAxis.getBarBottomY(), pcpAxis.getBarTopY());
 //                        double bottomY = GraphicsUtil.mapValue(minValue,
-//                                ((QuantitativeColumn)pcpAxis.getColumn()).getSummaryStats().getMin(),
-//                                ((QuantitativeColumn)pcpAxis.getColumn()).getSummaryStats().getMax(),
+//                                ((DoubleColumn)pcpAxis.getColumn()).getSummaryStats().getMin(),
+//                                ((DoubleColumn)pcpAxis.getColumn()).getSummaryStats().getMax(),
 //                                pcpAxis.getBarBottomY(), pcpAxis.getBarTopY());
 //
 //                        // update display and data model values
@@ -424,11 +424,11 @@ public class PCPTemporalAxisSelection {
                         ((TemporalColumn)pcpAxis.getColumn()).getStartInstant()));
 
 //                draggingMaxValue.set(GraphicsUtil.mapValue(topY, pcpAxis.getBarTopY(), pcpAxis.getBarBottomY(),
-//                        ((QuantitativeColumn)pcpAxis.getColumn()).getSummaryStats().getMax(),
-//                        ((QuantitativeColumn)pcpAxis.getColumn()).getSummaryStats().getMin()));
+//                        ((DoubleColumn)pcpAxis.getColumn()).getSummaryStats().getMax(),
+//                        ((DoubleColumn)pcpAxis.getColumn()).getSummaryStats().getMin()));
 //                draggingMinValue.set(GraphicsUtil.mapValue(bottomY, pcpAxis.getBarTopY(), pcpAxis.getBarBottomY(),
-//                        ((QuantitativeColumn)pcpAxis.getColumn()).getSummaryStats().getMax(),
-//                        ((QuantitativeColumn)pcpAxis.getColumn()).getSummaryStats().getMin()));
+//                        ((DoubleColumn)pcpAxis.getColumn()).getSummaryStats().getMax(),
+//                        ((DoubleColumn)pcpAxis.getColumn()).getSummaryStats().getMin()));
 
                 layoutGraphics(bottomY, topY);
 //                double maxSelectionValue = GraphicsUtil.mapValue(topY, pcpAxis.getFocusTopY(), pcpAxis.getFocusBottomY(),

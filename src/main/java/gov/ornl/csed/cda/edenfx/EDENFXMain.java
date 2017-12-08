@@ -190,10 +190,10 @@ public class EDENFXMain extends Application implements DataModelListener {
             }
         });
 
-//        TableColumn<ColumnSelectionRange, Number> minColumn = new TableColumn<>("Minimum Value");
+//        TableColumn<DoubleColumnSelectionRange, Number> minColumn = new TableColumn<>("Minimum Value");
 //        minColumn.setMinWidth(200);
-//        minColumn.setCellValueFactory(new PropertyValueFactory<ColumnSelectionRange, Number>("minValue"));
-//        minColumn.setCellFactory(TextFieldTableCell.<ColumnSelectionRange, Number>forTableColumn(new NumberStringConverter()));
+//        minColumn.setCellValueFactory(new PropertyValueFactory<DoubleColumnSelectionRange, Number>("minValue"));
+//        minColumn.setCellFactory(TextFieldTableCell.<DoubleColumnSelectionRange, Number>forTableColumn(new NumberStringConverter()));
 //        minColumn.setEditable(true);
 
         TableColumn<Column, String> nameColumn = new TableColumn<>("Variable Name");
@@ -285,7 +285,7 @@ public class EDENFXMain extends Application implements DataModelListener {
         summaryDisplayModeButton.setTooltip(new Tooltip("Summary Display Mode"));
 //        displayModeButtonMap.put(PCPView.DISPLAY_MODE.HISTOGRAM, summaryDisplayModeButton);
         histogramDisplayModeButton = new ToggleButton("H");
-        histogramDisplayModeButton.setTooltip(new Tooltip("Histogram Display Mode"));
+        histogramDisplayModeButton.setTooltip(new Tooltip("DoubleHistogram Display Mode"));
 //        displayModeButtonMap.put(PCPView.DISPLAY_MODE.HISTOGRAM, histogramDisplayModeButton);
         binDisplayModeButton = new ToggleButton("B");
         binDisplayModeButton.setTooltip(new Tooltip("Binned Parallel Coordinates Display Mode"));
@@ -619,7 +619,7 @@ public class EDENFXMain extends Application implements DataModelListener {
 
     private void changeNumHistogramBins() {
         Dialog<Integer> numHistogramBinsDialog = new Dialog<>();
-        numHistogramBinsDialog.setTitle("Number of Histogram Bins");
+        numHistogramBinsDialog.setTitle("Number of DoubleHistogram Bins");
         numHistogramBinsDialog.setHeaderText("Set the number of histogram bins.");
 
         GridPane grid = new GridPane();
@@ -631,7 +631,7 @@ public class EDENFXMain extends Application implements DataModelListener {
         spinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(2, (int)pcpView.getPCPVerticalBarHeight(), dataModel.getNumHistogramBins()));
         spinner.setEditable(true);
 
-        grid.add(new Label("Number of Histogram Bins: "), 0, 0);
+        grid.add(new Label("Number of DoubleHistogram Bins: "), 0, 0);
         grid.add(spinner, 1, 0);
 
         numHistogramBinsDialog.getDialogPane().setContent(grid);
@@ -958,7 +958,7 @@ public class EDENFXMain extends Application implements DataModelListener {
         viewMenu.getItems().add(enableDataTableUpdatesCheckMenuItem);
 
         // change histogram bin count menu item
-        changeHistogramBinCountMenuItem = new MenuItem("Change Number of Histogram Bins...");
+        changeHistogramBinCountMenuItem = new MenuItem("Change Number of DoubleHistogram Bins...");
         changeHistogramBinCountMenuItem.setOnAction(event -> {
             changeNumHistogramBins();
         });

@@ -59,7 +59,7 @@ public class PCPQuantitativeAxis extends PCPAxis {
 //    public final static double DEFAULT_STROKE_WIDTH = 1.5;
 
 //    private DataModel dataModel;
-//    private QuantitativeColumn quantitativeColumn;
+//    private DoubleColumn quantitativeColumn;
 
 //    private double centerX;
 //    private Rectangle bounds;
@@ -135,7 +135,7 @@ public class PCPQuantitativeAxis extends PCPAxis {
 
     public PCPQuantitativeAxis(PCPView pcpView, QuantitativeColumn column, DataModel dataModel, Pane pane) {
         super(pcpView, column, dataModel, pane);
-//        quantitativeColumn = (QuantitativeColumn)column;
+//        quantitativeColumn = (DoubleColumn)column;
 //        this.pcpView = pcpView;
 //        this.column = column;
 ////        this.dataModelIndex = dataModelIndex;
@@ -161,7 +161,7 @@ public class PCPQuantitativeAxis extends PCPAxis {
 //        nameText.setFill(labelColor);
 //        nameText.rotateProperty().bindBidirectional(nameTextRotation);
 
-//        columnNameColumn.setCellValueFactory(new PropertyValueFactory<ColumnSelectionRange, String>("column"));
+//        columnNameColumn.setCellValueFactory(new PropertyValueFactory<DoubleColumnSelectionRange, String>("column"));
         minValueText = new Text();
         minValueText.textProperty().bindBidirectional(column.minValueProperty(), new NumberStringConverter());
         minValueText.setFont(new Font(DEFAULT_TEXT_SIZE));
@@ -402,7 +402,7 @@ public class PCPQuantitativeAxis extends PCPAxis {
                         quantitativeColumn().getSummaryStats().getMax(), quantitativeColumn().getSummaryStats().getMin());
 
                 if (draggingSelection == null) {
-//                    ColumnSelectionRange selectionRange = dataModel.addColumnSelectionRangeToActiveQuery(column, minSelectionValue, maxSelectionValue);
+//                    DoubleColumnSelectionRange selectionRange = dataModel.addColumnSelectionRangeToActiveQuery(column, minSelectionValue, maxSelectionValue);
                     ColumnSelectionRange selectionRange = new ColumnSelectionRange(quantitativeColumn(), minSelectionValue, maxSelectionValue);
                     draggingSelection = new PCPAxisSelection(thisPCPAxis, selectionRange, selectionMinY, selectionMaxY, pane, dataModel);
                 } else {
@@ -626,7 +626,7 @@ public class PCPQuantitativeAxis extends PCPAxis {
 
     public Rectangle getVerticalBar() { return verticalBar; }
 
-//    public QuantitativeColumn getColumn() { return column; }
+//    public DoubleColumn getColumn() { return column; }
     public int getColumnDataModelIndex() { return dataModel.getColumnIndex(quantitativeColumn()); }
 
     public double getFocusTopY() { return focusTopY; }

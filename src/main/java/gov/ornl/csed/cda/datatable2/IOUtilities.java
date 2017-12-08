@@ -1,4 +1,4 @@
-package gov.ornl.csed.cda.datatable;
+package gov.ornl.csed.cda.datatable2;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -10,7 +10,6 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Random;
 import java.util.StringTokenizer;
 import java.util.logging.Logger;
 
@@ -107,13 +106,20 @@ public class IOUtilities {
 //		dataModel.setData(tuples, columns);
 //	}
 
-	public static void readCSV(File f, DateTimeFormatter dateTimeFormatter, String temporalColumnName, DataModel dataModel) throws IOException {
+	public static void readCSV(File f, ArrayList<String> temporalColumnNames,
+							   ArrayList<DateTimeFormatter> temporalColumnFormatters, DataModel dataModel) throws IOException {
 		BufferedReader reader = new BufferedReader(new FileReader(f));
 
-		ArrayList<Tuple> tuples = new ArrayList<Tuple>();
-		ArrayList<QuantitativeColumn> columns = new ArrayList<QuantitativeColumn>();
-		TemporalColumn temporalColumn = null;
-		int temporalColumnIndex = -1;
+		ArrayList<Tuple> tuples = new ArrayList<>();
+		ArrayList<Column> columns = new ArrayList<>();
+
+		int temporalColumnIndices[] = null;
+		if (temporalColumnNames != null && !temporalColumnNames.isEmpty()) {
+		    temporalColumnIndices = new int[temporalColumnNames.size()];
+		    Arrays.fill(temporalColumnIndices, -1);
+        }
+//		TemporalColumn temporalColumn = null;
+//		int temporalColumnIndex = -1;
 
 		String line = reader.readLine();
 		int lineCounter = 0;
@@ -128,13 +134,30 @@ public class IOUtilities {
 				while (st.hasMoreTokens()) {
 					String token = st.nextToken(",");
 
-					if (temporalColumnName != null && token.equals(temporalColumnName)) {
-						temporalColumnIndex = tokenCounter;
-						temporalColumn = new TemporalColumn(token.trim());
-					} else {
-						QuantitativeColumn column = new QuantitativeColumn(token.trim());
-						columns.add(column);
-					}
+					Column column = null;
+
+					if (temporalColumnNames != null) {
+					    for (int i = 0; i < temporalColumnNames.size(); i++) {
+					        if (token.equals(temporalColumnNames.get(i))) {
+					            temporalColumnIndices[i] = tokenCounter;
+					            column = new TemporalColumn(token.trim());
+                            }
+                        }
+                    }
+
+                    if (column == null) {
+					    column = new DoubleColumn(token.trim());
+                    }
+
+                    columns.add(column);
+
+//					if (temporalColumnName != null && token.equals(temporalColumnName)) {
+//						temporalColumnIndex = tokenCounter;
+//						temporalColumn = new TemporalColumn(token.trim());
+//					} else {
+//						DoubleColumn column = new DoubleColumn(token.trim());
+//						columns.add(column);
+//					}
 
 					tokenCounter++;
 				}
@@ -152,34 +175,47 @@ public class IOUtilities {
 			while (st.hasMoreTokens()) {
 				String token = st.nextToken(",");
 
-				if (tokenCounter == temporalColumnIndex) {
-					LocalDateTime localDateTime = LocalDateTime.parse(token, dateTimeFormatter);
-					Instant instant = localDateTime.toInstant(ZoneOffset.UTC);
-					tuple.setInstant(instant);
-					tokenCounter++;
-				} else {
-					try {
-						double value = Double.parseDouble(token);
+				if (temporalColumnIndices != null) {
+				    Instant instant = null;
+				    for (int i = 0; i < temporalColumnIndices.length; i++) {
+				        if (tokenCounter == temporalColumnIndices[i]) {
+                            LocalDateTime localDateTime = LocalDateTime.parse(token, temporalColumnFormatters.get(i));
+                            instant = localDateTime.toInstant(ZoneOffset.UTC);
+//                            tuple.addElement(instant);
+//                            tokenCounter++;
+                            break;
+//                            tuple.setInstant(instant);
+                        }
+                    }
+
+                    if (instant != null) {
+				        tuple.addElement(instant);
+				        tokenCounter++;
+				        continue;
+                    }
+                }
+
+                try {
+                    double value = Double.parseDouble(token);
 
 //                    if (token_counter == 0) {
 //                        log.info("token=" + token + " value=" + ((long)value) + " dvalue=" + (long)dvalue);
 //                    }
 
-						if (Double.isNaN(value)) {
-							skip_line = true;
-							break;
-						}
-						// data attribute
-						tuple.addElement(value);
-						tokenCounter++;
-					} catch (NumberFormatException ex) {
-						System.out.println("DataSet.readCSV(): NumberFormatException caught so skipping record. "
-								+ ex.fillInStackTrace());
-						skip_line = true;
-						numLinesIgnored++;
-						break;
-					}
-				}
+                    if (Double.isNaN(value)) {
+                        skip_line = true;
+                        break;
+                    }
+                    // data attribute
+                    tuple.addElement(value);
+                    tokenCounter++;
+                } catch (NumberFormatException ex) {
+                    System.out.println("DataSet.readCSV(): NumberFormatException caught so skipping record. "
+                            + ex.fillInStackTrace());
+                    skip_line = true;
+                    numLinesIgnored++;
+                    break;
+                }
 			}
 
 			if (tuple.getElementCount() != columns.size()) {
@@ -202,8 +238,20 @@ public class IOUtilities {
 
 		log.info("Finished reading CSV file '" + f.getName() + "': Read " + tuples.size() + " rows with " + columns.size() + " columns; " + numLinesIgnored + " rows ignored.");
 
-		dataModel.setData(tuples, columns, temporalColumn);
+		dataModel.setData(tuples, columns);
 
 		log.info("Finished setting data in datamodel");
 	}
+
+	public static void main (String args[]) throws IOException {
+	    DataModel dataModel = new DataModel();
+
+	    ArrayList<String> temporalColumnNames = new ArrayList<>();
+	    temporalColumnNames.add("Date");
+	    ArrayList<DateTimeFormatter> temporalColumnFormatters = new ArrayList<>();
+	    temporalColumnFormatters.add(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss"));
+
+	    IOUtilities.readCSV(new File("data/csv/titan-performance.csv"),
+                temporalColumnNames, temporalColumnFormatters, dataModel);
+    }
 }

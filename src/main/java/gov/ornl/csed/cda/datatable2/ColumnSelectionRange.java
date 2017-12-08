@@ -1,9 +1,9 @@
-package gov.ornl.csed.cda.datamodel;
+package gov.ornl.csed.cda.datatable2;
 
 public abstract class ColumnSelectionRange {
     protected Column column;
 
-    public ColumnSelectionRange(Column column) {
+    public ColumnSelectionRange (Column column) {
         this.column = column;
     }
 

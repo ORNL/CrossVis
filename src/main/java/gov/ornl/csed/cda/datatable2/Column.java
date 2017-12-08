@@ -1,4 +1,4 @@
-package gov.ornl.csed.cda.datamodel;
+package gov.ornl.csed.cda.datatable2;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -6,6 +6,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
 public abstract class Column {
+    protected DataModel dataModel;
     private StringProperty name;
     private BooleanProperty enabled;
 
@@ -14,9 +15,21 @@ public abstract class Column {
         setEnabled(true);
     }
 
-    public abstract long getSize();
+    protected void setDataModel(DataModel dataModel) {
+        this.dataModel = dataModel;
+    }
 
-    protected abstract void calculateStatistics();
+    public DataModel getDataModel() {
+        return dataModel;
+    }
+
+    public abstract void calculateStatistics();
+
+    public abstract ColumnSummaryStats getStatistics();
+
+//    public abstract void calculateQueryStatistics();
+//
+//    public abstract ColumnSummaryStats getQueryStatistics();
 
     public void setEnabled(boolean enabled) {
         enabledProperty().set(enabled);
