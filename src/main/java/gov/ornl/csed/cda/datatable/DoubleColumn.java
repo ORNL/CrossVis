@@ -1,4 +1,4 @@
-package gov.ornl.csed.cda.datatable2;
+package gov.ornl.csed.cda.datatable;
 
 import java.util.Set;
 
@@ -9,7 +9,7 @@ public class DoubleColumn extends Column {
 
     public DoubleColumn(String name) {
         super(name);
-        summaryStats = new DoubleColumnSummaryStats(this);
+//        summaryStats = new DoubleColumnSummaryStats(this, getDataModel().getNumHistogramBins());
 //        querySummaryStats = new DoubleColumnSummaryStats();
     }
 
@@ -68,6 +68,9 @@ public class DoubleColumn extends Column {
 //    }
 
     public void calculateStatistics() {
+        if (summaryStats == null) {
+            summaryStats = new DoubleColumnSummaryStats(this, getDataModel().getNumHistogramBins());
+        }
         summaryStats.setValues(getValues());
 //        DescriptiveStatistics stats = new DescriptiveStatistics(values);
 //

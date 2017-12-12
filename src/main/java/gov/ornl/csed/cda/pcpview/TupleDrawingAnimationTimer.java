@@ -23,16 +23,14 @@ public class TupleDrawingAnimationTimer extends AnimationTimer {
     private Color tupleColor;
     private ArrayBlockingQueue<PCPTuple> tupleQueue;
     private int maxTuplesPerFrame;
-    private ArrayList<PCPQuantitativeAxis> axisList;
-    private PCPTemporalAxis temporalAxis;
+    private ArrayList<PCPAxis> axisList;
     private BooleanProperty running;
     public long id;
 
-    public TupleDrawingAnimationTimer (Canvas canvas, Collection<PCPTuple> tuples, ArrayList<PCPQuantitativeAxis> axisList, PCPTemporalAxis temporalAxis, Color tupleColor, int maxTuplesPerFrame) {
+    public TupleDrawingAnimationTimer (Canvas canvas, Collection<PCPTuple> tuples, ArrayList<PCPAxis> axisList, Color tupleColor, int maxTuplesPerFrame) {
         id = System.currentTimeMillis();
         this.canvas = canvas;
         this.axisList = axisList;
-        this.temporalAxis = temporalAxis;
         this.tupleColor = tupleColor;
         tupleQueue = new ArrayBlockingQueue<PCPTuple>(tuples.size());
         tupleQueue.addAll(tuples);
@@ -46,37 +44,24 @@ public class TupleDrawingAnimationTimer extends AnimationTimer {
 
     @Override
     public void handle(long now) {
-//        log.debug("Drawing frame");
         canvas.getGraphicsContext2D().setStroke(tupleColor);
 
         for (int ituple = 0; ituple < maxTuplesPerFrame; ituple++) {
             PCPTuple pcpTuple = tupleQueue.poll();
             if (pcpTuple == null) {
-//                log.debug("Stopping Timer normally (id: " + id + ")");
                 this.stop();
                 break;
             } else {
-                if (temporalAxis != null) {
-                    canvas.getGraphicsContext2D().strokeLine(temporalAxis.getBarRightX(), pcpTuple.getYPoints()[0],
-                            axisList.get(0).getBarLeftX(), pcpTuple.getYPoints()[1]);
-                    for (int i = 2; i < pcpTuple.getXPoints().length; i++) {
-                        canvas.getGraphicsContext2D().strokeLine(axisList.get(i - 2).getBarRightX(), pcpTuple.getYPoints()[i - 1],
-                                axisList.get(i - 1).getBarLeftX(), pcpTuple.getYPoints()[i]);
-                    }
-                } else {
-                    for (int i = 1; i < pcpTuple.getXPoints().length; i++) {
-                        canvas.getGraphicsContext2D().strokeLine(axisList.get(i - 1).getBarRightX(), pcpTuple.getYPoints()[i - 1],
-                                axisList.get(i).getBarLeftX(), pcpTuple.getYPoints()[i]);
-                    }
+                for (int i = 1; i < pcpTuple.getXPoints().length; i++) {
+                    canvas.getGraphicsContext2D().strokeLine(axisList.get(i - 1).getBarRightX(), pcpTuple.getYPoints()[i - 1],
+                            axisList.get(i).getBarLeftX(), pcpTuple.getYPoints()[i]);
                 }
             }
         }
-//        log.debug("Finished Frame");
     }
 
     @Override
     public void start() {
-//        log.debug("Started TupleDrawingAnimationTimer with id " + id);
         super.start();
         running.set(true);
     }

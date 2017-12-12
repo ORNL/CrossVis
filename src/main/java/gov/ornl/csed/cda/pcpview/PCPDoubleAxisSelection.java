@@ -1,12 +1,12 @@
 package gov.ornl.csed.cda.pcpview;
 
 import gov.ornl.csed.cda.datatable.DataModel;
-import gov.ornl.csed.cda.datatable.TemporalColumn;
-import gov.ornl.csed.cda.datatable.TemporalColumnSelectionRange;
+import gov.ornl.csed.cda.datatable.DoubleColumn;
+import gov.ornl.csed.cda.datatable.DoubleColumnSelectionRange;
 import gov.ornl.csed.cda.util.GraphicsUtil;
 import javafx.application.Platform;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
 import javafx.scene.control.ButtonType;
@@ -18,20 +18,23 @@ import javafx.scene.layout.Pane;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.util.Pair;
+import javafx.util.converter.NumberStringConverter;
 
-import java.time.Instant;
+import java.util.Optional;
 
-public class PCPTemporalAxisSelection extends PCPAxisSelection {
+public class PCPDoubleAxisSelection extends PCPAxisSelection {
 
     private Text minText;
     private Text maxText;
-    private ObjectProperty<Instant> draggingMinValue;
-    private ObjectProperty<Instant> draggingMaxValue;
+    private DoubleProperty draggingMinValue;
+    private DoubleProperty draggingMaxValue;
 
-    public PCPTemporalAxisSelection(PCPAxis pcpAxis, TemporalColumnSelectionRange selectionRange, double minValueY, double maxValueY, Pane pane, DataModel dataModel) {
+    public PCPDoubleAxisSelection(PCPAxis pcpAxis, DoubleColumnSelectionRange selectionRange, double minValueY, double maxValueY, Pane pane, DataModel dataModel) {
         super(pcpAxis, selectionRange, minValueY, maxValueY, pane, dataModel);
 
-        minText = new Text(String.valueOf(selectionRange.getStartInstant()));
+        minText = new Text(String.valueOf(selectionRange.getMinValue()));
+//        minText = new Text());
+//        minText.textProperty().bindBidirectional(getColumnSelectionRange().minValueProperty(), new NumberStringConverter());
         minText.setFont(new Font(DEFAULT_TEXT_SIZE));
         minText.setX(pcpAxis.getCenterX() - (minText.getLayoutBounds().getWidth() / 2d));
         minText.setY(getBottomY() + minText.getLayoutBounds().getHeight());
@@ -39,7 +42,9 @@ public class PCPTemporalAxisSelection extends PCPAxisSelection {
         minText.setFill(DEFAULT_TEXT_FILL);
         minText.setVisible(false);
 
-        maxText = new Text(String.valueOf(selectionRange.getEndInstant()));
+        maxText = new Text(String.valueOf(selectionRange.getMaxValue()));
+//        maxText = new Text();
+//        maxText.textProperty().bindBidirectional(getColumnSelectionRange().maxValueProperty(), new NumberStringConverter());
         maxText.setFont(new Font(DEFAULT_TEXT_SIZE));
         maxText.setX(pcpAxis.getCenterX() - (maxText.getLayoutBounds().getWidth() / 2d));
         maxText.setY(getTopY() - 2d);
@@ -49,31 +54,6 @@ public class PCPTemporalAxisSelection extends PCPAxisSelection {
         getGraphicsGroup().getChildren().addAll(minText, maxText);
 
         registerListeners();
-    }
-
-    private TemporalColumnSelectionRange temporalColumnSelectionRange() {
-        return (TemporalColumnSelectionRange)getColumnSelectionRange();
-    }
-
-    private PCPTemporalAxis temporalAxis() {
-        return (PCPTemporalAxis)getPCPAxis();
-    }
-
-    protected void layoutGraphics(double bottomY, double topY) {
-        super.layoutGraphics(bottomY, topY);
-
-        minText.setY(getBottomY() + minText.getLayoutBounds().getHeight());
-        minText.setX(getPCPAxis().getCenterX() - (minText.getLayoutBounds().getWidth() / 2d));
-
-        maxText.setX(getPCPAxis().getCenterX() - (maxText.getLayoutBounds().getWidth() / 2d));
-        maxText.setY(getTopY() - 2d);
-    }
-
-
-    @Override
-    protected void handleRectangleMouseEntered() {
-        minText.setVisible(true);
-        maxText.setVisible(true);
     }
 
     @Override
@@ -92,16 +72,10 @@ public class PCPTemporalAxisSelection extends PCPAxisSelection {
 //                    maxText.textProperty().unbindBidirectional(getColumnSelectionRange().maxValueProperty());
 
             // bind range selection min/max labels to local values during drag operation
-            draggingMinValue = new SimpleObjectProperty(temporalColumnSelectionRange().getStartInstant());
-            draggingMaxValue = new SimpleObjectProperty(temporalColumnSelectionRange().getEndInstant());
-            draggingMinValue.addListener((observable, oldValue, newValue) -> {
-                minText.setText(draggingMinValue.get().toString());
-            });
-            draggingMaxValue.addListener((observable, oldValue, newValue) -> {
-                maxText.setText(draggingMaxValue.get().toString());
-            });
-//                    minText.textProperty().bindBidirectional(draggingMinValue, new NumberStringConverter());
-//                    maxText.textProperty().bindBidirectional(draggingMaxValue, new NumberStringConverter());
+            draggingMinValue = new SimpleDoubleProperty(doubleColumnSelectionRange().getMinValue());
+            draggingMaxValue = new SimpleDoubleProperty(doubleColumnSelectionRange().getMaxValue());
+            minText.textProperty().bindBidirectional(draggingMinValue, new NumberStringConverter());
+            maxText.textProperty().bindBidirectional(draggingMaxValue, new NumberStringConverter());
         }
 
         double deltaY = event.getY() - dragEndPoint.getY();
@@ -123,19 +97,48 @@ public class PCPTemporalAxisSelection extends PCPAxisSelection {
         }
 
         draggingMaxValue.set(GraphicsUtil.mapValue(topY, getPCPAxis().getFocusTopY(), getPCPAxis().getFocusBottomY(),
-                ((TemporalColumn)getPCPAxis().getColumn()).getStatistics().getEndInstant(),
-                ((TemporalColumn)getPCPAxis().getColumn()).getStatistics().getStartInstant()));
-
+                ((DoubleColumn)getPCPAxis().getColumn()).getStatistics().getMaxValue(),
+                ((DoubleColumn)getPCPAxis().getColumn()).getStatistics().getMinValue()));
         draggingMinValue.set(GraphicsUtil.mapValue(bottomY, getPCPAxis().getFocusTopY(), getPCPAxis().getFocusBottomY(),
-                ((TemporalColumn)getPCPAxis().getColumn()).getStatistics().getEndInstant(),
-                ((TemporalColumn)getPCPAxis().getColumn()).getStatistics().getStartInstant()));
+                ((DoubleColumn)getPCPAxis().getColumn()).getStatistics().getMaxValue(),
+                ((DoubleColumn)getPCPAxis().getColumn()).getStatistics().getMinValue()));
 
         layoutGraphics(bottomY, topY);
     }
 
     @Override
     protected void handleRectangleMousePressed(MouseEvent event) {
-        //TODO: Make popup dialog to change start and end instants for selection
+        if (event.isPopupTrigger()) {
+            Dialog dialog = createSelectionRangeInputDialog(doubleColumnSelectionRange().getMinValue(),
+                    doubleColumnSelectionRange().getMaxValue());
+            Optional<Pair<Double, Double>> result = dialog.showAndWait();
+
+            result.ifPresent(newMinValue -> {
+                double minValue = result.get().getKey();
+                double maxValue = result.get().getValue();
+
+                // ensure min is the min and max is the max
+                minValue = Math.min(minValue, maxValue);
+                maxValue = Math.max(minValue, maxValue);
+
+                // clamp within the bounds of the focus range
+                minValue = minValue < ((DoubleColumn)getPCPAxis().getColumn()).getStatistics().getMinValue() ? ((DoubleColumn)getPCPAxis().getColumn()).getStatistics().getMinValue() : minValue;
+                maxValue = maxValue > ((DoubleColumn)getPCPAxis().getColumn()).getStatistics().getMaxValue() ? ((DoubleColumn)getPCPAxis().getColumn()).getStatistics().getMaxValue() : maxValue;
+
+                // find the y positions for the min and max
+                double topY = GraphicsUtil.mapValue(maxValue,
+                        ((DoubleColumn)getPCPAxis().getColumn()).getStatistics().getMinValue(),
+                        ((DoubleColumn)getPCPAxis().getColumn()).getStatistics().getMaxValue(),
+                        getPCPAxis().getFocusBottomY(), getPCPAxis().getFocusTopY());
+                double bottomY = GraphicsUtil.mapValue(minValue,
+                        ((DoubleColumn)getPCPAxis().getColumn()).getStatistics().getMinValue(),
+                        ((DoubleColumn)getPCPAxis().getColumn()).getStatistics().getMaxValue(),
+                        getPCPAxis().getFocusBottomY(), getPCPAxis().getFocusTopY());
+
+                // update display and data model values
+                update(minValue, maxValue, bottomY, topY);
+            });
+        }
     }
 
     @Override
@@ -143,14 +146,16 @@ public class PCPTemporalAxisSelection extends PCPAxisSelection {
         if (dragging) {
             dragging = false;
 
-            // update column selection range min/max properties
-            temporalColumnSelectionRange().setRangeInstants((Instant)draggingMinValue.get(), (Instant)draggingMaxValue.get());
+            doubleColumnSelectionRange().setRangeValues(draggingMinValue.get(), draggingMaxValue.get());
+
+            // unbind selection range min/max labels from dragging min/max range values
+            minText.textProperty().unbindBidirectional(draggingMinValue);
+            maxText.textProperty().unbindBidirectional(draggingMaxValue);
 
         } else {
             getPane().getChildren().remove(getGraphicsGroup());
             getPCPAxis().getAxisSelectionList().remove(this);
-            getDataModel().clearColumnSelectionRange(temporalColumnSelectionRange());
-//                    dataModel.setQueriedTuples();
+            getDataModel().clearColumnSelectionRange(doubleColumnSelectionRange());
         }
     }
 
@@ -171,11 +176,12 @@ public class PCPTemporalAxisSelection extends PCPAxisSelection {
         if (!dragging) {
             dragging = true;
 
+            // unbind range selection min labels from selection range min properties
+//                    minText.textProperty().unbindBidirectional(getColumnSelectionRange().minValueProperty());
+
             // bind range selection min/max labels to local values during drag operation
-            draggingMinValue = new SimpleObjectProperty(temporalColumnSelectionRange().getStartInstant());
-            draggingMinValue.addListener((observable, oldValue, newValue) -> {
-                minText.setText(draggingMinValue.get().toString());
-            });
+            draggingMinValue = new SimpleDoubleProperty(doubleColumnSelectionRange().getMinValue());
+            minText.textProperty().bindBidirectional(draggingMinValue, new NumberStringConverter());
         }
 
         double deltaY = event.getY() - dragEndPoint.getY();
@@ -192,8 +198,8 @@ public class PCPTemporalAxisSelection extends PCPAxisSelection {
         }
 
         draggingMinValue.set(GraphicsUtil.mapValue(bottomY, getPCPAxis().getFocusTopY(), getPCPAxis().getFocusBottomY(),
-                ((TemporalColumn)getPCPAxis().getColumn()).getStatistics().getEndInstant(),
-                ((TemporalColumn)getPCPAxis().getColumn()).getStatistics().getStartInstant()));
+                ((DoubleColumn)getPCPAxis().getColumn()).getStatistics().getMaxValue(),
+                ((DoubleColumn)getPCPAxis().getColumn()).getStatistics().getMinValue()));
         layoutGraphics(bottomY, getTopY());
     }
 
@@ -208,7 +214,7 @@ public class PCPTemporalAxisSelection extends PCPAxisSelection {
             dragging = false;
 
             // update column selection range min properties
-            temporalColumnSelectionRange().setStartInstant((Instant)draggingMinValue.get());
+            doubleColumnSelectionRange().setMinValue(draggingMinValue.get());
 
             // unbind selection range min labels from dragging min range value
             minText.textProperty().unbindBidirectional(draggingMinValue);
@@ -232,11 +238,12 @@ public class PCPTemporalAxisSelection extends PCPAxisSelection {
         if (!dragging) {
             dragging = true;
 
+            // unbind range selection max label from selection range max property
+//                    maxText.textProperty().unbindBidirectional(getColumnSelectionRange().maxValueProperty());
+
             // bind range selection max labels to local value during drag operation
-            draggingMaxValue = new SimpleObjectProperty(temporalColumnSelectionRange().getEndInstant());
-            draggingMaxValue.addListener((observable, oldValue, newValue) -> {
-                maxText.setText(draggingMaxValue.get().toString());
-            });
+            draggingMaxValue = new SimpleDoubleProperty(doubleColumnSelectionRange().getMaxValue());
+            maxText.textProperty().bindBidirectional(draggingMaxValue, new NumberStringConverter());
         }
 
         double deltaY = event.getY() - dragEndPoint.getY();
@@ -253,8 +260,8 @@ public class PCPTemporalAxisSelection extends PCPAxisSelection {
         }
 
         draggingMaxValue.set(GraphicsUtil.mapValue(topY, getPCPAxis().getFocusTopY(), getPCPAxis().getFocusBottomY(),
-                ((TemporalColumn)getPCPAxis().getColumn()).getStatistics().getEndInstant(),
-                ((TemporalColumn)getPCPAxis().getColumn()).getStatistics().getStartInstant()));
+                ((DoubleColumn)getPCPAxis().getColumn()).getStatistics().getMaxValue(),
+                ((DoubleColumn)getPCPAxis().getColumn()).getStatistics().getMinValue()));
 
         layoutGraphics(getBottomY(), topY);
     }
@@ -270,15 +277,21 @@ public class PCPTemporalAxisSelection extends PCPAxisSelection {
             dragging = false;
 
             // update column selection range max property
-            temporalColumnSelectionRange().setEndInstant((Instant)draggingMaxValue.get());
+            doubleColumnSelectionRange().setMaxValue(draggingMaxValue.get());
 
             // unbind selection range max label from dragging max range value
             maxText.textProperty().unbindBidirectional(draggingMaxValue);
-       }
+        }
+    }
+
+    @Override
+    protected void handleRectangleMouseEntered() {
+        minText.setVisible(true);
+        maxText.setVisible(true);
     }
 
     private void registerListeners() {
-        temporalColumnSelectionRange().rangeInstantsProperty().addListener((observable, oldValue, newValue) -> {
+        doubleColumnSelectionRange().rangeValuesProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue != null) {
                 minText.setText(newValue.get(0).toString());
                 maxText.setText(newValue.get(1).toString());
@@ -287,26 +300,44 @@ public class PCPTemporalAxisSelection extends PCPAxisSelection {
         });
     }
 
+    private DoubleColumnSelectionRange doubleColumnSelectionRange() {
+        return (DoubleColumnSelectionRange)getColumnSelectionRange();
+    }
+
+    private PCPDoubleAxis doubleAxis() {
+        return (PCPDoubleAxis)getPCPAxis();
+    }
+
+    protected void layoutGraphics(double bottomY, double topY) {
+        super.layoutGraphics(bottomY, topY);
+
+        minText.setY(getBottomY() + minText.getLayoutBounds().getHeight());
+        minText.setX(getPCPAxis().getCenterX() - (minText.getLayoutBounds().getWidth() / 2d));
+
+        maxText.setX(getPCPAxis().getCenterX() - (maxText.getLayoutBounds().getWidth() / 2d));
+        maxText.setY(getTopY() - 2d);
+    }
+
     @Override
     public void relayout() {
-        double topY = GraphicsUtil.mapValue(temporalColumnSelectionRange().getEndInstant(),
-                ((TemporalColumn)getPCPAxis().getColumn()).getStatistics().getStartInstant(),
-                ((TemporalColumn)getPCPAxis().getColumn()).getStatistics().getEndInstant(),
+        double topY = GraphicsUtil.mapValue(doubleColumnSelectionRange().getMaxValue(),
+                ((DoubleColumn)getPCPAxis().getColumn()).getStatistics().getMinValue(),
+                ((DoubleColumn)getPCPAxis().getColumn()).getStatistics().getMaxValue(),
                 getPCPAxis().getFocusBottomY(), getPCPAxis().getFocusTopY());
-        double bottomY = GraphicsUtil.mapValue(temporalColumnSelectionRange().getStartInstant(),
-                ((TemporalColumn)getPCPAxis().getColumn()).getStatistics().getStartInstant(),
-                ((TemporalColumn)getPCPAxis().getColumn()).getStatistics().getEndInstant(),
+        double bottomY = GraphicsUtil.mapValue(doubleColumnSelectionRange().getMinValue(),
+                ((DoubleColumn)getPCPAxis().getColumn()).getStatistics().getMinValue(),
+                ((DoubleColumn)getPCPAxis().getColumn()).getStatistics().getMaxValue(),
                 getPCPAxis().getFocusBottomY(), getPCPAxis().getFocusTopY());
         layoutGraphics(bottomY, topY);
     }
 
-    public void update(Instant minValue, Instant maxValue, double minValueY, double maxValueY) {
-        temporalColumnSelectionRange().setEndInstant(maxValue);
-        temporalColumnSelectionRange().setStartInstant(minValue);
+    protected void update(double minValue, double maxValue, double minValueY, double maxValueY) {
+        doubleColumnSelectionRange().setMaxValue(maxValue);
+        doubleColumnSelectionRange().setMinValue(minValue);
         layoutGraphics(minValueY, maxValueY);
     }
 
-    private Dialog<Pair<Double, Double>> createSelectionRangeInputDialog (Instant minValue, Instant maxValue) {
+    private Dialog<Pair<Double, Double>> createSelectionRangeInputDialog (double minValue, double maxValue) {
         Dialog<Pair<Double, Double>> dialog = new Dialog<>();
         dialog.setTitle("Change Selection Value Range");
         dialog.setHeaderText("Enter New Minimum and Maximum Range Values");
@@ -341,4 +372,5 @@ public class PCPTemporalAxisSelection extends PCPAxisSelection {
 
         return dialog;
     }
+
 }

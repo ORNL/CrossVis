@@ -1,9 +1,11 @@
-package gov.ornl.csed.cda.datatable2;
+package gov.ornl.csed.cda.datatable;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
 public class TemporalColumnSummaryStats extends ColumnSummaryStats {
     private static final int DEFAULT_NUM_HISTOGRAM_BINS = 50;
@@ -11,18 +13,22 @@ public class TemporalColumnSummaryStats extends ColumnSummaryStats {
 
     private SimpleObjectProperty<Instant> startInstant;
     private SimpleObjectProperty<Instant> endInstant;
+    private SimpleObjectProperty<LocalDateTime> startLocalDateTime;
+    private SimpleObjectProperty<LocalDateTime> endLocalDateTime;
+
     private SimpleObjectProperty<TemporalHistogram> histogram;
 
     private Instant[] values;
 
     private int numHistogramBins = DEFAULT_NUM_HISTOGRAM_BINS;
 
-    public TemporalColumnSummaryStats(Column column) {
+    public TemporalColumnSummaryStats(Column column, int numHistogramBins) {
         super(column);
+        this.numHistogramBins = numHistogramBins;
     }
 
-    public TemporalColumnSummaryStats(Column column, Instant startInstant, Instant endInstant) {
-        super(column);
+    public TemporalColumnSummaryStats(Column column, Instant startInstant, Instant endInstant, int numHistogramBins) {
+        this(column, numHistogramBins);
 
         setStartInstant(startInstant);
         setEndInstant(endInstant);
@@ -37,10 +43,10 @@ public class TemporalColumnSummaryStats extends ColumnSummaryStats {
     public void setValues(Instant[] values) {
         this.values = values;
 
-        numHistogramBins = (int)Math.floor(Math.sqrt(values.length));
-        if (numHistogramBins > MAX_NUM_HISTOGRAM_BINS) {
-            numHistogramBins = MAX_NUM_HISTOGRAM_BINS;
-        }
+//        numHistogramBins = (int)Math.floor(Math.sqrt(values.length));
+//        if (numHistogramBins > MAX_NUM_HISTOGRAM_BINS) {
+//            numHistogramBins = MAX_NUM_HISTOGRAM_BINS;
+//        }
 
         calculateStatistics();
     }
@@ -62,29 +68,39 @@ public class TemporalColumnSummaryStats extends ColumnSummaryStats {
 
     @Override
     public void calculateStatistics() {
+        Instant start = null;
+        Instant end = null;
+
         int columnIndex = getColumn().getDataModel().getColumnIndex(column);
+
         for (int i = 0; i < values.length; i++) {
-//        for (int i = 0; i < getColumn().getDataModel().getTupleCount(); i++) {
             Instant instant = values[i];
-//            Instant instant = (Instant)getColumn().getDataModel().getTuple(0).getElement(columnIndex);
             if (i == 0) {
-                setStartInstant(instant);
-                setEndInstant(instant);
+                start = end = instant;
             } else {
-                if (instant.isBefore(getStartInstant())) {
-                    setStartInstant(instant);
-                } else if (instant.isAfter(getEndInstant())) {
-                    setEndInstant(instant);
+                if (instant.isBefore(start)) {
+                    start = instant;
+                } else if (instant.isAfter(end)) {
+                    end = instant;
                 }
             }
         }
 
+        setStartInstant(start);
+        setEndInstant(end);
+
         calculateHistogram();
+    }
+
+    private TemporalColumn temporalColumn() {
+        return (TemporalColumn)getColumn();
     }
 
     @Override
     public void calculateHistogram() {
-        setHistogram(new TemporalHistogram(column.getName(), values, numHistogramBins, getStartInstant(), getEndInstant()));
+        setHistogram(new TemporalHistogram(column.getName(), values, numHistogramBins,
+                temporalColumn().getStatistics().getStartInstant(),
+                temporalColumn().getStatistics().getEndInstant()));
     }
 
     public TemporalHistogram getHistogram() {
@@ -126,7 +142,7 @@ public class TemporalColumnSummaryStats extends ColumnSummaryStats {
 
     public void setStartInstant(Instant startInstant) {
         startInstantProperty().set(startInstant);
-//        startLocalDateTimeProperty().set(LocalDateTime.ofInstant(startInstant, ZoneOffset.UTC));
+        startLocalDateTimeProperty().set(LocalDateTime.ofInstant(startInstant, ZoneOffset.UTC));
     }
 
     public Instant getStartInstant() {
@@ -139,17 +155,17 @@ public class TemporalColumnSummaryStats extends ColumnSummaryStats {
         }
         return startInstant;
     }
-//
-//    public SimpleObjectProperty<LocalDateTime> startLocalDateTimeProperty() {
-//        if (startLocalDateTime == null) {
-//            startLocalDateTime = new SimpleObjectProperty<>(this, "startLocalDateTime");
-//        }
-//        return startLocalDateTime;
-//    }
+
+    public SimpleObjectProperty<LocalDateTime> startLocalDateTimeProperty() {
+        if (startLocalDateTime == null) {
+            startLocalDateTime = new SimpleObjectProperty<>(this, "startLocalDateTime");
+        }
+        return startLocalDateTime;
+    }
 
     public void setEndInstant(Instant endInstant) {
         endInstantProperty().set(endInstant);
-//        endLocalDateTimeProperty().set(LocalDateTime.ofInstant(endInstant, ZoneOffset.UTC));
+        endLocalDateTimeProperty().set(LocalDateTime.ofInstant(endInstant, ZoneOffset.UTC));
     }
 
     public Instant getEndInstant() {
@@ -161,5 +177,12 @@ public class TemporalColumnSummaryStats extends ColumnSummaryStats {
             endInstant = new SimpleObjectProperty<>(this, "endInstant");
         }
         return endInstant;
+    }
+
+    public SimpleObjectProperty<LocalDateTime> endLocalDateTimeProperty() {
+        if (endLocalDateTime == null) {
+            endLocalDateTime = new SimpleObjectProperty<>(this, "endLocalDateTime");
+        }
+        return endLocalDateTime;
     }
 }

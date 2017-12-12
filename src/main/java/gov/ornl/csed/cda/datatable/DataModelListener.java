@@ -15,16 +15,7 @@ public interface DataModelListener {
 	public void dataModelQueryCleared(DataModel dataModel);
 
     // Called when selections for a particular column are removed from the active query
-    public void dataModelQueryColumnCleared(DataModel dataModel, QuantitativeColumn column);
-
-	// Called when a temporal selection is added to the active query
-	public void dataModelTemporalColumnSelectionAdded(DataModel dataModel, TemporalColumnSelectionRange columnSelectionRange);
-
-	// Called when a temporal selection is removed from the active query
-	public void dataModelTemporalColumnSelectionRemoved(DataModel dataModel, TemporalColumnSelectionRange columnSelectionRange);
-
-	// Called when a temporal selection from the active query is modified (min/max range)
-	public void dataModelTemporalColumnSelectionChanged(DataModel dataModel, TemporalColumnSelectionRange columnSelectionRange);
+    public void dataModelQueryColumnCleared(DataModel dataModel, Column column);
 
 	// Called when a selection is added to the active query
 	public void dataModelColumnSelectionAdded(DataModel dataModel, ColumnSelectionRange columnSelectionRange);
@@ -37,7 +28,7 @@ public interface DataModelListener {
 
 	// Methods affecting the highlighted column
 	// Called when the highlighted column changes
-	public void dataModelHighlightedColumnChanged(DataModel dataModel, QuantitativeColumn oldHighlightedColumn, QuantitativeColumn newHighlightedColumn);
+	public void dataModelHighlightedColumnChanged(DataModel dataModel, Column oldHighlightedColumn, Column newHighlightedColumn);
 
 	// Methods affecting the tuples in the data model
 	// Called when new tuples are added to the data model
@@ -48,17 +39,17 @@ public interface DataModelListener {
 
 	// Methods affecting the columns in the data model
 	// Called when a column is disabled
-	public void dataModelColumnDisabled(DataModel dataModel, QuantitativeColumn disabledColumn);
+	public void dataModelColumnDisabled(DataModel dataModel, Column disabledColumn);
 
     // Called when a set of columns are disabled
-	public void dataModelColumnsDisabled(DataModel dataModel, ArrayList<QuantitativeColumn> disabledColumns);
+	public void dataModelColumnsDisabled(DataModel dataModel, ArrayList<Column> disabledColumns);
 
 	// Called when a column is enabled (previously disabled)
-	public void dataModelColumnEnabled(DataModel dataModel, QuantitativeColumn enabledColumn);
+	public void dataModelColumnEnabled(DataModel dataModel, Column enabledColumn);
 
 	// Called when the column order is changed
 	public void dataModelColumnOrderChanged(DataModel dataModel);
 
 	// Called when a column name changes
-	public void dataModelColumnNameChanged(DataModel dataModel, QuantitativeColumn column);
+	public void dataModelColumnNameChanged(DataModel dataModel, Column column);
 }

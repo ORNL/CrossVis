@@ -1,10 +1,12 @@
-package gov.ornl.csed.cda.datatable2;
+package gov.ornl.csed.cda.datatable;
 
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
+
+import javax.print.Doc;
 
 /**
  * Created by csg on 11/25/14.
@@ -32,8 +34,7 @@ public class DoubleColumnSummaryStats extends ColumnSummaryStats {
 
     private int numHistogramBins = DEFAULT_NUM_HISTOGRAM_BINS;
 
-
-    public DoubleColumnSummaryStats(Column column) {
+    public DoubleColumnSummaryStats(Column column, int numHistogramBins) {
         super(column);
 
         values = null;
@@ -49,6 +50,8 @@ public class DoubleColumnSummaryStats extends ColumnSummaryStats {
         kurtosisValue = new SimpleDoubleProperty(Double.NaN);
         upperWhiskerValue = new SimpleDoubleProperty(Double.NaN);
         lowerWhiskerValue = new SimpleDoubleProperty(Double.NaN);
+
+        this.numHistogramBins = numHistogramBins;
     }
 
     public void setValues(double[] values, int numHistogramBins) {
@@ -62,10 +65,10 @@ public class DoubleColumnSummaryStats extends ColumnSummaryStats {
     public void setValues(double[] values) {
         this.values = values;
 
-        numHistogramBins = (int)Math.floor(Math.sqrt(values.length));
-        if (numHistogramBins > MAX_NUM_HISTOGRAM_BINS) {
-            numHistogramBins = MAX_NUM_HISTOGRAM_BINS;
-        }
+//        numHistogramBins = (int)Math.floor(Math.sqrt(values.length));
+//        if (numHistogramBins > MAX_NUM_HISTOGRAM_BINS) {
+//            numHistogramBins = MAX_NUM_HISTOGRAM_BINS;
+//        }
 
         calculateStatistics();
     }
@@ -134,9 +137,15 @@ public class DoubleColumnSummaryStats extends ColumnSummaryStats {
         return numHistogramBins;
     }
 
+    private DoubleColumn doubleColumn() {
+        return (DoubleColumn)getColumn();
+    }
+
     @Override
     public void calculateHistogram() {
-        setHistogram(new DoubleHistogram(column.getName(), values, numHistogramBins, getMinValue(), getMaxValue()));
+        setHistogram(new DoubleHistogram(column.getName(), values, numHistogramBins,
+                doubleColumn().getStatistics().getMinValue(),
+                doubleColumn().getStatistics().getMaxValue()));
     }
 
     public DoubleHistogram getHistogram() {

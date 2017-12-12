@@ -1,4 +1,4 @@
-package gov.ornl.csed.cda.datatable2;
+package gov.ornl.csed.cda.datatable;
 
 import javafx.beans.property.ListProperty;
 import javafx.beans.property.SimpleListProperty;

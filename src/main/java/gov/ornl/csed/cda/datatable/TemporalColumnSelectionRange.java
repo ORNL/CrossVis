@@ -1,6 +1,5 @@
 package gov.ornl.csed.cda.datatable;
 
-import javafx.beans.Observable;
 import javafx.beans.property.ListProperty;
 import javafx.beans.property.SimpleListProperty;
 import javafx.collections.FXCollections;
@@ -8,19 +7,14 @@ import javafx.collections.ObservableList;
 
 import java.time.Instant;
 
-public class TemporalColumnSelectionRange {
-    private TemporalColumn column;
+public class TemporalColumnSelectionRange extends ColumnSelectionRange {
     private ListProperty<Instant> rangeInstants;
 
     public TemporalColumnSelectionRange(TemporalColumn column, Instant startInstant, Instant endInstant) {
-        this.column = column;
+        super(column);
         rangeInstants = new SimpleListProperty<>();
         ObservableList<Instant> observableList = FXCollections.observableArrayList(startInstant, endInstant);
         rangeInstants.set(observableList);
-    }
-
-    public final TemporalColumn getColumn() {
-        return column;
     }
 
     public final Instant getStartInstant() {

@@ -1,4 +1,4 @@
-package gov.ornl.csed.cda.datatable2;
+package gov.ornl.csed.cda.datatable;
 
 import java.time.Duration;
 import java.time.Instant;

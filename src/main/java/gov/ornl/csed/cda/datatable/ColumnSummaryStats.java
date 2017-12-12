@@ -1,4 +1,4 @@
-package gov.ornl.csed.cda.datatable2;
+package gov.ornl.csed.cda.datatable;
 
 public abstract class ColumnSummaryStats {
     protected Column column;
