@@ -116,6 +116,18 @@ public class Query {
                 ((DoubleColumnSummaryStats)columnSummaryStats).setValues(values);
             }
         }
+
+        maxHistogram2DBinCount = 0;
+        for (ColumnSummaryStats columnSummaryStats : columnQuerySummaryStatsMap.values()) {
+            for (ColumnSummaryStats compareColumnSummaryStats : columnQuerySummaryStatsMap.values()) {
+                if (columnSummaryStats != compareColumnSummaryStats) {
+                    columnSummaryStats.calculateHistogram2D(compareColumnSummaryStats);
+                    if (columnSummaryStats.getMaxHistogram2DBinCount() > maxHistogram2DBinCount) {
+                        maxHistogram2DBinCount = columnSummaryStats.getMaxHistogram2DBinCount();
+                    }
+                }
+            }
+        }
     }
 
     public final ObservableList<ColumnSelectionRange> getColumnSelectionRanges() { return columnSelectionRanges.get(); }

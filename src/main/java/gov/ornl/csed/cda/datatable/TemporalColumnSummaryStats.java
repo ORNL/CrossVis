@@ -8,23 +8,16 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 
 public class TemporalColumnSummaryStats extends ColumnSummaryStats {
-    private static final int DEFAULT_NUM_HISTOGRAM_BINS = 50;
-    private static final int MAX_NUM_HISTOGRAM_BINS = 100;
-
     private SimpleObjectProperty<Instant> startInstant;
     private SimpleObjectProperty<Instant> endInstant;
     private SimpleObjectProperty<LocalDateTime> startLocalDateTime;
     private SimpleObjectProperty<LocalDateTime> endLocalDateTime;
-
     private SimpleObjectProperty<TemporalHistogram> histogram;
-
     private Instant[] values;
 
-    private int numHistogramBins = DEFAULT_NUM_HISTOGRAM_BINS;
 
     public TemporalColumnSummaryStats(Column column, int numHistogramBins) {
-        super(column);
-        this.numHistogramBins = numHistogramBins;
+        super(column, numHistogramBins);
     }
 
     public TemporalColumnSummaryStats(Column column, Instant startInstant, Instant endInstant, int numHistogramBins) {
@@ -49,17 +42,6 @@ public class TemporalColumnSummaryStats extends ColumnSummaryStats {
 //        }
 
         calculateStatistics();
-    }
-
-    public void setNumHistogramBins(int numBins) {
-        if (numBins != numHistogramBins) {
-            numHistogramBins = numBins;
-            calculateHistogram();
-        }
-    }
-
-    public int getNumHistogramBins() {
-        return numHistogramBins;
     }
 
     public Instant[] getValues() {
@@ -102,6 +84,23 @@ public class TemporalColumnSummaryStats extends ColumnSummaryStats {
                 temporalColumn().getStatistics().getStartInstant(),
                 temporalColumn().getStatistics().getEndInstant()));
     }
+
+//    @Override
+//    public void calculateHistogram2D(ColumnSummaryStats columnSummaryStats) {
+//        Histogram2DDimension xDimension = new Histogram2DDimension.Temporal(values, numHistogramBins, getStartInstant(), getEndInstant());
+//        Histogram2DDimension yDimension = null;
+//        if (columnSummaryStats.getColumn() instanceof TemporalColumn) {
+//            TemporalColumnSummaryStats yColumnSummaryStats = (TemporalColumnSummaryStats)columnSummaryStats;
+//            yDimension = new Histogram2DDimension.Temporal(yColumnSummaryStats.getValues(),
+//                    numHistogramBins, yColumnSummaryStats.getStartInstant(), yColumnSummaryStats.getEndInstant());
+//        } else if (columnSummaryStats.getColumn() instanceof DoubleColumn) {
+//            DoubleColumnSummaryStats yColumnSummaryStats = (DoubleColumnSummaryStats)columnSummaryStats;
+//            yDimension = new Histogram2DDimension.Double(yColumnSummaryStats.getValues(), numHistogramBins,
+//                    yColumnSummaryStats.getMinValue(), yColumnSummaryStats.getMaxValue());
+//        }
+//        Histogram2D histogram2D = new Histogram2D(xDimension, yDimension);
+//        columnHistogram2DMap.put(columnSummaryStats.getColumn(), histogram2D);
+//    }
 
     public TemporalHistogram getHistogram() {
         return histogramProperty().get();

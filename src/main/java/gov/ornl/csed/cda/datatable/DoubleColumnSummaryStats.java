@@ -12,9 +12,6 @@ import javax.print.Doc;
  * Created by csg on 11/25/14.
  */
 public class DoubleColumnSummaryStats extends ColumnSummaryStats {
-    private static final int DEFAULT_NUM_HISTOGRAM_BINS = 50;
-    private static final int MAX_NUM_HISTOGRAM_BINS = 100;
-
     private double[] values;
 
     private DoubleProperty meanValue;
@@ -32,10 +29,8 @@ public class DoubleColumnSummaryStats extends ColumnSummaryStats {
 
     private ObjectProperty<DoubleHistogram> histogram;
 
-    private int numHistogramBins = DEFAULT_NUM_HISTOGRAM_BINS;
-
     public DoubleColumnSummaryStats(Column column, int numHistogramBins) {
-        super(column);
+        super(column, numHistogramBins);
 
         values = null;
         minValue = new SimpleDoubleProperty(Double.NaN);
@@ -50,8 +45,6 @@ public class DoubleColumnSummaryStats extends ColumnSummaryStats {
         kurtosisValue = new SimpleDoubleProperty(Double.NaN);
         upperWhiskerValue = new SimpleDoubleProperty(Double.NaN);
         lowerWhiskerValue = new SimpleDoubleProperty(Double.NaN);
-
-        this.numHistogramBins = numHistogramBins;
     }
 
     public void setValues(double[] values, int numHistogramBins) {
@@ -124,17 +117,6 @@ public class DoubleColumnSummaryStats extends ColumnSummaryStats {
         }
 
         calculateHistogram();
-    }
-
-    public void setNumHistogramBins(int numBins) {
-        if (numBins != numHistogramBins) {
-            numHistogramBins = numBins;
-            calculateHistogram();
-        }
-    }
-
-    public int getNumHistogramBins() {
-        return numHistogramBins;
     }
 
     private DoubleColumn doubleColumn() {

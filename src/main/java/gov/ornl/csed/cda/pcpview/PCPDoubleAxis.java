@@ -70,6 +70,14 @@ public class PCPDoubleAxis extends PCPAxis {
         registerListeners();
     }
 
+    public Rectangle getOverallDispersionRectangle() { return overallDispersionRectangle; }
+
+    public Rectangle getQueryDispersionRectangle () { return queryDispersionRectangle; }
+
+    public Line getOverallTypicalLine () { return overallTypicalLine; }
+
+    public Line getQueryTypicalLine () { return queryTypicalLine; }
+
     @Override
     protected void handleAxisBarMousePressed() {
 

@@ -288,6 +288,12 @@ public abstract class PCPAxis {
 
         maxValueText.setX(bounds.getX() + ((width - maxValueText.getLayoutBounds().getWidth()) / 2.));
         maxValueText.setY(barTopY - 4d);
+
+        if (!axisSelectionList.isEmpty()) {
+            for (PCPAxisSelection pcpAxisSelection : axisSelectionList) {
+                pcpAxisSelection.relayout();
+            }
+        }
     }
 
     public double getCenterX() {

@@ -79,7 +79,7 @@ public class DataModel {
 
 	public final Query getActiveQuery() { return activeQuery; }
 
-//	public int getMaxHistogram2DBinCount() { return maxHistogram2DBinCount; }
+	public int getMaxHistogram2DBinCount() { return maxHistogram2DBinCount; }
 
 	public boolean isEmpty() {
 		return tuples.isEmpty();
@@ -543,8 +543,8 @@ public class DataModel {
             }
             column.getSummaryStats().setCorrelationCoefficients(newCorrCoef);
 
-			ArrayList<Histogram2D> histogram2DList = column.getSummaryStats().getHistogram2DList();
-			ArrayList<Histogram2D> newHistogram2DList = new ArrayList<>();
+			ArrayList<Histogram2DOLD> histogram2DList = column.getSummaryStats().getHistogram2DList();
+			ArrayList<Histogram2DOLD> newHistogram2DList = new ArrayList<>();
 			for (int i = 0; i < histogram2DList.size(); i++) {
 				newHistogram2DList.add(histogram2DList.get(dstColumnIndices[i]));
 			}
@@ -576,8 +576,8 @@ public class DataModel {
                 }
                 summaryStats.setCorrelationCoefficients(newCorrCoef);
 
-				ArrayList<Histogram2D> histogram2DList = summaryStats.getHistogram2DList();
-				ArrayList<Histogram2D> newHistogram2DList = new ArrayList<>();
+				ArrayList<Histogram2DOLD> histogram2DList = summaryStats.getHistogram2DList();
+				ArrayList<Histogram2DOLD> newHistogram2DList = new ArrayList<>();
 				for (int i = 0; i < histogram2DList.size(); i++) {
 					newHistogram2DList.add(histogram2DList.get(dstColumnIndices[i]));
 				}
@@ -826,7 +826,7 @@ public class DataModel {
             DoubleColumnSummaryStats columnSummaryStats = getActiveQuery().getColumnQuerySummaryStats(column);
 
             ArrayList<Double> coefList = new ArrayList<>();
-            ArrayList<Histogram2D> histogram2DArrayList = new ArrayList<Histogram2D>();
+            ArrayList<Histogram2DOLD> histogram2DArrayList = new ArrayList<Histogram2DOLD>();
 
             for (int iy = 0; iy < columns.size(); iy++) {
                 try {
@@ -839,8 +839,8 @@ public class DataModel {
                 // calculate 2D histograms
                 // TODO: This could be optimized to reduce some computational complexity
                 // TODO: The code current calculates a redundant 2D histogram for each pair of variables
-                Histogram2D histogram2D = column.getSummaryStats().getHistogram2DList().get(iy);
-                Histogram2D queryHistogram2D = new Histogram2D("", data[ix], data[iy], numHistogramBins,
+                Histogram2DOLD histogram2D = column.getSummaryStats().getHistogram2DList().get(iy);
+                Histogram2DOLD queryHistogram2D = new Histogram2DOLD("", data[ix], data[iy], numHistogramBins,
                         histogram2D.getXMinValue(), histogram2D.getXMaxValue(), histogram2D.getYMinValue(), histogram2D.getYMaxValue());
                 histogram2DArrayList.add(queryHistogram2D);
 
@@ -861,9 +861,21 @@ public class DataModel {
 
 
     private void calculateStatistics() {
-        for (int icolumn = 0; icolumn < columns.size(); icolumn++) {
-            columns.get(icolumn).calculateStatistics();
+        for (Column column : columns) {
+            column.calculateStatistics();
         }
+
+        maxHistogram2DBinCount = 0;
+        for (Column column : columns) {
+        	for (Column compareColumn : columns) {
+        		if (column != compareColumn) {
+        			column.getStatistics().calculateHistogram2D(compareColumn.getStatistics());
+					if (column.getStatistics().getMaxHistogram2DBinCount() > maxHistogram2DBinCount) {
+						maxHistogram2DBinCount = column.getStatistics().getMaxHistogram2DBinCount();
+					}
+				}
+			}
+		}
     }
 
 
