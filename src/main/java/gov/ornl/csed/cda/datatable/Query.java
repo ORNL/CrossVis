@@ -33,6 +33,14 @@ public class Query {
         return queriedTuples;
     }
 
+    public int getQueriedTupleCount() {
+        return queriedTuples.size();
+    }
+
+    public int getNonQueriedTupleCount() {
+        return nonQueriedTuples.size();
+    }
+
     public Set<Tuple> getNonQueriedTuples() {
         return nonQueriedTuples;
     }

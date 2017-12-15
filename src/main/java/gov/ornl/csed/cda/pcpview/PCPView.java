@@ -358,6 +358,29 @@ public class PCPView extends Region implements DataModelListener {
         }
     }
 
+    public void clearQuery() {
+        dataModel.clearActiveQuery();
+
+        // clear all axis selection graphics
+        for (PCPAxis pcpAxis : axisList) {
+            if (!pcpAxis.getAxisSelectionList().isEmpty()) {
+                for (PCPAxisSelection pcpAxisSelection : pcpAxis.getAxisSelectionList()) {
+                    pane.getChildren().remove(pcpAxisSelection.getGraphicsGroup());
+                }
+                pcpAxis.getAxisSelectionList().clear();
+            }
+        }
+
+        handleQueryChange();
+    }
+
+    public double getPCPVerticalBarHeight() {
+        if (axisList != null && !axisList.isEmpty()) {
+            return axisList.get(0).getAxisBar().getHeight();
+        }
+        return Double.NaN;
+    }
+
     private void drawPCPBins() {
 //        lineCanvas.setCache(false);
 //        lineGC.setLineCap(StrokeLineCap.BUTT);
