@@ -71,8 +71,10 @@ public class PCPViewTest extends Application {
                     temporalColumnNames.add("Date");
                     ArrayList<DateTimeFormatter> temporalColumnFormatters = new ArrayList<>();
                     temporalColumnFormatters.add(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss"));
+                    ArrayList<String> ignoreColumnNames = new ArrayList<>();
+//                    ignoreColumnNames.add("StageoutPilots");
 
-                    IOUtilities.readCSV(new File("data/csv/titan-performance.csv"),
+                    IOUtilities.readCSV(new File("data/csv/titan-performance.csv"), ignoreColumnNames,
                             temporalColumnNames, temporalColumnFormatters, dataModel);
                 } catch (IOException e) {
                     System.exit(0);

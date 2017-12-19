@@ -1,6 +1,7 @@
 package gov.ornl.csed.cda.edenfx;
 
 import gov.ornl.csed.cda.datatable.*;
+import gov.ornl.csed.cda.pcpview.ColumnSpecification;
 import gov.ornl.csed.cda.pcpview.PCPView;
 import javafx.animation.FadeTransition;
 import javafx.application.Application;
@@ -22,6 +23,7 @@ import javafx.scene.Scene;
 import javafx.scene.SceneAntialiasing;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.CheckBoxTableCell;
+import javafx.scene.control.cell.ComboBoxTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.effect.DropShadow;
@@ -41,6 +43,7 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.util.Callback;
 import javafx.util.Duration;
+import javafx.util.Pair;
 import javafx.util.converter.NumberStringConverter;
 import org.controlsfx.control.StatusBar;
 import org.slf4j.Logger;
@@ -52,10 +55,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Optional;
-import java.util.Set;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 import java.util.prefs.Preferences;
 
 /**
@@ -1055,10 +1056,36 @@ public class EDENFXMain extends Application implements DataModelListener {
             dataModel.clear();
         }
 
+        String columnNames[] = IOUtilities.readCSVHeader(f);
+        int lineCount = IOUtilities.getCSVLineCount(f);
+
+        ArrayList<ColumnSpecification> columnSpecifications = getColumnSpecifications(columnNames);
+        if (columnSpecifications == null) {
+            return;
+        }
+
+        ArrayList<String> temporalColumnNames = new ArrayList<>();
+        ArrayList<DateTimeFormatter> temporalColumnFormatters = new ArrayList<>();
+        ArrayList<String> ignoreColumnNames = new ArrayList<>();
+        String lastDateTimeParsePattern = null;
+        for (ColumnSpecification columnSpecification : columnSpecifications) {
+            if (columnSpecification.getIgnore()) {
+                ignoreColumnNames.add(columnSpecification.getName());
+            } else if (columnSpecification.getType().equalsIgnoreCase("Temporal")) {
+                temporalColumnNames.add(columnSpecification.getName());
+                temporalColumnFormatters.add(DateTimeFormatter.ofPattern(columnSpecification.getParsePattern()));
+                lastDateTimeParsePattern = columnSpecification.getParsePattern();
+            }
+        }
+
         long start = System.currentTimeMillis();
-        IOUtilities.readCSV(f, null, null, dataModel);
+        IOUtilities.readCSV(f, ignoreColumnNames, temporalColumnNames, temporalColumnFormatters, dataModel);
         long elasped = System.currentTimeMillis() - start;
         log.debug("Reading file data took " + elasped + "ms");
+
+        if (lastDateTimeParsePattern != null) {
+            preferences.put(EDENFXPreferenceKeys.LAST_CSV_IMPORT_DATETIME_PARSE_PATTERN, lastDateTimeParsePattern);
+        }
 
         columnTableView.getItems().clear();
         columnTableView.setItems(FXCollections.observableArrayList(dataModel.getColumns()));
@@ -1075,6 +1102,238 @@ public class EDENFXMain extends Application implements DataModelListener {
 
         displayModeMenu.setDisable(false);
     }
+
+    private ArrayList<ColumnSpecification> getColumnSpecifications (String columnNames[]) {
+        ObservableList<ColumnSpecification> tableColumnSpecs = FXCollections.observableArrayList();
+        for (String columnName : columnNames) {
+            ColumnSpecification columnSpec = new ColumnSpecification(columnName, "Double",
+                    "", false);
+            tableColumnSpecs.add(columnSpec);
+        }
+        final ObservableList<ColumnSpecification> temporalColumnSpecs = FXCollections.observableArrayList();
+
+        Dialog<ObservableList<ColumnSpecification>> dialog = new Dialog<>();
+        dialog.setTitle("CSV Column Specifications");
+        dialog.setHeaderText("Specify Details for each Column");
+
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+
+        // Create tableview for temporal column details
+        TableView<ColumnSpecification> temporalSpecsTableView = new TableView<>();
+        temporalSpecsTableView.setEditable(true);
+
+        TableColumn<ColumnSpecification, String> nameColumn = new TableColumn<>("Column Name");
+        nameColumn.setMinWidth(180);
+        nameColumn.setCellValueFactory(new PropertyValueFactory<ColumnSpecification, String>("name"));
+//        nameColumn.setCellFactory(TextFieldTableCell.forTableColumn());
+        nameColumn.setEditable(false);
+
+        ArrayList<String> parsePatterns = new ArrayList<>();
+        if (!preferences.get(EDENFXPreferenceKeys.LAST_CSV_IMPORT_DATETIME_PARSE_PATTERN, "").isEmpty()) {
+            parsePatterns.add(preferences.get(EDENFXPreferenceKeys.LAST_CSV_IMPORT_DATETIME_PARSE_PATTERN, ""));
+        }
+        parsePatterns.add(preferences.get(EDENFXPreferenceKeys.DEFAULT_CSV_IMPORT_DATETIME_PARSE_PATTERN,
+                "yyyy-MM-ddTHH:mm:ssz"));
+
+        TableColumn<ColumnSpecification, String> parseColumn = new TableColumn<>("DateTime Parse Pattern");
+        parseColumn.setMinWidth(180);
+        parseColumn.setCellValueFactory(new PropertyValueFactory<ColumnSpecification, String>("parsePattern"));
+//        parseColumn.setCellFactory(TextFieldTableCell.forTableColumn());
+        parseColumn.setCellFactory(new Callback<TableColumn<ColumnSpecification, String>, TableCell<ColumnSpecification, String>>() {
+            @Override
+            public TableCell<ColumnSpecification, String> call(TableColumn<ColumnSpecification, String> param) {
+                return new ComboBoxTableCell<ColumnSpecification, String>(FXCollections.observableArrayList(parsePatterns)) {
+                    {
+                        setComboBoxEditable(true);
+                    }
+//                    @Override
+//                    public void updateItem(String item, boolean empty) {
+//
+//                        if (!empty) {
+//                            TableRow row = getTableRow();
+//                            if (row != null) {
+//                                int rowNumber = row.getIndex();
+//                                TableView.TableViewSelectionModel sm = getTableView().getSelectionModel();
+//                                if (item.equalsIgnoreCase("Temporal")) {
+//                                    // add row to temporal column specs table
+//                                    if (!temporalSpecsTableView.getItems().contains(tableColumnSpecs.get(rowNumber))) {
+//                                        temporalSpecsTableView.getItems().add(tableColumnSpecs.get(rowNumber));
+//                                    }
+//                                } else if (item.equalsIgnoreCase("Double")) {
+//                                    // check temporal column specs table for column and remove if found
+//                                    temporalSpecsTableView.getItems().remove(tableColumnSpecs.get(rowNumber));
+//                                }
+//                            }
+//                        }
+//                        super.updateItem(item, empty);
+//                    }
+                };
+            }
+        });
+        parseColumn.setEditable(true);
+        
+        temporalSpecsTableView.getColumns().addAll(nameColumn, parseColumn);
+        temporalColumnSpecs.addAll(temporalColumnSpecs);
+        
+        // create tableview for other column details
+        TableView<ColumnSpecification> columnSpecsTableView = new TableView<>();
+        columnSpecsTableView.setEditable(true);
+
+        nameColumn = new TableColumn<>("Column Name");
+        nameColumn.setMinWidth(180);
+        nameColumn.setCellValueFactory(new PropertyValueFactory<ColumnSpecification, String>("name"));
+        nameColumn.setCellFactory(TextFieldTableCell.forTableColumn());
+        nameColumn.setEditable(false);
+
+        TableColumn<ColumnSpecification, Boolean> ignoreColumn = new TableColumn<>("Ignore");
+        ignoreColumn.setMinWidth(20);
+        ignoreColumn.setCellValueFactory(new PropertyValueFactory<ColumnSpecification, Boolean>("ignore"));
+        ignoreColumn.setCellFactory(column -> new CheckBoxTableCell());
+        ignoreColumn.setEditable(true);
+
+        TableColumn<ColumnSpecification, String> typeColumn = new TableColumn<>("Column Type");
+        typeColumn.setMinWidth(180);
+        typeColumn.setCellValueFactory(new PropertyValueFactory<ColumnSpecification, String>("type"));
+        typeColumn.setEditable(true);
+        typeColumn.setCellFactory(new Callback<TableColumn<ColumnSpecification, String>, TableCell<ColumnSpecification, String>>() {
+            @Override
+            public TableCell<ColumnSpecification, String> call(TableColumn<ColumnSpecification, String> param) {
+                return new ComboBoxTableCell<ColumnSpecification, String>(FXCollections.observableArrayList("Temporal", "Double")) {
+                    @Override
+                    public void updateItem(String item, boolean empty) {
+                        if (!empty) {
+                            TableRow row = getTableRow();
+                            if (row != null) {
+                                int rowNumber = row.getIndex();
+                                TableView.TableViewSelectionModel sm = getTableView().getSelectionModel();
+                                if (item.equalsIgnoreCase("Temporal")) {
+                                    // add row to temporal column specs table
+                                    if (!temporalSpecsTableView.getItems().contains(tableColumnSpecs.get(rowNumber))) {
+                                        temporalSpecsTableView.getItems().add(tableColumnSpecs.get(rowNumber));
+                                    }
+                                } else if (item.equalsIgnoreCase("Double")) {
+                                    // check temporal column specs table for column and remove if found
+                                    temporalSpecsTableView.getItems().remove(tableColumnSpecs.get(rowNumber));
+                                }
+                            }
+                        }
+                        super.updateItem(item, empty);
+                    }
+                };
+            }
+        });
+
+        columnSpecsTableView.getColumns().addAll(ignoreColumn, nameColumn, typeColumn);
+        columnSpecsTableView.setItems(tableColumnSpecs);
+
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setPadding(new Insets(10, 10, 10, 10));
+
+        grid.add(new Label("General Column Parameters:"), 0, 0);
+        grid.add(columnSpecsTableView, 0, 1);
+        grid.add(new Label("Temporal Column Parameters: "), 0, 2);
+        grid.add(temporalSpecsTableView, 0, 3);
+//        BorderPane borderPane = new BorderPane();
+
+//        borderPane.setCenter(columnSpecsTableView);
+//        borderPane.setBottom(temporalSpecsTableView);
+        dialog.getDialogPane().setContent(grid);
+
+        Platform.runLater(() -> columnSpecsTableView.requestFocus());
+
+        dialog.setResultConverter(dialogButton -> {
+            if (dialogButton == ButtonType.OK) {
+                return tableColumnSpecs;
+            }
+            return null;
+        });
+
+        Optional<ObservableList<ColumnSpecification>> result = dialog.showAndWait();
+
+        if (result.isPresent()) {
+            return new ArrayList<ColumnSpecification>(result.get());
+        }
+
+        return null;
+    }
+
+    
+//    private TableView<ColumnSpecification> makeColumnSpecificationTableView () {
+//
+//
+////        TableColumn<ColumnSpecification, String> parsePatternColumn = new TableColumn<>("DateTime Parse Pattern");
+////        parsePatternColumn.setMinWidth(180);
+////        parsePatternColumn.setCellValueFactory(new PropertyValueFactory<ColumnSpecification, String>("parsePattern"));
+////        parsePatternColumn.setCellFactory(TextFieldTableCell.forTableColumn());
+////        parsePatternColumn.setEditable(true);
+//
+////        Callback<TableColumn<ColumnSpecification, String>, TableCell<ColumnSpecification, String>> cellFactory = new Callback<TableColumn<ColumnSpecification, String>, TableCell<ColumnSpecification, String>>() {
+////            @Override
+////            public TableCell<ColumnSpecification, String> call(TableColumn<ColumnSpecification, String> paramTableColumn) {
+////                return new TextFieldTableCell<ColumnSpecification, String>() {
+////                    @Override
+////                    public void updateItem(String s, boolean b) {
+////                        super.updateItem(s, b);
+////                        if (! isEmpty()) {
+////                            ColumnSpecification item = getTableView().getItems().get(getIndex());
+////                            // Test for disable condition
+////                            if (item != null && item.getType().equalsIgnoreCase("Temporal")) {
+////                                setDisable(false);
+////                                setEditable(true);
+////                                setStyle("");
+////                            } else {
+////                                setDisable(true);
+////                                setEditable(false);
+////                                this.setStyle("-fx-text-fill: grey;-fx-border-color: red");
+////                            }
+////                        }
+////                    }
+////
+////                    public void commitEdit(String value) {
+////                        log.debug("commiting value '" + value + "'");
+////                    }
+////                };
+////            }
+////        };
+////        parsePatternColumn.setCellFactory(cellFactory);
+//
+//        TableColumn<ColumnSpecification, String> typeColumn = new TableColumn<>("Column Type");
+//        typeColumn.setMinWidth(180);
+//        typeColumn.setCellValueFactory(new PropertyValueFactory<ColumnSpecification, String>("type"));
+////        typeColumn.setCellFactory(column -> new ComboBoxTableCell<ColumnSpecification, String>(FXCollections.observableArrayList("Temporal", "Double")));
+////        typeColumn.setCellFactory(TextFieldTableCell.forTableColumn());
+//        typeColumn.setEditable(true);
+//        typeColumn.setCellFactory(new Callback<TableColumn<ColumnSpecification, String>, TableCell<ColumnSpecification, String>>() {
+//            @Override
+//            public TableCell<ColumnSpecification, String> call(TableColumn<ColumnSpecification, String> param) {
+//                return new ComboBoxTableCell<ColumnSpecification, String>(FXCollections.observableArrayList("Temporal", "Double")) {
+//                    @Override
+//                    public void updateItem(String item, boolean empty) {
+//                        if (!empty) {
+//                            TableRow row = getTableRow();
+//                            if (row != null) {
+//                                int rowNumber = row.getIndex();
+//                                TableView.TableViewSelectionModel sm = getTableView().getSelectionModel();
+//                                if (item.equalsIgnoreCase("Double")) {
+////                                    getTableView().getItems().get(getIndex()).setParsePattern("");
+////                                    tableColumnSpecs.get(rowNumber).setParsePattern("");
+//                                } else if (item.equalsIgnoreCase("Temporal")) {
+////                                    getTableView().edit(rowNumber, parsePatternColumn);
+//                                }
+//                            }
+//                        }
+//                        super.updateItem(item, empty);
+//                    }
+//                };
+//            }
+//        });
+//
+//        columnSpecTableView.getColumns().addAll(ignoreColumn, nameColumn, typeColumn);
+//
+//        return columnSpecTableView;
+//    }
 
     private void setDataTableItems() {
         if (enableDataTableUpdatesCheckMenuItem.isSelected()) {

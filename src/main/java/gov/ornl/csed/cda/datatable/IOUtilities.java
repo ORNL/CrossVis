@@ -1,9 +1,6 @@
 package gov.ornl.csed.cda.datatable;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -106,7 +103,24 @@ public class IOUtilities {
 //		dataModel.setData(tuples, columns);
 //	}
 
-	public static void readCSV(File f, ArrayList<String> temporalColumnNames,
+	public static String[] readCSVHeader(File f) throws  IOException {
+		BufferedReader reader = new BufferedReader(new FileReader(f));
+		String headerLine = reader.readLine();
+		reader.close();
+
+		String columnNames[] = headerLine.trim().split(",");
+		return columnNames;
+	}
+
+	public static int getCSVLineCount(File f) throws IOException {
+		LineNumberReader lineNumberReader = new LineNumberReader(new FileReader(f));
+		lineNumberReader.skip(Long.MAX_VALUE);
+		int numLines = lineNumberReader.getLineNumber();
+		lineNumberReader.close();
+		return numLines;
+	}
+
+	public static void readCSV(File f, ArrayList<String> ignoreColumnNames, ArrayList<String> temporalColumnNames,
 							   ArrayList<DateTimeFormatter> temporalColumnFormatters, DataModel dataModel) throws IOException {
 		BufferedReader reader = new BufferedReader(new FileReader(f));
 
@@ -118,8 +132,12 @@ public class IOUtilities {
 		    temporalColumnIndices = new int[temporalColumnNames.size()];
 		    Arrays.fill(temporalColumnIndices, -1);
         }
-//		TemporalColumn temporalColumn = null;
-//		int temporalColumnIndex = -1;
+
+        int ignoreColumnIndices[] = null;
+		if (ignoreColumnNames != null && !ignoreColumnNames.isEmpty()) {
+			ignoreColumnIndices = new int[ignoreColumnNames.size()];
+			Arrays.fill(ignoreColumnIndices, -1);
+		}
 
 		String line = reader.readLine();
 		int lineCounter = 0;
@@ -135,6 +153,21 @@ public class IOUtilities {
 					String token = st.nextToken(",");
 
 					Column column = null;
+
+					if (ignoreColumnNames != null) {
+						boolean isIgnoreColumn = false;
+						for (int i = 0; i < ignoreColumnNames.size(); i++) {
+							if (token.equals(ignoreColumnNames.get(i))) {
+								ignoreColumnIndices[i] = tokenCounter;
+								tokenCounter++;
+								isIgnoreColumn = true;
+								break;
+							}
+						}
+						if (isIgnoreColumn) {
+							continue;
+						}
+					}
 
 					if (temporalColumnNames != null) {
 					    for (int i = 0; i < temporalColumnNames.size(); i++) {
@@ -175,8 +208,25 @@ public class IOUtilities {
 			while (st.hasMoreTokens()) {
 				String token = st.nextToken(",");
 
+				if (ignoreColumnIndices != null) {
+					boolean ignoreColumn = false;
+					// is this a column to ignore
+					for (int i = 0; i < ignoreColumnIndices.length; i++) {
+						if (tokenCounter == ignoreColumnIndices[i]) {
+							tokenCounter++;
+							ignoreColumn = true;
+							break;
+						}
+					}
+					if (ignoreColumn) {
+						continue;
+					}
+				}
+
 				if (temporalColumnIndices != null) {
 				    Instant instant = null;
+
+				    // is this a temporal column
 				    for (int i = 0; i < temporalColumnIndices.length; i++) {
 				        if (tokenCounter == temporalColumnIndices[i]) {
                             LocalDateTime localDateTime = LocalDateTime.parse(token, temporalColumnFormatters.get(i));
@@ -251,7 +301,7 @@ public class IOUtilities {
 	    ArrayList<DateTimeFormatter> temporalColumnFormatters = new ArrayList<>();
 	    temporalColumnFormatters.add(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss"));
 
-	    IOUtilities.readCSV(new File("data/csv/titan-performance.csv"),
+	    IOUtilities.readCSV(new File("data/csv/titan-performance.csv"), null,
                 temporalColumnNames, temporalColumnFormatters, dataModel);
     }
 }
