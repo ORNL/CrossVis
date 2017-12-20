@@ -77,6 +77,44 @@ public class DataModel {
 		}
 	}
 
+	public ArrayList<DoubleColumn> getDoubleColumns() {
+		ArrayList<DoubleColumn> doubleColumns = new ArrayList<>();
+		for (Column column : columns) {
+			if (column instanceof DoubleColumn) {
+				doubleColumns.add((DoubleColumn)column);
+			}
+		}
+		for (Column column : disabledColumns) {
+			if (column instanceof DoubleColumn) {
+				doubleColumns.add((DoubleColumn)column);
+			}
+		}
+
+		if (doubleColumns.isEmpty()) {
+			return null;
+		}
+		return doubleColumns;
+	}
+
+	public ArrayList<TemporalColumn> getTemporalColumns() {
+		ArrayList<TemporalColumn> temporalColumns = new ArrayList<>();
+		for (Column column : columns) {
+			if (column instanceof TemporalColumn) {
+				temporalColumns.add((TemporalColumn)column);
+			}
+		}
+		for (Column column : disabledColumns) {
+			if (column instanceof TemporalColumn) {
+				temporalColumns.add((TemporalColumn)column);
+			}
+		}
+
+		if (temporalColumns.isEmpty()) {
+			return null;
+		}
+		return temporalColumns;
+	}
+
 	public final Query getActiveQuery() { return activeQuery; }
 
 	public int getMaxHistogram2DBinCount() { return maxHistogram2DBinCount; }

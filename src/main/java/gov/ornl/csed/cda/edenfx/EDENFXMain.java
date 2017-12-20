@@ -32,11 +32,11 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextAlignment;
 import javafx.stage.FileChooser;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
@@ -56,6 +56,7 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.prefs.Preferences;
 
@@ -82,7 +83,8 @@ public class EDENFXMain extends Application implements DataModelListener {
     private CheckMenuItem fitPCPAxesToWidthCheckMI;
     private MenuItem changeAxisSpacingMI;
 
-    private TableView<Column> columnTableView;
+    private TableView<DoubleColumn> doubleColumnTableView;
+    private TableView<TemporalColumn> temporalColumnTableView;
     private TableView<ColumnSelectionRange> queryTableView;
     private TableView<Tuple> dataTableView;
     private MenuItem removeAllQueriesMI;
@@ -122,13 +124,23 @@ public class EDENFXMain extends Application implements DataModelListener {
     @Override
     public void init() {
         ImageView splash = new ImageView(new Image(SPLASH_IMAGE));
+        Text copyrightText = new Text(splash.getLayoutBounds().getWidth()/2., 100., "© 2017  All Rights Reserved");
+        copyrightText.setFont(Font.font(16.));
+        copyrightText.setFill(Color.WHITE);
+//        copyrightText.setTextAlignment(TextAlignment.CENTER);
+//        copyrightText.setLayoutX(splash.getLayoutBounds().getWidth()/2.);
+//        copyrightText.setLayoutY(100.);
+        StackPane pane = new StackPane();
+        pane.getChildren().add(splash);
+        pane.getChildren().add(copyrightText);
+//        pane.setAlignment(Pos.CENTER);
 
         loadProgress = new ProgressBar();
         loadProgress.setPrefWidth(SPLASH_WIDTH - 20);
         loadProgressText = new Label("Loading EDENFX . . .");
         loadProgressText.setTextFill(Color.WHITESMOKE);
         splashLayout = new VBox();
-        splashLayout.getChildren().addAll(splash, loadProgress, loadProgressText);
+        splashLayout.getChildren().addAll(pane, loadProgress, loadProgressText);
         splashLayout.setStyle(
                 "-fx-padding: 5; " +
                         "-fx-background-color: black; " +
@@ -158,59 +170,191 @@ public class EDENFXMain extends Application implements DataModelListener {
         columnNameColumn.setMinWidth(160);
         columnNameColumn.setCellValueFactory(new PropertyValueFactory<ColumnSelectionRange, String>("column"));
 
-        TableColumn<ColumnSelectionRange, Number> minColumn = new TableColumn<>("Minimum Value");
+        TableColumn<ColumnSelectionRange, String> minColumn = new TableColumn<>("Minimum Value");
         minColumn.setMinWidth(200);
-        minColumn.setCellValueFactory(new PropertyValueFactory<ColumnSelectionRange, Number>("minValue"));
-        minColumn.setCellFactory(TextFieldTableCell.<ColumnSelectionRange, Number>forTableColumn(new NumberStringConverter()));
-        minColumn.setOnEditCommit((TableColumn.CellEditEvent<ColumnSelectionRange, Number> t) -> {
-//            t.getRowValue().setMinValue(t.getNewValue().doubleValue());
+        minColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<ColumnSelectionRange, String>, ObservableValue<String>>() {
+            public ObservableValue<String> call(TableColumn.CellDataFeatures<ColumnSelectionRange, String> t) {
+                if (t.getValue() instanceof TemporalColumnSelectionRange) {
+                    return new ReadOnlyObjectWrapper(((TemporalColumnSelectionRange)t.getValue()).getStartInstant().toString());
+                } else {
+                    return new ReadOnlyObjectWrapper(String.valueOf(((DoubleColumnSelectionRange)t.getValue()).getMinValue()));
+                }
+            }
         });
-//        minColumn.setEditable(true);
+        minColumn.setOnEditCommit((TableColumn.CellEditEvent<ColumnSelectionRange, String> t) -> {
+            if (t.getRowValue() instanceof TemporalColumnSelectionRange) {
+                try {
+                    Instant instant = Instant.parse(t.getNewValue());
+                    ((TemporalColumnSelectionRange) t.getRowValue()).setStartInstant(instant);
+                } catch (DateTimeParseException ex) {
+                    // show alert dialog
+                    Alert alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setTitle("Value Parsing Error");
+                    alert.setHeaderText("An Exception Occurred While Parsing New Start Time");
+                    alert.setContentText(ex.getMessage());
+                    alert.showAndWait();
+                    queryTableView.refresh();
+                }
+            } else {
+                try {
+                    Double doubleValue = Double.parseDouble(t.getNewValue());
+                    ((DoubleColumnSelectionRange) t.getRowValue()).setMinValue(doubleValue);
+                } catch (NumberFormatException ex) {
+                    // show alert dialog
+                    Alert alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setTitle("Value Parsing Error");
+                    alert.setHeaderText("An Exception Occurred While Parsing New Minimum Value");
+                    alert.setContentText(ex.getMessage());
+                    alert.showAndWait();
+                    queryTableView.refresh();
+                }
+            }
+        });
+        minColumn.setCellFactory(TextFieldTableCell.forTableColumn());
+        minColumn.setEditable(true);
 
-        TableColumn<ColumnSelectionRange, Number> maxColumn = new TableColumn<>("Maximum Value");
+        TableColumn<ColumnSelectionRange, String> maxColumn = new TableColumn<>("Maximum Value");
         maxColumn.setMinWidth(200);
-        maxColumn.setCellValueFactory(new PropertyValueFactory<ColumnSelectionRange, Number>("maxValue"));
-        maxColumn.setCellFactory(TextFieldTableCell.<ColumnSelectionRange, Number>forTableColumn(new NumberStringConverter()));
-        maxColumn.setOnEditCommit((TableColumn.CellEditEvent<ColumnSelectionRange, Number> t) -> {
-//            t.getRowValue().setMaxValue(t.getNewValue().doubleValue());
+        maxColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<ColumnSelectionRange, String>, ObservableValue<String>>() {
+            public ObservableValue<String> call(TableColumn.CellDataFeatures<ColumnSelectionRange, String> t) {
+                if (t.getValue() instanceof TemporalColumnSelectionRange) {
+                    return new ReadOnlyObjectWrapper(((TemporalColumnSelectionRange)t.getValue()).getEndInstant().toString());
+                } else {
+                    return new ReadOnlyObjectWrapper(String.valueOf(((DoubleColumnSelectionRange)t.getValue()).getMaxValue()));
+                }
+            }
         });
-//        maxColumn.setEditable(true);
+        maxColumn.setCellFactory(TextFieldTableCell.forTableColumn());
+        maxColumn.setOnEditCommit((TableColumn.CellEditEvent<ColumnSelectionRange, String> t) -> {
+            if (t.getRowValue() instanceof TemporalColumnSelectionRange) {
+                try {
+                    Instant instant = Instant.parse(t.getNewValue());
+                    ((TemporalColumnSelectionRange) t.getRowValue()).setEndInstant(instant);
+                } catch (DateTimeParseException ex) {
+                    // show alert dialog
+                    Alert alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setTitle("Value Parsing Error");
+                    alert.setHeaderText("An Exception Occurred While Parsing New End Time");
+                    alert.setContentText(ex.getMessage());
+                    alert.showAndWait();
+                    queryTableView.refresh();
+                }
+            } else {
+                try {
+                    Double doubleValue = Double.parseDouble(t.getNewValue());
+                    ((DoubleColumnSelectionRange) t.getRowValue()).setMaxValue(doubleValue);
+                } catch (NumberFormatException ex) {
+                    // show alert dialog
+                    Alert alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setTitle("Value Parsing Error");
+                    alert.setHeaderText("An Exception Occurred While Parsing New Maximum Value");
+                    alert.setContentText(ex.getMessage());
+                    alert.showAndWait();
+                    queryTableView.refresh();
+                }
+            }
+        });
+        maxColumn.setEditable(true);
 
         queryTableView.getColumns().addAll(columnNameColumn, minColumn, maxColumn);
     }
 
-    private void createColumnTableView() {
-        columnTableView = new TableView<>();
-        columnTableView.setEditable(true);
-        columnTableView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+    private void createColumnTableViews() {
+        // create table view for temporal columns
+        temporalColumnTableView = new TableView<>();
+        temporalColumnTableView.setEditable(true);
+        temporalColumnTableView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue != null) {
-//                log.debug("Column '" + newValue.getName() + "' selected in column datamodel");
                 dataModel.setHighlightedColumn(newValue);
-//            } else {
-//                log.debug("SelectedItemProperty changed and new value is null");
             }
         });
 
-//        TableColumn<DoubleColumnSelectionRange, Number> minColumn = new TableColumn<>("Minimum Value");
-//        minColumn.setMinWidth(200);
-//        minColumn.setCellValueFactory(new PropertyValueFactory<DoubleColumnSelectionRange, Number>("minValue"));
-//        minColumn.setCellFactory(TextFieldTableCell.<DoubleColumnSelectionRange, Number>forTableColumn(new NumberStringConverter()));
-//        minColumn.setEditable(true);
+        TableColumn<TemporalColumn, String> temporalNameColumn = new TableColumn<>("Variable Name");
+        temporalNameColumn.setMinWidth(180);
+        temporalNameColumn.setCellValueFactory(new PropertyValueFactory<TemporalColumn, String>("name"));
+        temporalNameColumn.setCellFactory(TextFieldTableCell.forTableColumn());
+        temporalNameColumn.setEditable(true);
 
-        TableColumn<Column, String> nameColumn = new TableColumn<>("Variable Name");
-        nameColumn.setMinWidth(180);
-        nameColumn.setCellValueFactory(new PropertyValueFactory<Column, String>("name"));
-        nameColumn.setCellFactory(TextFieldTableCell.forTableColumn());
-        nameColumn.setEditable(true);
-
-        TableColumn<Column, Boolean> enabledColumn = new TableColumn<>("Visible");
-        enabledColumn.setMinWidth(20);
-        enabledColumn.setCellValueFactory(new PropertyValueFactory<Column, Boolean>("enabled"));
-//        enabledColumn.setCellFactory(column -> new CheckBoxTableCell());
-        enabledColumn.setCellFactory(new Callback<TableColumn<Column, Boolean>, TableCell<Column, Boolean>>() {
+        TableColumn<TemporalColumn, Boolean> temporalEnabledColumn = new TableColumn<>("Visible");
+        temporalEnabledColumn.setMinWidth(20);
+        temporalEnabledColumn.setCellValueFactory(new PropertyValueFactory<TemporalColumn, Boolean>("enabled"));
+        temporalEnabledColumn.setCellFactory(new Callback<TableColumn<TemporalColumn, Boolean>, TableCell<TemporalColumn, Boolean>>() {
             @Override
-            public TableCell<Column, Boolean> call(TableColumn<Column, Boolean> param) {
-                return new CheckBoxTableCell<Column, Boolean>() {
+            public TableCell<TemporalColumn, Boolean> call(TableColumn<TemporalColumn, Boolean> param) {
+                return new CheckBoxTableCell<TemporalColumn, Boolean>() {
+                    {
+                        setAlignment(Pos.CENTER);
+                    }
+
+                    @Override
+                    public void updateItem(Boolean item, boolean empty) {
+                        if (!empty) {
+                            TableRow row = getTableRow();
+
+                            if (row != null) {
+                                int rowNumber = row.getIndex();
+                                TableView.TableViewSelectionModel sm = getTableView().getSelectionModel();
+
+                                if (item) {
+                                    // enable a disabled column
+                                    // get the column name; lookup column in data model; enable the column
+                                    Column column = getTableView().getItems().get(rowNumber);
+                                    dataModel.enableColumn(column);
+                                } else {
+                                    // disable an enabled column
+                                    // get the column name; disable column in data model
+                                    Column column = getTableView().getItems().get(rowNumber);
+                                    dataModel.disableColumn(column);
+                                }
+                            }
+                        }
+                        super.updateItem(item, empty);
+                    }
+                };
+            }
+        });
+        temporalEnabledColumn.setEditable(true);
+
+        TableColumn <TemporalColumn, Instant> startColumn = new TableColumn<>("Start");
+        startColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<TemporalColumn, Instant>, ObservableValue<Instant>>() {
+            public ObservableValue<Instant> call(TableColumn.CellDataFeatures<TemporalColumn, Instant> t) {
+                return new ReadOnlyObjectWrapper(t.getValue().getStatistics().getStartInstant());
+            }
+        });
+
+        TableColumn <TemporalColumn, Instant> endColumn = new TableColumn<>("End");
+        endColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<TemporalColumn, Instant>, ObservableValue<Instant>>() {
+            public ObservableValue<Instant> call(TableColumn.CellDataFeatures<TemporalColumn, Instant> t) {
+                return new ReadOnlyObjectWrapper(t.getValue().getStatistics().getEndInstant());
+            }
+        });
+
+        temporalColumnTableView.getColumns().addAll(temporalEnabledColumn, temporalNameColumn, startColumn, endColumn);
+        
+
+        // create table view for double columns
+        doubleColumnTableView = new TableView<>();
+        doubleColumnTableView.setEditable(true);
+        doubleColumnTableView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue != null) {
+                dataModel.setHighlightedColumn(newValue);
+            }
+        });
+
+        TableColumn<DoubleColumn, String> doubleNameColumn = new TableColumn<>("Variable Name");
+        doubleNameColumn.setMinWidth(180);
+        doubleNameColumn.setCellValueFactory(new PropertyValueFactory<DoubleColumn, String>("name"));
+        doubleNameColumn.setCellFactory(TextFieldTableCell.forTableColumn());
+        doubleNameColumn.setEditable(true);
+
+        TableColumn<DoubleColumn, Boolean> doubleEnabledColumn = new TableColumn<>("Visible");
+        doubleEnabledColumn.setMinWidth(20);
+        doubleEnabledColumn.setCellValueFactory(new PropertyValueFactory<DoubleColumn, Boolean>("enabled"));
+//        enabledColumn.setCellFactory(column -> new CheckBoxTableCell());
+        doubleEnabledColumn.setCellFactory(new Callback<TableColumn<DoubleColumn, Boolean>, TableCell<DoubleColumn, Boolean>>() {
+            @Override
+            public TableCell<DoubleColumn, Boolean> call(TableColumn<DoubleColumn, Boolean> param) {
+                return new CheckBoxTableCell<DoubleColumn, Boolean>() {
                     {
                         setAlignment(Pos.CENTER);
                     }
@@ -231,14 +375,14 @@ public class EDENFXMain extends Application implements DataModelListener {
 //                                    log.debug("Would set column " + dataModel.getColumn(rowNumber) + " to enabled");
 
 //                                    dataModel.enableColumn(dataModel.getColumn(rowNumber));
-                                    Column column = columnTableView.getItems().get(rowNumber);
+                                    Column column = doubleColumnTableView.getItems().get(rowNumber);
 
                                     dataModel.enableColumn(column);
 //                                    log.debug("Set column '" + column.getName() + "' to enabled");
                                 } else {
                                     // disable an enabled column
                                     // get the column name; disable column in data model
-                                    Column column = columnTableView.getItems().get(rowNumber);
+                                    Column column = doubleColumnTableView.getItems().get(rowNumber);
                                     dataModel.disableColumn(column);
 //                                    log.debug("Set column '" + column.getName() + "' to disabled");
 //                                    sm.clearSelection(rowNumber);
@@ -253,28 +397,81 @@ public class EDENFXMain extends Application implements DataModelListener {
                 };
             }
         });
-        enabledColumn.setEditable(true);
+        doubleEnabledColumn.setEditable(true);
 
-        TableColumn <Column, Double > minColumn = new TableColumn<>("Min");
-        minColumn.setCellValueFactory(new PropertyValueFactory<Column, Double>("minValue"));
+        TableColumn <DoubleColumn, Double > minColumn = new TableColumn<>("Min");
+        minColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<DoubleColumn, Double>, ObservableValue<Double>>() {
+            public ObservableValue<Double> call(TableColumn.CellDataFeatures<DoubleColumn, Double> t) {
+//                log.debug("t.getValue().getStatistics().getMinValue(): " + t.getValue().getStatistics().getMinValue());
+                return new ReadOnlyObjectWrapper(t.getValue().getStatistics().getMinValue());
+            }
+        });
+//        minColumn.setCellValueFactory(new PropertyValueFactory<DoubleColumn, Double>("minValue"));
 
-        TableColumn<Column, Double> maxColumn = new TableColumn<>("Max");
-        maxColumn.setCellValueFactory(new PropertyValueFactory<Column, Double>("maxValue"));
+        TableColumn<DoubleColumn, Double> maxColumn = new TableColumn<>("Max");
+        maxColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<DoubleColumn, Double>, ObservableValue<Double>>() {
+            public ObservableValue<Double> call(TableColumn.CellDataFeatures<DoubleColumn, Double> t) {
+//                log.debug("t.getValue().getStatistics().getMinValue(): " + t.getValue().getStatistics().getMinValue());
+                return new ReadOnlyObjectWrapper(t.getValue().getStatistics().getMaxValue());
+            }
+        });
+//        maxColumn.setCellValueFactory(new PropertyValueFactory<DoubleColumn, Double>("maxValue"));
 
-        TableColumn<Column, Double> meanColumn = new TableColumn<>("Mean");
-        meanColumn.setCellValueFactory(new PropertyValueFactory<Column, Double>("meanValue"));
+        TableColumn<DoubleColumn, Double> meanColumn = new TableColumn<>("Mean");
+        meanColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<DoubleColumn, Double>, ObservableValue<Double>>() {
+            public ObservableValue<Double> call(TableColumn.CellDataFeatures<DoubleColumn, Double> t) {
+//                log.debug("t.getValue().getStatistics().getMinValue(): " + t.getValue().getStatistics().getMinValue());
+                return new ReadOnlyObjectWrapper(t.getValue().getStatistics().getMeanValue());
+            }
+        });
+//        meanColumn.setCellValueFactory(new PropertyValueFactory<DoubleColumn, Double>("meanValue"));
 
-        TableColumn<Column, Double> stdevColumn = new TableColumn<>("St. Dev.");
-        stdevColumn.setCellValueFactory(new PropertyValueFactory<Column, Double>("standardDeviationValue"));
+        TableColumn<DoubleColumn, Double> stdevColumn = new TableColumn<>("St. Dev.");
+        stdevColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<DoubleColumn, Double>, ObservableValue<Double>>() {
+            public ObservableValue<Double> call(TableColumn.CellDataFeatures<DoubleColumn, Double> t) {
+//                log.debug("t.getValue().getStatistics().getMinValue(): " + t.getValue().getStatistics().getMinValue());
+                return new ReadOnlyObjectWrapper(t.getValue().getStatistics().getStandardDeviationValue());
+            }
+        });
+//        stdevColumn.setCellValueFactory(new PropertyValueFactory<DoubleColumn, Double>("standardDeviationValue"));
 
-        TableColumn<Column, Double> queryMeanColumn = new TableColumn<>("Query Mean");
-        queryMeanColumn.setCellValueFactory(new PropertyValueFactory<Column, Double>("queryMeanValue"));
+        TableColumn<DoubleColumn, Double> varianceColumn = new TableColumn<>("Variance");
+        varianceColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<DoubleColumn, Double>, ObservableValue<Double>>() {
+            public ObservableValue<Double> call(TableColumn.CellDataFeatures<DoubleColumn, Double> t) {
+                return new ReadOnlyObjectWrapper(t.getValue().getStatistics().getVarianceValue());
+            }
+        });
 
-        TableColumn<Column, Double> queryStdevColumn = new TableColumn<>("Query St. Dev.");
-        queryStdevColumn.setCellValueFactory(new PropertyValueFactory<Column, Double>("queryStandardDeviationValue"));
+        TableColumn<DoubleColumn, Double> medianColumn = new TableColumn<>("Median");
+        medianColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<DoubleColumn, Double>, ObservableValue<Double>>() {
+            public ObservableValue<Double> call(TableColumn.CellDataFeatures<DoubleColumn, Double> t) {
+                return new ReadOnlyObjectWrapper(t.getValue().getStatistics().getMedianValue());
+            }
+        });
 
-        columnTableView.getColumns().addAll(enabledColumn, nameColumn, minColumn, maxColumn, meanColumn, stdevColumn,
-                queryMeanColumn, queryStdevColumn);
+        TableColumn<DoubleColumn, Double> percentile25Column = new TableColumn<>("25th Percentile");
+        percentile25Column.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<DoubleColumn, Double>, ObservableValue<Double>>() {
+            public ObservableValue<Double> call(TableColumn.CellDataFeatures<DoubleColumn, Double> t) {
+                return new ReadOnlyObjectWrapper(t.getValue().getStatistics().getPercentile25Value());
+            }
+        });
+
+        TableColumn<DoubleColumn, Double> percentile75Column = new TableColumn<>("75th Percentile");
+        percentile75Column.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<DoubleColumn, Double>, ObservableValue<Double>>() {
+            public ObservableValue<Double> call(TableColumn.CellDataFeatures<DoubleColumn, Double> t) {
+                return new ReadOnlyObjectWrapper(t.getValue().getStatistics().getPercentile75Value());
+            }
+        });
+
+        TableColumn<DoubleColumn, Double> IQRColumn = new TableColumn<>("Interquartile Range");
+        IQRColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<DoubleColumn, Double>, ObservableValue<Double>>() {
+            public ObservableValue<Double> call(TableColumn.CellDataFeatures<DoubleColumn, Double> t) {
+                return new ReadOnlyObjectWrapper(t.getValue().getStatistics().getIQR());
+            }
+        });
+
+        doubleColumnTableView.getColumns().addAll(doubleEnabledColumn, doubleNameColumn, minColumn, maxColumn, meanColumn,
+                medianColumn, varianceColumn, stdevColumn, percentile25Column, percentile75Column, IQRColumn);
     }
 
     private ToolBar createToolBar(Stage stage) {
@@ -475,15 +672,19 @@ public class EDENFXMain extends Application implements DataModelListener {
 
         MenuBar menuBar = createMenuBar(mainStage);
 //        menuBar.setUseSystemMenuBar(true);
-        createColumnTableView();
+        createColumnTableViews();
         createQueryTableView();
         dataTableView = new TableView<>();
 
         // create datamodel tab pane
         tabPane = new TabPane();
-        Tab columnTableTab = new Tab(" Column Table ");
-        columnTableTab.setClosable(false);
-        columnTableTab.setContent(columnTableView);
+        Tab quantitativeColumnTableTab = new Tab(" Quantitative Column Table ");
+        quantitativeColumnTableTab.setClosable(false);
+        quantitativeColumnTableTab.setContent(doubleColumnTableView);
+
+        Tab temporalColumnTableTab = new Tab(" Temporal Column Table ");
+        temporalColumnTableTab.setClosable(false);
+        temporalColumnTableTab.setContent(temporalColumnTableView);
 
         Tab dataTableTab = new Tab(" Data Table ");
         dataTableTab.setClosable(false);
@@ -493,7 +694,7 @@ public class EDENFXMain extends Application implements DataModelListener {
         queryTableTab.setClosable(false);
         queryTableTab.setContent(queryTableView);
 
-        tabPane.getTabs().addAll(columnTableTab, dataTableTab, queryTableTab);
+        tabPane.getTabs().addAll(temporalColumnTableTab, quantitativeColumnTableTab, dataTableTab, queryTableTab);
 
         SplitPane middleSplit = new SplitPane();
         middleSplit.setOrientation(Orientation.VERTICAL);
@@ -1087,8 +1288,17 @@ public class EDENFXMain extends Application implements DataModelListener {
             preferences.put(EDENFXPreferenceKeys.LAST_CSV_IMPORT_DATETIME_PARSE_PATTERN, lastDateTimeParsePattern);
         }
 
-        columnTableView.getItems().clear();
-        columnTableView.setItems(FXCollections.observableArrayList(dataModel.getColumns()));
+        temporalColumnTableView.getItems().clear();
+        ArrayList<TemporalColumn> temporalColumns = dataModel.getTemporalColumns();
+        if (temporalColumns != null && !temporalColumns.isEmpty()) {
+            temporalColumnTableView.setItems(FXCollections.observableArrayList(temporalColumns));
+        }
+
+        doubleColumnTableView.getItems().clear();
+        ArrayList<DoubleColumn> doubleColumns = dataModel.getDoubleColumns();
+        if (doubleColumns != null && !doubleColumns.isEmpty()) {
+            doubleColumnTableView.setItems(FXCollections.observableArrayList(doubleColumns));
+        }
 
         queryTableView.getItems().clear();
         queryTableView.setItems(dataModel.getActiveQuery().columnSelectionRangesProperty());
@@ -1125,7 +1335,7 @@ public class EDENFXMain extends Application implements DataModelListener {
         TableColumn<ColumnSpecification, String> nameColumn = new TableColumn<>("Column Name");
         nameColumn.setMinWidth(180);
         nameColumn.setCellValueFactory(new PropertyValueFactory<ColumnSpecification, String>("name"));
-//        nameColumn.setCellFactory(TextFieldTableCell.forTableColumn());
+        nameColumn.setCellFactory(TextFieldTableCell.forTableColumn());
         nameColumn.setEditable(false);
 
         ArrayList<String> parsePatterns = new ArrayList<>();
@@ -1146,27 +1356,6 @@ public class EDENFXMain extends Application implements DataModelListener {
                     {
                         setComboBoxEditable(true);
                     }
-//                    @Override
-//                    public void updateItem(String item, boolean empty) {
-//
-//                        if (!empty) {
-//                            TableRow row = getTableRow();
-//                            if (row != null) {
-//                                int rowNumber = row.getIndex();
-//                                TableView.TableViewSelectionModel sm = getTableView().getSelectionModel();
-//                                if (item.equalsIgnoreCase("Temporal")) {
-//                                    // add row to temporal column specs table
-//                                    if (!temporalSpecsTableView.getItems().contains(tableColumnSpecs.get(rowNumber))) {
-//                                        temporalSpecsTableView.getItems().add(tableColumnSpecs.get(rowNumber));
-//                                    }
-//                                } else if (item.equalsIgnoreCase("Double")) {
-//                                    // check temporal column specs table for column and remove if found
-//                                    temporalSpecsTableView.getItems().remove(tableColumnSpecs.get(rowNumber));
-//                                }
-//                            }
-//                        }
-//                        super.updateItem(item, empty);
-//                    }
                 };
             }
         });
@@ -1205,7 +1394,7 @@ public class EDENFXMain extends Application implements DataModelListener {
                             TableRow row = getTableRow();
                             if (row != null) {
                                 int rowNumber = row.getIndex();
-                                TableView.TableViewSelectionModel sm = getTableView().getSelectionModel();
+//                                TableView.TableViewSelectionModel sm = getTableView().getSelectionModel();
                                 if (item.equalsIgnoreCase("Temporal")) {
                                     // add row to temporal column specs table
                                     if (!temporalSpecsTableView.getItems().contains(tableColumnSpecs.get(rowNumber))) {
@@ -1235,10 +1424,7 @@ public class EDENFXMain extends Application implements DataModelListener {
         grid.add(columnSpecsTableView, 0, 1);
         grid.add(new Label("Temporal Column Parameters: "), 0, 2);
         grid.add(temporalSpecsTableView, 0, 3);
-//        BorderPane borderPane = new BorderPane();
 
-//        borderPane.setCenter(columnSpecsTableView);
-//        borderPane.setBottom(temporalSpecsTableView);
         dialog.getDialogPane().setContent(grid);
 
         Platform.runLater(() -> columnSpecsTableView.requestFocus());
@@ -1258,82 +1444,6 @@ public class EDENFXMain extends Application implements DataModelListener {
 
         return null;
     }
-
-    
-//    private TableView<ColumnSpecification> makeColumnSpecificationTableView () {
-//
-//
-////        TableColumn<ColumnSpecification, String> parsePatternColumn = new TableColumn<>("DateTime Parse Pattern");
-////        parsePatternColumn.setMinWidth(180);
-////        parsePatternColumn.setCellValueFactory(new PropertyValueFactory<ColumnSpecification, String>("parsePattern"));
-////        parsePatternColumn.setCellFactory(TextFieldTableCell.forTableColumn());
-////        parsePatternColumn.setEditable(true);
-//
-////        Callback<TableColumn<ColumnSpecification, String>, TableCell<ColumnSpecification, String>> cellFactory = new Callback<TableColumn<ColumnSpecification, String>, TableCell<ColumnSpecification, String>>() {
-////            @Override
-////            public TableCell<ColumnSpecification, String> call(TableColumn<ColumnSpecification, String> paramTableColumn) {
-////                return new TextFieldTableCell<ColumnSpecification, String>() {
-////                    @Override
-////                    public void updateItem(String s, boolean b) {
-////                        super.updateItem(s, b);
-////                        if (! isEmpty()) {
-////                            ColumnSpecification item = getTableView().getItems().get(getIndex());
-////                            // Test for disable condition
-////                            if (item != null && item.getType().equalsIgnoreCase("Temporal")) {
-////                                setDisable(false);
-////                                setEditable(true);
-////                                setStyle("");
-////                            } else {
-////                                setDisable(true);
-////                                setEditable(false);
-////                                this.setStyle("-fx-text-fill: grey;-fx-border-color: red");
-////                            }
-////                        }
-////                    }
-////
-////                    public void commitEdit(String value) {
-////                        log.debug("commiting value '" + value + "'");
-////                    }
-////                };
-////            }
-////        };
-////        parsePatternColumn.setCellFactory(cellFactory);
-//
-//        TableColumn<ColumnSpecification, String> typeColumn = new TableColumn<>("Column Type");
-//        typeColumn.setMinWidth(180);
-//        typeColumn.setCellValueFactory(new PropertyValueFactory<ColumnSpecification, String>("type"));
-////        typeColumn.setCellFactory(column -> new ComboBoxTableCell<ColumnSpecification, String>(FXCollections.observableArrayList("Temporal", "Double")));
-////        typeColumn.setCellFactory(TextFieldTableCell.forTableColumn());
-//        typeColumn.setEditable(true);
-//        typeColumn.setCellFactory(new Callback<TableColumn<ColumnSpecification, String>, TableCell<ColumnSpecification, String>>() {
-//            @Override
-//            public TableCell<ColumnSpecification, String> call(TableColumn<ColumnSpecification, String> param) {
-//                return new ComboBoxTableCell<ColumnSpecification, String>(FXCollections.observableArrayList("Temporal", "Double")) {
-//                    @Override
-//                    public void updateItem(String item, boolean empty) {
-//                        if (!empty) {
-//                            TableRow row = getTableRow();
-//                            if (row != null) {
-//                                int rowNumber = row.getIndex();
-//                                TableView.TableViewSelectionModel sm = getTableView().getSelectionModel();
-//                                if (item.equalsIgnoreCase("Double")) {
-////                                    getTableView().getItems().get(getIndex()).setParsePattern("");
-////                                    tableColumnSpecs.get(rowNumber).setParsePattern("");
-//                                } else if (item.equalsIgnoreCase("Temporal")) {
-////                                    getTableView().edit(rowNumber, parsePatternColumn);
-//                                }
-//                            }
-//                        }
-//                        super.updateItem(item, empty);
-//                    }
-//                };
-//            }
-//        });
-//
-//        columnSpecTableView.getColumns().addAll(ignoreColumn, nameColumn, typeColumn);
-//
-//        return columnSpecTableView;
-//    }
 
     private void setDataTableItems() {
         if (enableDataTableUpdatesCheckMenuItem.isSelected()) {
@@ -1444,7 +1554,8 @@ public class EDENFXMain extends Application implements DataModelListener {
 //        log.debug("dataModel column selection changed");
 //        int rowIndex = queryTableView.getItems().indexOf(columnSelectionRange);
         queryTableView.refresh();
-        columnTableView.refresh();
+        doubleColumnTableView.refresh();
+        temporalColumnTableView.refresh();
         setDataTableItems();
         updatePercentSelected();
     }
@@ -1452,9 +1563,14 @@ public class EDENFXMain extends Application implements DataModelListener {
     @Override
     public void dataModelHighlightedColumnChanged(DataModel dataModel, Column oldHighlightedColumn, Column newHighlightedColumn) {
         if (newHighlightedColumn != null) {
-            columnTableView.getSelectionModel().select(newHighlightedColumn);
+            if (newHighlightedColumn instanceof TemporalColumn) {
+                temporalColumnTableView.getSelectionModel().select((TemporalColumn)newHighlightedColumn);
+            } else if (newHighlightedColumn instanceof DoubleColumn) {
+                doubleColumnTableView.getSelectionModel().select((DoubleColumn)newHighlightedColumn);
+            }
         } else {
-            columnTableView.getSelectionModel().clearSelection();
+            temporalColumnTableView.getSelectionModel().clearSelection();
+            doubleColumnTableView.getSelectionModel().clearSelection();
         }
     }
 
@@ -1480,7 +1596,8 @@ public class EDENFXMain extends Application implements DataModelListener {
         setDataTableItems();
 
         updatePercentSelected();
-        columnTableView.refresh();
+        doubleColumnTableView.refresh();
+        temporalColumnTableView.refresh();
     }
 
     @Override

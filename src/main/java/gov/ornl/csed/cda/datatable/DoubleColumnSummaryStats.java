@@ -6,8 +6,6 @@ import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 
-import javax.print.Doc;
-
 /**
  * Created by csg on 11/25/14.
  */
@@ -19,8 +17,8 @@ public class DoubleColumnSummaryStats extends ColumnSummaryStats {
     private DoubleProperty maxValue;
     private DoubleProperty standardDeviationValue;
     private DoubleProperty varianceValue;
-    private DoubleProperty quartile1Value;
-    private DoubleProperty quartile3Value;
+    private DoubleProperty percentile25Value;
+    private DoubleProperty percentile75Value;
     private DoubleProperty medianValue;
     private DoubleProperty skewnessValue;
     private DoubleProperty kurtosisValue;
@@ -39,8 +37,8 @@ public class DoubleColumnSummaryStats extends ColumnSummaryStats {
         medianValue = new SimpleDoubleProperty(Double.NaN);
         standardDeviationValue = new SimpleDoubleProperty(Double.NaN);
         varianceValue = new SimpleDoubleProperty(Double.NaN);
-        quartile1Value = new SimpleDoubleProperty(Double.NaN);
-        quartile3Value = new SimpleDoubleProperty(Double.NaN);
+        percentile25Value = new SimpleDoubleProperty(Double.NaN);
+        percentile75Value = new SimpleDoubleProperty(Double.NaN);
         skewnessValue = new SimpleDoubleProperty(Double.NaN);
         kurtosisValue = new SimpleDoubleProperty(Double.NaN);
         upperWhiskerValue = new SimpleDoubleProperty(Double.NaN);
@@ -80,15 +78,15 @@ public class DoubleColumnSummaryStats extends ColumnSummaryStats {
         setMedianValue(stats.getPercentile(50));
         setVarianceValue(stats.getVariance());
         setStandardDeviationValue(stats.getStandardDeviation());
-        setQuartile1Value(stats.getPercentile(25));
-        setQuartile3Value(stats.getPercentile(75));
+        setPercentile25Value(stats.getPercentile(25));
+        setPercentile75Value(stats.getPercentile(75));
         setSkewnessValue(stats.getSkewness());
         setKurtosisValue(stats.getKurtosis());
 
         // calculate whiskers for box plot 1.5 of IQR
         double iqr_range = 1.5 * getIQR();
-        double lowerFence = getQuartile1Value() - iqr_range;
-        double upperFence = getQuartile3Value() + iqr_range;
+        double lowerFence = getPercentile25Value() - iqr_range;
+        double upperFence = getPercentile75Value() + iqr_range;
         double sorted_data[] = stats.getSortedValues();
 
         // find upper datum that is not greater than upper fence
@@ -146,7 +144,7 @@ public class DoubleColumnSummaryStats extends ColumnSummaryStats {
     }
 
     public double getIQR() {
-        return getQuartile3Value() - getQuartile1Value();
+        return getPercentile75Value() - getPercentile25Value();
     }
 
     public void setMinValue(double value) {
@@ -221,28 +219,28 @@ public class DoubleColumnSummaryStats extends ColumnSummaryStats {
         return varianceValue;
     }
 
-    public void setQuartile1Value(double value) {
-        quartile1ValueProperty().set(value);
+    public void setPercentile25Value(double value) {
+        percentile25ValueProperty().set(value);
     }
 
-    public double getQuartile1Value() {
-        return quartile1ValueProperty().get();
+    public double getPercentile25Value() {
+        return percentile25ValueProperty().get();
     }
 
-    public DoubleProperty quartile1ValueProperty() {
-        return quartile1Value;
+    public DoubleProperty percentile25ValueProperty() {
+        return percentile25Value;
     }
 
-    public void setQuartile3Value(double value) {
-        quartile3ValueProperty().set(value);
+    public void setPercentile75Value(double value) {
+        percentile75ValueProperty().set(value);
     }
 
-    public double getQuartile3Value() {
-        return quartile3ValueProperty().get();
+    public double getPercentile75Value() {
+        return percentile75ValueProperty().get();
     }
 
-    public DoubleProperty quartile3ValueProperty() {
-        return quartile3Value;
+    public DoubleProperty percentile75ValueProperty() {
+        return percentile75Value;
     }
 
     public void setUpperWhiskerValue(double value) {

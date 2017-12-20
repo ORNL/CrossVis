@@ -25,15 +25,15 @@ public class DoubleColumn extends Column {
         querySummaryStats.setMedianValue(stats.getPercentile(50));
         querySummaryStats.setVarianceValue(stats.getVariance());
         querySummaryStats.setStandardDeviationValue(stats.getStandardDeviation());
-        querySummaryStats.setQuartile1Value(stats.getPercentile(25));
-        querySummaryStats.setQuartile3Value(stats.getPercentile(75));
+        querySummaryStats.setPercentile25Value(stats.getPercentile(25));
+        querySummaryStats.setPercentile75Value(stats.getPercentile(75));
         querySummaryStats.setSkewnessValue(stats.getSkewness());
         querySummaryStats.setKurtosisValue(stats.getKurtosis());
 
         // calculate whiskers for box plot 1.5 of IQR
         double iqr_range = 1.5 * querySummaryStats.getIQR();
-        double lowerFence = querySummaryStats.getQuartile1Value() - iqr_range;
-        double upperFence = querySummaryStats.getQuartile3Value() + iqr_range;
+        double lowerFence = querySummaryStats.getPercentile25Value() - iqr_range;
+        double upperFence = querySummaryStats.getPercentile75Value() + iqr_range;
         double sorted_data[] = stats.getSortedValues();
 
         // find upper datum that is not greater than upper fence
@@ -80,15 +80,15 @@ public class DoubleColumn extends Column {
 //        summaryStats.setMedianValue(stats.getPercentile(50));
 //        summaryStats.setVarianceValue(stats.getVariance());
 //        summaryStats.setStandardDeviationValue(stats.getStandardDeviation());
-//        summaryStats.setQuartile1Value(stats.getPercentile(25));
-//        summaryStats.setQuartile3Value(stats.getPercentile(75));
+//        summaryStats.setPercentile25Value(stats.getPercentile(25));
+//        summaryStats.setPercentile75Value(stats.getPercentile(75));
 //        summaryStats.setSkewnessValue(stats.getSkewness());
 //        summaryStats.setKurtosisValue(stats.getKurtosis());
 //
 //        // calculate whiskers for box plot 1.5 of IQR
 //        double iqr_range = 1.5 * summaryStats.getIQR();
-//        double lowerFence = summaryStats.getQuartile1Value() - iqr_range;
-//        double upperFence = summaryStats.getQuartile3Value() + iqr_range;
+//        double lowerFence = summaryStats.getPercentile25Value() - iqr_range;
+//        double upperFence = summaryStats.getPercentile75Value() + iqr_range;
 //        double sorted_data[] = stats.getSortedValues();
 //
 //        // find upper datum that is not greater than upper fence
