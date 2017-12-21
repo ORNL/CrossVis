@@ -56,6 +56,10 @@ public class TemporalColumn extends Column {
     }
 
     public Instant[] getQueriedValues() {
+        if (getDataModel().getActiveQuery().getQueriedTuples().isEmpty()) {
+            return null;
+        }
+
         Instant[] values = new Instant[getDataModel().getActiveQuery().getQueriedTuples().size()];
         int columnIndex = getDataModel().getColumnIndex(this);
         int counter = 0;

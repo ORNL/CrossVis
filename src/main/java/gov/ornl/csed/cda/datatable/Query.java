@@ -105,33 +105,35 @@ public class Query {
     }
 
     public void calculateStatistics() {
-        for (int icolumn = 0; icolumn < dataModel.getColumnCount(); icolumn++) {
-            Column column = dataModel.getColumn(icolumn);
-            ColumnSummaryStats columnSummaryStats = columnQuerySummaryStatsMap.get(column);
-            if (column instanceof TemporalColumn) {
-                Instant values[] = ((TemporalColumn)column).getQueriedValues();
-                if (columnSummaryStats == null) {
-                    columnSummaryStats = new TemporalColumnSummaryStats(column, dataModel.getNumHistogramBins());
-                    columnQuerySummaryStatsMap.put(column, columnSummaryStats);
+        if (!queriedTuples.isEmpty()) {
+            for (int icolumn = 0; icolumn < dataModel.getColumnCount(); icolumn++) {
+                Column column = dataModel.getColumn(icolumn);
+                ColumnSummaryStats columnSummaryStats = columnQuerySummaryStatsMap.get(column);
+                if (column instanceof TemporalColumn) {
+                    Instant values[] = ((TemporalColumn) column).getQueriedValues();
+                    if (columnSummaryStats == null) {
+                        columnSummaryStats = new TemporalColumnSummaryStats(column, dataModel.getNumHistogramBins());
+                        columnQuerySummaryStatsMap.put(column, columnSummaryStats);
+                    }
+                    ((TemporalColumnSummaryStats) columnSummaryStats).setValues(values);
+                } else if (column instanceof DoubleColumn) {
+                    double values[] = ((DoubleColumn) column).getQueriedValues();
+                    if (columnSummaryStats == null) {
+                        columnSummaryStats = new DoubleColumnSummaryStats(column, dataModel.getNumHistogramBins());
+                        columnQuerySummaryStatsMap.put(column, columnSummaryStats);
+                    }
+                    ((DoubleColumnSummaryStats) columnSummaryStats).setValues(values);
                 }
-                ((TemporalColumnSummaryStats)columnSummaryStats).setValues(values);
-            } else if (column instanceof DoubleColumn) {
-                double values[] = ((DoubleColumn)column).getQueriedValues();
-                if (columnSummaryStats == null) {
-                    columnSummaryStats = new DoubleColumnSummaryStats(column, dataModel.getNumHistogramBins());
-                    columnQuerySummaryStatsMap.put(column, columnSummaryStats);
-                }
-                ((DoubleColumnSummaryStats)columnSummaryStats).setValues(values);
             }
-        }
 
-        maxHistogram2DBinCount = 0;
-        for (ColumnSummaryStats columnSummaryStats : columnQuerySummaryStatsMap.values()) {
-            for (ColumnSummaryStats compareColumnSummaryStats : columnQuerySummaryStatsMap.values()) {
-                if (columnSummaryStats != compareColumnSummaryStats) {
-                    columnSummaryStats.calculateHistogram2D(compareColumnSummaryStats);
-                    if (columnSummaryStats.getMaxHistogram2DBinCount() > maxHistogram2DBinCount) {
-                        maxHistogram2DBinCount = columnSummaryStats.getMaxHistogram2DBinCount();
+            maxHistogram2DBinCount = 0;
+            for (ColumnSummaryStats columnSummaryStats : columnQuerySummaryStatsMap.values()) {
+                for (ColumnSummaryStats compareColumnSummaryStats : columnQuerySummaryStatsMap.values()) {
+                    if (columnSummaryStats != compareColumnSummaryStats) {
+                        columnSummaryStats.calculateHistogram2D(compareColumnSummaryStats);
+                        if (columnSummaryStats.getMaxHistogram2DBinCount() > maxHistogram2DBinCount) {
+                            maxHistogram2DBinCount = columnSummaryStats.getMaxHistogram2DBinCount();
+                        }
                     }
                 }
             }

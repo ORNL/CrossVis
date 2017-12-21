@@ -68,6 +68,9 @@ public class DataModel {
 	public void setNumHistogramBins(int numBins) {
 		if (numBins != numHistogramBins) {
 			numHistogramBins = numBins;
+			for (Column column : columns) {
+			    column.getStatistics().setNumHistogramBins(numHistogramBins);
+            }
 			calculateStatistics();
 			if (activeQuery.hasColumnSelections()) {
 				activeQuery.calculateStatistics();
@@ -162,6 +165,7 @@ public class DataModel {
 		}
 
 		calculateStatistics();
+		getActiveQuery().setQueriedTuples();
 		fireDataModelReset();
 	}
 

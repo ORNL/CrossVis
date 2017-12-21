@@ -170,7 +170,7 @@ public class PCPView extends Region implements DataModelListener {
 
     public void setAxisSpacing(double axisSpacing) {
         this.axisSpacing = axisSpacing;
-        redrawView();
+        resizeView();
     }
 
     public final PCPAxis getAxis(int index) {
@@ -471,6 +471,7 @@ public class PCPView extends Region implements DataModelListener {
 
     public void setFitAxisSpacingToWidthEnabled (boolean enabled) {
         fitAxisSpacingToWidthEnabled = enabled;
+        resizeView();
     }
 
     public double getNameTextRotation() {

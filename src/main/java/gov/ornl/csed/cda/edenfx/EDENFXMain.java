@@ -55,8 +55,12 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoField;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.prefs.Preferences;
 
@@ -97,10 +101,8 @@ public class EDENFXMain extends Application implements DataModelListener {
     private RadioMenuItem histogramDisplayModeMenuItem;
     private RadioMenuItem binDisplayModeMenuItem;
     private RadioMenuItem lineDisplayModeMenuItem;
-//    private HashMap<PCPView.DISPLAY_MODE, ToggleButton> displayModeButtonMap;
 
     private ToggleGroup displayModeButtonGroup;
-//    private HashMap<PCPView.DISPLAY_MODE, RadioMenuItem> displayModeMenuItemMap;
     private ToggleButton summaryDisplayModeButton;
     private ToggleButton histogramDisplayModeButton;
     private ToggleButton binDisplayModeButton;
@@ -124,9 +126,12 @@ public class EDENFXMain extends Application implements DataModelListener {
     @Override
     public void init() {
         ImageView splash = new ImageView(new Image(SPLASH_IMAGE));
-        Text copyrightText = new Text(splash.getLayoutBounds().getWidth()/2., 100., "© 2017  All Rights Reserved");
+        String copyrightString = "© " + LocalDate.now().getYear() + " All Rights Reserved";
+        Text copyrightText = new Text(splash.getLayoutBounds().getWidth()/2., 100., copyrightString);
         copyrightText.setFont(Font.font(16.));
         copyrightText.setFill(Color.WHITE);
+//        copyrightText.setTranslateX(splash.getLayoutBounds().getWidth() / 2.);
+        copyrightText.setTranslateY(80.);
 //        copyrightText.setTextAlignment(TextAlignment.CENTER);
 //        copyrightText.setLayoutX(splash.getLayoutBounds().getWidth()/2.);
 //        copyrightText.setLayoutY(100.);
@@ -1160,7 +1165,7 @@ public class EDENFXMain extends Application implements DataModelListener {
         viewMenu.getItems().add(enableDataTableUpdatesCheckMenuItem);
 
         // change histogram bin count menu item
-        changeHistogramBinCountMenuItem = new MenuItem("Change Number of DoubleHistogram Bins...");
+        changeHistogramBinCountMenuItem = new MenuItem("Change Number of Histogram Bins...");
         changeHistogramBinCountMenuItem.setOnAction(event -> {
             changeNumHistogramBins();
         });
