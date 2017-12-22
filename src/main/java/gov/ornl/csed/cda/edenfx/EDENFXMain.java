@@ -130,15 +130,10 @@ public class EDENFXMain extends Application implements DataModelListener {
         Text copyrightText = new Text(splash.getLayoutBounds().getWidth()/2., 100., copyrightString);
         copyrightText.setFont(Font.font(16.));
         copyrightText.setFill(Color.WHITE);
-//        copyrightText.setTranslateX(splash.getLayoutBounds().getWidth() / 2.);
         copyrightText.setTranslateY(80.);
-//        copyrightText.setTextAlignment(TextAlignment.CENTER);
-//        copyrightText.setLayoutX(splash.getLayoutBounds().getWidth()/2.);
-//        copyrightText.setLayoutY(100.);
         StackPane pane = new StackPane();
         pane.getChildren().add(splash);
         pane.getChildren().add(copyrightText);
-//        pane.setAlignment(Pos.CENTER);
 
         loadProgress = new ProgressBar();
         loadProgress.setPrefWidth(SPLASH_WIDTH - 20);
@@ -220,13 +215,11 @@ public class EDENFXMain extends Application implements DataModelListener {
 
         TableColumn<ColumnSelectionRange, String> maxColumn = new TableColumn<>("Maximum Value");
         maxColumn.setMinWidth(200);
-        maxColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<ColumnSelectionRange, String>, ObservableValue<String>>() {
-            public ObservableValue<String> call(TableColumn.CellDataFeatures<ColumnSelectionRange, String> t) {
-                if (t.getValue() instanceof TemporalColumnSelectionRange) {
-                    return new ReadOnlyObjectWrapper(((TemporalColumnSelectionRange)t.getValue()).getEndInstant().toString());
-                } else {
-                    return new ReadOnlyObjectWrapper(String.valueOf(((DoubleColumnSelectionRange)t.getValue()).getMaxValue()));
-                }
+        maxColumn.setCellValueFactory(t -> {
+            if (t.getValue() instanceof TemporalColumnSelectionRange) {
+                return new ReadOnlyObjectWrapper(((TemporalColumnSelectionRange)t.getValue()).getEndInstant().toString());
+            } else {
+                return new ReadOnlyObjectWrapper(String.valueOf(((DoubleColumnSelectionRange)t.getValue()).getMaxValue()));
             }
         });
         maxColumn.setCellFactory(TextFieldTableCell.forTableColumn());
@@ -355,7 +348,6 @@ public class EDENFXMain extends Application implements DataModelListener {
         TableColumn<DoubleColumn, Boolean> doubleEnabledColumn = new TableColumn<>("Visible");
         doubleEnabledColumn.setMinWidth(20);
         doubleEnabledColumn.setCellValueFactory(new PropertyValueFactory<DoubleColumn, Boolean>("enabled"));
-//        enabledColumn.setCellFactory(column -> new CheckBoxTableCell());
         doubleEnabledColumn.setCellFactory(new Callback<TableColumn<DoubleColumn, Boolean>, TableCell<DoubleColumn, Boolean>>() {
             @Override
             public TableCell<DoubleColumn, Boolean> call(TableColumn<DoubleColumn, Boolean> param) {
@@ -376,23 +368,13 @@ public class EDENFXMain extends Application implements DataModelListener {
                                 if (item) {
                                     // enable a disabled column
                                     // get the column name; lookup column in data model; enable the column
-//                                    sm.select(rowNumber);
-//                                    log.debug("Would set column " + dataModel.getColumn(rowNumber) + " to enabled");
-
-//                                    dataModel.enableColumn(dataModel.getColumn(rowNumber));
                                     Column column = doubleColumnTableView.getItems().get(rowNumber);
-
                                     dataModel.enableColumn(column);
-//                                    log.debug("Set column '" + column.getName() + "' to enabled");
                                 } else {
                                     // disable an enabled column
                                     // get the column name; disable column in data model
                                     Column column = doubleColumnTableView.getItems().get(rowNumber);
                                     dataModel.disableColumn(column);
-//                                    log.debug("Set column '" + column.getName() + "' to disabled");
-//                                    sm.clearSelection(rowNumber);
-//                                    log.debug("Would set column " + dataModel.getColumn(rowNumber) + " to disabled");
-//                                    dataModel.disableColumn(dataModel.getColumn(rowNumber));
                                 }
                             }
                         }
@@ -407,38 +389,30 @@ public class EDENFXMain extends Application implements DataModelListener {
         TableColumn <DoubleColumn, Double > minColumn = new TableColumn<>("Min");
         minColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<DoubleColumn, Double>, ObservableValue<Double>>() {
             public ObservableValue<Double> call(TableColumn.CellDataFeatures<DoubleColumn, Double> t) {
-//                log.debug("t.getValue().getStatistics().getMinValue(): " + t.getValue().getStatistics().getMinValue());
                 return new ReadOnlyObjectWrapper(t.getValue().getStatistics().getMinValue());
             }
         });
-//        minColumn.setCellValueFactory(new PropertyValueFactory<DoubleColumn, Double>("minValue"));
 
         TableColumn<DoubleColumn, Double> maxColumn = new TableColumn<>("Max");
         maxColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<DoubleColumn, Double>, ObservableValue<Double>>() {
             public ObservableValue<Double> call(TableColumn.CellDataFeatures<DoubleColumn, Double> t) {
-//                log.debug("t.getValue().getStatistics().getMinValue(): " + t.getValue().getStatistics().getMinValue());
                 return new ReadOnlyObjectWrapper(t.getValue().getStatistics().getMaxValue());
             }
         });
-//        maxColumn.setCellValueFactory(new PropertyValueFactory<DoubleColumn, Double>("maxValue"));
 
         TableColumn<DoubleColumn, Double> meanColumn = new TableColumn<>("Mean");
         meanColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<DoubleColumn, Double>, ObservableValue<Double>>() {
             public ObservableValue<Double> call(TableColumn.CellDataFeatures<DoubleColumn, Double> t) {
-//                log.debug("t.getValue().getStatistics().getMinValue(): " + t.getValue().getStatistics().getMinValue());
                 return new ReadOnlyObjectWrapper(t.getValue().getStatistics().getMeanValue());
             }
         });
-//        meanColumn.setCellValueFactory(new PropertyValueFactory<DoubleColumn, Double>("meanValue"));
 
         TableColumn<DoubleColumn, Double> stdevColumn = new TableColumn<>("St. Dev.");
         stdevColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<DoubleColumn, Double>, ObservableValue<Double>>() {
             public ObservableValue<Double> call(TableColumn.CellDataFeatures<DoubleColumn, Double> t) {
-//                log.debug("t.getValue().getStatistics().getMinValue(): " + t.getValue().getStatistics().getMinValue());
                 return new ReadOnlyObjectWrapper(t.getValue().getStatistics().getStandardDeviationValue());
             }
         });
-//        stdevColumn.setCellValueFactory(new PropertyValueFactory<DoubleColumn, Double>("standardDeviationValue"));
 
         TableColumn<DoubleColumn, Double> varianceColumn = new TableColumn<>("Variance");
         varianceColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<DoubleColumn, Double>, ObservableValue<Double>>() {
@@ -510,7 +484,6 @@ public class EDENFXMain extends Application implements DataModelListener {
         }
 
         displayModeButtonGroup.selectedToggleProperty().addListener((observable, oldValue, newValue) -> {
-//            log.debug("Button DisplayMode Group changed");
             if (newValue != null) {
                 if (newValue == summaryDisplayModeButton) {
                     pcpView.setDisplayMode(PCPView.DISPLAY_MODE.SUMMARY);
@@ -525,10 +498,6 @@ public class EDENFXMain extends Application implements DataModelListener {
                     pcpView.setDisplayMode(PCPView.DISPLAY_MODE.PCP_LINES);
                     displayModeMenuGroup.selectToggle(lineDisplayModeMenuItem);
                 }
-
-//                pcpView.setDisplayMode(PCPView.DISPLAY_MODE.PCP_LINES);
-
-//                displayModeMenuGroup.selectToggle(displayModeMenuItemMap.get(newDisplayMode));
             }
         });
 
@@ -715,7 +684,6 @@ public class EDENFXMain extends Application implements DataModelListener {
         rootNode.setCenter(middleSplit);
         rootNode.setTop(topContainer);
         rootNode.setBottom(statusBar);
-//        rootNode.setLeft(settingsPane);
 
         Rectangle2D screenVisualBounds = Screen.getPrimary().getVisualBounds();
 
@@ -725,94 +693,6 @@ public class EDENFXMain extends Application implements DataModelListener {
         mainStage.setScene(scene);
         mainStage.show();
     }
-    /*
-    @Override
-    public void start(Stage stage) throws Exception {
-//        stage.setOnShown(event -> {
-//            FileChooser fileChooser = new FileChooser();
-//            fileChooser.setTitle("Open CSV File");
-//
-//            String lastCSVDirectoryPath = preferences.get(EDENFXPreferenceKeys.LAST_CSV_READ_DIRECTORY, "");
-//            if (!lastCSVDirectoryPath.isEmpty()) {
-//                fileChooser.setInitialDirectory(new File(lastCSVDirectoryPath));
-//            }
-//
-//            File file = fileChooser.showOpenDialog(stage);
-//            if (file != null) {
-//                try {
-//                    openCSVFile(file);
-//                    preferences.put(EDENFXPreferenceKeys.LAST_CSV_READ_DIRECTORY, file.getParentFile().getAbsolutePath());
-//                    displayModeMenu.setDisable(false);
-//                    fitPCPAxesToWidthCheckMI.setDisable(false);
-//                    changeAxisSpacingMI.setDisable(pcpView.getFitAxisSpacingToWidthEnabled());
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                }
-//            }
-//        });
-
-        pcpView = new PCPView();
-        pcpView.setDataModel(dataModel);
-        pcpView.setPrefHeight(400);
-        pcpView.setAxisSpacing(100);
-        pcpView.setPadding(new Insets(10));
-
-        pcpScrollPane = new ScrollPane(pcpView);
-        pcpScrollPane.setFitToHeight(true);
-        pcpScrollPane.setFitToWidth(pcpView.getFitAxisSpacingToWidthEnabled());
-
-        ToolBar toolBar = createToolBar(stage);
-
-        createStatusBar();
-//        statusBar.progressProperty().bindBidirectional(pcpView.drawingProgressProperty());
-
-        MenuBar menuBar = createMenuBar(stage);
-//        menuBar.setUseSystemMenuBar(true);
-        createColumnTableView();
-        createQueryTableView();
-        dataTableView = new TableView<>();
-
-        // create datamodel tab pane
-        tabPane = new TabPane();
-        Tab columnTableTab = new Tab(" Column Table ");
-        columnTableTab.setClosable(false);
-        columnTableTab.setContent(columnTableView);
-
-        Tab dataTableTab = new Tab(" Data Table ");
-        dataTableTab.setClosable(false);
-        dataTableTab.setContent(dataTableView);
-
-        Tab queryTableTab = new Tab(" Query Table ");
-        queryTableTab.setClosable(false);
-        queryTableTab.setContent(queryTableView);
-
-        tabPane.getTabs().addAll(columnTableTab, dataTableTab, queryTableTab);
-
-        SplitPane middleSplit = new SplitPane();
-        middleSplit.setOrientation(Orientation.VERTICAL);
-        middleSplit.getItems().addAll(pcpScrollPane, tabPane);
-        middleSplit.setResizableWithParent(pcpScrollPane, false);
-        middleSplit.setDividerPositions(0.7);
-
-        VBox topContainer = new VBox();
-        topContainer.getChildren().add(menuBar);
-        topContainer.getChildren().add(toolBar);
-
-        BorderPane rootNode = new BorderPane();
-        rootNode.setCenter(middleSplit);
-        rootNode.setTop(topContainer);
-        rootNode.setBottom(statusBar);
-//        rootNode.setLeft(settingsPane);
-
-        Rectangle2D screenVisualBounds = Screen.getPrimary().getVisualBounds();
-
-        Scene scene = new Scene(rootNode, screenVisualBounds.getWidth() - 20, 800, true, SceneAntialiasing.BALANCED);
-
-        stage.setTitle("EDEN.FX");
-        stage.setScene(scene);
-        stage.show();
-    }
-    */
 
     @Override
     public void stop() {
@@ -820,7 +700,6 @@ public class EDENFXMain extends Application implements DataModelListener {
     }
 
     public static void main (String args[]) {
-//        LauncherImpl.launchApplication(EDENFXMain.class, SplashScreenLoader.class, args);
         launch(args);
     }
 
@@ -1010,7 +889,6 @@ public class EDENFXMain extends Application implements DataModelListener {
         exportUnselectedDataMI = new MenuItem("Export Unselected Data...");
         exportUnselectedDataMI.setAccelerator(new KeyCodeCombination(KeyCode.U, KeyCombination.META_DOWN));
         exportUnselectedDataMI.setOnAction(event -> {
-//            boolean exportSelectedData = false;
             if (dataModel.getActiveQuery().getQueriedTuples().isEmpty()) {
                 Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
                 alert.setTitle("No Tuples Selected");
@@ -1019,8 +897,6 @@ public class EDENFXMain extends Application implements DataModelListener {
                 Optional<ButtonType> result = alert.showAndWait();
                 if (result.get() == ButtonType.CANCEL) {
                     return;
-//                } else {
-//                    exportSelectedData = true;
                 }
             }
 
@@ -1031,7 +907,6 @@ public class EDENFXMain extends Application implements DataModelListener {
                 if (lastExportDirectory != null && lastExportDirectory.exists() && lastExportDirectory.canRead()) {
                     fileChooser.setInitialDirectory(new File(lastExportDirectoryPath));
                 }
-//                fileChooser.setInitialDirectory(new File(lastExportDirectoryPath));
             }
             fileChooser.setTitle("Export Unselected Data to CSV File");
             File csvFile = fileChooser.showSaveDialog(stage);
@@ -1048,7 +923,6 @@ public class EDENFXMain extends Application implements DataModelListener {
         displayModeMenu = new Menu("Display Mode");
         displayModeMenu.setDisable(true);
         displayModeMenuGroup = new ToggleGroup();
-//        displayModeMenuItemMap = new HashMap<>();
 
         summaryDisplayModeMenuItem = new RadioMenuItem("Summary");
         summaryDisplayModeMenuItem.setToggleGroup(displayModeMenuGroup);
@@ -1057,22 +931,16 @@ public class EDENFXMain extends Application implements DataModelListener {
         }
         histogramDisplayModeMenuItem = new RadioMenuItem("Histograms");
         histogramDisplayModeMenuItem.setToggleGroup(displayModeMenuGroup);
-//        displayModeMenu.getItems().add(item);
-//        displayModeMenuItemMap.put(PCPView.DISPLAY_MODE.HISTOGRAM, item);
         if (pcpView.getDisplayMode() == PCPView.DISPLAY_MODE.HISTOGRAM) {
             histogramDisplayModeMenuItem.setSelected(true);
         }
         binDisplayModeMenuItem = new RadioMenuItem("Parallel Coordinates Bins");
         binDisplayModeMenuItem.setToggleGroup(displayModeMenuGroup);
-//        displayModeMenu.getItems().add(item);
-//        displayModeMenuItemMap.put(PCPView.DISPLAY_MODE.PCP_BINS, item);
         if (pcpView.getDisplayMode() == PCPView.DISPLAY_MODE.PCP_BINS) {
             binDisplayModeMenuItem.setSelected(true);
         }
         lineDisplayModeMenuItem = new RadioMenuItem("Parallel Coordinates Lines");
         lineDisplayModeMenuItem.setToggleGroup(displayModeMenuGroup);
-//        displayModeMenu.getItems().add(item);
-//        displayModeMenuItemMap.put(PCPView.DISPLAY_MODE.PCP_LINES, item);
         if (pcpView.getDisplayMode() == PCPView.DISPLAY_MODE.PCP_LINES) {
             lineDisplayModeMenuItem.setSelected(true);
         }
@@ -1083,7 +951,6 @@ public class EDENFXMain extends Application implements DataModelListener {
         displayModeMenuGroup.selectedToggleProperty().addListener(new ChangeListener<Toggle>() {
             @Override
             public void changed(ObservableValue<? extends Toggle> observable, Toggle oldValue, Toggle newValue) {
-//                log.debug("Menu Display Mode group changed");
                 if (newValue != null) {
                     RadioMenuItem toggleItem = (RadioMenuItem)newValue;
                     PCPView.DISPLAY_MODE newDisplayMode = displayModeMap.get(toggleItem.getText());
@@ -1211,8 +1078,6 @@ public class EDENFXMain extends Application implements DataModelListener {
         }
 
         // write to csv file
-//        for (int ituple = 0; ituple < tuples.size(); ituple++) {
-//            Tuple tuple = tuples.get(ituple);
         int tupleCounter = 0;
         for (Tuple tuple : tuples) {
             StringBuffer lineBuffer = new StringBuffer();
@@ -1353,7 +1218,6 @@ public class EDENFXMain extends Application implements DataModelListener {
         TableColumn<ColumnSpecification, String> parseColumn = new TableColumn<>("DateTime Parse Pattern");
         parseColumn.setMinWidth(180);
         parseColumn.setCellValueFactory(new PropertyValueFactory<ColumnSpecification, String>("parsePattern"));
-//        parseColumn.setCellFactory(TextFieldTableCell.forTableColumn());
         parseColumn.setCellFactory(new Callback<TableColumn<ColumnSpecification, String>, TableCell<ColumnSpecification, String>>() {
             @Override
             public TableCell<ColumnSpecification, String> call(TableColumn<ColumnSpecification, String> param) {
@@ -1420,6 +1284,8 @@ public class EDENFXMain extends Application implements DataModelListener {
         columnSpecsTableView.getColumns().addAll(ignoreColumn, nameColumn, typeColumn);
         columnSpecsTableView.setItems(tableColumnSpecs);
 
+        columnSpecsTableView.setPrefHeight(150.);
+        temporalSpecsTableView.setPrefHeight(100.);
         GridPane grid = new GridPane();
         grid.setHgap(10);
         grid.setVgap(10);
@@ -1470,18 +1336,6 @@ public class EDENFXMain extends Application implements DataModelListener {
 
         // make a column for each enabled data datamodel column
         if (!dataModel.isEmpty()) {
-//            if (dataModel.getTemporalColumn() != null) {
-//                TemporalColumn temporalColumn = dataModel.getTemporalColumn();
-//                TableColumn<Tuple, Instant> tableColumn = new TableColumn<Tuple, Instant>(temporalColumn.getName());
-//                tableColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<Tuple, Instant>, ObservableValue<Instant>>() {
-//                    public ObservableValue<Instant> call(TableColumn.CellDataFeatures<Tuple, Instant> t) {
-//                        return new ReadOnlyObjectWrapper(t.getValue().getInstant());
-//
-//                    }
-//                });
-//                dataTableView.getColumns().add(tableColumn);
-//            }
-
             for (int icol = 0; icol < dataModel.getColumnCount(); icol++) {
                 Column column = dataModel.getColumn(icol);
                 if (column instanceof TemporalColumn) {
@@ -1555,9 +1409,7 @@ public class EDENFXMain extends Application implements DataModelListener {
 
     @Override
     public void dataModelColumnSelectionChanged(DataModel dataModel, ColumnSelectionRange columnSelectionRange) {
-//        removeAllQueriesMI.setDisable(!dataModel.getActiveQuery().hasColumnSelections());
-//        log.debug("dataModel column selection changed");
-//        int rowIndex = queryTableView.getItems().indexOf(columnSelectionRange);
+        removeAllQueriesMI.setDisable(!dataModel.getActiveQuery().hasColumnSelections());
         queryTableView.refresh();
         doubleColumnTableView.refresh();
         temporalColumnTableView.refresh();

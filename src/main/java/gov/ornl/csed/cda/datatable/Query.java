@@ -104,6 +104,12 @@ public class Query {
         }
     }
 
+    public void setNumHistogramBins(int numBins) {
+        for (ColumnSummaryStats summaryStats : columnQuerySummaryStatsMap.values()) {
+            summaryStats.setNumHistogramBins(numBins);
+        }
+    }
+
     public void calculateStatistics() {
         if (!queriedTuples.isEmpty()) {
             for (int icolumn = 0; icolumn < dataModel.getColumnCount(); icolumn++) {

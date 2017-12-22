@@ -53,7 +53,6 @@ public class PCPTuple {
             } else if (axis instanceof PCPDoubleAxis) {
                 PCPDoubleAxis quantitativeAxis = (PCPDoubleAxis)axis;
                 double value = (Double)tuple.getElement(i);
-//                PCPQuantitativeAxis axis = axisList.get(i);
                 double yPosition = GraphicsUtil.mapValue(value,
                         ((DoubleColumn) axis.getColumn()).getStatistics().getMinValue(),
                         ((DoubleColumn) axis.getColumn()).getStatistics().getMaxValue(),
@@ -62,44 +61,6 @@ public class PCPTuple {
                 yPoints[i] = yPosition;
             }
         }
-        /*
-        if (temporalAxis != null) {
-            xPoints = new double[tuple.getElementCount() + 1];
-            yPoints = new double[tuple.getElementCount() + 1];
-
-            double yPosition = GraphicsUtil.mapValue(tuple.getInstant(),
-                    ((TemporalColumn)temporalAxis.getColumn()).getStartInstant(),
-                    ((TemporalColumn)temporalAxis.getColumn()).getEndInstant(), temporalAxis.getFocusBottomY(),
-                    temporalAxis.getFocusTopY());
-            xPoints[0] = temporalAxis.getCenterX();
-            yPoints[0] = yPosition;
-
-            for (int i = 0; i < tuple.getElementCount(); i++) {
-                double value = tuple.getElement(i);
-                PCPQuantitativeAxis axis = axisList.get(i);
-                yPosition = GraphicsUtil.mapValue(value,
-                        ((QuantitativeColumn)axis.getColumn()).getSummaryStats().getMin(),
-                        ((QuantitativeColumn)axis.getColumn()).getSummaryStats().getMax(),
-                        axis.getFocusBottomY(), axis.getFocusTopY());
-                xPoints[i+1] = axis.getCenterX();
-                yPoints[i+1] = yPosition;
-            }
-        } else {
-            xPoints = new double[tuple.getElementCount()];
-            yPoints = new double[tuple.getElementCount()];
-
-            for (int i = 0; i < tuple.getElementCount(); i++) {
-                double value = tuple.getElement(i);
-                PCPQuantitativeAxis axis = axisList.get(i);
-                double yPosition = GraphicsUtil.mapValue(value,
-                        ((QuantitativeColumn) axis.getColumn()).getSummaryStats().getMin(),
-                        ((QuantitativeColumn) axis.getColumn()).getSummaryStats().getMax(),
-                        axis.getFocusBottomY(), axis.getFocusTopY());
-                xPoints[i] = axis.getCenterX();
-                yPoints[i] = yPosition;
-            }
-        }
-        */
     }
 
     public double[] getXPoints() { return xPoints; }

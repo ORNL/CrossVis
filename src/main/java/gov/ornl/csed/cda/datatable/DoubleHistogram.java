@@ -115,12 +115,6 @@ public class DoubleHistogram extends Histogram {
         binSize = (maxValue - minValue) / numBins;
 
         for (double value : values) {
-//            if (name.equals("MPG")) {
-//                if (value >= 9d && value <= 11.5d) {
-//                    System.out.println("value: " + value);
-//                }
-//            }
-
             int binIndex = (int)((value - minValue) / binSize);
             if (binIndex < 0) {
                 // the value is smaller than the minValue

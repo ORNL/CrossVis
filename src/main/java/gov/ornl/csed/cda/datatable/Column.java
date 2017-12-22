@@ -27,10 +27,6 @@ public abstract class Column {
 
     public abstract ColumnSummaryStats getStatistics();
 
-//    public abstract void calculateQueryStatistics();
-//
-//    public abstract ColumnSummaryStats getQueryStatistics();
-
     public void setEnabled(boolean enabled) {
         enabledProperty().set(enabled);
     }

@@ -1,6 +1,6 @@
 package gov.ornl.csed.cda.datatable;
 
-import java.util.*;
+import java.util.ArrayList;
 import java.util.logging.Logger;
 
 public class DataModel {
@@ -20,12 +20,6 @@ public class DataModel {
 
     // List of tuple elements for disabled columns
     protected ArrayList<Tuple> disabledColumnTuples;
-
-	// Set of queried tuples
-//	private HashSet<Tuple> queriedTuples;
-//
-//	// Set of nonQueried tuples (should be tuples - queried tuples)
-//	private HashSet<Tuple> nonQueriedTuples;
 
     // List of active listeners
 	private ArrayList<DataModelListener> listeners;
@@ -52,8 +46,6 @@ public class DataModel {
 	public DataModel() {
         tuples = new ArrayList<>();
         columns = new ArrayList<>();
-//		queriedTuples = new HashSet<>();
-//		nonQueriedTuples = new HashSet<>();
         disabledColumnTuples = new ArrayList<>();
         disabledColumns = new ArrayList<>();
 
@@ -284,9 +276,6 @@ public class DataModel {
             removeTupleElementsForColumn(disabledColumn);
 			disabledColumn.setEnabled(false);
 
-//			disabledColumn.setQueryMeanValue(Double.NaN);
-//			disabledColumn.setQueryStandardDeviationValue(Double.NaN);
-
 			if (disabledColumn == this.highlightedColumn) {
 				highlightedColumn = null;
 //                fireHighlightedColumnChanged();
@@ -297,13 +286,6 @@ public class DataModel {
 
             getActiveQuery().removeColumnSelectionRanges(disabledColumn);
             getActiveQuery().setQueriedTuples();
-//            setQueriedTuples();
-//            clearActiveQueryColumnSelections(disabledColumn);
-
-//            for (Column column : columns) {
-//                column.getSummaryStats().getCorrelationCoefficients().remove(disabledColumnIndex);
-//                column.getSummaryStats().getHistogram2DList().remove(disabledColumnIndex);
-//            }
 
 			fireColumnDisabled(disabledColumn);
 		}
@@ -353,12 +335,6 @@ public class DataModel {
 
 	public void clearColumnSelectionRange (ColumnSelectionRange selectionRange) {
 		getActiveQuery().removeColumnSelectionRange(selectionRange);
-//        if (!getActiveQuery().hasColumnSelections()) {
-//            for (Column column : columns) {
-//                column.setQueryMeanValue(Double.NaN);
-//                column.setQueryStandardDeviationValue(Double.NaN);
-//            }
-//        }
 		getActiveQuery().setQueriedTuples();
 		fireColumnSelectionRemoved(selectionRange);
 	}
@@ -367,17 +343,12 @@ public class DataModel {
         int tuplesRemoved = 0;
 
         if (getActiveQuery().hasColumnSelections()) {
-//            tuplesRemoved = tuples.size() - getActiveQuery().getTuples().size();
-//            tuples.clear();
-//            tuples.addAll(getActiveQuery().getTuples());
-//            getActiveQuery().clearAllColumnSelections();
 			tuplesRemoved = getActiveQuery().getNonQueriedTuples().size();
 			tuples.clear();
 			tuples.addAll(getActiveQuery().getQueriedTuples());
 			getActiveQuery().clear();
 			calculateStatistics();
 			getActiveQuery().setQueriedTuples();
-//            calculateStatistics();
             fireTuplesRemoved(tuplesRemoved);
         }
 
@@ -388,10 +359,6 @@ public class DataModel {
         int tuplesRemoved = 0;
 
 		if (getActiveQuery().hasColumnSelections()) {
-//            tuplesRemoved = getActiveQuery().getTuples().size();
-//            tuples.removeAll(getActiveQuery().getTuples());
-//            getActiveQuery().clearAllColumnSelections();
-//            calculateStatistics();
 			tuplesRemoved = getActiveQuery().getQueriedTuples().size();
 			tuples.clear();
 			tuples.addAll(getActiveQuery().getNonQueriedTuples());
@@ -425,10 +392,6 @@ public class DataModel {
 
 	public void clearActiveQuery() {
         activeQuery = new Query("Q" + (nextQueryNumber++), this);
-//        for (Column column : columns) {
-//            column.setQueryStandardDeviationValue(Double.NaN);
-//            column.setQueryMeanValue(Double.NaN);
-//        }
         fireQueryCleared();
 	}
 
@@ -477,16 +440,6 @@ public class DataModel {
 			}));
 		}
 	}
-
-//	public void addColumnSelectionRangeToActiveQuery(TemporalColumnSelectionRange temporalColumnSelectionRange) {
-//		getActiveQuery().addTemporalColumnSelectionRange(temporalColumnSelectionRange);
-//		setQueriedTuples();
-//		fireTemporalColumnSelectionAdded(temporalColumnSelectionRange);
-//		temporalColumnSelectionRange.rangeInstantsProperty().addListener((observable, oldValue, newValue) -> {
-//			setQueriedTuples();
-//			fireTemporalColumnSelectionChanged(temporalColumnSelectionRange);
-//		});
-//	}
 
 //    public void orderColumnsByCorrelation (DoubleColumn compareColumn, boolean useQueryCorrelations) {
 //        int compareColumnIndex = getColumnIndex(compareColumn);
@@ -631,105 +584,6 @@ public class DataModel {
         fireColumnOrderChanged();
     }
 
-//    public int getQueriedTupleCount() {
-//		return queriedTuples.size();
-//    }
-
-//    public Set<Tuple> getQueriedTuples() {
-//		return queriedTuples;
-//    }
-
-//    public Set<Tuple> getNonQueriedTuples() {
-//		return nonQueriedTuples;
-//	}
-
-//	// TODO: Remove later (just get from query object)
-//	private void setQueriedTuples() {
-//		getActiveQuery().setQueriedTuples();
-//	}
-	/*
-    private void setQueriedTuples() {
-		queriedTuples.clear();
-		nonQueriedTuples.clear();
-
-        if (getTupleCount() == 0) {
-            return;
-        }
-
-        if (!getActiveQuery().getAllColumnSelectionRanges().isEmpty() ||
-				!getActiveQuery().getTemporalColumnSelectionRangeList().isEmpty()) {
-            for (int ituple = 0; ituple < getTupleCount(); ituple++) {
-                Tuple currentTuple = getTuple(ituple);
-                currentTuple.setQueryFlag(true);
-
-//                // get temporal queries
-//				if (hasTemporalColumn()) {
-//					List<TemporalColumnSelectionRange> temporalColumnSelectionRanges = getActiveQuery().getTemporalColumnSelectionRangeList();
-//					if (temporalColumnSelectionRanges != null && !temporalColumnSelectionRanges.isEmpty()) {
-//						boolean insideSelection = false;
-//
-//						for (TemporalColumnSelectionRange selectionRange : temporalColumnSelectionRanges) {
-//							if (!((currentTuple.getInstant().isBefore(selectionRange.getStartInstant())) ||
-//									currentTuple.getInstant().isAfter(selectionRange.getEndInstant()))) {
-//								insideSelection = true;
-//								break;
-//							}
-//						}
-//
-//						if (!insideSelection) {
-//							currentTuple.setQueryFlag(false);
-////							break;
-//						}
-//					}
-//				}
-
-                for (int icolumn = 0; icolumn < columns.size(); icolumn++) {
-                    Column column = columns.get(icolumn);
-                    ArrayList<DoubleColumnSelectionRange> columnSelectionRanges = getActiveQuery().getColumnSelectionRanges(column);
-                    if ((columnSelectionRanges != null) && (!columnSelectionRanges.isEmpty())) {
-                        boolean insideSelection = false;
-
-                        for (DoubleColumnSelectionRange selectionRange : columnSelectionRanges) {
-                            if ((currentTuple.getElement(icolumn) <= selectionRange.getMaxValue()) &&
-                                    (currentTuple.getElement(icolumn) >= selectionRange.getMinValue())) {
-                                insideSelection = true;
-                                break;
-                            }
-                        }
-
-                        if (!insideSelection) {
-                            currentTuple.setQueryFlag(false);
-                            break;
-                        }
-                    }
-                }
-
-                if (currentTuple.getQueryFlag()) {
-					queriedTuples.add(currentTuple);
-//                    getActiveQuery().addTuple(currentTuple);
-                } else {
-					nonQueriedTuples.add(currentTuple);
-				}
-            }
-
-            calculateQueryStatistics();
-//			fireQueryChanged();
-        } else {
-            for (Tuple tuple : tuples) {
-                tuple.setQueryFlag(false);
-				nonQueriedTuples.add(tuple);
-            }
-            for (DoubleColumn column : columns) {
-				column.setQueryMeanValue(Double.NaN);
-				column.setQueryStandardDeviationValue(Double.NaN);
-			}
-        }
-
-        log.info("After setQueriedTuples() with " + tuples.size() + " total tuples: Queried tuples set size is " + queriedTuples.size() + ", nonQueried tuples set size is " + nonQueriedTuples.size());
-//        log.info("after setQueriedTuples() number of queried tuples is " + getActiveQuery().getTuples().size() + " queryTuplesSet size " + queriedTuples.size() + " nonQueriedTuplesSet size " + nonQueriedTuples.size());
-    }
-*/
-
     // get index of column and remove all tuple elements at this index
     // add the tuple elements to a list of disabledColumnTuples for later enabling
     private void removeTupleElementsForColumn(Column column) {
@@ -771,155 +625,26 @@ public class DataModel {
         }
     }
 
-    /*
-    private void calculateQueryStatistics() {
-        // find start and end of temporal column
-//        if (hasTemporalColumn()) {
-//            boolean firstIteration = true;
-//            for (Tuple tuple : queriedTuples) {
-//                if (firstIteration) {
-//                    temporalColumn.setQueryStartInstant(tuple.getInstant());
-//                    temporalColumn.setQueryEndInstant(tuple.getInstant());
-//                    firstIteration = false;
-//                } else {
-//                    if (tuple.getInstant().isBefore(temporalColumn.getQueryStartInstant())) {
-//                        temporalColumn.setQueryStartInstant(tuple.getInstant());
-//                    } else if (tuple.getInstant().isAfter(temporalColumn.getQueryEndInstant())) {
-//                        temporalColumn.setQueryEndInstant(tuple.getInstant());
-//                    }
-//                }
-//            }
-//        }
-
-        double[][] data = new double[columns.size()][];
-
-        for (int icolumn = 0; icolumn < columns.size(); icolumn++) {
-            DoubleColumn column = columns.get(icolumn);
-            data[icolumn] = getColumnQueriedValues(icolumn);
-            DescriptiveStatistics stats = new DescriptiveStatistics(data[icolumn]);
-
-            DoubleColumnSummaryStats columnSummaryStats = new DoubleColumnSummaryStats();
-            getActiveQuery().setColumnQuerySummaryStats(column, columnSummaryStats);
-
-			column.setQueryMeanValue(stats.getMean());
-			column.setQueryStandardDeviationValue(stats.getStandardDeviation());
-
-            columnSummaryStats.setMean(stats.getMean());
-            columnSummaryStats.setMedian(stats.getPercentile(50));
-            columnSummaryStats.setVariance(stats.getVariance());
-            columnSummaryStats.setStandardDeviation(stats.getStandardDeviation());
-            columnSummaryStats.setQuantile1(stats.getPercentile(25));
-            columnSummaryStats.setQuantile3(stats.getPercentile(75));
-            columnSummaryStats.setSkewness(stats.getSkewness());
-            columnSummaryStats.setKurtosis(stats.getKurtosis());
-            columnSummaryStats.setMax(stats.getMax());
-            columnSummaryStats.setMin(stats.getMin());
-
-            // calculate whiskers for box plot 1.5 of IQR
-            double iqr_range = 1.5f * columnSummaryStats.getIQR();
-            double lowerFence = columnSummaryStats.getQuantile1() - iqr_range;
-            double upperFence = columnSummaryStats.getQuantile3() + iqr_range;
-            double sorted_data[] = stats.getSortedValues();
-
-            // find upper datum that is not greater than upper fence
-            if (upperFence >= columnSummaryStats.getMax()) {
-                columnSummaryStats.setUpperWhisker(columnSummaryStats.getMax());
-            } else {
-                // find largest datum not larger than upper fence value
-                for (int i = sorted_data.length - 1; i >= 0; i--) {
-                    if (sorted_data[i] <= upperFence) {
-                        columnSummaryStats.setUpperWhisker(sorted_data[i]);
-                        break;
-                    }
-                }
-            }
-
-            if (lowerFence <= columnSummaryStats.getMin()) {
-                columnSummaryStats.setLowerWhisker(columnSummaryStats.getMin());
-            } else {
-                // find smallest datum not less than lower fence value
-                for (int i = 0; i < sorted_data.length; i++) {
-                    if (sorted_data[i] >= lowerFence) {
-                        columnSummaryStats.setLowerWhisker(sorted_data[i]);
-                        break;
-                    }
-                }
-            }
-
-            // calculate frequency information for column
-            DoubleHistogram histogram;
-            if (column.isContinuous()) {
-                histogram = new DoubleHistogram(column.getName(), data[icolumn],
-						numHistogramBins, column.getSummaryStats().getMin(),
-                        column.getSummaryStats().getMax());
-            } else {
-                int numBins = column.getSummaryStats().getHistogram().getNumBins();
-                histogram = new DoubleHistogram(column.getName(), data[icolumn], numBins, column.getSummaryStats().getMin(),
-                        column.getSummaryStats().getMax());
-            }
-            columnSummaryStats.setHistogram(histogram);
-        }
-
-        PearsonsCorrelation pCorr = new PearsonsCorrelation();
-
-        getActiveQuery().setMaxHistogram2DBinCount(0);
-        for (int ix = 0; ix < columns.size(); ix++) {
-            DoubleColumn column = columns.get(ix);
-            DoubleColumnSummaryStats columnSummaryStats = getActiveQuery().getColumnQuerySummaryStats(column);
-
-            ArrayList<Double> coefList = new ArrayList<>();
-            ArrayList<Histogram2DOLD> histogram2DArrayList = new ArrayList<Histogram2DOLD>();
-
-            for (int iy = 0; iy < columns.size(); iy++) {
-                try {
-                    double coef = pCorr.correlation(data[ix], data[iy]);
-                    coefList.add(coef);
-                } catch (Exception ex) {
-                    coefList.add(0.);
-                }
-
-                // calculate 2D histograms
-                // TODO: This could be optimized to reduce some computational complexity
-                // TODO: The code current calculates a redundant 2D histogram for each pair of variables
-                Histogram2DOLD histogram2D = column.getSummaryStats().getHistogram2DList().get(iy);
-                Histogram2DOLD queryHistogram2D = new Histogram2DOLD("", data[ix], data[iy], numHistogramBins,
-                        histogram2D.getXMinValue(), histogram2D.getXMaxValue(), histogram2D.getYMinValue(), histogram2D.getYMaxValue());
-                histogram2DArrayList.add(queryHistogram2D);
-
-                if (histogram2D.getMaxBinCount() > columnSummaryStats.getMaxHistogram2DCount()) {
-                    columnSummaryStats.setMaxHistogram2DCount(histogram2D.getMaxBinCount());
-                }
-            }
-
-            columnSummaryStats.setCorrelationCoefficients(coefList);
-            columnSummaryStats.setHistogram2DList(histogram2DArrayList);
-
-            if (columnSummaryStats.getMaxHistogram2DCount() > getActiveQuery().getMaxHistogram2DBinCount()) {
-                getActiveQuery().setMaxHistogram2DBinCount(column.getSummaryStats().getMaxHistogram2DCount());
-            }
-        }
-    }
-    */
-
-
     private void calculateStatistics() {
         for (Column column : columns) {
             column.calculateStatistics();
         }
-
-        maxHistogram2DBinCount = 0;
-        for (Column column : columns) {
-        	for (Column compareColumn : columns) {
-        		if (column != compareColumn) {
-        			column.getStatistics().calculateHistogram2D(compareColumn.getStatistics());
-					if (column.getStatistics().getMaxHistogram2DBinCount() > maxHistogram2DBinCount) {
-						maxHistogram2DBinCount = column.getStatistics().getMaxHistogram2DBinCount();
-					}
-				}
-			}
-		}
     }
 
+    private void calculateColumnHistograms() {
+        maxHistogram2DBinCount = 0;
+        for (Column column : columns) {
+            column.getStatistics().calculateHistogram();
+            for (Column compareColumn : columns) {
+                if (column != compareColumn) {
+                    column.getStatistics().calculateHistogram2D(compareColumn.getStatistics());
+                    if (column.getStatistics().getMaxHistogram2DBinCount() > maxHistogram2DBinCount) {
+                        maxHistogram2DBinCount = column.getStatistics().getMaxHistogram2DBinCount();
+                    }
+                }
+            }
+        }
+    }
 
     public void fireNumHistogramBinsChanged() {
 		for (DataModelListener listener : listeners) {

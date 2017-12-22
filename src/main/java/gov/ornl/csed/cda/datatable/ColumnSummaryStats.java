@@ -22,6 +22,7 @@ public abstract class ColumnSummaryStats {
     }
 
     public abstract void calculateStatistics();
+
     public abstract void calculateHistogram();
 
     public void calculateHistogram2D(ColumnSummaryStats columnSummaryStats) {

@@ -85,23 +85,6 @@ public class TemporalColumnSummaryStats extends ColumnSummaryStats {
                 temporalColumn().getStatistics().getEndInstant()));
     }
 
-//    @Override
-//    public void calculateHistogram2D(ColumnSummaryStats columnSummaryStats) {
-//        Histogram2DDimension xDimension = new Histogram2DDimension.Temporal(values, numHistogramBins, getStartInstant(), getEndInstant());
-//        Histogram2DDimension yDimension = null;
-//        if (columnSummaryStats.getColumn() instanceof TemporalColumn) {
-//            TemporalColumnSummaryStats yColumnSummaryStats = (TemporalColumnSummaryStats)columnSummaryStats;
-//            yDimension = new Histogram2DDimension.Temporal(yColumnSummaryStats.getValues(),
-//                    numHistogramBins, yColumnSummaryStats.getStartInstant(), yColumnSummaryStats.getEndInstant());
-//        } else if (columnSummaryStats.getColumn() instanceof DoubleColumn) {
-//            DoubleColumnSummaryStats yColumnSummaryStats = (DoubleColumnSummaryStats)columnSummaryStats;
-//            yDimension = new Histogram2DDimension.Double(yColumnSummaryStats.getValues(), numHistogramBins,
-//                    yColumnSummaryStats.getMinValue(), yColumnSummaryStats.getMaxValue());
-//        }
-//        Histogram2D histogram2D = new Histogram2D(xDimension, yDimension);
-//        columnHistogram2DMap.put(columnSummaryStats.getColumn(), histogram2D);
-//    }
-
     public TemporalHistogram getHistogram() {
         return histogramProperty().get();
     }
@@ -116,28 +99,6 @@ public class TemporalColumnSummaryStats extends ColumnSummaryStats {
         }
         return histogram;
     }
-
-//    @Override
-//    public void calculateQueryStatistics() {
-//        int columnIndex = getColumn().getDataModel().getColumnIndex(column);
-//
-//        int counter = 0;
-//        for (Tuple tuple : getColumn().getDataModel().getActiveQuery().getQueriedTuples()) {
-//            Instant instant = (Instant)tuple.getElement(columnIndex);
-//            if (counter == 0) {
-//                setStartInstant(instant);
-//                setEndInstant(instant);
-//            } else {
-//                if (instant.isBefore(getStartInstant())) {
-//                    setStartInstant(instant);
-//                } else if (instant.isAfter(getEndInstant())) {
-//                    setEndInstant(instant);
-//                }
-//            }
-//            counter++;
-//        }
-//    }
-
 
     public void setStartInstant(Instant startInstant) {
         startInstantProperty().set(startInstant);
