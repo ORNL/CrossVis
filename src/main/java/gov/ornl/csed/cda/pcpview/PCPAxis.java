@@ -2,14 +2,22 @@ package gov.ornl.csed.cda.pcpview;
 
 import gov.ornl.csed.cda.datatable.Column;
 import gov.ornl.csed.cda.datatable.DataModel;
+import gov.ornl.csed.cda.util.GraphicsUtil;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
+import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Point2D;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Group;
+import javafx.scene.Node;
+import javafx.scene.SnapshotParameters;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.Tooltip;
+import javafx.scene.effect.DropShadow;
 import javafx.scene.effect.Glow;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.WritableImage;
@@ -97,8 +105,14 @@ public abstract class PCPAxis {
     // dragging variables
     protected Point2D dragStartPoint;
     protected Point2D dragEndPoint;
-//    private PCPAxisSelection draggingSelection;
     protected boolean dragging = false;
+
+    private Line draggingTopCrossBarLine;
+    private Line draggingBottomCrossBarLine;
+    private Line draggingTopFocusCrossBarLine;
+    private Line draggingBottomFocusCrossBarLine;
+    private Rectangle draggingAxisBar;
+    private Text draggingNameText;
 
     public PCPAxis (PCPView pcpView, Column column, DataModel dataModel, Pane pane) {
         this.pcpView = pcpView;
@@ -171,6 +185,34 @@ public abstract class PCPAxis {
     public abstract Group getHistogramBinRectangleGroup();
     public abstract Group getQueryHistogramBinRectangleGroup();
 
+    private void makeAxisDraggingGraphicsGroup() {
+        draggingAxisBar = new Rectangle(getAxisBar().getX(), getAxisBar().getY(), getAxisBar().getWidth(), getAxisBar().getHeight());
+        draggingAxisBar.setStroke(getAxisBar().getStroke());
+        draggingAxisBar.setFill(getAxisBar().getFill());
+
+        draggingBottomCrossBarLine = new Line(bottomCrossBarLine.getStartX(), bottomCrossBarLine.getStartY(),
+                bottomCrossBarLine.getEndX(), bottomCrossBarLine.getEndY());
+        draggingBottomCrossBarLine.setStroke(bottomCrossBarLine.getStroke());
+        draggingTopCrossBarLine = new Line(topCrossBarLine.getStartX(), topCrossBarLine.getStartY(),
+                topCrossBarLine.getEndX(), topCrossBarLine.getEndY());
+        draggingTopCrossBarLine.setStroke(topCrossBarLine.getStroke());
+        draggingBottomFocusCrossBarLine = new Line(bottomFocusCrossBarLine.getStartX(), bottomFocusCrossBarLine.getStartY(),
+                bottomFocusCrossBarLine.getEndX(), bottomFocusCrossBarLine.getEndY());
+        draggingBottomFocusCrossBarLine.setStroke(bottomFocusCrossBarLine.getStroke());
+        draggingTopFocusCrossBarLine = new Line(topFocusCrossBarLine.getStartX(), topFocusCrossBarLine.getStartY(),
+                topFocusCrossBarLine.getEndX(), topFocusCrossBarLine.getEndY());
+        draggingTopFocusCrossBarLine.setStroke(topFocusCrossBarLine.getStroke());
+
+        draggingNameText = new Text(nameText.getText());
+        draggingNameText.setX(nameText.getX());
+        draggingNameText.setY(nameText.getY());
+        draggingNameText.setFont(nameText.getFont());
+
+        axisDraggingGraphicsGroup = new Group(draggingNameText, draggingAxisBar, draggingBottomCrossBarLine,
+                draggingTopCrossBarLine, draggingBottomFocusCrossBarLine, draggingTopFocusCrossBarLine);
+        axisDraggingGraphicsGroup.setTranslateY(5);
+    }
+
     private void registerListeners() {
         nameText.textProperty().addListener((observable, oldValue, newValue) -> {
             nameText.setX(bounds.getX() + ((bounds.getWidth() - nameText.getLayoutBounds().getWidth()) / 2.));
@@ -183,6 +225,104 @@ public abstract class PCPAxis {
                     dataModel.setHighlightedColumn(null);
                 } else {
                     dataModel.setHighlightedColumn(getColumn());
+                }
+            }
+        });
+
+        nameText.setOnMouseDragged(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                if (!dragging) {
+                    dragging = true;
+                    makeAxisDraggingGraphicsGroup();
+                    axisDraggingGraphicsGroup.setEffect(new DropShadow());
+                    pane.getChildren().add(axisDraggingGraphicsGroup);
+
+                    dragStartPoint = new Point2D(event.getX(), event.getY());
+                    /*
+                    SnapshotParameters snapshotParameters = new SnapshotParameters();
+                    snapshotParameters.setFill(Color.TRANSPARENT);
+                    dragImage = pane.snapshot(snapshotParameters, null);
+
+                    dragImageView = new ImageView(dragImage);
+                    dragImageView.setViewport(new Rectangle2D(bounds.getX(), bounds.getY(), bounds.getWidth(), bounds.getHeight()));
+                    dragImageView.setX(centerX - (dragImageView.getLayoutBounds().getWidth() / 2d));
+                    dragImageView.setY(graphicsGroup.getLayoutY() + 5);
+//                    log.debug("GraphicsGroup.getLayout() = " + graphicsGroup.getLayoutBounds());
+
+                    // blur everything except the drag image view
+                    for (Node node : pane.getChildren()) {
+                        node.setEffect(new GaussianBlur());
+                    }
+
+//                    makeAxisDraggingGraphicsGroup();
+//                    pane.getChildren().add(axisDraggingGraphicsGroup);
+                    dragImageView.setEffect(new DropShadow());
+                    pane.getChildren().add(dragImageView);
+                    */
+                }
+
+                dragEndPoint = new Point2D(event.getX(), event.getY());
+                axisDraggingGraphicsGroup.setTranslateX(event.getX() - dragStartPoint.getX());
+//                draggingAxisBar.setX(event.getX() - draggingAxisBar.getWidth()/2d);
+
+//                axisDraggingGraphicsGroup.setTranslateX(event.getX());
+
+//                graphicsGroup.setTranslateX(event.getX());
+
+//                axisDraggingGraphicsGroup.relocate(event.getX() - axisDraggingGraphicsGroup.getLayoutBounds().getWidth()/2d, verticalBar.getY() + 10);
+//                log.debug("event.getX()= " + event.getX() + " event.getSceneX()= " + event.getSceneX() + " event.getScreenX()= " + event.getScreenX());
+//                log.debug("dragImage.getFitWidth() = " + dragImageView.getFitWidth() + " dragImage.getWidth() = " + dragImage.getWidth());
+//                log.debug("dragImageView.getLayoutBounds().getWidth() = " + dragImageView.getLayoutBounds().getWidth());
+//                dragImageView.setX(event.getX() - (dragImageView.getLayoutBounds().getWidth() / 2d));
+            }
+        });
+
+        nameText.setOnMousePressed(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                if (event.isSecondaryButtonDown()) {
+                    final ContextMenu contextMenu = new ContextMenu();
+                    MenuItem hideMenuItem = new MenuItem("Hide Axis");
+                    MenuItem closeMenuItem = new MenuItem("Close Popup");
+                    contextMenu.getItems().addAll(hideMenuItem, closeMenuItem);
+                    hideMenuItem.setOnAction(new EventHandler<ActionEvent>() {
+                        @Override
+                        public void handle(ActionEvent event) {
+                            dataModel.disableColumn(column);
+                        }
+                    });
+                    closeMenuItem.setOnAction(new EventHandler<ActionEvent>() {
+                        @Override
+                        public void handle(ActionEvent event) {
+                            contextMenu.hide();
+                        }
+                    });
+                    contextMenu.show(pcpView, event.getScreenX(), event.getScreenY());
+                }
+            }
+        });
+
+        nameText.setOnMouseReleased(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                if (dragging) {
+                    pane.getChildren().remove(axisDraggingGraphicsGroup);
+
+                    pane.getChildren().remove(dragImageView);
+
+                    dragging = false;
+
+                    // calculate the new index position for the column associated with this axis
+//                    double dragImageCenterX = dragImageView.getX() + (dragImageView.getLayoutBounds().getWidth() / 2.);
+//                    int newColumnIndex = (int) dragImageCenterX / pcpView.getAxisSpacing();
+                    int newColumnIndex = (int)dragEndPoint.getX() / pcpView.getAxisSpacing();
+                    newColumnIndex = GraphicsUtil.constrain(newColumnIndex, 0, dataModel.getColumnCount() - 1);
+
+                    if (!(newColumnIndex == dataModel.getColumnIndex(column))) {
+                        dataModel.changeColumnOrder(getColumn(), newColumnIndex);
+                    }
+
                 }
             }
         });
