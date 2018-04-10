@@ -71,7 +71,7 @@ public class EDENFXMain extends Application implements DataModelListener {
     private static final Logger log = LoggerFactory.getLogger(EDENFXMain.class);
 
     public static final String SPLASH_IMAGE = "EDENFX-SplashScreen.png";
-    private static final int SPLASH_WIDTH = 600;
+    private static final int SPLASH_WIDTH = 650;
     private static final int SPLASH_HEIGHT = 350;
 
     private PCPView pcpView;

@@ -629,12 +629,13 @@ public class DataModel {
         for (Column column : columns) {
             column.calculateStatistics();
         }
+
+        calculateColumn2DHistograms();
     }
 
-    private void calculateColumnHistograms() {
+    private void calculateColumn2DHistograms() {
         maxHistogram2DBinCount = 0;
         for (Column column : columns) {
-            column.getStatistics().calculateHistogram();
             for (Column compareColumn : columns) {
                 if (column != compareColumn) {
                     column.getStatistics().calculateHistogram2D(compareColumn.getStatistics());

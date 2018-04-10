@@ -108,6 +108,8 @@ public class Query {
         for (ColumnSummaryStats summaryStats : columnQuerySummaryStatsMap.values()) {
             summaryStats.setNumHistogramBins(numBins);
         }
+        
+        calculateColumn2DHistograms();
     }
 
     public void calculateStatistics() {
@@ -132,14 +134,18 @@ public class Query {
                 }
             }
 
-            maxHistogram2DBinCount = 0;
-            for (ColumnSummaryStats columnSummaryStats : columnQuerySummaryStatsMap.values()) {
-                for (ColumnSummaryStats compareColumnSummaryStats : columnQuerySummaryStatsMap.values()) {
-                    if (columnSummaryStats != compareColumnSummaryStats) {
-                        columnSummaryStats.calculateHistogram2D(compareColumnSummaryStats);
-                        if (columnSummaryStats.getMaxHistogram2DBinCount() > maxHistogram2DBinCount) {
-                            maxHistogram2DBinCount = columnSummaryStats.getMaxHistogram2DBinCount();
-                        }
+            calculateColumn2DHistograms();
+        }
+    }
+
+    private void calculateColumn2DHistograms() {
+        maxHistogram2DBinCount = 0;
+        for (ColumnSummaryStats columnSummaryStats : columnQuerySummaryStatsMap.values()) {
+            for (ColumnSummaryStats compareColumnSummaryStats : columnQuerySummaryStatsMap.values()) {
+                if (columnSummaryStats != compareColumnSummaryStats) {
+                    columnSummaryStats.calculateHistogram2D(compareColumnSummaryStats);
+                    if (columnSummaryStats.getMaxHistogram2DBinCount() > maxHistogram2DBinCount) {
+                        maxHistogram2DBinCount = columnSummaryStats.getMaxHistogram2DBinCount();
                     }
                 }
             }
