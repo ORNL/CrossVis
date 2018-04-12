@@ -353,7 +353,7 @@ public abstract class PCPAxis {
         highlighted.addListener((observable, oldValue, newValue) -> {
             if (newValue) {
                 nameText.setFont(Font.font(nameText.getFont().getFamily(), FontWeight.BOLD, DEFAULT_NAME_TEXT_SIZE));
-                nameText.setEffect(new Glow());
+                nameText.setEffect(new DropShadow());
             } else {
                 nameText.setFont(Font.font(nameText.getFont().getFamily(), FontWeight.NORMAL, DEFAULT_NAME_TEXT_SIZE));
                 nameText.setEffect(null);
