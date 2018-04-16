@@ -67,7 +67,7 @@
 					</descriptorRefs>
                     <archive>
                         <manifest>
-                            <mainClass>gov.ornl.csed.cda.edenfx.EDENFXMain</mainClass>
+                            <mainClass>gov.ornl.edenfx.EDENFXMain</mainClass>
                         </manifest>
                         <manifestEntries>
                             <Title>${project.artifactId}</Title>
@@ -119,7 +119,7 @@
                                 <argument>-srcfiles</argument>
                                 <argument>./target/edenfx-${project.version}-jar-with-dependencies.jar</argument>
                                 <argument>-appclass</argument>
-                                <argument>gov.ornl.csed.cda.edenfx.EDENFXMain</argument>
+                                <argument>gov.ornl.edenfx.EDENFXMain</argument>
                                 <argument>-outdir</argument>
                                 <argument>./target</argument>
                                 <argument>-outfile</argument>
