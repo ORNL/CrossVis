@@ -120,7 +120,7 @@ public class IOUtilities {
 		return numLines;
 	}
 
-	public static void readCSV(File f, ArrayList<String> ignoreColumnNames, ArrayList<String> temporalColumnNames,
+	public static void readCSV(File f, ArrayList<String> ignoreColumnNames, ArrayList<String> categoricalColumnNames, ArrayList<String> temporalColumnNames,
 							   ArrayList<DateTimeFormatter> temporalColumnFormatters, DataModel dataModel) throws IOException {
 		BufferedReader reader = new BufferedReader(new FileReader(f));
 
@@ -132,6 +132,12 @@ public class IOUtilities {
 		    temporalColumnIndices = new int[temporalColumnNames.size()];
 		    Arrays.fill(temporalColumnIndices, -1);
         }
+
+        int categoricalColumnIndices[] = null;
+		if (categoricalColumnNames != null && !categoricalColumnNames.isEmpty()) {
+			categoricalColumnIndices = new int[categoricalColumnNames.size()];
+			Arrays.fill(categoricalColumnIndices, -1);
+		}
 
         int ignoreColumnIndices[] = null;
 		if (ignoreColumnNames != null && !ignoreColumnNames.isEmpty()) {
@@ -157,7 +163,7 @@ public class IOUtilities {
 					if (ignoreColumnNames != null) {
 						boolean isIgnoreColumn = false;
 						for (int i = 0; i < ignoreColumnNames.size(); i++) {
-							if (token.equals(ignoreColumnNames.get(i))) {
+							if (token.trim().equals(ignoreColumnNames.get(i))) {
 								ignoreColumnIndices[i] = tokenCounter;
 								tokenCounter++;
 								isIgnoreColumn = true;
@@ -171,12 +177,21 @@ public class IOUtilities {
 
 					if (temporalColumnNames != null) {
 					    for (int i = 0; i < temporalColumnNames.size(); i++) {
-					        if (token.equals(temporalColumnNames.get(i))) {
+					        if (token.trim().equals(temporalColumnNames.get(i))) {
 					            temporalColumnIndices[i] = tokenCounter;
 					            column = new TemporalColumn(token.trim());
                             }
                         }
                     }
+
+                    if (categoricalColumnNames != null) {
+						for (int i = 0; i < categoricalColumnNames.size(); i++) {
+							if (token.trim().equals(categoricalColumnNames.get(i))) {
+								categoricalColumnIndices[i] = tokenCounter;
+								column = new CategoricalColumn(token.trim());
+							}
+						}
+					}
 
                     if (column == null) {
 					    column = new DoubleColumn(token.trim());
@@ -245,6 +260,24 @@ public class IOUtilities {
                     }
                 }
 
+                if (categoricalColumnIndices != null) {
+					String category = null;
+
+					// is this a categorical column
+					for (int i = 0; i < categoricalColumnIndices.length; i++) {
+						if (tokenCounter == categoricalColumnIndices[i]) {
+							category = token.trim();
+							break;
+						}
+					}
+
+					if (category != null) {
+						tuple.addElement(category);
+						tokenCounter++;
+						continue;
+					}
+				}
+
                 try {
                     double value = Double.parseDouble(token);
 
@@ -296,12 +329,19 @@ public class IOUtilities {
 	public static void main (String args[]) throws IOException {
 	    DataModel dataModel = new DataModel();
 
-	    ArrayList<String> temporalColumnNames = new ArrayList<>();
-	    temporalColumnNames.add("Date");
-	    ArrayList<DateTimeFormatter> temporalColumnFormatters = new ArrayList<>();
-	    temporalColumnFormatters.add(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss"));
+	    ArrayList<String> categoricalColumnNames = new ArrayList<>();
+	    categoricalColumnNames.add("Origin");
 
-	    IOUtilities.readCSV(new File("data/csv/titan-performance.csv"), null,
-                temporalColumnNames, temporalColumnFormatters, dataModel);
+	    IOUtilities.readCSV(new File("data/csv/cars.csv"), null, categoricalColumnNames,
+				null, null, dataModel);
+
+	    log.info("Finished");
+//	    ArrayList<String> temporalColumnNames = new ArrayList<>();
+//	    temporalColumnNames.add("Date");
+//	    ArrayList<DateTimeFormatter> temporalColumnFormatters = new ArrayList<>();
+//	    temporalColumnFormatters.add(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss"));
+//
+//	    IOUtilities.readCSV(new File("data/csv/titan-performance.csv"), null, null,
+//                temporalColumnNames, temporalColumnFormatters, dataModel);
     }
 }

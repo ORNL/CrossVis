@@ -110,6 +110,25 @@ public class DataModel {
 		return temporalColumns;
 	}
 
+	public ArrayList<CategoricalColumn> getCategoricalColumns() {
+		ArrayList<CategoricalColumn> categoricalColumns = new ArrayList<>();
+		for (Column column : columns) {
+			if (column instanceof CategoricalColumn) {
+				categoricalColumns.add((CategoricalColumn)column);
+			}
+		}
+		for (Column column : disabledColumns) {
+			if (column instanceof CategoricalColumn) {
+				categoricalColumns.add((CategoricalColumn)column);
+			}
+		}
+
+		if (categoricalColumns.isEmpty()) {
+			return null;
+		}
+		return categoricalColumns;
+	}
+
 	public final Query getActiveQuery() { return activeQuery; }
 
 	public int getMaxHistogram2DBinCount() { return maxHistogram2DBinCount; }
@@ -272,7 +291,6 @@ public class DataModel {
 
 	public void disableColumn(Column disabledColumn) {
 		if (!disabledColumns.contains(disabledColumn)) {
-            int disabledColumnIndex = columns.indexOf(disabledColumn);
             removeTupleElementsForColumn(disabledColumn);
 			disabledColumn.setEnabled(false);
 
@@ -434,11 +452,16 @@ public class DataModel {
 				fireColumnSelectionChanged(newColumnSelectionRange);
 			});
 		} else if (newColumnSelectionRange instanceof TemporalColumnSelectionRange) {
-			((TemporalColumnSelectionRange)newColumnSelectionRange).rangeInstantsProperty().addListener(((observable, oldValue, newValue) -> {
+			((TemporalColumnSelectionRange)newColumnSelectionRange).rangeInstantsProperty().addListener((observable, oldValue, newValue) -> {
 				getActiveQuery().setQueriedTuples();
 				fireColumnSelectionChanged(newColumnSelectionRange);
-			}));
-		}
+			});
+		} else if (newColumnSelectionRange instanceof CategoricalColumnSelection) {
+            ((CategoricalColumnSelection)newColumnSelectionRange).selectedCategoriesProperty().addListener((observable, oldValue, newValue) -> {
+                getActiveQuery().setQueriedTuples();
+                fireColumnSelectionChanged(newColumnSelectionRange);
+            });
+        }
 	}
 
 //    public void orderColumnsByCorrelation (DoubleColumn compareColumn, boolean useQueryCorrelations) {

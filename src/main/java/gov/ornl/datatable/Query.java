@@ -79,6 +79,13 @@ public class Query {
                                     break;
 							    }
                             }
+                        } else if (column instanceof CategoricalColumn) {
+                            for (ColumnSelectionRange selectionRange : selectionRanges) {
+                                if (((CategoricalColumnSelection)selectionRange).getSelectedCategories().contains((String)tuple.getElement(icol))) {
+                                    insideSelectionRange = true;
+                                    break;
+                                }
+                            }
                         }
 
                         if (!insideSelectionRange) {
@@ -131,6 +138,13 @@ public class Query {
                         columnQuerySummaryStatsMap.put(column, columnSummaryStats);
                     }
                     ((DoubleColumnSummaryStats) columnSummaryStats).setValues(values);
+                } else if (column instanceof CategoricalColumn) {
+                    String values[] = ((CategoricalColumn)column).getQueriedValues();
+                    if (columnSummaryStats == null) {
+                        columnSummaryStats = new CategoricalColumnSummaryStats(column);
+                        columnQuerySummaryStatsMap.put(column, columnSummaryStats);
+                    }
+                    ((CategoricalColumnSummaryStats)columnSummaryStats).setValues(values);
                 }
             }
 

@@ -1144,7 +1144,7 @@ public class EDENFXMain extends Application implements DataModelListener {
         }
 
         long start = System.currentTimeMillis();
-        IOUtilities.readCSV(f, ignoreColumnNames, temporalColumnNames, temporalColumnFormatters, dataModel);
+        IOUtilities.readCSV(f, ignoreColumnNames, null, temporalColumnNames, temporalColumnFormatters, dataModel);
         long elasped = System.currentTimeMillis() - start;
         log.debug("Reading file data took " + elasped + "ms");
 

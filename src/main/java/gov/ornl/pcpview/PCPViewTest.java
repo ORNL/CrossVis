@@ -73,7 +73,7 @@ public class PCPViewTest extends Application {
                     ArrayList<String> ignoreColumnNames = new ArrayList<>();
 //                    ignoreColumnNames.add("StageoutPilots");
 
-                    IOUtilities.readCSV(new File("data/csv/titan-performance.csv"), ignoreColumnNames,
+                    IOUtilities.readCSV(new File("data/csv/titan-performance.csv"), ignoreColumnNames, null,
                             temporalColumnNames, temporalColumnFormatters, dataModel);
                 } catch (IOException e) {
                     System.exit(0);
