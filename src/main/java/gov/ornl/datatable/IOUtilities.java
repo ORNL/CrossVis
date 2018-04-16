@@ -188,7 +188,7 @@ public class IOUtilities {
 						for (int i = 0; i < categoricalColumnNames.size(); i++) {
 							if (token.trim().equals(categoricalColumnNames.get(i))) {
 								categoricalColumnIndices[i] = tokenCounter;
-								column = new CategoricalColumn(token.trim());
+								column = new CategoricalColumn(token.trim(), null);
 							}
 						}
 					}
@@ -267,6 +267,7 @@ public class IOUtilities {
 					for (int i = 0; i < categoricalColumnIndices.length; i++) {
 						if (tokenCounter == categoricalColumnIndices[i]) {
 							category = token.trim();
+							((CategoricalColumn)columns.get(tokenCounter)).addCategory(category);
 							break;
 						}
 					}
@@ -332,7 +333,7 @@ public class IOUtilities {
 	    ArrayList<String> categoricalColumnNames = new ArrayList<>();
 	    categoricalColumnNames.add("Origin");
 
-	    IOUtilities.readCSV(new File("data/csv/cars.csv"), null, categoricalColumnNames,
+	    IOUtilities.readCSV(new File("data/csv/cars-cat.csv"), null, categoricalColumnNames,
 				null, null, dataModel);
 
 	    log.info("Finished");

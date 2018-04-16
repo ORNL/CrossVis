@@ -37,21 +37,31 @@ public abstract class ColumnSummaryStats {
             xDimension = new Histogram2DDimension.Double(xColumnSummaryStats.getValues(), numHistogramBins,
                     ((DoubleColumnSummaryStats)xColumnSummaryStats.getColumn().getStatistics()).getMinValue(),
                     ((DoubleColumnSummaryStats)xColumnSummaryStats.getColumn().getStatistics()).getMaxValue());
+        } else if (this instanceof CategoricalColumnSummaryStats) {
+            CategoricalColumnSummaryStats xColumnSummaryStats = (CategoricalColumnSummaryStats)this;
+            xDimension = new Histogram2DDimension.Categorical(xColumnSummaryStats.getValues(), xColumnSummaryStats.getColumnCategories());
         }
 
         Histogram2DDimension yDimension = null;
         if (columnSummaryStats.getColumn() instanceof TemporalColumn) {
             TemporalColumnSummaryStats yColumnSummaryStats = (TemporalColumnSummaryStats)columnSummaryStats;
             yDimension = new Histogram2DDimension.Temporal(yColumnSummaryStats.getValues(),
-                    numHistogramBins,
+                    columnSummaryStats.getNumHistogramBins(),
                     ((TemporalColumnSummaryStats)yColumnSummaryStats.getColumn().getStatistics()).getStartInstant(),
                     ((TemporalColumnSummaryStats)yColumnSummaryStats.getColumn().getStatistics()).getEndInstant());
         } else if (columnSummaryStats.getColumn() instanceof DoubleColumn) {
             DoubleColumnSummaryStats yColumnSummaryStats = (DoubleColumnSummaryStats)columnSummaryStats;
-            yDimension = new Histogram2DDimension.Double(yColumnSummaryStats.getValues(), numHistogramBins,
+            yDimension = new Histogram2DDimension.Double(yColumnSummaryStats.getValues(), columnSummaryStats.getNumHistogramBins(),
                     ((DoubleColumnSummaryStats)yColumnSummaryStats.getColumn().getStatistics()).getMinValue(),
                     ((DoubleColumnSummaryStats)yColumnSummaryStats.getColumn().getStatistics()).getMaxValue());
+        } else if (columnSummaryStats.getColumn() instanceof CategoricalColumn) {
+            CategoricalColumnSummaryStats yColumnSummaryStats = (CategoricalColumnSummaryStats)columnSummaryStats;
+            yDimension = new Histogram2DDimension.Categorical(yColumnSummaryStats.getValues(), yColumnSummaryStats.getColumnCategories());
         }
+
+//        if (xDimension instanceof Histogram2DDimension.Categorical || yDimension instanceof Histogram2DDimension.Categorical) {
+//            System.out.println("categorical dimensions");
+//        }
 
         Histogram2D histogram2D = new Histogram2D(xDimension, yDimension);
         columnHistogram2DMap.put(columnSummaryStats.getColumn(), histogram2D);

@@ -58,6 +58,7 @@ public class Histogram2D {
                 continue;
             } else if (yBinIndex >= yDimension.getNumBins()) {
                 log.info("yBinIndex is >= numBins so ignoring this value");
+                int testyBinIndex = yDimension.getBinIndex(yDimension.getValue(i));
                 continue;
             }
 

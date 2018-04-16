@@ -1,17 +1,38 @@
 package gov.ornl.datatable;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 public class CategoricalColumn extends Column {
 
-    private HashSet<String> categories = new HashSet<>();
-
+    private ArrayList<String> categories = new ArrayList<>();
     private CategoricalColumnSummaryStats summaryStats;
 
-    public CategoricalColumn(String name) {
+    public CategoricalColumn(String name, List<String> categories) {
         super(name);
+        if (categories != null && (categories.size() > 0)) {
+            this.categories.addAll(categories);
+        }
+    }
+
+    public ArrayList<String> getCategories() {
+        return categories;
+    }
+
+    public int getCategoryID(String category) {
+        return categories.indexOf(category);
+    }
+
+    public String getCategory(int id) {
+        if (id > 0 && id < categories.size()) {
+            return categories.get(id);
+        }
+        return null;
+    }
+
+    public void addCategory(String category) {
+        if (!categories.contains(category)) {
+            categories.add(category);
+        }
     }
 
     @Override

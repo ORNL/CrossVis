@@ -2,6 +2,7 @@ package gov.ornl.datatable;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 
 public abstract class Histogram2DDimension {
     private final static double EPSILON = 0.000001;
@@ -11,6 +12,42 @@ public abstract class Histogram2DDimension {
     public abstract int size();
     public abstract Object getValue(int index);
     public abstract int getBinIndex(Object value);
+
+    public static class Categorical extends Histogram2DDimension {
+        private String data[];
+        private List categories;
+
+        public Categorical(String data[], List categories) {
+            this.data = data;
+            this.categories = categories;
+        }
+
+        @Override
+        public void setNumBins(int numBins) {
+            // this doesn't apply with categorical variables
+        }
+
+        @Override
+        // for categorical data this returns the number of categories
+        public int getNumBins() {
+            return categories.size();
+        }
+
+        @Override
+        public int size() {
+            return data.length;
+        }
+
+        @Override
+        public Object getValue(int index) {
+            return data[index];
+        }
+
+        @Override
+        public int getBinIndex(Object value) {
+            return categories.indexOf(value);
+        }
+    }
 
     public static class Temporal extends Histogram2DDimension {
         private Instant data[];
@@ -140,6 +177,7 @@ public abstract class Histogram2DDimension {
             }
 
             binSize = (maxValue - minValue) / numBins;
+
         }
 
         public Double(double data[], int numBins, double minValue, double maxValue) {
