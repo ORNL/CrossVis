@@ -109,6 +109,9 @@ public class IOUtilities {
 		reader.close();
 
 		String columnNames[] = headerLine.trim().split(",");
+		for (int i = 0; i < columnNames.length; i++) {
+			columnNames[i] = columnNames[i].trim();
+		}
 		return columnNames;
 	}
 

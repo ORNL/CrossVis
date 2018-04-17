@@ -35,7 +35,7 @@ public class ColumnSpecification {
 
     public StringProperty typeProperty() {
         if (type == null) {
-            type = new SimpleStringProperty("Number");
+            type = new SimpleStringProperty("Double");
         }
         return type;
     }

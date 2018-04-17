@@ -83,6 +83,8 @@ public class EDENFXMain extends Application implements DataModelListener {
 
     private TableView<DoubleColumn> doubleColumnTableView;
     private TableView<TemporalColumn> temporalColumnTableView;
+    private TableView<CategoricalColumn> categoricalColumnTableView;
+
     private TableView<ColumnSelectionRange> queryTableView;
     private TableView<Tuple> dataTableView;
     private MenuItem removeAllQueriesMI;
@@ -252,6 +254,77 @@ public class EDENFXMain extends Application implements DataModelListener {
     }
 
     private void createColumnTableViews() {
+        // create table view for categorical columns
+        categoricalColumnTableView = new TableView<>();
+        categoricalColumnTableView.setEditable(true);
+        categoricalColumnTableView.getSelectionModel().selectedItemProperty().addListener(((observable, oldValue, newValue) -> {
+            if (newValue != null) {
+                dataModel.setHighlightedColumn(newValue);
+            }
+        }));
+
+        TableColumn<CategoricalColumn, String> categoricalNameColumn = new TableColumn<>("Variable Name");
+        categoricalNameColumn.setMinWidth(180);
+        categoricalNameColumn.setCellValueFactory(new PropertyValueFactory<CategoricalColumn, String>("name"));
+        categoricalNameColumn.setCellFactory(TextFieldTableCell.forTableColumn());
+        categoricalNameColumn.setEditable(true);
+
+        TableColumn<CategoricalColumn, Boolean> categoricalEnabledColumn = new TableColumn<>("Visible");
+        categoricalEnabledColumn.setMinWidth(20);
+        categoricalEnabledColumn.setCellValueFactory(new PropertyValueFactory<CategoricalColumn, Boolean>("enabled"));
+        categoricalEnabledColumn.setCellFactory(new Callback<TableColumn<CategoricalColumn, Boolean>, TableCell<CategoricalColumn, Boolean>>() {
+            @Override
+            public TableCell<CategoricalColumn, Boolean> call(TableColumn<CategoricalColumn, Boolean> param) {
+                return new CheckBoxTableCell<CategoricalColumn, Boolean>() {
+                    {
+                        setAlignment(Pos.CENTER);
+                    }
+
+                    @Override
+                    public void updateItem(Boolean item, boolean empty) {
+                        if (!empty) {
+                            TableRow row = getTableRow();
+
+                            if (row != null) {
+                                int rowNumber = row.getIndex();
+                                TableView.TableViewSelectionModel sm = getTableView().getSelectionModel();
+
+                                if (item) {
+                                    // enable a disabled column
+                                    // get the column name; lookup column in data model; enable the column
+                                    Column column = getTableView().getItems().get(rowNumber);
+                                    dataModel.enableColumn(column);
+                                } else {
+                                    // disable an enabled column
+                                    // get the column name; disable column in data model
+                                    Column column = getTableView().getItems().get(rowNumber);
+                                    dataModel.disableColumn(column);
+                                }
+                            }
+                        }
+                        super.updateItem(item, empty);
+                    }
+                };
+            }
+        });
+        categoricalEnabledColumn.setEditable(true);
+
+//        TableColumn <TemporalColumn, Instant> startColumn = new TableColumn<>("Start");
+//        startColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<TemporalColumn, Instant>, ObservableValue<Instant>>() {
+//            public ObservableValue<Instant> call(TableColumn.CellDataFeatures<TemporalColumn, Instant> t) {
+//                return new ReadOnlyObjectWrapper(t.getValue().getStatistics().getStartInstant());
+//            }
+//        });
+//
+//        TableColumn <TemporalColumn, Instant> endColumn = new TableColumn<>("End");
+//        endColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<TemporalColumn, Instant>, ObservableValue<Instant>>() {
+//            public ObservableValue<Instant> call(TableColumn.CellDataFeatures<TemporalColumn, Instant> t) {
+//                return new ReadOnlyObjectWrapper(t.getValue().getStatistics().getEndInstant());
+//            }
+//        });
+
+        categoricalColumnTableView.getColumns().addAll(categoricalEnabledColumn, categoricalNameColumn);
+
         // create table view for temporal columns
         temporalColumnTableView = new TableView<>();
         temporalColumnTableView.setEditable(true);
@@ -654,6 +727,10 @@ public class EDENFXMain extends Application implements DataModelListener {
         temporalColumnTableTab.setClosable(false);
         temporalColumnTableTab.setContent(temporalColumnTableView);
 
+        Tab categoricalColumnTableTab = new Tab(" Categorical Column Table ");
+        categoricalColumnTableTab.setClosable(false);
+        categoricalColumnTableTab.setContent(categoricalColumnTableView);
+
         Tab dataTableTab = new Tab(" Data Table ");
         dataTableTab.setClosable(false);
         dataTableTab.setContent(dataTableView);
@@ -662,7 +739,7 @@ public class EDENFXMain extends Application implements DataModelListener {
         queryTableTab.setClosable(false);
         queryTableTab.setContent(queryTableView);
 
-        tabPane.getTabs().addAll(temporalColumnTableTab, quantitativeColumnTableTab, dataTableTab, queryTableTab);
+        tabPane.getTabs().addAll(temporalColumnTableTab, quantitativeColumnTableTab, categoricalColumnTableTab, dataTableTab, queryTableTab);
 
         SplitPane middleSplit = new SplitPane();
         middleSplit.setOrientation(Orientation.VERTICAL);
@@ -1132,6 +1209,8 @@ public class EDENFXMain extends Application implements DataModelListener {
         ArrayList<String> temporalColumnNames = new ArrayList<>();
         ArrayList<DateTimeFormatter> temporalColumnFormatters = new ArrayList<>();
         ArrayList<String> ignoreColumnNames = new ArrayList<>();
+        ArrayList<String> categoricalColumnNames = new ArrayList<>();
+
         String lastDateTimeParsePattern = null;
         for (ColumnSpecification columnSpecification : columnSpecifications) {
             if (columnSpecification.getIgnore()) {
@@ -1140,11 +1219,13 @@ public class EDENFXMain extends Application implements DataModelListener {
                 temporalColumnNames.add(columnSpecification.getName());
                 temporalColumnFormatters.add(DateTimeFormatter.ofPattern(columnSpecification.getParsePattern()));
                 lastDateTimeParsePattern = columnSpecification.getParsePattern();
+            } else if (columnSpecification.getType().equalsIgnoreCase("Categorical")) {
+                categoricalColumnNames.add(columnSpecification.getName());
             }
         }
 
         long start = System.currentTimeMillis();
-        IOUtilities.readCSV(f, ignoreColumnNames, null, temporalColumnNames, temporalColumnFormatters, dataModel);
+        IOUtilities.readCSV(f, ignoreColumnNames, categoricalColumnNames, temporalColumnNames, temporalColumnFormatters, dataModel);
         long elasped = System.currentTimeMillis() - start;
         log.debug("Reading file data took " + elasped + "ms");
 
@@ -1162,6 +1243,12 @@ public class EDENFXMain extends Application implements DataModelListener {
         ArrayList<DoubleColumn> doubleColumns = dataModel.getDoubleColumns();
         if (doubleColumns != null && !doubleColumns.isEmpty()) {
             doubleColumnTableView.setItems(FXCollections.observableArrayList(doubleColumns));
+        }
+
+        categoricalColumnTableView.getItems().clear();
+        ArrayList<CategoricalColumn> categoricalColumns = dataModel.getCategoricalColumns();
+        if (categoricalColumns != null && !categoricalColumns.isEmpty()) {
+            categoricalColumnTableView.setItems(FXCollections.observableArrayList(categoricalColumns));
         }
 
         queryTableView.getItems().clear();
@@ -1185,6 +1272,7 @@ public class EDENFXMain extends Application implements DataModelListener {
             tableColumnSpecs.add(columnSpec);
         }
         final ObservableList<ColumnSpecification> temporalColumnSpecs = FXCollections.observableArrayList();
+        final ObservableList<ColumnSpecification> categoricalColumnSpecs = FXCollections.observableArrayList();
 
         Dialog<ObservableList<ColumnSpecification>> dialog = new Dialog<>();
         dialog.setTitle("CSV Column Specifications");
@@ -1250,7 +1338,7 @@ public class EDENFXMain extends Application implements DataModelListener {
         typeColumn.setCellFactory(new Callback<TableColumn<ColumnSpecification, String>, TableCell<ColumnSpecification, String>>() {
             @Override
             public TableCell<ColumnSpecification, String> call(TableColumn<ColumnSpecification, String> param) {
-                return new ComboBoxTableCell<ColumnSpecification, String>(FXCollections.observableArrayList("Temporal", "Double")) {
+                return new ComboBoxTableCell<ColumnSpecification, String>(FXCollections.observableArrayList("Temporal", "Double", "Categorical")) {
                     @Override
                     public void updateItem(String item, boolean empty) {
                         if (!empty) {
@@ -1265,6 +1353,8 @@ public class EDENFXMain extends Application implements DataModelListener {
                                     }
                                 } else if (item.equalsIgnoreCase("Double")) {
                                     // check temporal column specs table for column and remove if found
+                                    temporalSpecsTableView.getItems().remove(tableColumnSpecs.get(rowNumber));
+                                } else if (item.equalsIgnoreCase("Categorical")) {
                                     temporalSpecsTableView.getItems().remove(tableColumnSpecs.get(rowNumber));
                                 }
                             }
