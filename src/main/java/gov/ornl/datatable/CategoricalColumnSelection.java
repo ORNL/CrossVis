@@ -25,4 +25,12 @@ public class CategoricalColumnSelection extends ColumnSelectionRange {
     public Set<String> getSelectedCategories() {
         return selectedCategories.get();
     }
+
+    public void removeCategory(String category) {
+        selectedCategories.remove(category);
+    }
+
+    public void addCategory(String category) {
+        selectedCategories.add(category);
+    }
 }

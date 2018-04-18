@@ -333,8 +333,10 @@ public class PCPView extends Region implements DataModelListener {
                         pcpAxis.layout(left + (iaxis * axisSpacing), top, axisSpacing, pcpHeight);
 
                         if (getDisplayMode() == DISPLAY_MODE.HISTOGRAM) {
-                            pane.getChildren().add(0, pcpAxis.getHistogramBinRectangleGroup());
-                            pane.getChildren().add(1, pcpAxis.getQueryHistogramBinRectangleGroup());
+                            if (!(pcpAxis instanceof PCPCategoricalAxis)) {
+                                pane.getChildren().add(0, pcpAxis.getHistogramBinRectangleGroup());
+                                pane.getChildren().add(1, pcpAxis.getQueryHistogramBinRectangleGroup());
+                            }
                         }
                     }
 
@@ -573,15 +575,20 @@ public class PCPView extends Region implements DataModelListener {
         if (axisList.isEmpty()) {
             for (int iaxis = 0; iaxis < dataModel.getColumnCount(); iaxis++) {
 
-                PCPAxis pcpAxis;
+                PCPAxis pcpAxis = null;
                 if (dataModel.getColumn(iaxis) instanceof TemporalColumn) {
                     pcpAxis = new PCPTemporalAxis(this, dataModel.getColumn(iaxis), dataModel, pane);
-                } else {
+                } else if (dataModel.getColumn(iaxis) instanceof CategoricalColumn) {
+                    pcpAxis = new PCPCategoricalAxis(this, dataModel.getColumn(iaxis), dataModel, pane);
+                } else if (dataModel.getColumn(iaxis) instanceof DoubleColumn){
                     pcpAxis = new PCPDoubleAxis(this, dataModel.getColumn(iaxis), dataModel, pane);
                 }
-                pcpAxis.nameTextRotationProperty().bind(nameTextRotationProperty());
-                pane.getChildren().add(pcpAxis.getGraphicsGroup());
-                axisList.add(pcpAxis);
+
+                if (pcpAxis != null) {
+                    pcpAxis.nameTextRotationProperty().bind(nameTextRotationProperty());
+                    pane.getChildren().add(pcpAxis.getGraphicsGroup());
+                    axisList.add(pcpAxis);
+                }
             }
         } else {
             ArrayList<PCPAxis> newAxisList = new ArrayList<>();
@@ -625,6 +632,8 @@ public class PCPView extends Region implements DataModelListener {
             pcpAxis = new PCPDoubleAxis(this, column, dataModel, pane);
         } else if (column instanceof TemporalColumn) {
             pcpAxis = new PCPTemporalAxis(this, column, dataModel, pane);
+        } else if (column instanceof CategoricalColumn) {
+            pcpAxis = new PCPCategoricalAxis(this, column, dataModel, pane);
         }
 
         pcpAxis.nameTextRotationProperty().bind(nameTextRotationProperty());

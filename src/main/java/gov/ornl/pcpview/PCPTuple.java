@@ -6,6 +6,7 @@ import gov.ornl.datatable.Tuple;
 import gov.ornl.util.GraphicsUtil;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
+import javafx.scene.shape.Rectangle;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -59,6 +60,12 @@ public class PCPTuple {
                         quantitativeAxis.getFocusBottomY(), quantitativeAxis.getFocusTopY());
                 xPoints[i] = axis.getCenterX();
                 yPoints[i] = yPosition;
+            } else if (axis instanceof PCPCategoricalAxis) {
+                PCPCategoricalAxis categoricalAxis = (PCPCategoricalAxis)axis;
+                String category = (String)tuple.getElement(i);
+                Rectangle categoryRectangle = categoricalAxis.getCategoryRectangle(category);
+                xPoints[i] = axis.getCenterX();
+                yPoints[i] = categoryRectangle.getY() + (categoryRectangle.getHeight() / 2.);
             }
         }
     }

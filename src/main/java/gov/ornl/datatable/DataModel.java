@@ -1,5 +1,7 @@
 package gov.ornl.datatable;
 
+import javafx.collections.SetChangeListener;
+
 import java.util.ArrayList;
 import java.util.logging.Logger;
 
@@ -457,10 +459,21 @@ public class DataModel {
 				fireColumnSelectionChanged(newColumnSelectionRange);
 			});
 		} else if (newColumnSelectionRange instanceof CategoricalColumnSelection) {
-            ((CategoricalColumnSelection)newColumnSelectionRange).selectedCategoriesProperty().addListener((observable, oldValue, newValue) -> {
-                getActiveQuery().setQueriedTuples();
-                fireColumnSelectionChanged(newColumnSelectionRange);
-            });
+			((CategoricalColumnSelection)newColumnSelectionRange).selectedCategoriesProperty().addListener(new SetChangeListener<String>() {
+			    @Override
+                public void onChanged(Change<? extends String> change) {
+			        log.info("categorical column selection changed");
+			        if (((CategoricalColumnSelection) newColumnSelectionRange).getSelectedCategories().isEmpty()) {
+			        	getActiveQuery().removeColumnSelectionRange(newColumnSelectionRange);
+					}
+			        getActiveQuery().setQueriedTuples();
+			        fireColumnSelectionChanged(newColumnSelectionRange);
+                }
+			});
+//            ((CategoricalColumnSelection)newColumnSelectionRange).selectedCategoriesProperty().addListener((observable, oldValue, newValue) -> {
+//                getActiveQuery().setQueriedTuples();
+//                fireColumnSelectionChanged(newColumnSelectionRange);
+//            });
         }
 	}
 

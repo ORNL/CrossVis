@@ -15,8 +15,20 @@ public class CategoricalHistogram extends Histogram {
         calculateStatistics();
     }
 
+    public List<String> getCategories() {
+        return categories;
+    }
+
     public int getCategoryCount(String category) {
         return categoryCounts.get(category);
+    }
+
+    public int getNumCategories() {
+        return categories.size();
+    }
+
+    public int getTotalCount() {
+        return values.length;
     }
 
     public void setValues (String values[]) {
