@@ -3,6 +3,7 @@ package gov.ornl.edenfx;
 import gov.ornl.pcpview.ColumnSpecification;
 import gov.ornl.pcpview.PCPView;
 import gov.ornl.datatable.*;
+import gov.ornl.pcpview.QueryTableFactory;
 import javafx.animation.FadeTransition;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -56,6 +57,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.prefs.Preferences;
 
 /**
@@ -85,7 +87,11 @@ public class EDENFXMain extends Application implements DataModelListener {
     private TableView<TemporalColumn> temporalColumnTableView;
     private TableView<CategoricalColumn> categoricalColumnTableView;
 
-    private TableView<ColumnSelectionRange> queryTableView;
+    private TableView<ColumnSelectionRange> queryTableView = new TableView<>();
+    private TableView<ColumnSelectionRange> doubleQueryTableView;
+    private TableView<ColumnSelectionRange> temporalQueryTableView;
+    private TableView<ColumnSelectionRange> categoricalQueryTableView;
+
     private TableView<Tuple> dataTableView;
     private MenuItem removeAllQueriesMI;
     private MenuItem exportSelectedDataMI;
@@ -158,100 +164,100 @@ public class EDENFXMain extends Application implements DataModelListener {
         dataModel.addDataModelListener(this);
     }
 
-    private void createQueryTableView() {
-        queryTableView = new TableView();
-        queryTableView.setEditable(true);
-
-        TableColumn<ColumnSelectionRange, String> columnNameColumn = new TableColumn<>("Column");
-        columnNameColumn.setMinWidth(160);
-        columnNameColumn.setCellValueFactory(new PropertyValueFactory<ColumnSelectionRange, String>("column"));
-
-        TableColumn<ColumnSelectionRange, String> minColumn = new TableColumn<>("Minimum Value");
-        minColumn.setMinWidth(200);
-        minColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<ColumnSelectionRange, String>, ObservableValue<String>>() {
-            public ObservableValue<String> call(TableColumn.CellDataFeatures<ColumnSelectionRange, String> t) {
-                if (t.getValue() instanceof TemporalColumnSelectionRange) {
-                    return new ReadOnlyObjectWrapper(((TemporalColumnSelectionRange)t.getValue()).getStartInstant().toString());
-                } else {
-                    return new ReadOnlyObjectWrapper(String.valueOf(((DoubleColumnSelectionRange)t.getValue()).getMinValue()));
-                }
-            }
-        });
-        minColumn.setOnEditCommit((TableColumn.CellEditEvent<ColumnSelectionRange, String> t) -> {
-            if (t.getRowValue() instanceof TemporalColumnSelectionRange) {
-                try {
-                    Instant instant = Instant.parse(t.getNewValue());
-                    ((TemporalColumnSelectionRange) t.getRowValue()).setStartInstant(instant);
-                } catch (DateTimeParseException ex) {
-                    // show alert dialog
-                    Alert alert = new Alert(Alert.AlertType.ERROR);
-                    alert.setTitle("Value Parsing Error");
-                    alert.setHeaderText("An Exception Occurred While Parsing New Start Time");
-                    alert.setContentText(ex.getMessage());
-                    alert.showAndWait();
-                    queryTableView.refresh();
-                }
-            } else {
-                try {
-                    Double doubleValue = Double.parseDouble(t.getNewValue());
-                    ((DoubleColumnSelectionRange) t.getRowValue()).setMinValue(doubleValue);
-                } catch (NumberFormatException ex) {
-                    // show alert dialog
-                    Alert alert = new Alert(Alert.AlertType.ERROR);
-                    alert.setTitle("Value Parsing Error");
-                    alert.setHeaderText("An Exception Occurred While Parsing New Minimum Value");
-                    alert.setContentText(ex.getMessage());
-                    alert.showAndWait();
-                    queryTableView.refresh();
-                }
-            }
-        });
-        minColumn.setCellFactory(TextFieldTableCell.forTableColumn());
-        minColumn.setEditable(true);
-
-        TableColumn<ColumnSelectionRange, String> maxColumn = new TableColumn<>("Maximum Value");
-        maxColumn.setMinWidth(200);
-        maxColumn.setCellValueFactory(t -> {
-            if (t.getValue() instanceof TemporalColumnSelectionRange) {
-                return new ReadOnlyObjectWrapper(((TemporalColumnSelectionRange)t.getValue()).getEndInstant().toString());
-            } else {
-                return new ReadOnlyObjectWrapper(String.valueOf(((DoubleColumnSelectionRange)t.getValue()).getMaxValue()));
-            }
-        });
-        maxColumn.setCellFactory(TextFieldTableCell.forTableColumn());
-        maxColumn.setOnEditCommit((TableColumn.CellEditEvent<ColumnSelectionRange, String> t) -> {
-            if (t.getRowValue() instanceof TemporalColumnSelectionRange) {
-                try {
-                    Instant instant = Instant.parse(t.getNewValue());
-                    ((TemporalColumnSelectionRange) t.getRowValue()).setEndInstant(instant);
-                } catch (DateTimeParseException ex) {
-                    // show alert dialog
-                    Alert alert = new Alert(Alert.AlertType.ERROR);
-                    alert.setTitle("Value Parsing Error");
-                    alert.setHeaderText("An Exception Occurred While Parsing New End Time");
-                    alert.setContentText(ex.getMessage());
-                    alert.showAndWait();
-                    queryTableView.refresh();
-                }
-            } else {
-                try {
-                    Double doubleValue = Double.parseDouble(t.getNewValue());
-                    ((DoubleColumnSelectionRange) t.getRowValue()).setMaxValue(doubleValue);
-                } catch (NumberFormatException ex) {
-                    // show alert dialog
-                    Alert alert = new Alert(Alert.AlertType.ERROR);
-                    alert.setTitle("Value Parsing Error");
-                    alert.setHeaderText("An Exception Occurred While Parsing New Maximum Value");
-                    alert.setContentText(ex.getMessage());
-                    alert.showAndWait();
-                    queryTableView.refresh();
-                }
-            }
-        });
-        maxColumn.setEditable(true);
-
-        queryTableView.getColumns().addAll(columnNameColumn, minColumn, maxColumn);
-    }
+//    private void createQueryTableView() {
+//        queryTableView = new TableView();
+//        queryTableView.setEditable(true);
+//
+//        TableColumn<ColumnSelectionRange, String> columnNameColumn = new TableColumn<>("Column");
+//        columnNameColumn.setMinWidth(160);
+//        columnNameColumn.setCellValueFactory(new PropertyValueFactory<ColumnSelectionRange, String>("column"));
+//
+//        TableColumn<ColumnSelectionRange, String> minColumn = new TableColumn<>("Minimum Value");
+//        minColumn.setMinWidth(200);
+//        minColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<ColumnSelectionRange, String>, ObservableValue<String>>() {
+//            public ObservableValue<String> call(TableColumn.CellDataFeatures<ColumnSelectionRange, String> t) {
+//                if (t.getValue() instanceof TemporalColumnSelectionRange) {
+//                    return new ReadOnlyObjectWrapper(((TemporalColumnSelectionRange)t.getValue()).getStartInstant().toString());
+//                } else {
+//                    return new ReadOnlyObjectWrapper(String.valueOf(((DoubleColumnSelectionRange)t.getValue()).getMinValue()));
+//                }
+//            }
+//        });
+//        minColumn.setOnEditCommit((TableColumn.CellEditEvent<ColumnSelectionRange, String> t) -> {
+//            if (t.getRowValue() instanceof TemporalColumnSelectionRange) {
+//                try {
+//                    Instant instant = Instant.parse(t.getNewValue());
+//                    ((TemporalColumnSelectionRange) t.getRowValue()).setStartInstant(instant);
+//                } catch (DateTimeParseException ex) {
+//                    // show alert dialog
+//                    Alert alert = new Alert(Alert.AlertType.ERROR);
+//                    alert.setTitle("Value Parsing Error");
+//                    alert.setHeaderText("An Exception Occurred While Parsing New Start Time");
+//                    alert.setContentText(ex.getMessage());
+//                    alert.showAndWait();
+//                    queryTableView.refresh();
+//                }
+//            } else {
+//                try {
+//                    Double doubleValue = Double.parseDouble(t.getNewValue());
+//                    ((DoubleColumnSelectionRange) t.getRowValue()).setMinValue(doubleValue);
+//                } catch (NumberFormatException ex) {
+//                    // show alert dialog
+//                    Alert alert = new Alert(Alert.AlertType.ERROR);
+//                    alert.setTitle("Value Parsing Error");
+//                    alert.setHeaderText("An Exception Occurred While Parsing New Minimum Value");
+//                    alert.setContentText(ex.getMessage());
+//                    alert.showAndWait();
+//                    queryTableView.refresh();
+//                }
+//            }
+//        });
+//        minColumn.setCellFactory(TextFieldTableCell.forTableColumn());
+//        minColumn.setEditable(true);
+//
+//        TableColumn<ColumnSelectionRange, String> maxColumn = new TableColumn<>("Maximum Value");
+//        maxColumn.setMinWidth(200);
+//        maxColumn.setCellValueFactory(t -> {
+//            if (t.getValue() instanceof TemporalColumnSelectionRange) {
+//                return new ReadOnlyObjectWrapper(((TemporalColumnSelectionRange)t.getValue()).getEndInstant().toString());
+//            } else {
+//                return new ReadOnlyObjectWrapper(String.valueOf(((DoubleColumnSelectionRange)t.getValue()).getMaxValue()));
+//            }
+//        });
+//        maxColumn.setCellFactory(TextFieldTableCell.forTableColumn());
+//        maxColumn.setOnEditCommit((TableColumn.CellEditEvent<ColumnSelectionRange, String> t) -> {
+//            if (t.getRowValue() instanceof TemporalColumnSelectionRange) {
+//                try {
+//                    Instant instant = Instant.parse(t.getNewValue());
+//                    ((TemporalColumnSelectionRange) t.getRowValue()).setEndInstant(instant);
+//                } catch (DateTimeParseException ex) {
+//                    // show alert dialog
+//                    Alert alert = new Alert(Alert.AlertType.ERROR);
+//                    alert.setTitle("Value Parsing Error");
+//                    alert.setHeaderText("An Exception Occurred While Parsing New End Time");
+//                    alert.setContentText(ex.getMessage());
+//                    alert.showAndWait();
+//                    queryTableView.refresh();
+//                }
+//            } else {
+//                try {
+//                    Double doubleValue = Double.parseDouble(t.getNewValue());
+//                    ((DoubleColumnSelectionRange) t.getRowValue()).setMaxValue(doubleValue);
+//                } catch (NumberFormatException ex) {
+//                    // show alert dialog
+//                    Alert alert = new Alert(Alert.AlertType.ERROR);
+//                    alert.setTitle("Value Parsing Error");
+//                    alert.setHeaderText("An Exception Occurred While Parsing New Maximum Value");
+//                    alert.setContentText(ex.getMessage());
+//                    alert.showAndWait();
+//                    queryTableView.refresh();
+//                }
+//            }
+//        });
+//        maxColumn.setEditable(true);
+//
+//        queryTableView.getColumns().addAll(columnNameColumn, minColumn, maxColumn);
+//    }
 
     private void createColumnTableViews() {
         // create table view for categorical columns
@@ -714,8 +720,36 @@ public class EDENFXMain extends Application implements DataModelListener {
         MenuBar menuBar = createMenuBar(mainStage);
 //        menuBar.setUseSystemMenuBar(true);
         createColumnTableViews();
-        createQueryTableView();
+//        createQueryTableView();
         dataTableView = new TableView<>();
+
+        doubleQueryTableView = QueryTableFactory.buildDoubleSelectionTable();
+        doubleQueryTableView.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
+        temporalQueryTableView = QueryTableFactory.buildTemporalSelectionTable();
+        temporalQueryTableView.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
+        categoricalQueryTableView = QueryTableFactory.buildCategoricalSelectionTable();
+        categoricalQueryTableView.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
+
+        GridPane queryTablePane = new GridPane();
+        ColumnConstraints col1Constraints = new ColumnConstraints();
+        col1Constraints.setFillWidth(true);
+        col1Constraints.setHgrow(Priority.ALWAYS);
+        ColumnConstraints col2Constraints = new ColumnConstraints();
+        col2Constraints.setFillWidth(true);
+        col2Constraints.setHgrow(Priority.ALWAYS);
+        ColumnConstraints col3Constraints = new ColumnConstraints();
+        col3Constraints.setFillWidth(true);
+        col3Constraints.setHgrow(Priority.ALWAYS);
+        queryTablePane.getColumnConstraints().addAll(col1Constraints, col2Constraints, col3Constraints);
+        TitledPane doubleQueryTitledPane = new TitledPane("Double Column Selections", doubleQueryTableView);
+        doubleQueryTitledPane.setCollapsible(false);
+        queryTablePane.add(doubleQueryTitledPane, 0, 0);
+        TitledPane temporalQueryTitledPane = new TitledPane("Temporal Column Selections", temporalQueryTableView);
+        temporalQueryTitledPane.setCollapsible(false);
+        queryTablePane.add(temporalQueryTitledPane, 1, 0);
+        TitledPane categoricalQueryTitledPane = new TitledPane("Categorical Column Selections", categoricalQueryTableView);
+        categoricalQueryTitledPane.setCollapsible(false);
+        queryTablePane.add(categoricalQueryTitledPane, 2, 0);
 
         // create datamodel tab pane
         tabPane = new TabPane();
@@ -737,7 +771,9 @@ public class EDENFXMain extends Application implements DataModelListener {
 
         Tab queryTableTab = new Tab(" Query Table ");
         queryTableTab.setClosable(false);
-        queryTableTab.setContent(queryTableView);
+//        queryTableGrid.prefWidthProperty().bind(tabPane.widthProperty());
+        queryTableTab.setContent(queryTablePane);
+//        queryTableTab.setContent(queryTableView);
 
         tabPane.getTabs().addAll(temporalColumnTableTab, quantitativeColumnTableTab, categoricalColumnTableTab, dataTableTab, queryTableTab);
 
@@ -1251,8 +1287,17 @@ public class EDENFXMain extends Application implements DataModelListener {
             categoricalColumnTableView.setItems(FXCollections.observableArrayList(categoricalColumns));
         }
 
-        queryTableView.getItems().clear();
-        queryTableView.setItems(dataModel.getActiveQuery().columnSelectionRangesProperty());
+        doubleQueryTableView.getItems().clear();
+        temporalQueryTableView.getItems().clear();
+        categoricalQueryTableView.getItems().clear();
+        doubleQueryTableView.setItems(dataModel.getActiveQuery().columnSelectionRangesProperty().filtered(selection -> selection instanceof DoubleColumnSelectionRange));
+        temporalQueryTableView.setItems(dataModel.getActiveQuery().columnSelectionRangesProperty().filtered(selection -> selection instanceof TemporalColumnSelectionRange));
+        categoricalQueryTableView.setItems(dataModel.getActiveQuery().columnSelectionRangesProperty().filtered(selection -> selection instanceof CategoricalColumnSelection));
+//        doubleQueryTableView.setItems(dataModel.getActiveQuery().columnSelectionRangesProperty());
+//        temporalQueryTableView.setItems(dataModel.getActiveQuery().columnSelectionRangesProperty());
+//        categoricalQueryTableView.setItems(dataModel.getActiveQuery().columnSelectionRangesProperty());
+//        queryTableView.getItems().clear();
+//        queryTableView.setItems(dataModel.getActiveQuery().columnSelectionRangesProperty());
         
         setDataTableColumns();
 
@@ -1466,8 +1511,16 @@ public class EDENFXMain extends Application implements DataModelListener {
         removeAllQueriesMI.setDisable(!dataModel.getActiveQuery().hasColumnSelections());
         setDataTableItems();
         updatePercentSelected();
-        queryTableView.getItems().clear();
-        queryTableView.setItems(dataModel.getActiveQuery().columnSelectionRangesProperty());
+
+        doubleQueryTableView.getItems().clear();
+        temporalQueryTableView.getItems().clear();
+        categoricalQueryTableView.getItems().clear();
+//        Predicate<ColumnSelectionRange> isDoubleSelection = (selection -> selection instanceof DoubleColumnSelectionRange);
+        doubleQueryTableView.setItems(dataModel.getActiveQuery().columnSelectionRangesProperty().filtered(selection -> selection instanceof DoubleColumnSelectionRange));
+        temporalQueryTableView.setItems(dataModel.getActiveQuery().columnSelectionRangesProperty().filtered(selection -> selection instanceof TemporalColumnSelectionRange));
+        categoricalQueryTableView.setItems(dataModel.getActiveQuery().columnSelectionRangesProperty().filtered(selection -> selection instanceof CategoricalColumnSelection));
+//        queryTableView.getItems().clear();
+//        queryTableView.setItems(dataModel.getActiveQuery().columnSelectionRangesProperty());
     }
 
     @Override
@@ -1495,6 +1548,9 @@ public class EDENFXMain extends Application implements DataModelListener {
     public void dataModelColumnSelectionChanged(DataModel dataModel, ColumnSelectionRange columnSelectionRange) {
         removeAllQueriesMI.setDisable(!dataModel.getActiveQuery().hasColumnSelections());
         queryTableView.refresh();
+        doubleQueryTableView.refresh();
+        temporalQueryTableView.refresh();
+        categoricalQueryTableView.refresh();
         doubleColumnTableView.refresh();
         temporalColumnTableView.refresh();
         setDataTableItems();

@@ -138,10 +138,11 @@ public class PCPCategoricalAxis extends PCPAxis {
     }
 
     private void handleCategoryRectangleClicked(Rectangle rectangle, String category) {
-        log.info("got a click on a category rectangle (" + category + ")");
+//        log.info("got a click on a category rectangle (" + category + ")");
 
         // if there are no current axis selections, make a new selection and add this category
         if (getAxisSelectionList().isEmpty()) {
+//            log.info("adding categorical selection to empty axis selection list");
             HashSet<String> categories = new HashSet<>();
             categories.add(category);
             CategoricalColumnSelection columnSelection = new CategoricalColumnSelection(categoricalColumn(), categories);
@@ -149,16 +150,27 @@ public class PCPCategoricalAxis extends PCPAxis {
             getAxisSelectionList().add(axisSelection);
             dataModel.addColumnSelectionRangeToActiveQuery(columnSelection);
         } else {
+            ArrayList<PCPAxisSelection> selectionsToRemove = new ArrayList<>();
             for (PCPAxisSelection selection : getAxisSelectionList()) {
                 PCPCategoricalAxisSelection categoricalSelection = (PCPCategoricalAxisSelection)selection;
                 CategoricalColumnSelection categoricalColumnSelection = (CategoricalColumnSelection)categoricalSelection.getColumnSelectionRange();
 
                 if (categoricalColumnSelection.getSelectedCategories().contains(category)) {
+//                    log.info("Removing category from axis selection");
                     // remove the category from the selection
                     categoricalColumnSelection.removeCategory(category);
+                    if (categoricalColumnSelection.getSelectedCategories().isEmpty()) {
+//                        log.info("No selected categories after removal so removign axis selection");
+                        selectionsToRemove.add(selection);
+                    }
                 } else {
+//                    log.info("Adding category for existing axis selection");
                     categoricalColumnSelection.addCategory(category);
                 }
+            }
+            if (!selectionsToRemove.isEmpty()) {
+//                log.info("Removed axis from axis selection list");
+                getAxisSelectionList().removeAll(selectionsToRemove);
             }
         }
     }
