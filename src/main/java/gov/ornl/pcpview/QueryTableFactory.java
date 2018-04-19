@@ -9,6 +9,7 @@ import javafx.beans.value.ObservableValue;
 import javafx.scene.control.Alert;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.control.cell.ComboBoxTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.util.Callback;
@@ -120,13 +121,15 @@ public class QueryTableFactory {
     private static TableColumn<ColumnSelectionRange, String> createColorColumn(TableView tableView) {
         TableColumn<ColumnSelectionRange, String> colorColumn = new TableColumn<>("Color");
         colorColumn.setMinWidth(100);
+//        colorColumn.setCellValueFactory(cellData -> "Blue");
+        colorColumn.setCellFactory(ComboBoxTableCell.forTableColumn("Friends", "Family", "Work Contacts"));
 //        colorColumn.setCellFactory(new ColorTableCell<ColumnSelectionRange>(colorColumn));
         colorColumn.setEditable(true);
         return colorColumn;
     }
 
     private static TableColumn<ColumnSelectionRange, String> createCategoriesColumn(TableView tableView) {
-        TableColumn<ColumnSelectionRange, String> categoriesColumn = new TableColumn<>("Color");
+        TableColumn<ColumnSelectionRange, String> categoriesColumn = new TableColumn<>("Selected Categories");
         categoriesColumn.setMinWidth(200);
         categoriesColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<ColumnSelectionRange, String>, ObservableValue<String>>() {
             public ObservableValue<String> call(TableColumn.CellDataFeatures<ColumnSelectionRange, String> t) {
@@ -220,9 +223,9 @@ public class QueryTableFactory {
 
         TableColumn<ColumnSelectionRange, String> categoriesColumn = createCategoriesColumn(categoricalSelectionTableView);
 
-        TableColumn<ColumnSelectionRange, String> colorColumn = createColorColumn(categoricalSelectionTableView);
+//        TableColumn<ColumnSelectionRange, String> colorColumn = createColorColumn(categoricalSelectionTableView);
 
-        categoricalSelectionTableView.getColumns().addAll(nameColumn, categoriesColumn, colorColumn);
+        categoricalSelectionTableView.getColumns().addAll(nameColumn, categoriesColumn);
 
         return categoricalSelectionTableView;
     }

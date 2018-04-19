@@ -1494,6 +1494,19 @@ public class EDENFXMain extends Application implements DataModelListener {
                         }
                     });
                     dataTableView.getColumns().add(tableColumn);
+                } else if (column instanceof CategoricalColumn) {
+                    TableColumn<Tuple, String> tableColumn = new TableColumn<>(column.getName());
+                    tableColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<Tuple, String>, ObservableValue<String>>() {
+                        @Override
+                        public ObservableValue<String> call(TableColumn.CellDataFeatures<Tuple, String> param) {
+                            int columnIndex = dataModel.getColumnIndex(column);
+                            if (columnIndex == -1) {
+                                log.debug("Weird!");
+                            }
+                            return new ReadOnlyObjectWrapper<>((String)param.getValue().getElement(columnIndex));
+                        }
+                    });
+                    dataTableView.getColumns().add(tableColumn);
                 }
             }
         }
