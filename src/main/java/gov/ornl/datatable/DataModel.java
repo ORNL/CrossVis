@@ -3,6 +3,7 @@ package gov.ornl.datatable;
 import javafx.collections.SetChangeListener;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Logger;
 
 public class DataModel {
@@ -563,25 +564,33 @@ public class DataModel {
         // reset columns array
         columns = newColumnOrder;
 
-        /*
         // rearrange column correlation coefficients
         for (int iColumn = 0; iColumn < columns.size(); iColumn++) {
             Column column = columns.get(iColumn);
-            ArrayList<Double> corrCoef = column.getSummaryStats().getCorrelationCoefficients();
-            ArrayList<Double> newCorrCoef = new ArrayList<Double>();
-            for (int iCorrCoef = 0; iCorrCoef < corrCoef.size(); iCorrCoef++) {
-                newCorrCoef.add(corrCoef.get(dstColumnIndices[iCorrCoef]));
-            }
-            column.getSummaryStats().setCorrelationCoefficients(newCorrCoef);
+            if (column instanceof DoubleColumn) {
+				List<Double> currentCoefList = ((DoubleColumnSummaryStats)column.getStatistics()).getCorrelationCoefficientList();
+				ArrayList<Double> newCoefList = new ArrayList<>();
+				for (int i = 0; i < currentCoefList.size(); i++) {
+					newCoefList.add(currentCoefList.get(dstColumnIndices[i]));
+				}
+				((DoubleColumnSummaryStats)column.getStatistics()).setCorrelationCoefficientList(newCoefList);
+            	/*
+				ArrayList<Double> corrCoef = column.getSummaryStats().getCorrelationCoefficients();
+				ArrayList<Double> newCorrCoef = new ArrayList<Double>();
+				for (int iCorrCoef = 0; iCorrCoef < corrCoef.size(); iCorrCoef++) {
+					newCorrCoef.add(corrCoef.get(dstColumnIndices[iCorrCoef]));
+				}
+				column.getSummaryStats().setCorrelationCoefficients(newCorrCoef);
 
-			ArrayList<Histogram2DOLD> histogram2DList = column.getSummaryStats().getHistogram2DList();
-			ArrayList<Histogram2DOLD> newHistogram2DList = new ArrayList<>();
-			for (int i = 0; i < histogram2DList.size(); i++) {
-				newHistogram2DList.add(histogram2DList.get(dstColumnIndices[i]));
+				ArrayList<Histogram2DOLD> histogram2DList = column.getSummaryStats().getHistogram2DList();
+				ArrayList<Histogram2DOLD> newHistogram2DList = new ArrayList<>();
+				for (int i = 0; i < histogram2DList.size(); i++) {
+					newHistogram2DList.add(histogram2DList.get(dstColumnIndices[i]));
+				}
+				column.getSummaryStats().setHistogram2DList(newHistogram2DList);
+				*/
 			}
-			column.getSummaryStats().setHistogram2DList(newHistogram2DList);
         }
-        */
 
         // move tuple elements to reflect new column order
         for (int iTuple = 0; iTuple < tuples.size(); iTuple++) {

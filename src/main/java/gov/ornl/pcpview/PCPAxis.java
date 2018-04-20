@@ -2,6 +2,8 @@ package gov.ornl.pcpview;
 
 import gov.ornl.datatable.Column;
 import gov.ornl.datatable.DataModel;
+import gov.ornl.datatable.DoubleColumn;
+import gov.ornl.datatable.DoubleColumnSummaryStats;
 import gov.ornl.util.GraphicsUtil;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
@@ -15,6 +17,7 @@ import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.Tooltip;
 import javafx.scene.effect.DropShadow;
+import javafx.scene.effect.Glow;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseEvent;
@@ -22,6 +25,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.shape.StrokeLineCap;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
@@ -33,6 +37,8 @@ public abstract class PCPAxis {
     public final static Color DEFAULT_HISTOGRAM_FILL = new Color(Color.LIGHTSTEELBLUE.getRed(), Color.LIGHTSTEELBLUE.getGreen(), Color.LIGHTSTEELBLUE.getBlue(), 0.8d);
     public final static Color DEFAULT_QUERY_HISTOGRAM_FILL = new Color(Color.STEELBLUE.getRed(), Color.STEELBLUE.getGreen(), Color.STEELBLUE.getBlue(), 0.8d);
     public final static Color DEFAULT_HISTOGRAM_STROKE = Color.DARKGRAY;
+    public final static Color DEFAULT_CORRELATION_INDICATOR_FILL_COLOR = DEFAULT_QUERY_HISTOGRAM_FILL;
+    public final static Color DEFAULT_CORRELATION_INDICATOR_HOVER_FILL_COLOR = Color.BLACK;
 
     public final static Color DEFAULT_LABEL_COLOR = Color.BLACK;
 
@@ -42,6 +48,9 @@ public abstract class PCPAxis {
     public final static double DEFAULT_BAR_WIDTH = 10d;
     public final static double DEFAULT_TEXT_SIZE = 10d;
     public final static double DEFAULT_STROKE_WIDTH = 1.5;
+    public final static double DEFAULT_CORRELATION_INDICATOR_HEIGHT = 24d;
+    public final static double DEFAULT_CORRELATION_INDICATOR_WIDTH = 6.;
+    public final static double DEFAULT_CORRELATION_INDICATOR_PADDING = 1.;
 
     protected DataModel dataModel;
     protected Column column;
@@ -75,6 +84,11 @@ public abstract class PCPAxis {
     private Line bottomFocusCrossBarLine;
 
     private Rectangle axisBar;
+
+    private Rectangle correlationCoefficientIndicatorRectangle;
+    private Line correlationCoefficientIndicatorZeroLine;
+//    private ArrayList<Line> correlationCoefficientIndicatorList = new ArrayList<>();
+    private Group correlationCoefficientIndicatorGroup = new Group();
 
     // axis column name label
 //    private Text nameText;
@@ -136,6 +150,16 @@ public abstract class PCPAxis {
         nameText.setFill(labelColor);
         nameText.rotateProperty().bindBidirectional(nameTextRotation);
 
+        correlationCoefficientIndicatorRectangle = new Rectangle();
+        correlationCoefficientIndicatorRectangle.setStroke(Color.BLACK);
+        correlationCoefficientIndicatorRectangle.setFill(Color.TRANSPARENT);
+        correlationCoefficientIndicatorRectangle.setHeight(DEFAULT_CORRELATION_INDICATOR_HEIGHT);
+
+        correlationCoefficientIndicatorZeroLine = new Line();
+        correlationCoefficientIndicatorZeroLine.setStroke(Color.DARKGRAY);
+        correlationCoefficientIndicatorZeroLine.setStrokeWidth(1.);
+        correlationCoefficientIndicatorGroup.getChildren().add(correlationCoefficientIndicatorZeroLine);
+
         minValueText = new Text();
 //        minValueText.textProperty().bindBidirectional(column.minValueProperty(), new NumberStringConverter());
         minValueText.setFont(new Font(DEFAULT_TEXT_SIZE));
@@ -167,6 +191,10 @@ public abstract class PCPAxis {
 
         graphicsGroup = new Group(nameText, axisBar, topCrossBarLine, bottomCrossBarLine, topFocusCrossBarLine,
                 bottomFocusCrossBarLine, minValueText, maxValueText, focusMinValueText, focusMaxValueText);
+
+        if (getColumn() instanceof DoubleColumn) {
+            graphicsGroup.getChildren().addAll(correlationCoefficientIndicatorZeroLine, correlationCoefficientIndicatorGroup);
+        }
 
         registerListeners();
     }
@@ -375,10 +403,36 @@ public abstract class PCPAxis {
         this.centerX = center;
         double left = centerX - (width / 2.);
         bounds = new Rectangle(left, top, width, height);
-        barTopY = top + DEFAULT_NAME_LABEL_HEIGHT;
+
+        nameText.setText(column.getName());
+        if (nameText.getLayoutBounds().getWidth() > bounds.getWidth()) {
+            // truncate the column name to fit axis bounds
+            while (nameText.getLayoutBounds().getWidth() > bounds.getWidth()) {
+                nameText.setText(nameText.getText().substring(0, nameText.getText().length() - 1));
+            }
+        }
+        nameText.setX(bounds.getX() + ((width - nameText.getLayoutBounds().getWidth()) / 2.));
+        nameText.setY(bounds.getY() + nameText.getLayoutBounds().getHeight());
+        nameText.setRotate(getNameTextRotation());
+
+        correlationCoefficientIndicatorRectangle.setY(nameText.getLayoutBounds().getMaxY() + 4);
+        correlationCoefficientIndicatorRectangle.setX(bounds.getLayoutBounds().getMinX());
+        correlationCoefficientIndicatorRectangle.setWidth(bounds.getLayoutBounds().getWidth());
+
+        barTopY = correlationCoefficientIndicatorRectangle.getLayoutBounds().getMaxY() + minValueText.getLayoutBounds().getHeight() + 4;
         barBottomY = bounds.getY() + bounds.getHeight() - maxValueText.getLayoutBounds().getHeight();
-        focusTopY = top + DEFAULT_NAME_LABEL_HEIGHT + contextRegionHeight;
+        focusTopY = barTopY + contextRegionHeight;
         focusBottomY = barBottomY - contextRegionHeight;
+//        barTopY = top + DEFAULT_NAME_LABEL_HEIGHT;
+//        barBottomY = bounds.getY() + bounds.getHeight() - maxValueText.getLayoutBounds().getHeight();
+//        focusTopY = top + DEFAULT_NAME_LABEL_HEIGHT + contextRegionHeight;
+//        focusBottomY = barBottomY - contextRegionHeight;
+
+        minValueText.setX(bounds.getX() + ((width - minValueText.getLayoutBounds().getWidth()) / 2.));
+        minValueText.setY(barBottomY + minValueText.getLayoutBounds().getHeight());
+
+        maxValueText.setX(bounds.getX() + ((width - maxValueText.getLayoutBounds().getWidth()) / 2.));
+        maxValueText.setY(barTopY - 4d);
 
         maxHistogramBinWidth = bounds.getWidth() / 2;
 
@@ -407,29 +461,134 @@ public abstract class PCPAxis {
         bottomFocusCrossBarLine.setStartX(centerX - (DEFAULT_BAR_WIDTH / 2.));
         bottomFocusCrossBarLine.setEndX(centerX + (DEFAULT_BAR_WIDTH / 2.));
 
-        nameText.setText(column.getName());
-        if (nameText.getLayoutBounds().getWidth() > bounds.getWidth()) {
-            // truncate the column name to fit axis bounds
-            while (nameText.getLayoutBounds().getWidth() > bounds.getWidth()) {
-                nameText.setText(nameText.getText().substring(0, nameText.getText().length() - 1));
-            }
-        }
-
-        nameText.setX(bounds.getX() + ((width - nameText.getLayoutBounds().getWidth()) / 2.));
-        nameText.setY(bounds.getY() + nameText.getLayoutBounds().getHeight());
-        nameText.setRotate(getNameTextRotation());
-
-        minValueText.setX(bounds.getX() + ((width - minValueText.getLayoutBounds().getWidth()) / 2.));
-        minValueText.setY(barBottomY + minValueText.getLayoutBounds().getHeight());
-
-        maxValueText.setX(bounds.getX() + ((width - maxValueText.getLayoutBounds().getWidth()) / 2.));
-        maxValueText.setY(barTopY - 4d);
-
         if (!axisSelectionList.isEmpty()) {
             for (PCPAxisSelection pcpAxisSelection : axisSelectionList) {
                 pcpAxisSelection.relayout();
             }
         }
+
+        // create graphics for correlation coefficient indicators
+        if (this instanceof PCPDoubleAxis) {
+            double correlationIndicatorRectangleWidth = (pcpView.getAxisCount() * DEFAULT_CORRELATION_INDICATOR_WIDTH) +
+                    ((pcpView.getAxisCount() - 1) * DEFAULT_CORRELATION_INDICATOR_PADDING);
+            double correlationIndicatorRectangleLeft = centerX - (correlationIndicatorRectangleWidth / 2.);
+            double correlationIndicatorRectangleMiddleY = correlationCoefficientIndicatorRectangle.getLayoutBounds().getMinY() +
+                    (correlationCoefficientIndicatorRectangle.getLayoutBounds().getHeight()/2.);
+
+            correlationCoefficientIndicatorRectangle.setX(correlationIndicatorRectangleLeft);
+            correlationCoefficientIndicatorRectangle.setWidth(correlationIndicatorRectangleWidth);
+            correlationCoefficientIndicatorZeroLine.setStartX(correlationCoefficientIndicatorRectangle.getLayoutBounds().getMinX());
+            correlationCoefficientIndicatorZeroLine.setStartY(correlationIndicatorRectangleMiddleY);
+            correlationCoefficientIndicatorZeroLine.setEndX(correlationCoefficientIndicatorRectangle.getLayoutBounds().getMaxX());
+            correlationCoefficientIndicatorZeroLine.setEndY(correlationIndicatorRectangleMiddleY);
+
+            correlationCoefficientIndicatorGroup.getChildren().clear();
+
+            for (int iaxis = 0; iaxis < pcpView.getAxisCount(); iaxis++) {
+                PCPAxis pcpAxis = pcpView.getAxis(iaxis);
+                if (pcpAxis instanceof PCPDoubleAxis) {
+                    double x = correlationIndicatorRectangleLeft + (iaxis * DEFAULT_CORRELATION_INDICATOR_WIDTH) +
+                            (iaxis * DEFAULT_CORRELATION_INDICATOR_PADDING);
+
+                    Rectangle rectangle = new Rectangle(x, 0, DEFAULT_CORRELATION_INDICATOR_WIDTH, 0);
+//                    rectangle.setStroke(DEFAULT_CORRELATION_INDICATOR_FILL_COLOR);
+
+                    if (this == pcpAxis) {
+                        rectangle.setY(correlationCoefficientIndicatorRectangle.getLayoutBounds().getMinY());
+                        rectangle.setHeight(correlationCoefficientIndicatorRectangle.getLayoutBounds().getHeight());
+                        rectangle.setFill(DEFAULT_CORRELATION_INDICATOR_FILL_COLOR.grayscale());
+                        Tooltip.install(rectangle, new Tooltip(getColumn().getName() + " Correlation Indicators"));
+                    } else {
+                        double corrCoef = ((DoubleColumnSummaryStats) getColumn().getStatistics()).getCorrelationCoefficientList().get(iaxis);
+                        if (corrCoef >= 0) {
+                            double topY = GraphicsUtil.mapValue(corrCoef, 0d, 1d,
+                                    correlationIndicatorRectangleMiddleY, correlationCoefficientIndicatorRectangle.getLayoutBounds().getMinY());
+                            rectangle.setY(topY);
+                            rectangle.setHeight(correlationIndicatorRectangleMiddleY - topY);
+                        } else {
+                            double bottomY = GraphicsUtil.mapValue(corrCoef, 0d, -1d,
+                                    correlationIndicatorRectangleMiddleY, correlationCoefficientIndicatorRectangle.getLayoutBounds().getMaxY());
+                            rectangle.setY(correlationIndicatorRectangleMiddleY);
+                            rectangle.setHeight(bottomY - correlationIndicatorRectangleMiddleY);
+                        }
+
+                        rectangle.setFill(DEFAULT_CORRELATION_INDICATOR_FILL_COLOR);
+                        Tooltip.install(rectangle,
+                                new Tooltip(this.column.getName() + " / " + pcpAxis.getColumn().getName() + " correlation = " + corrCoef));
+                    }
+
+                    rectangle.setOnMouseEntered(event -> {
+                        rectangle.setStroke(Color.BLACK);
+                    });
+
+                    rectangle.setOnMouseExited(event -> {
+                        rectangle.setStroke(null);
+                    });
+
+                    correlationCoefficientIndicatorGroup.getChildren().add(rectangle);
+                }
+            }
+        }
+/*
+        double corrWidth = DEFAULT_CORRELATION_INDICATOR_STROKE_SPACING * (pcpView.getAxisCount() - 1);
+        double corrLeft = centerX - ( corrWidth / 2);
+        double corrMiddleY = correlationCoefficientIndicatorRectangle.getLayoutBounds().getMinY() +
+                (correlationCoefficientIndicatorRectangle.getLayoutBounds().getHeight()/2.);
+        correlationCoefficientIndicatorRectangle.setX(corrLeft);
+        correlationCoefficientIndicatorRectangle.setWidth(corrWidth);
+        correlationCoefficientIndicatorZeroLine.setStartX(correlationCoefficientIndicatorRectangle.getLayoutBounds().getMinX());
+        correlationCoefficientIndicatorZeroLine.setStartY(corrMiddleY);
+        correlationCoefficientIndicatorZeroLine.setEndX(correlationCoefficientIndicatorRectangle.getLayoutBounds().getMaxX());
+        correlationCoefficientIndicatorZeroLine.setEndY(corrMiddleY);
+
+//        correlationCoefficientIndicatorList.clear();
+        correlationCoefficientIndicatorGroup.getChildren().clear();
+        if (this instanceof PCPDoubleAxis) {
+            for (int iaxis = 0; iaxis < pcpView.getAxisCount(); iaxis++) {
+                PCPAxis pcpAxis = pcpView.getAxis(iaxis);
+                if (pcpAxis instanceof PCPDoubleAxis) {
+                    double x = correlationCoefficientIndicatorRectangle.getX() + (iaxis * DEFAULT_CORRELATION_INDICATOR_STROKE_SPACING);
+
+                    Line line = new Line(x, 0, x, 0);
+                    line.setStrokeWidth(DEFAULT_CORRELATION_INDICATOR_STROKE_WIDTH);
+                    line.setStrokeLineCap(StrokeLineCap.BUTT);
+
+                    if (this == pcpAxis) {
+                        line.setStartY(correlationCoefficientIndicatorRectangle.getLayoutBounds().getMinY());
+                        line.setEndY(correlationCoefficientIndicatorRectangle.getLayoutBounds().getMaxY());
+                        line.setStroke(DEFAULT_CORRELATION_INDICATOR_STROKE_COLOR.grayscale());
+                        Tooltip.install(line, new Tooltip(getColumn().getName() + " Correlation Indicators"));
+                    } else {
+                        double corrCoef = ((DoubleColumnSummaryStats) getColumn().getStatistics()).getCorrelationCoefficientList().get(iaxis);
+                        if (corrCoef >= 0) {
+                            double lineStartY = GraphicsUtil.mapValue(corrCoef, 0d, 1d, corrMiddleY, correlationCoefficientIndicatorRectangle.getLayoutBounds().getMinY());
+                            line.setStartY(lineStartY);
+                            line.setEndY(corrMiddleY);
+                        } else {
+                            double lineEndY = GraphicsUtil.mapValue(corrCoef, 0d, -1d, corrMiddleY, correlationCoefficientIndicatorRectangle.getLayoutBounds().getMaxY());
+                            line.setStartY(corrMiddleY);
+                            line.setEndY(lineEndY);
+                        }
+
+                        line.setStroke(DEFAULT_CORRELATION_INDICATOR_STROKE_COLOR);
+                        Tooltip.install(line, new Tooltip(this.column.getName() + " / " + pcpAxis.getColumn().getName() + " correlation = " + corrCoef));
+                    }
+
+                    line.setOnMouseEntered(new EventHandler<MouseEvent>() {
+                        @Override
+                        public void handle(MouseEvent event) {
+                            line.setEffect(new DropShadow());
+                        }
+                    });
+
+                    line.setOnMouseExited(event -> { line.setEffect(null); });
+
+//                    correlationCoefficientIndicatorList.add(line);
+                    correlationCoefficientIndicatorGroup.getChildren().add(line);
+                }
+            }
+        }
+        */
     }
 
     public double getCenterX() {

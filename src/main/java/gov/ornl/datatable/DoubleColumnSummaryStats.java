@@ -192,8 +192,15 @@ public class DoubleColumnSummaryStats extends ColumnSummaryStats {
         return correlationCoefficientList;
     }
 
-    public List<Double> setCorrelationCoefficientList() {
+    public List<Double> getCorrelationCoefficientList() {
         return correlationCoefficientList.get();
+    }
+
+    public void setCorrelationCoefficientList(List<Double> newCorrelationCoefficientList) {
+        correlationCoefficientListProperty().clear();
+        for (double corrCoef : newCorrelationCoefficientList) {
+            correlationCoefficientListProperty().add(corrCoef);
+        }
     }
 
     public DoubleProperty minValueProperty() {
