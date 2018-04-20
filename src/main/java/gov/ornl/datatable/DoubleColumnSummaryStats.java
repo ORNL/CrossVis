@@ -1,15 +1,19 @@
 package gov.ornl.datatable;
 
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.*;
+import javafx.collections.FXCollections;
+import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
+
+import java.util.List;
+import java.util.logging.Logger;
 
 /**
  * Created by csg on 11/25/14.
  */
 public class DoubleColumnSummaryStats extends ColumnSummaryStats {
+    private final static Logger log = Logger.getLogger(DoubleColumnSummaryStats.class.getName());
+
     private double[] values;
 
     private DoubleProperty meanValue;
@@ -25,10 +29,12 @@ public class DoubleColumnSummaryStats extends ColumnSummaryStats {
     private DoubleProperty upperWhiskerValue;
     private DoubleProperty lowerWhiskerValue;
 
+    private ListProperty<Double> correlationCoefficientList;
+
     private ObjectProperty<DoubleHistogram> histogram;
 
-    public DoubleColumnSummaryStats(Column column, int numHistogramBins) {
-        super(column, numHistogramBins);
+    public DoubleColumnSummaryStats(Column column, int numHistogramBins, Query query) {
+        super(column, numHistogramBins, query);
 
         values = null;
         minValue = new SimpleDoubleProperty(Double.NaN);
@@ -43,6 +49,8 @@ public class DoubleColumnSummaryStats extends ColumnSummaryStats {
         kurtosisValue = new SimpleDoubleProperty(Double.NaN);
         upperWhiskerValue = new SimpleDoubleProperty(Double.NaN);
         lowerWhiskerValue = new SimpleDoubleProperty(Double.NaN);
+
+        correlationCoefficientList = new SimpleListProperty<>(FXCollections.observableArrayList());
     }
 
     public void setValues(double[] values, int numHistogramBins) {
@@ -115,6 +123,31 @@ public class DoubleColumnSummaryStats extends ColumnSummaryStats {
         }
 
         calculateHistogram();
+
+        calculateCorrelations();
+    }
+
+    private void calculateCorrelations() {
+        correlationCoefficientList.clear();
+        PearsonsCorrelation pCorr = new PearsonsCorrelation();
+
+        for (int icol = 0; icol < getColumn().getDataModel().getColumns().size(); icol++) {
+            Column otherColumn = getColumn().getDataModel().getColumn(icol);
+            double coefficient = Double.NaN;
+            if (otherColumn == this.column) {
+                // no need to computer correlation with itself
+                coefficient = 1d;
+            } else if (!(otherColumn instanceof DoubleColumn)) {
+                // doesn't make sense to computer correlation with non number column
+            } else {
+                if (query == null) {
+                    coefficient = pCorr.correlation(values, ((DoubleColumn) otherColumn).getValues());
+                } else {
+                    coefficient = pCorr.correlation(values, ((DoubleColumn)otherColumn).getQueriedValues());
+                }
+            }
+            correlationCoefficientList.add(coefficient);
+        }
     }
 
     private DoubleColumn doubleColumn() {
@@ -153,6 +186,14 @@ public class DoubleColumnSummaryStats extends ColumnSummaryStats {
 
     public double getMinValue() {
         return minValueProperty().get();
+    }
+
+    public ListProperty<Double> correlationCoefficientListProperty() {
+        return correlationCoefficientList;
+    }
+
+    public List<Double> setCorrelationCoefficientList() {
+        return correlationCoefficientList.get();
     }
 
     public DoubleProperty minValueProperty() {

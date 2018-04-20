@@ -12,7 +12,7 @@ public class DoubleColumn extends Column {
 
     public void calculateStatistics() {
         if (summaryStats == null) {
-            summaryStats = new DoubleColumnSummaryStats(this, getDataModel().getNumHistogramBins());
+            summaryStats = new DoubleColumnSummaryStats(this, getDataModel().getNumHistogramBins(), null);
         }
         summaryStats.setValues(getValues());
     }

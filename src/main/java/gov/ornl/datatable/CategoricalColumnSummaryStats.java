@@ -15,8 +15,8 @@ public class CategoricalColumnSummaryStats extends ColumnSummaryStats {
 //    private MapProperty<String, Integer> categoryCountMap;
     private ObjectProperty<CategoricalHistogram> histogram;
 
-    public CategoricalColumnSummaryStats(Column column) {
-        super(column, 0);
+    public CategoricalColumnSummaryStats(Column column, Query query) {
+        super(column, 0, query);
 
         values = null;
 //        categoryCountMap = new SimpleMapProperty<String, Integer>(FXCollections.observableHashMap());

@@ -11,7 +11,7 @@ public class TemporalColumn extends Column {
 
     public void calculateStatistics() {
         if (summaryStats == null) {
-            summaryStats = new TemporalColumnSummaryStats(this, getDataModel().getNumHistogramBins());
+            summaryStats = new TemporalColumnSummaryStats(this, getDataModel().getNumHistogramBins(), null);
         }
         summaryStats.setValues(getValues());
     }

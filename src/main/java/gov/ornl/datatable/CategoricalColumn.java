@@ -38,7 +38,7 @@ public class CategoricalColumn extends Column {
     @Override
     public void calculateStatistics() {
         if (summaryStats == null) {
-            summaryStats = new CategoricalColumnSummaryStats(this);
+            summaryStats = new CategoricalColumnSummaryStats(this, null);
         }
         summaryStats.setValues(getValues());
     }

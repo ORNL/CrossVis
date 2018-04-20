@@ -127,21 +127,21 @@ public class Query {
                 if (column instanceof TemporalColumn) {
                     Instant values[] = ((TemporalColumn) column).getQueriedValues();
                     if (columnSummaryStats == null) {
-                        columnSummaryStats = new TemporalColumnSummaryStats(column, dataModel.getNumHistogramBins());
+                        columnSummaryStats = new TemporalColumnSummaryStats(column, dataModel.getNumHistogramBins(), this);
                         columnQuerySummaryStatsMap.put(column, columnSummaryStats);
                     }
                     ((TemporalColumnSummaryStats) columnSummaryStats).setValues(values);
                 } else if (column instanceof DoubleColumn) {
                     double values[] = ((DoubleColumn) column).getQueriedValues();
                     if (columnSummaryStats == null) {
-                        columnSummaryStats = new DoubleColumnSummaryStats(column, dataModel.getNumHistogramBins());
+                        columnSummaryStats = new DoubleColumnSummaryStats(column, dataModel.getNumHistogramBins(), this);
                         columnQuerySummaryStatsMap.put(column, columnSummaryStats);
                     }
                     ((DoubleColumnSummaryStats) columnSummaryStats).setValues(values);
                 } else if (column instanceof CategoricalColumn) {
                     String values[] = ((CategoricalColumn)column).getQueriedValues();
                     if (columnSummaryStats == null) {
-                        columnSummaryStats = new CategoricalColumnSummaryStats(column);
+                        columnSummaryStats = new CategoricalColumnSummaryStats(column, this);
                         columnQuerySummaryStatsMap.put(column, columnSummaryStats);
                     }
                     ((CategoricalColumnSummaryStats)columnSummaryStats).setValues(values);

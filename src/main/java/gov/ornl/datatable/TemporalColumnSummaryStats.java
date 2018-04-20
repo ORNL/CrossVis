@@ -16,12 +16,12 @@ public class TemporalColumnSummaryStats extends ColumnSummaryStats {
     private Instant[] values;
 
 
-    public TemporalColumnSummaryStats(Column column, int numHistogramBins) {
-        super(column, numHistogramBins);
+    public TemporalColumnSummaryStats(Column column, int numHistogramBins, Query query) {
+        super(column, numHistogramBins, query);
     }
 
-    public TemporalColumnSummaryStats(Column column, Instant startInstant, Instant endInstant, int numHistogramBins) {
-        this(column, numHistogramBins);
+    public TemporalColumnSummaryStats(Column column, Instant startInstant, Instant endInstant, int numHistogramBins, Query query) {
+        this(column, numHistogramBins, query);
 
         setStartInstant(startInstant);
         setEndInstant(endInstant);

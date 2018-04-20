@@ -8,10 +8,12 @@ public abstract class ColumnSummaryStats {
     private static final int MAX_NUM_HISTOGRAM_BINS = 100;
 
     protected Column column;
+    protected Query query = null;
     protected SimpleMapProperty<Column, Histogram2D> columnHistogram2DMap;
     protected int numHistogramBins = DEFAULT_NUM_HISTOGRAM_BINS;
 
-    public ColumnSummaryStats(Column column, int numHistogramBins) {
+    public ColumnSummaryStats(Column column, int numHistogramBins, Query query) {
+        this.query = query;
         this.column = column;
         this.numHistogramBins = numHistogramBins;
         columnHistogram2DMap = new SimpleMapProperty<>(FXCollections.observableHashMap());
