@@ -6,6 +6,7 @@ import javafx.event.EventHandler;
 import javafx.geometry.Point2D;
 import javafx.scene.Group;
 import javafx.scene.control.Tooltip;
+import javafx.scene.effect.DropShadow;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
@@ -22,6 +23,12 @@ public class PCPCategoricalAxis extends PCPAxis {
 
     private static final DecimalFormat percentageFormat = new DecimalFormat("0.0#%");
 
+    private final static Color DEFAULT_CATEGORY_STROKE_COLOR = new Color(0.1, 0.1, 0.2, 1.0);
+    private final static Color DEFAULT_SELECTED_CATEGORY_STROKE_COLOR = Color.YELLOW;
+    private final static Color DEFAULT_CATEGORY_FILL_COLOR = Color.LIGHTGRAY;
+    private final static Color DEFAULT_SELECTED_CATEGORY_FILL_COLOR = Color.YELLOW;
+    private final static Color DEFAULT_QUERY_STROKE_COLOR = new Color(0.2, 0.2, 0.2, 1.0);
+
     // category rectangles
     private Group categoriesRectangleGroup;
     private HashMap<String, Rectangle> categoriesRectangleMap = new HashMap<>();
@@ -30,16 +37,20 @@ public class PCPCategoricalAxis extends PCPAxis {
     private Group queryCategoriesRectangleGroup;
     private HashMap<String, Rectangle> queryCategoriesRectangleMap = new HashMap<>();
 
+    private Group nonQueryCategoriesRectangleGroup;
+    private HashMap<String, Rectangle> nonQueryCategoriesRectangleMap = new HashMap<>();
+
     // dragging selection
-    Rectangle draggingSelectionRectangle;
+//    Rectangle draggingSelectionRectangle;
 
     public PCPCategoricalAxis(PCPView pcpView, Column column, DataModel dataModel, Pane pane) {
         super(pcpView, column, dataModel, pane);
 
         categoriesRectangleGroup = new Group();
         queryCategoriesRectangleGroup = new Group();
+        nonQueryCategoriesRectangleGroup = new Group();
 
-        graphicsGroup.getChildren().add(categoriesRectangleGroup);
+        graphicsGroup.getChildren().addAll(categoriesRectangleGroup);
 
         registerListeners();
     }
@@ -57,7 +68,6 @@ public class PCPCategoricalAxis extends PCPAxis {
     }
 
     private void registerListeners() {
-
     }
 
     public void layout(double center, double top, double width, double height) {
@@ -65,6 +75,11 @@ public class PCPCategoricalAxis extends PCPAxis {
 
         if (!dataModel.isEmpty()) {
             CategoricalHistogram histogram = categoricalColumn().getStatistics().getHistogram();
+
+            HashSet<String> selectedCategories = new HashSet<>();
+            for (PCPAxisSelection axisSelection : getAxisSelectionList()) {
+                selectedCategories.addAll(((CategoricalColumnSelection)axisSelection.getColumnSelectionRange()).getSelectedCategories());
+            }
 
             // remove previously shown category shapes
             categoriesRectangleGroup.getChildren().clear();
@@ -76,9 +91,10 @@ public class PCPCategoricalAxis extends PCPAxis {
                 int categoryCount = histogram.getCategoryCount(category);
                 double y = lastRectangleBottomY;
                 double categoryHeight = GraphicsUtil.mapValue(categoryCount, 0, histogram.getTotalCount(), 0, getFocusBottomY()-getFocusTopY());
-                Rectangle rectangle = new Rectangle(getAxisBar().getX()+2, y, getAxisBar().getWidth()-4, categoryHeight);
-                rectangle.setStroke(histogramFill.darker());
-                rectangle.setFill(histogramFill);
+
+                Rectangle rectangle = new Rectangle(getAxisBar().getX(), y, getAxisBar().getWidth(), categoryHeight);
+                rectangle.setStroke(DEFAULT_CATEGORY_STROKE_COLOR);
+                rectangle.setFill(DEFAULT_CATEGORY_FILL_COLOR);
                 rectangle.setArcHeight(6);
                 rectangle.setArcWidth(6);
 
@@ -86,11 +102,23 @@ public class PCPCategoricalAxis extends PCPAxis {
                     handleCategoryRectangleClicked(rectangle, category);
                 });
 
-//                rectangle.setMouseTransparent(true);
-                Tooltip.install(rectangle, new Tooltip(category + " : " + categoryCount + " (" + percentageFormat.format((double)categoryCount/histogram.getTotalCount()) + " of total)"));
-//                categoriesRectangleList.add(rectangle);
+                Tooltip.install(rectangle, new Tooltip(category + " : " + categoryCount + " of " +
+                        histogram.getTotalCount() + " (" +
+                        percentageFormat.format((double)categoryCount/histogram.getTotalCount()) + " of total)"));
+
                 categoriesRectangleMap.put(category, rectangle);
                 categoriesRectangleGroup.getChildren().add(rectangle);
+
+                if (selectedCategories.contains(category)) {
+                    Rectangle innerRectangle = new Rectangle(rectangle.getX()+1, rectangle.getY()+1,
+                            rectangle.getWidth()-2, rectangle.getHeight()-2);
+                    innerRectangle.setStroke(DEFAULT_SELECTED_CATEGORY_STROKE_COLOR);
+                    innerRectangle.setFill(null);
+                    innerRectangle.setArcWidth(6);
+                    innerRectangle.setArcHeight(6);
+                    innerRectangle.setMouseTransparent(true);
+                    categoriesRectangleGroup.getChildren().add(innerRectangle);
+                }
 
                 lastRectangleBottomY = rectangle.getY() + rectangle.getHeight();
             }
@@ -98,10 +126,13 @@ public class PCPCategoricalAxis extends PCPAxis {
             if (graphicsGroup.getChildren().contains(queryCategoriesRectangleGroup)) {
                 graphicsGroup.getChildren().remove(queryCategoriesRectangleGroup);
             }
-
-
+            if (graphicsGroup.getChildren().contains(nonQueryCategoriesRectangleGroup)) {
+                graphicsGroup.getChildren().remove(nonQueryCategoriesRectangleGroup);
+            }
             queryCategoriesRectangleGroup.getChildren().clear();
             queryCategoriesRectangleMap.clear();
+            nonQueryCategoriesRectangleGroup.getChildren().clear();
+            nonQueryCategoriesRectangleMap.clear();
 
             if (dataModel.getActiveQuery().hasColumnSelections()) {
                 CategoricalColumnSummaryStats queryColumnSummaryStats = (CategoricalColumnSummaryStats)dataModel.getActiveQuery().getColumnQuerySummaryStats(getColumn());
@@ -109,40 +140,76 @@ public class PCPCategoricalAxis extends PCPAxis {
 
                 for (String category : queryHistogram.getCategories()) {
                     int queryCategoryCount = queryHistogram.getCategoryCount(category);
+                    Rectangle overallCategoryRectangle = categoriesRectangleMap.get(category);
+                    int overallCategoryCount = histogram.getCategoryCount(category);
+                    int nonQueryCategoryCount = overallCategoryCount - queryCategoryCount;
+
+                    Rectangle queryRectangle = new Rectangle (overallCategoryRectangle.getLayoutBounds().getMinX() + 3,
+                            0, overallCategoryRectangle.getLayoutBounds().getWidth() - 6d, 0);
+                    Rectangle nonQueryRectangle = new Rectangle (overallCategoryRectangle.getLayoutBounds().getMinX() + 3,
+                            0, overallCategoryRectangle.getLayoutBounds().getWidth() - 6d, 0);
+
                     if (queryCategoryCount > 0) {
-                        Rectangle overallCategoryRectangle = categoriesRectangleMap.get(category);
-                        int overallCategoryCount = histogram.getCategoryCount(category);
-                        double queryCategoryHeight = GraphicsUtil.mapValue(queryCategoryCount, 0, overallCategoryCount, 0, overallCategoryRectangle.getHeight());
-                        double y = overallCategoryRectangle.getY() + ((overallCategoryRectangle.getHeight() - queryCategoryHeight) / 2.);
-                        Rectangle queryRectangle = new Rectangle(getAxisBar().getX() + 2, y, getAxisBar().getWidth() - 4, queryCategoryHeight);
+                        queryRectangle.setY(overallCategoryRectangle.getY() + 2d);
+
+                        if (nonQueryCategoryCount > 0) {
+                            double queryRectangleHeight = GraphicsUtil.mapValue(queryCategoryCount, 0, overallCategoryCount,
+                                    0, overallCategoryRectangle.getHeight() - 4);
+                            queryRectangle.setHeight(queryRectangleHeight);
+                        } else {
+                            queryRectangle.setHeight(overallCategoryRectangle.getHeight() - 4);
+                        }
+
                         queryRectangle.setArcHeight(6);
                         queryRectangle.setArcWidth(6);
-                        queryRectangle.setStroke(queryHistogramFill.darker());
-                        queryRectangle.setFill(queryHistogramFill);
-//                        queryRectangle.setMouseTransparent(true);
-
-                        queryRectangle.setOnMouseClicked(event -> {
-                            handleCategoryRectangleClicked(queryRectangle, category);
-                        });
-
-                        Tooltip.install(queryRectangle, new Tooltip(category + " : " + queryCategoryCount + " (" + percentageFormat.format((double) queryCategoryCount / overallCategoryCount) + " of category)"));
+                        queryRectangle.setStroke(DEFAULT_QUERY_STROKE_COLOR);
+                        queryRectangle.setFill(pcpView.getSelectedItemsColor());
+                        queryRectangle.setMouseTransparent(true);
 
                         queryCategoriesRectangleMap.put(category, queryRectangle);
                         queryCategoriesRectangleGroup.getChildren().add(queryRectangle);
                     }
+
+                    if (nonQueryCategoryCount > 0) {
+                        if (queryCategoryCount > 0) {
+                            double nonQueryRectangleHeight = GraphicsUtil.mapValue(nonQueryCategoryCount, 0,
+                                    overallCategoryCount, 0, overallCategoryRectangle.getHeight() - 4);
+                            nonQueryRectangle.setHeight(nonQueryRectangleHeight);
+                            nonQueryRectangle.setY(queryRectangle.getY() + queryRectangle.getHeight());
+                        } else {
+                            nonQueryRectangle.setHeight(overallCategoryRectangle.getHeight() - 4);
+                            nonQueryRectangle.setY(overallCategoryRectangle.getY() + 2d);
+                        }
+
+                        nonQueryRectangle.setArcHeight(6);
+                        nonQueryRectangle.setArcWidth(6);
+                        nonQueryRectangle.setStroke(DEFAULT_QUERY_STROKE_COLOR);
+                        nonQueryRectangle.setFill(pcpView.getUnselectedItemsColor());
+                        nonQueryRectangle.setMouseTransparent(true);
+
+                        nonQueryCategoriesRectangleMap.put(category, nonQueryRectangle);
+                        nonQueryCategoriesRectangleGroup.getChildren().add(nonQueryRectangle);
+                    }
+
+                    Tooltip.install(overallCategoryRectangle,
+                            new Tooltip (category + " : " + overallCategoryCount + " of " +
+                                    histogram.getTotalCount() + " (" +
+                                    percentageFormat.format((double)overallCategoryCount/histogram.getTotalCount()) + " of total)\n" +
+                                    queryCategoryCount + " of " + overallCategoryCount + " selected (" +
+                                    percentageFormat.format((double)queryCategoryCount / overallCategoryCount) + ")"));
+//                            ))
+//                            new Tooltip(category + ": " + queryCategoryCount + " of " + overallCategoryCount + " selected (" +
+//                                    percentageFormat.format((double)queryCategoryCount / overallCategoryCount) + ")"));
                 }
 
-                graphicsGroup.getChildren().add(queryCategoriesRectangleGroup);
+                graphicsGroup.getChildren().addAll(nonQueryCategoriesRectangleGroup, queryCategoriesRectangleGroup);
             }
         }
     }
 
     private void handleCategoryRectangleClicked(Rectangle rectangle, String category) {
-//        log.info("got a click on a category rectangle (" + category + ")");
-
         // if there are no current axis selections, make a new selection and add this category
         if (getAxisSelectionList().isEmpty()) {
-//            log.info("adding categorical selection to empty axis selection list");
             HashSet<String> categories = new HashSet<>();
             categories.add(category);
             CategoricalColumnSelection columnSelection = new CategoricalColumnSelection(categoricalColumn(), categories);
@@ -156,20 +223,16 @@ public class PCPCategoricalAxis extends PCPAxis {
                 CategoricalColumnSelection categoricalColumnSelection = (CategoricalColumnSelection)categoricalSelection.getColumnSelectionRange();
 
                 if (categoricalColumnSelection.getSelectedCategories().contains(category)) {
-//                    log.info("Removing category from axis selection");
                     // remove the category from the selection
                     categoricalColumnSelection.removeCategory(category);
                     if (categoricalColumnSelection.getSelectedCategories().isEmpty()) {
-//                        log.info("No selected categories after removal so removign axis selection");
                         selectionsToRemove.add(selection);
                     }
                 } else {
-//                    log.info("Adding category for existing axis selection");
                     categoricalColumnSelection.addCategory(category);
                 }
             }
             if (!selectionsToRemove.isEmpty()) {
-//                log.info("Removed axis from axis selection list");
                 getAxisSelectionList().removeAll(selectionsToRemove);
             }
         }
