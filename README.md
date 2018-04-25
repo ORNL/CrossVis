@@ -1,6 +1,6 @@
 ## Falcon
 
-<img src="EDENfx-trans.png.png" width="170" align="right" hspace="10" vspace="6">
+<img src="EDENfx-trans.png" width="170" align="right" hspace="10" vspace="6">
 
 **EDEN.fx** is an interactive visual analytics tool for exploring multivariate data.
 
