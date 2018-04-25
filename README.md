@@ -1,8 +1,8 @@
 ## EDEN.fx
 
-<img src="images/edenfx-screenshot.png" width="500" align="right" hspace="10" vspace="6">
-
 **EDEN.fx** is an interactive visual analytics tool for exploring multivariate data.
+
+<img src="images/edenfx-screenshot.png" width="500" align="left" vspace="6">
 
 **EDEN.fx** is written in Java and runs on Mac OS X, Windows, and Linux operating systems.
  The application is developed and maintained by the [Oak Ridge National Laboratory](http://www.ornl.gov)
