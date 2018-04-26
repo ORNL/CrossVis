@@ -47,7 +47,10 @@ public abstract class Histogram2DDimension {
         public int getBinIndex(Object value) {
             return categories.indexOf(value);
         }
+
+        public String getBinCategory(int index) { return (String)categories.get(index); }
     }
+
 
     public static class Temporal extends Histogram2DDimension {
         private Instant data[];

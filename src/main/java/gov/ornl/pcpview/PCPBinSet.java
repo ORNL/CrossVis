@@ -2,9 +2,11 @@ package gov.ornl.pcpview;
 
 import gov.ornl.datatable.DataModel;
 import gov.ornl.datatable.Histogram2D;
+import gov.ornl.datatable.Histogram2DDimension;
 import gov.ornl.util.GraphicsUtil;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
+import javafx.scene.shape.Rectangle;
 
 import java.util.ArrayList;
 
@@ -61,17 +63,28 @@ public class PCPBinSet {
             queryHistogram2D = dataModel.getActiveQuery().getColumnQuerySummaryStats(leftAxis.getColumn()).getColumnHistogram2D(rightAxis.getColumn());
 //            queryHistogram2D = dataModel.getActiveQuery().getColumnQuerySummaryStats((QuantitativeColumn)leftAxis.getColumn()).getHistogram2DList().get(rightAxis.getColumnDataModelIndex());
         }
-
-        double leftX = leftAxis.getCenterX();
-        double rightX = rightAxis.getCenterX();
+        double leftX = leftAxis.getAxisBar().getLayoutBounds().getMaxX();
+        double rightX = rightAxis.getAxisBar().getLayoutBounds().getMinX();
+//        double leftX = leftAxis.getCenterX();
+//        double rightX = rightAxis.getCenterX();
 
         double leftBinHeight = (leftAxis.getFocusBottomY() - leftAxis.getFocusTopY()) / histogram2D.getXDimension().getNumBins();
         double leftQueryBinHeight = 2d * (leftBinHeight / 3d);
         double queryHeightOffset = (leftBinHeight - leftQueryBinHeight) / 2d;
 
         for (int ix = 0; ix < histogram2D.getXDimension().getNumBins(); ix++) {
-            double leftBottom = leftAxis.getFocusBottomY() - (ix * leftBinHeight);
-            double leftTop = leftAxis.getFocusBottomY() - ((ix + 1) * leftBinHeight);
+            double leftBottom = 0;
+            double leftTop = 0;
+
+            if (leftAxis instanceof PCPCategoricalAxis) {
+                String category = ((Histogram2DDimension.Categorical)histogram2D.getXDimension()).getBinCategory(ix);
+                Rectangle categoryRectangle = ((PCPCategoricalAxis)leftAxis).getCategoryRectangle(category);
+                leftBottom = categoryRectangle.getLayoutBounds().getMaxY();
+                leftTop = categoryRectangle.getLayoutBounds().getMinY();
+            } else if (leftAxis instanceof PCPDoubleAxis || leftAxis instanceof PCPTemporalAxis) {
+                leftBottom = leftAxis.getFocusBottomY() - (ix * leftBinHeight);
+                leftTop = leftAxis.getFocusBottomY() - ((ix + 1) * leftBinHeight);
+            }
 
             for (int iy = 0; iy < histogram2D.getYDimension().getNumBins(); iy++) {
                 int count = histogram2D.getBinCount(ix, iy);
@@ -79,7 +92,19 @@ public class PCPBinSet {
                 if (count > 0) {
                     PCPBin bin = new PCPBin();
                     bin.count = count;
-                    double rightBinHeight = (rightAxis.getFocusBottomY() - rightAxis.getFocusTopY()) / histogram2D.getYDimension().getNumBins();
+
+                    double rightBottom = 0.;
+                    double rightTop = 0.;
+                    if (rightAxis instanceof PCPCategoricalAxis) {
+                        String category = ((Histogram2DDimension.Categorical)histogram2D.getYDimension()).getBinCategory(iy);
+                        Rectangle categoryRectangle = ((PCPCategoricalAxis)rightAxis).getCategoryRectangle(category);
+                        rightBottom = categoryRectangle.getLayoutBounds().getMaxY();
+                        rightTop = categoryRectangle.getLayoutBounds().getMinY();
+                    } else if (rightAxis instanceof PCPDoubleAxis || rightAxis instanceof PCPTemporalAxis) {
+                        double rightBinHeight = (rightAxis.getFocusBottomY() - rightAxis.getFocusTopY()) / histogram2D.getYDimension().getNumBins();
+                        rightBottom = rightAxis.getFocusBottomY() - (iy * rightBinHeight);
+                        rightTop = rightAxis.getFocusBottomY() - ((iy + 1) * rightBinHeight);
+                    }
 
                     // compute fill color
                     double normCount = GraphicsUtil.norm(count, 0, dataModel.getMaxHistogram2DBinCount());
@@ -103,8 +128,10 @@ public class PCPBinSet {
                     bin.right = rightX;
                     bin.leftTop = leftTop;
                     bin.leftBottom = leftBottom;
-                    bin.rightBottom = rightAxis.getFocusBottomY() - (iy * rightBinHeight);
-                    bin.rightTop = rightAxis.getFocusBottomY() - ((iy + 1) * rightBinHeight);
+                    bin.rightTop = rightTop;
+                    bin.rightBottom = rightBottom;
+//                    bin.rightBottom = rightAxis.getFocusBottomY() - (iy * rightBinHeight);
+//                    bin.rightTop = rightAxis.getFocusBottomY() - ((iy + 1) * rightBinHeight);
 
                     bin.leftQueryBottom = bin.leftBottom - queryHeightOffset;
                     bin.leftQueryTop = bin.leftTop + queryHeightOffset;
