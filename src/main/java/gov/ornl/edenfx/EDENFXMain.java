@@ -1287,9 +1287,9 @@ public class EDENFXMain extends Application implements DataModelListener {
             categoricalColumnTableView.setItems(FXCollections.observableArrayList(categoricalColumns));
         }
 
-        doubleQueryTableView.getItems().clear();
-        temporalQueryTableView.getItems().clear();
-        categoricalQueryTableView.getItems().clear();
+//        doubleQueryTableView.getItems().clear();
+//        temporalQueryTableView.getItems().clear();
+//        categoricalQueryTableView.getItems().clear();
         doubleQueryTableView.setItems(dataModel.getActiveQuery().columnSelectionRangesProperty().filtered(selection -> selection instanceof DoubleColumnSelectionRange));
         temporalQueryTableView.setItems(dataModel.getActiveQuery().columnSelectionRangesProperty().filtered(selection -> selection instanceof TemporalColumnSelectionRange));
         categoricalQueryTableView.setItems(dataModel.getActiveQuery().columnSelectionRangesProperty().filtered(selection -> selection instanceof CategoricalColumnSelection));
@@ -1515,6 +1515,9 @@ public class EDENFXMain extends Application implements DataModelListener {
     @Override
     public void dataModelReset(DataModel dataModel) {
         removeAllQueriesMI.setDisable(!dataModel.getActiveQuery().hasColumnSelections());
+//        doubleQueryTableView.getItems().clear();
+//        temporalQueryTableView.getItems().clear();
+//        categoricalQueryTableView.getItems().clear();
         setDataTableItems();
         updatePercentSelected();
     }
@@ -1525,9 +1528,9 @@ public class EDENFXMain extends Application implements DataModelListener {
         setDataTableItems();
         updatePercentSelected();
 
-        doubleQueryTableView.getItems().clear();
-        temporalQueryTableView.getItems().clear();
-        categoricalQueryTableView.getItems().clear();
+//        doubleQueryTableView.getItems().clear();
+//        temporalQueryTableView.getItems().clear();
+//        categoricalQueryTableView.getItems().clear();
 //        Predicate<ColumnSelectionRange> isDoubleSelection = (selection -> selection instanceof DoubleColumnSelectionRange);
         doubleQueryTableView.setItems(dataModel.getActiveQuery().columnSelectionRangesProperty().filtered(selection -> selection instanceof DoubleColumnSelectionRange));
         temporalQueryTableView.setItems(dataModel.getActiveQuery().columnSelectionRangesProperty().filtered(selection -> selection instanceof TemporalColumnSelectionRange));

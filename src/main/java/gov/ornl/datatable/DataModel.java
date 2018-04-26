@@ -198,10 +198,11 @@ public class DataModel {
 	private void clearDataModel() {
 		tuples.clear();
 		disabledColumnTuples.clear();
-		clearActiveQuery();
-		this.columns.clear();
-		this.disabledColumns.clear();
-		this.highlightedColumn = null;
+		activeQuery = new Query("Q" + (nextQueryNumber++), this);
+//		clearActiveQuery();
+		columns.clear();
+		disabledColumns.clear();
+		highlightedColumn = null;
 	}
 
 	public void setColumnName(Column column, String name) {
@@ -414,6 +415,10 @@ public class DataModel {
 	public void clearActiveQuery() {
         activeQuery = new Query("Q" + (nextQueryNumber++), this);
         fireQueryCleared();
+	}
+
+	private void clearAllQueryColumnSelections() {
+		getActiveQuery().clear();
 	}
 
 	public void clearActiveQueryColumnSelections(Column column) {

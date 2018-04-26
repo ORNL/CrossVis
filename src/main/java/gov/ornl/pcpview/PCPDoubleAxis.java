@@ -12,8 +12,10 @@ import javafx.scene.shape.Rectangle;
 import javafx.util.converter.NumberStringConverter;
 
 import java.util.ArrayList;
+import java.util.logging.Logger;
 
 public class PCPDoubleAxis extends PCPAxis {
+    public static final Logger log = Logger.getLogger(PCPDoubleAxis.class.getName());
 
     public final static Color DEFAULT_OVERALL_DISPERSION_FILL = DEFAULT_HISTOGRAM_FILL;
     public final static Color DEFAULT_QUERY_DISPERSION_FILL = DEFAULT_QUERY_HISTOGRAM_FILL;
@@ -192,6 +194,9 @@ public class PCPDoubleAxis extends PCPAxis {
             if (dataModel.getActiveQuery().hasColumnSelections()) {
                 DoubleColumnSummaryStats queryColumnSummaryStats = (DoubleColumnSummaryStats)dataModel.getActiveQuery().getColumnQuerySummaryStats(getColumn());
 
+                if (queryColumnSummaryStats == null) {
+                    log.info("queryColumnSummaryStats is null for column " + getColumn().getName());
+                }
                 typicalValueY = GraphicsUtil.mapValue(queryColumnSummaryStats.getMeanValue(),
                         doubleColumn().getStatistics().getMinValue(), doubleColumn().getStatistics().getMaxValue(),
                         getFocusBottomY(), getFocusTopY());

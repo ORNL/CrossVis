@@ -360,10 +360,7 @@ public class PCPView extends Region implements DataModelListener {
         }
     }
 
-    public void clearQuery() {
-        dataModel.clearActiveQuery();
-
-        // clear all axis selection graphics
+    private void removeAllAxisSelectionGraphics() {
         for (PCPAxis pcpAxis : axisList) {
             if (!pcpAxis.getAxisSelectionList().isEmpty()) {
                 for (PCPAxisSelection pcpAxisSelection : pcpAxis.getAxisSelectionList()) {
@@ -372,6 +369,21 @@ public class PCPView extends Region implements DataModelListener {
                 pcpAxis.getAxisSelectionList().clear();
             }
         }
+    }
+
+    public void clearQuery() {
+        dataModel.clearActiveQuery();
+
+        // clear all axis selection graphics
+//        for (PCPAxis pcpAxis : axisList) {
+//            if (!pcpAxis.getAxisSelectionList().isEmpty()) {
+//                for (PCPAxisSelection pcpAxisSelection : pcpAxis.getAxisSelectionList()) {
+//                    pane.getChildren().remove(pcpAxisSelection.getGraphicsGroup());
+//                }
+//                pcpAxis.getAxisSelectionList().clear();
+//            }
+//        }
+        removeAllAxisSelectionGraphics();
 
         handleQueryChange();
     }
@@ -671,6 +683,10 @@ public class PCPView extends Region implements DataModelListener {
 
     @Override
     public void dataModelReset(DataModel dataModel) {
+        removeAllAxisSelectionGraphics();
+        selectedCanvas.getGraphicsContext2D().clearRect(0, 0, getWidth(), getHeight());
+        unselectedCanvas.getGraphicsContext2D().clearRect(0, 0, getWidth(), getHeight());
+
         if (axisList != null && !axisList.isEmpty()) {
             for (PCPAxis pcpAxis : axisList) {
                 pane.getChildren().removeAll(pcpAxis.getGraphicsGroup(), pcpAxis.getHistogramBinRectangleGroup(),

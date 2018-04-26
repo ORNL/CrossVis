@@ -5,12 +5,12 @@
 	<groupId>gov.ornl.edenfx</groupId>
 	<artifactId>edenfx</artifactId>
 	<packaging>jar</packaging>
-	<version>1.1.0</version>
+	<version>1.1.1</version>
 
 	<name>edenfx</name>
     <organization>
         <name>Oak Ridge National Laboratory</name>
-        <url>http://cda.ornl.gov/projects/edenfx</url>
+        <url>https://github.com/ORNL/edenfx</url>
     </organization>
 
 	<properties>

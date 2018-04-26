@@ -6,18 +6,17 @@ import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.paint.Color;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.logging.Logger;
 
 /**
  * Created by csg on 10/21/16.
  */
 public class TupleDrawingAnimationTimer extends AnimationTimer {
-    public final static Logger log = LoggerFactory.getLogger(TupleDrawingAnimationTimer.class);
+    public final static Logger log = Logger.getLogger(TupleDrawingAnimationTimer.class.getName());
 
     private Canvas canvas;
     private Color tupleColor;
