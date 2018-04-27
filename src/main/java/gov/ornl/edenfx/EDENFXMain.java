@@ -589,6 +589,14 @@ public class EDENFXMain extends Application implements DataModelListener {
         ColorPicker selectedItemsColorPicker = new ColorPicker();
         selectedItemsColorPicker.valueProperty().bindBidirectional(pcpView.selectedItemsColorProperty());
         selectedItemsColorPicker.getStyleClass().add("button");
+//        selectedItemsColorPicker.setOnAction(event -> {
+//            Color c = new Color(selectedItemsColorPicker.getValue().getRed(),
+//                    selectedItemsColorPicker.getValue().getGreen(),
+//                    selectedItemsColorPicker.getValue().getBlue(),
+//                    pcpView.getOpacity());
+//            selectedItemsColorPicker.setValue(c);
+//        });
+
         selectedItemsColorBox.getChildren().addAll(new Label(" Selected Items: "), selectedItemsColorPicker);
 
         // create unselected items color modification UI components
@@ -600,36 +608,48 @@ public class EDENFXMain extends Application implements DataModelListener {
         unselectedItemsColorPicker.valueProperty().bindBidirectional(pcpView.unselectedItemsColorProperty());
         unselectedItemsColorBox.getChildren().addAll(new Label(" Unselected Items: "), unselectedItemsColorPicker);
 
-        // create unselected items color modification UI components
-        HBox backgroundColorBox = new HBox();
-        backgroundColorBox.setAlignment(Pos.CENTER);
+        // create opacity slider
+        HBox opacityBox = new HBox();
+        opacityBox.setAlignment(Pos.CENTER);
 
-        ColorPicker backgroundColorPicker = new ColorPicker();
-        backgroundColorPicker.getStyleClass().add("button");
-        backgroundColorPicker.valueProperty().bindBidirectional(pcpView.backgroundColorProperty());
-        backgroundColorBox.getChildren().addAll(new Label(" Background: "), backgroundColorPicker);
+        Slider opacitySlider = new Slider(0., 1., pcpView.getDataItemsOpacity());
+        opacitySlider.valueProperty().bindBidirectional(pcpView.dataItemsOpacityProperty());
+        opacitySlider.setShowTickLabels(false);
+        opacitySlider.setShowTickMarks(false);
 
-        // create label color UI components
-        HBox labelColorBox = new HBox();
-        labelColorBox.setAlignment(Pos.CENTER);
+        opacityBox.getChildren().addAll(new Label(" Opacity: "), opacitySlider);
 
-        ColorPicker labelColorPicker = new ColorPicker();
-        labelColorPicker.getStyleClass().add("button");
-        labelColorPicker.valueProperty().bindBidirectional(pcpView.labelsColorProperty());
-        labelColorBox.getChildren().addAll(new Label(" Labels: "), labelColorPicker);
-
-        // create name text rotation spinner
-        HBox nameTextRotationBox = new HBox();
-        nameTextRotationBox.setAlignment(Pos.CENTER);
-
-        Spinner<Double> nameTextRotationSpinner = new Spinner<Double>(-30., 30., pcpView.getNameTextRotation());
-        pcpView.nameTextRotationProperty().bind(nameTextRotationSpinner.valueProperty());
-        nameTextRotationSpinner.setEditable(true);
-        nameTextRotationBox.getChildren().addAll(new Label(" Name Label Rotation: "), nameTextRotationSpinner);
+//        // create unselected items color modification UI components
+//        HBox backgroundColorBox = new HBox();
+//        backgroundColorBox.setAlignment(Pos.CENTER);
+//
+//        ColorPicker backgroundColorPicker = new ColorPicker();
+//        backgroundColorPicker.getStyleClass().add("button");
+//        backgroundColorPicker.valueProperty().bindBidirectional(pcpView.backgroundColorProperty());
+//        backgroundColorBox.getChildren().addAll(new Label(" Background: "), backgroundColorPicker);
+//
+//        // create label color UI components
+//        HBox labelColorBox = new HBox();
+//        labelColorBox.setAlignment(Pos.CENTER);
+//
+//        ColorPicker labelColorPicker = new ColorPicker();
+//        labelColorPicker.getStyleClass().add("button");
+//        labelColorPicker.valueProperty().bindBidirectional(pcpView.labelsColorProperty());
+//        labelColorBox.getChildren().addAll(new Label(" Labels: "), labelColorPicker);
+//
+//        // create name text rotation spinner
+//        HBox nameTextRotationBox = new HBox();
+//        nameTextRotationBox.setAlignment(Pos.CENTER);
+//
+//        Spinner<Double> nameTextRotationSpinner = new Spinner<Double>(-30., 30., pcpView.getNameTextRotation());
+//        pcpView.nameTextRotationProperty().bind(nameTextRotationSpinner.valueProperty());
+//        nameTextRotationSpinner.setEditable(true);
+//        nameTextRotationBox.getChildren().addAll(new Label(" Name Label Rotation: "), nameTextRotationSpinner);
 
         // add all items to layout
         toolBar.getItems().addAll(summaryDisplayModeButton, histogramDisplayModeButton, binDisplayModeButton, lineDisplayModeButton, new Separator(),
-                showUnselectedButton, showSelectedButton, new Separator(), selectedItemsColorBox, unselectedItemsColorBox, backgroundColorBox, labelColorBox, nameTextRotationBox);
+                showUnselectedButton, showSelectedButton, new Separator(), selectedItemsColorBox, unselectedItemsColorBox, new Separator(), opacityBox);
+//        , backgroundColorBox, labelColorBox, nameTextRotationBox);
 
         return toolBar;
     }

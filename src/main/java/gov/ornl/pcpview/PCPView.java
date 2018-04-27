@@ -35,6 +35,7 @@ public class PCPView extends Region implements DataModelListener {
     private Canvas unselectedCanvas;
     private ObjectProperty<Color> selectedItemsColor;
     private ObjectProperty<Color> unselectedItemsColor;
+    private DoubleProperty dataItemsOpacity;
     private ObjectProperty<Color> overallSummaryFillColor;
     private ObjectProperty<Color> querySummaryFillColor;
     private ObjectProperty<Color> overallSummaryStrokeColor;
@@ -74,6 +75,14 @@ public class PCPView extends Region implements DataModelListener {
 //                    pcpAxis.setLabelColor(newValue);
 //                }
             }
+        });
+
+        dataItemsOpacity.addListener((observable, oldValue, newValue) -> {
+            setSelectedItemsColor(new Color(getSelectedItemsColor().getRed(), getSelectedItemsColor().getGreen(),
+                    getSelectedItemsColor().getBlue(), getOpacity()));
+            setUnselectedItemsColor(new Color(getUnselectedItemsColor().getRed(), getUnselectedItemsColor().getGreen(),
+                    getUnselectedItemsColor().getBlue(), getOpacity()));
+            redrawView();
         });
 
         selectedItemsColor.addListener((observable, oldValue, newValue) -> {
@@ -141,6 +150,7 @@ public class PCPView extends Region implements DataModelListener {
         nameTextRotation = new SimpleDoubleProperty(0.0);
         selectedItemsColor = new SimpleObjectProperty<>(DEFAULT_SELECTED_ITEMS_COLOR);
         unselectedItemsColor = new SimpleObjectProperty<>(DEFAULT_UNSELECTED_ITEMS_COLOR);
+        dataItemsOpacity = new SimpleDoubleProperty(DEFAULT_LINE_OPACITY);
 
         overallSummaryFillColor = new SimpleObjectProperty<>(DEFAULT_OVERALL_SUMMARY_FILL_COLOR);
         overallSummaryStrokeColor = new SimpleObjectProperty<>(DEFAULT_OVERALL_SUMMARY_STROKE_COLOR);
@@ -195,7 +205,10 @@ public class PCPView extends Region implements DataModelListener {
                 unselectedTuplesTimer.stop();
             }
 
-            unselectedTuplesTimer = new TupleDrawingAnimationTimer(unselectedCanvas, unselectedTupleSet, axisList, getUnselectedItemsColor(), 100);
+            Color lineColor = new Color(getUnselectedItemsColor().getRed(), getUnselectedItemsColor().getGreen(),
+                    getUnselectedItemsColor().getBlue(), getDataItemsOpacity());
+            unselectedTuplesTimer = new TupleDrawingAnimationTimer(unselectedCanvas, unselectedTupleSet,
+                    axisList, lineColor, 100);
             unselectedTuplesTimer.start();
         }
 
@@ -204,7 +217,10 @@ public class PCPView extends Region implements DataModelListener {
                 selectedTuplesTimer.stop();
             }
 
-            selectedTuplesTimer = new TupleDrawingAnimationTimer(selectedCanvas, selectedTupleSet, axisList, getSelectedItemsColor(), 100);
+            Color lineColor = new Color(getSelectedItemsColor().getRed(), getSelectedItemsColor().getGreen(),
+                    getSelectedItemsColor().getBlue(), getDataItemsOpacity());
+            selectedTuplesTimer = new TupleDrawingAnimationTimer(selectedCanvas, selectedTupleSet,
+                    axisList, lineColor, 100);
             selectedTuplesTimer.start();
         }
     }
@@ -416,16 +432,18 @@ public class PCPView extends Region implements DataModelListener {
                 if (isShowingUnselectedItems()) {
                     for (PCPBinSet binSet : PCPBinSetList) {
                         for (PCPBin bin : binSet.getBins()) {
-                            Color binColor = new Color(getUnselectedItemsColor().getRed(), getUnselectedItemsColor().getGreen(),
-                                    getUnselectedItemsColor().getBlue(), bin.fillColor.getOpacity());
-//                            lineGC.setFill(binColor);
-                            unselectedCanvas.getGraphicsContext2D().setFill(binColor);
+                            if (bin.queryCount == 0) {
+                                Color binColor = new Color(getUnselectedItemsColor().getRed(), getUnselectedItemsColor().getGreen(),
+                                        getUnselectedItemsColor().getBlue(), bin.fillColor.getOpacity());
+                                //                            lineGC.setFill(binColor);
+                                unselectedCanvas.getGraphicsContext2D().setFill(binColor);
 
-                            double xValues[] = new double[]{bin.left, bin.right, bin.right, bin.left};
-                            double yValues[] = new double[]{bin.leftTop, bin.rightTop, bin.rightBottom, bin.leftBottom};
+                                double xValues[] = new double[]{bin.left, bin.right, bin.right, bin.left};
+                                double yValues[] = new double[]{bin.leftTop, bin.rightTop, bin.rightBottom, bin.leftBottom};
 
-                            unselectedCanvas.getGraphicsContext2D().fillPolygon(xValues, yValues, xValues.length);
-//                            lineGC.fillPolygon(xValues, yValues, xValues.length);
+                                unselectedCanvas.getGraphicsContext2D().fillPolygon(xValues, yValues, xValues.length);
+                                //                            lineGC.fillPolygon(xValues, yValues, xValues.length);
+                            }
                         }
                     }
                 }
@@ -442,7 +460,8 @@ public class PCPView extends Region implements DataModelListener {
                                 selectedCanvas.getGraphicsContext2D().setFill(binColor);
 
                                 double xValues[] = new double[]{bin.left, bin.right, bin.right, bin.left};
-                                double yValues[] = new double[]{bin.leftQueryTop, bin.rightQueryTop, bin.rightQueryBottom, bin.leftQueryBottom};
+                                double yValues[] = new double[]{bin.leftTop, bin.rightTop, bin.rightBottom, bin.leftBottom};
+//                                double yValues[] = new double[]{bin.leftQueryTop, bin.rightQueryTop, bin.rightQueryBottom, bin.leftQueryBottom};
 //                                lineGC.fillPolygon(xValues, yValues, xValues.length);
 
                                 selectedCanvas.getGraphicsContext2D().fillPolygon(xValues, yValues, xValues.length);
@@ -542,6 +561,14 @@ public class PCPView extends Region implements DataModelListener {
     public final void setShowUnselectedItems(boolean enabled) { showUnselectedItems.set(enabled); }
 
     public BooleanProperty showUnselectedItemsProperty() { return showUnselectedItems; }
+
+    public final double getDataItemsOpacity() { return dataItemsOpacity.get(); }
+
+    public final void setDataItemsOpacity(double opacity) {
+        dataItemsOpacity.set(opacity);
+    }
+
+    public DoubleProperty dataItemsOpacityProperty() { return dataItemsOpacity; }
 
     public final Color getSelectedItemsColor() { return selectedItemsColor.get(); }
 
