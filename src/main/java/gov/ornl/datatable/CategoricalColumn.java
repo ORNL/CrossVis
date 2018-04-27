@@ -67,6 +67,21 @@ public class CategoricalColumn extends Column {
 
         return values;
     }
+
+    public String[] getNonqueriedValues() {
+        int columnIndex = getDataModel().getColumnIndex(this);
+
+        Set<Tuple> nonqueriedTuples = getDataModel().getActiveQuery().getNonQueriedTuples();
+        String values[] = new String[nonqueriedTuples.size()];
+
+        int counter = 0;
+        for (Tuple tuple : nonqueriedTuples) {
+            values[counter++] = (String)tuple.getElement(columnIndex);
+        }
+
+        return values;
+    }
+
     @Override
     public CategoricalColumnSummaryStats getStatistics() {
         return summaryStats;

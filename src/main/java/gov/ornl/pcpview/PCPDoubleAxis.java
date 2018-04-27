@@ -30,6 +30,8 @@ public class PCPDoubleAxis extends PCPAxis {
     private Group querySummaryStatisticsGroup;
     private Rectangle queryDispersionRectangle;
     private Line queryTypicalLine;
+    private Rectangle nonqueryDispersionRectangle;
+    private Line nonqueryTypicalLine;
 
     // histogram bin rectangles
     private Group histogramBinRectangleGroup;
@@ -60,13 +62,25 @@ public class PCPDoubleAxis extends PCPAxis {
         graphicsGroup.getChildren().add(overallSummaryStatisticsGroup);
 
         queryDispersionRectangle = new Rectangle();
-        queryDispersionRectangle.setFill(queryDispersionFill);
+        queryDispersionRectangle.setFill(pcpView.getSelectedItemsColor());
+        queryDispersionRectangle.setStroke(Color.DARKGRAY);
         queryDispersionRectangle.setSmooth(true);
         queryDispersionRectangle.setStrokeWidth(DEFAULT_STROKE_WIDTH);
 
         queryTypicalLine = makeLine();
         queryTypicalLine.setStroke(queryTypicalStroke);
-        querySummaryStatisticsGroup = new Group(queryDispersionRectangle, queryTypicalLine);
+
+        nonqueryDispersionRectangle = new Rectangle();
+        nonqueryDispersionRectangle.setFill(pcpView.getUnselectedItemsColor());
+        nonqueryDispersionRectangle.setStroke(Color.DARKGRAY);
+        nonqueryDispersionRectangle.setSmooth(true);
+        nonqueryDispersionRectangle.setStrokeWidth(DEFAULT_STROKE_WIDTH);
+
+        nonqueryTypicalLine = makeLine();
+        nonqueryTypicalLine.setStroke(queryTypicalStroke);
+
+        querySummaryStatisticsGroup = new Group(nonqueryDispersionRectangle, nonqueryTypicalLine,
+                queryDispersionRectangle, queryTypicalLine);
         querySummaryStatisticsGroup.setMouseTransparent(true);
 
         registerListeners();
@@ -76,9 +90,13 @@ public class PCPDoubleAxis extends PCPAxis {
 
     public Rectangle getQueryDispersionRectangle () { return queryDispersionRectangle; }
 
+    public Rectangle getNonqueryDispersionRectangle () { return nonqueryDispersionRectangle; }
+
     public Line getOverallTypicalLine () { return overallTypicalLine; }
 
     public Line getQueryTypicalLine () { return queryTypicalLine; }
+
+    public Line getNonqueryTypicalLine () { return nonqueryTypicalLine; }
 
     @Override
     protected void handleAxisBarMousePressed() {
@@ -131,6 +149,12 @@ public class PCPDoubleAxis extends PCPAxis {
                 new NumberStringConverter());
         maxValueText.textProperty().bindBidirectional(((DoubleColumn)getColumn()).getStatistics().maxValueProperty(),
                 new NumberStringConverter());
+        pcpView.selectedItemsColorProperty().addListener((observable, oldValue, newValue) -> {
+            queryDispersionRectangle.setFill(newValue);
+        });
+        pcpView.unselectedItemsColorProperty().addListener((observable, oldValue, newValue) -> {
+            nonqueryDispersionRectangle.setFill(newValue);
+        });
     }
 
     private DoubleColumn doubleColumn() {
@@ -192,6 +216,7 @@ public class PCPDoubleAxis extends PCPAxis {
             queryHistogramBinRectangleGroup = new Group();
 
             if (dataModel.getActiveQuery().hasColumnSelections()) {
+                // draw query statistics shapes
                 DoubleColumnSummaryStats queryColumnSummaryStats = (DoubleColumnSummaryStats)dataModel.getActiveQuery().getColumnQuerySummaryStats(getColumn());
 
                 if (queryColumnSummaryStats == null) {
@@ -200,8 +225,8 @@ public class PCPDoubleAxis extends PCPAxis {
                 typicalValueY = GraphicsUtil.mapValue(queryColumnSummaryStats.getMeanValue(),
                         doubleColumn().getStatistics().getMinValue(), doubleColumn().getStatistics().getMaxValue(),
                         getFocusBottomY(), getFocusTopY());
-                queryTypicalLine.setStartX(centerX - 2.);
-                queryTypicalLine.setEndX(centerX + 2.);
+                queryTypicalLine.setStartX(centerX - 4.);
+                queryTypicalLine.setEndX(centerX);
                 queryTypicalLine.setStartY(typicalValueY);
                 queryTypicalLine.setEndY(typicalValueY);
 
@@ -217,6 +242,33 @@ public class PCPDoubleAxis extends PCPAxis {
                 queryDispersionRectangle.setWidth(queryTypicalLine.getEndX() - queryTypicalLine.getStartX());
                 queryDispersionRectangle.setY(queryDispersionTop);
                 queryDispersionRectangle.setHeight(queryDispersionBottom - queryDispersionTop);
+
+                // draw nonquery statistics shapes
+                DoubleColumnSummaryStats nonqueryColumnSummaryStats = (DoubleColumnSummaryStats)dataModel.getActiveQuery().getColumnNonquerySummaryStats(getColumn());
+
+                if (nonqueryColumnSummaryStats == null) {
+                    log.info("nonqueryColumnSummaryStats is null for column " + getColumn().getName());
+                }
+                typicalValueY = GraphicsUtil.mapValue(nonqueryColumnSummaryStats.getMeanValue(),
+                        doubleColumn().getStatistics().getMinValue(), doubleColumn().getStatistics().getMaxValue(),
+                        getFocusBottomY(), getFocusTopY());
+                nonqueryTypicalLine.setStartX(centerX);
+                nonqueryTypicalLine.setEndX(centerX + 4.);
+                nonqueryTypicalLine.setStartY(typicalValueY);
+                nonqueryTypicalLine.setEndY(typicalValueY);
+
+                double dispersionValue = nonqueryColumnSummaryStats.getMeanValue() + nonqueryColumnSummaryStats.getStandardDeviationValue();
+                double nonqueryDispersionTop = GraphicsUtil.mapValue(dispersionValue, doubleColumn().getStatistics().getMinValue(),
+                        doubleColumn().getStatistics().getMaxValue(), getFocusBottomY(), getFocusTopY());
+                nonqueryDispersionTop = nonqueryDispersionTop < getFocusTopY() ? getFocusTopY() : nonqueryDispersionTop;
+                dispersionValue = nonqueryColumnSummaryStats.getMeanValue() - nonqueryColumnSummaryStats.getStandardDeviationValue();
+                double nonqueryDispersionBottom = GraphicsUtil.mapValue(dispersionValue, doubleColumn().getStatistics().getMinValue(),
+                        doubleColumn().getStatistics().getMaxValue(), getFocusBottomY(), getFocusTopY());
+                nonqueryDispersionBottom = nonqueryDispersionBottom > getFocusBottomY() ? getFocusBottomY() : nonqueryDispersionBottom;
+                nonqueryDispersionRectangle.setX(nonqueryTypicalLine.getStartX());
+                nonqueryDispersionRectangle.setWidth(nonqueryTypicalLine.getEndX() - nonqueryTypicalLine.getStartX());
+                nonqueryDispersionRectangle.setY(nonqueryDispersionTop);
+                nonqueryDispersionRectangle.setHeight(nonqueryDispersionBottom - nonqueryDispersionTop);
 
                 if (!graphicsGroup.getChildren().contains(querySummaryStatisticsGroup)) {
                     graphicsGroup.getChildren().add(querySummaryStatisticsGroup);

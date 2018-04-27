@@ -1249,17 +1249,17 @@ public class EDENFXMain extends Application implements DataModelListener {
     }
 
     private void openCSVFile(File f) throws IOException {
-        if (dataModel != null) {
-            // TODO: Clear the data model from the PCPView
-            dataModel.clear();
-        }
-
         String columnNames[] = IOUtilities.readCSVHeader(f);
         int lineCount = IOUtilities.getCSVLineCount(f);
 
         ArrayList<ColumnSpecification> columnSpecifications = getColumnSpecifications(columnNames);
         if (columnSpecifications == null) {
             return;
+        }
+
+        if (dataModel != null) {
+            // TODO: Clear the data model from the PCPView
+            dataModel.clear();
         }
 
         ArrayList<String> temporalColumnNames = new ArrayList<>();
@@ -1361,6 +1361,7 @@ public class EDENFXMain extends Application implements DataModelListener {
         }
         parsePatterns.add(preferences.get(EDENFXPreferenceKeys.DEFAULT_CSV_IMPORT_DATETIME_PARSE_PATTERN,
                 "yyyy-MM-ddTHH:mm:ssz"));
+        parsePatterns.add("dd.MM.yyy HH:mm:ss");
 
         TableColumn<ColumnSpecification, String> parseColumn = new TableColumn<>("DateTime Parse Pattern");
         parseColumn.setMinWidth(180);

@@ -143,7 +143,13 @@ public class DoubleColumnSummaryStats extends ColumnSummaryStats {
                 if (query == null) {
                     coefficient = pCorr.correlation(values, ((DoubleColumn) otherColumn).getValues());
                 } else {
-                    coefficient = pCorr.correlation(values, ((DoubleColumn)otherColumn).getQueriedValues());
+                    if (((DoubleColumn)otherColumn).getQueriedValues().length == values.length) {
+                        coefficient = pCorr.correlation(values, ((DoubleColumn) otherColumn).getQueriedValues());
+                    } else if (((DoubleColumn)otherColumn).getNonqueriedValues().length == values.length) {
+                        coefficient = pCorr.correlation(values, ((DoubleColumn) otherColumn).getNonqueriedValues());
+                    } else {
+                        coefficient = Double.NaN;
+                    }
                 }
             }
             correlationCoefficientList.add(coefficient);

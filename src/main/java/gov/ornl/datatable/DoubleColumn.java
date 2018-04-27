@@ -42,5 +42,19 @@ public class DoubleColumn extends Column {
         return values;
     }
 
+    public double[] getNonqueriedValues() {
+        int columnIndex = getDataModel().getColumnIndex(this);
+
+        Set<Tuple> nonqueriedTuples = getDataModel().getActiveQuery().getNonQueriedTuples();
+        double values[] = new double[nonqueriedTuples.size()];
+
+        int counter = 0;
+        for (Tuple tuple : nonqueriedTuples) {
+            values[counter++] = (Double) tuple.getElement(columnIndex);
+        }
+
+        return values;
+    }
+
     public DoubleColumnSummaryStats getStatistics() { return summaryStats; }
 }

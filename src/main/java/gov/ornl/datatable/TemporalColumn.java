@@ -41,6 +41,21 @@ public class TemporalColumn extends Column {
         return values;
     }
 
+    public Instant[] getNonqueriedValues() {
+        if (getDataModel().getActiveQuery().getNonQueriedTuples().isEmpty()) {
+            return null;
+        }
+
+        Instant[] values = new Instant[getDataModel().getActiveQuery().getNonQueriedTuples().size()];
+        int columnIndex = getDataModel().getColumnIndex(this);
+        int counter = 0;
+        for (Tuple tuple : getDataModel().getActiveQuery().getNonQueriedTuples()) {
+            values[counter++] = (Instant)tuple.getElement(columnIndex);
+        }
+
+        return values;
+    }
+
     public TemporalColumnSummaryStats getStatistics () {
         return summaryStats;
     }

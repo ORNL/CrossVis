@@ -13,6 +13,7 @@ public class Query {
 
     private ListProperty<ColumnSelectionRange> columnSelectionRanges;
     private HashMap<Column, ColumnSummaryStats> columnQuerySummaryStatsMap;
+    private HashMap<Column, ColumnSummaryStats> columnNonquerySummaryStatsMap;
     private int maxHistogram2DBinCount;
     private DataModel dataModel;
 
@@ -24,6 +25,7 @@ public class Query {
         this.dataModel = dataModel;
         columnSelectionRanges = new SimpleListProperty<>(FXCollections.observableArrayList());
         columnQuerySummaryStatsMap = new HashMap<>();
+        columnNonquerySummaryStatsMap = new HashMap<>();
         maxHistogram2DBinCount = 0;
         queriedTuples = new HashSet<>();
         nonQueriedTuples = new HashSet<>();
@@ -123,31 +125,53 @@ public class Query {
         if (!queriedTuples.isEmpty()) {
             for (int icolumn = 0; icolumn < dataModel.getColumnCount(); icolumn++) {
                 Column column = dataModel.getColumn(icolumn);
-                ColumnSummaryStats columnSummaryStats = columnQuerySummaryStatsMap.get(column);
+                ColumnSummaryStats queryColumnSummaryStats = columnQuerySummaryStatsMap.get(column);
+                ColumnSummaryStats nonqueryColumnSummaryStats = columnNonquerySummaryStatsMap.get(column);
+
                 if (column instanceof TemporalColumn) {
-                    Instant values[] = ((TemporalColumn) column).getQueriedValues();
-                    if (columnSummaryStats == null) {
-                        columnSummaryStats = new TemporalColumnSummaryStats(column, dataModel.getNumHistogramBins(), this);
-                        columnQuerySummaryStatsMap.put(column, columnSummaryStats);
+                    Instant queriedValues[] = ((TemporalColumn)column).getQueriedValues();
+                    if (queryColumnSummaryStats == null) {
+                        queryColumnSummaryStats = new TemporalColumnSummaryStats(column, dataModel.getNumHistogramBins(), this);
+                        columnQuerySummaryStatsMap.put(column, queryColumnSummaryStats);
                     }
-                    ((TemporalColumnSummaryStats) columnSummaryStats).setValues(values);
+                    ((TemporalColumnSummaryStats)queryColumnSummaryStats).setValues(queriedValues);
+
+                    Instant nonqueriedValues[] = ((TemporalColumn)column).getNonqueriedValues();
+                    if (nonqueryColumnSummaryStats == null) {
+                        nonqueryColumnSummaryStats = new TemporalColumnSummaryStats(column, dataModel.getNumHistogramBins(), this);
+                        columnNonquerySummaryStatsMap.put(column, nonqueryColumnSummaryStats);
+                    }
+                    ((TemporalColumnSummaryStats)nonqueryColumnSummaryStats).setValues(nonqueriedValues);
                 } else if (column instanceof DoubleColumn) {
-                    double values[] = ((DoubleColumn) column).getQueriedValues();
-                    if (columnSummaryStats == null) {
-                        columnSummaryStats = new DoubleColumnSummaryStats(column, dataModel.getNumHistogramBins(), this);
-                        columnQuerySummaryStatsMap.put(column, columnSummaryStats);
+                    double queriedValues[] = ((DoubleColumn)column).getQueriedValues();
+                    if (queryColumnSummaryStats == null) {
+                        queryColumnSummaryStats = new DoubleColumnSummaryStats(column, dataModel.getNumHistogramBins(), this);
+                        columnQuerySummaryStatsMap.put(column, queryColumnSummaryStats);
                     }
-                    ((DoubleColumnSummaryStats) columnSummaryStats).setValues(values);
+                    ((DoubleColumnSummaryStats)queryColumnSummaryStats).setValues(queriedValues);
+
+                    double nonqueriedValues[] = ((DoubleColumn)column).getNonqueriedValues();
+                    if (nonqueryColumnSummaryStats == null) {
+                        nonqueryColumnSummaryStats = new DoubleColumnSummaryStats(column, dataModel.getNumHistogramBins(), this);
+                        columnNonquerySummaryStatsMap.put(column, nonqueryColumnSummaryStats);
+                    }
+                    ((DoubleColumnSummaryStats)nonqueryColumnSummaryStats).setValues(nonqueriedValues);
                 } else if (column instanceof CategoricalColumn) {
-                    String values[] = ((CategoricalColumn)column).getQueriedValues();
-                    if (columnSummaryStats == null) {
-                        columnSummaryStats = new CategoricalColumnSummaryStats(column, this);
-                        columnQuerySummaryStatsMap.put(column, columnSummaryStats);
+                    String queriedValues[] = ((CategoricalColumn)column).getQueriedValues();
+                    if (queryColumnSummaryStats == null) {
+                        queryColumnSummaryStats = new CategoricalColumnSummaryStats(column, this);
+                        columnQuerySummaryStatsMap.put(column, queryColumnSummaryStats);
                     }
-                    ((CategoricalColumnSummaryStats)columnSummaryStats).setValues(values);
+                    ((CategoricalColumnSummaryStats)queryColumnSummaryStats).setValues(queriedValues);
+
+                    String nonqueriedValues[] = ((CategoricalColumn)column).getNonqueriedValues();
+                    if (nonqueryColumnSummaryStats == null) {
+                        nonqueryColumnSummaryStats = new CategoricalColumnSummaryStats(column, this);
+                        columnNonquerySummaryStatsMap.put(column, nonqueryColumnSummaryStats);
+                    }
+                    ((CategoricalColumnSummaryStats)nonqueryColumnSummaryStats).setValues(nonqueriedValues);
                 }
             }
-
             calculateColumn2DHistograms();
         }
     }
@@ -191,6 +215,10 @@ public class Query {
         columnQuerySummaryStatsMap.put(column, querySummaryStats);
     }
 
+    public ColumnSummaryStats getColumnNonquerySummaryStats(Column column) {
+        return columnNonquerySummaryStatsMap.get(column);
+    }
+
     public String getID() {
         return id;
     }
@@ -202,6 +230,7 @@ public class Query {
     public void clear () {
         columnSelectionRanges.clear();
         columnQuerySummaryStatsMap.clear();
+        columnNonquerySummaryStatsMap.clear();
     }
 
     public ArrayList<ColumnSelectionRange> getColumnSelectionRanges (Column column) {

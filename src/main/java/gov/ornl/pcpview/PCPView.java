@@ -86,6 +86,7 @@ public class PCPView extends Region implements DataModelListener {
         });
 
         selectedItemsColor.addListener((observable, oldValue, newValue) -> {
+            log.info("selectedItemsColor changed to " + newValue.toString());
             redrawView();
         });
 
@@ -266,7 +267,7 @@ public class PCPView extends Region implements DataModelListener {
             if (axis0 instanceof PCPDoubleAxis && axis1 instanceof PCPDoubleAxis) {
                 PCPDoubleAxis dAxis0 = (PCPDoubleAxis)axis0;
                 PCPDoubleAxis dAxis1 = (PCPDoubleAxis)axis1;
-                
+
                 if (!(Double.isNaN(dAxis0.getOverallTypicalLine().getEndY())) &&
                         !(Double.isNaN(dAxis1.getOverallTypicalLine().getStartY()))) {
 
