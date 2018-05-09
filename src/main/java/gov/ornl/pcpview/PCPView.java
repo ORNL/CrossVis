@@ -3,6 +3,7 @@ package gov.ornl.pcpview;
 import gov.ornl.datatable.*;
 import javafx.beans.property.*;
 import javafx.geometry.Insets;
+import javafx.scene.Group;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
@@ -55,6 +56,8 @@ public class PCPView extends Region implements DataModelListener {
     private boolean fitAxisSpacingToWidthEnabled = true;
     private DoubleProperty nameTextRotation;
     private ArrayList<PCPBinSet> PCPBinSetList;
+
+    private Group summaryShapeGroup;
 
     public PCPView() {
         initialize();
@@ -170,9 +173,11 @@ public class PCPView extends Region implements DataModelListener {
         labelsColor = new SimpleObjectProperty<>(DEFAULT_LABEL_COLOR);
         backgroundColor = new SimpleObjectProperty<>(DEFAULT_BACKGROUND_COLOR);
 
+        summaryShapeGroup = new Group();
+
         pane = new Pane();
         pane.setBackground(new Background(new BackgroundFill(backgroundColor.get(), new CornerRadii(0), Insets.EMPTY)));
-        pane.getChildren().addAll(unselectedCanvas, selectedCanvas);
+        pane.getChildren().addAll(unselectedCanvas, selectedCanvas, summaryShapeGroup);
 
         getChildren().add(pane);
     }
@@ -240,7 +245,9 @@ public class PCPView extends Region implements DataModelListener {
         } else if (getDisplayMode() == DISPLAY_MODE.PCP_BINS) {
             drawPCPBins();
         } else if (getDisplayMode() == DISPLAY_MODE.SUMMARY) {
-            drawSummaryShapes();
+            unselectedCanvas.getGraphicsContext2D().clearRect(0, 0, unselectedCanvas.getWidth(), unselectedCanvas.getHeight());
+            selectedCanvas.getGraphicsContext2D().clearRect(0, 0, selectedCanvas.getWidth(), selectedCanvas.getHeight());
+//            drawSummaryShapes();
         }
     }
 
@@ -360,6 +367,10 @@ public class PCPView extends Region implements DataModelListener {
                         }
                     }
 
+                    if (!summaryShapeGroup.getChildren().isEmpty()) {
+                        summaryShapeGroup.getChildren().clear();
+                    }
+
                     // add tuples polylines from data model
                     if (getDisplayMode() == DISPLAY_MODE.PCP_LINES) {
                         if (tupleList != null) {
@@ -372,8 +383,13 @@ public class PCPView extends Region implements DataModelListener {
                         for (PCPBinSet PCPBinSet : PCPBinSetList) {
                             PCPBinSet.layoutBins();
                         }
+                    } else if (getDisplayMode() == DISPLAY_MODE.SUMMARY) {
+                        // build summary shapes and add to pane
+//                        SummaryShapeBuilder.buildShapes(axisList, this, summaryShapeGroup);
+//                        pane.getChildren().add(summaryShapeGroup);
                     }
                 }
+
 
                 redrawView();
             }
@@ -710,6 +726,8 @@ public class PCPView extends Region implements DataModelListener {
             }
             redrawView();
         } else if (getDisplayMode() == DISPLAY_MODE.SUMMARY) {
+//            summaryShapeGroup.getChildren().clear();
+//            SummaryShapeBuilder.buildShapes(axisList, this, summaryShapeGroup);
             redrawView();
         }
     }

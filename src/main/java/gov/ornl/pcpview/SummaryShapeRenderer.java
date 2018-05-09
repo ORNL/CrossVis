@@ -1,7 +1,10 @@
 package gov.ornl.pcpview;
 
+import gov.ornl.datatable.CategoricalColumn;
+import gov.ornl.datatable.CategoricalHistogram;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.StrokeLineCap;
 
 import java.util.ArrayList;
@@ -71,7 +74,34 @@ public class SummaryShapeRenderer {
                     }
                 }
             } else if (leftAxis instanceof PCPCategoricalAxis && rightAxis instanceof PCPDoubleAxis) {
+                PCPCategoricalAxis cLeftAxis = (PCPCategoricalAxis)leftAxis;
+                CategoricalHistogram categoricalHistogram = ((CategoricalColumn)cLeftAxis.getColumn()).getStatistics().getHistogram();
+                PCPDoubleAxis dRightAxis = (PCPDoubleAxis)rightAxis;
 
+                double rightAxisRangeTop = dRightAxis.getOverallDispersionRectangle().getLayoutBounds().getMinY();
+                double rightAxisRangeBottom = dRightAxis.getOverallDispersionRectangle().getLayoutBounds().getMaxY();
+                double rightAxisRangeX = dRightAxis.getOverallDispersionRectangle().getLayoutBounds().getMinX();
+                double rightAxisRangeHeight = rightAxisRangeBottom - rightAxisRangeTop;
+                double rightAxisLastBottomY = rightAxisRangeTop;
+
+                for (String category : cLeftAxis.getCategories()) {
+                    Rectangle categoryRectangle = cLeftAxis.getCategoryRectangle(category);
+                    double rightAxisCategoryHeight = rightAxisRangeHeight * ((double)categoricalHistogram.getCategoryCount(category) / categoricalHistogram.getTotalCount());
+
+                    double xValues[] = new double[]{categoryRectangle.getLayoutBounds().getMaxX(),
+                            rightAxisRangeX, rightAxisRangeX, categoryRectangle.getLayoutBounds().getMaxX()};
+                    double yValues[] = new double[]{categoryRectangle.getLayoutBounds().getMaxY(),
+                            rightAxisLastBottomY + rightAxisCategoryHeight, rightAxisLastBottomY,
+                            categoryRectangle.getLayoutBounds().getMinY()};
+
+                    unselectedCanvas.getGraphicsContext2D().setFill(overallFillColor);
+                    unselectedCanvas.getGraphicsContext2D().fillPolygon(xValues, yValues, xValues.length);
+                    unselectedCanvas.getGraphicsContext2D().setStroke(Color.DARKGRAY);
+                    unselectedCanvas.getGraphicsContext2D().strokePolygon(xValues, yValues, xValues.length);
+
+                    
+                    rightAxisLastBottomY += rightAxisCategoryHeight;
+                }
             } else if (leftAxis instanceof PCPDoubleAxis && rightAxis instanceof PCPCategoricalAxis) {
 
             } else if (leftAxis instanceof PCPCategoricalAxis && rightAxis instanceof PCPCategoricalAxis) {

@@ -16,6 +16,7 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.logging.Logger;
 
 public class PCPCategoricalAxis extends PCPAxis {
@@ -54,6 +55,10 @@ public class PCPCategoricalAxis extends PCPAxis {
         graphicsGroup.getChildren().addAll(categoriesRectangleGroup);
 
         registerListeners();
+    }
+
+    public List<String> getCategories() {
+        return categoricalColumn().getCategories();
     }
 
     public Rectangle getCategoryRectangle(String category) {
@@ -150,10 +155,10 @@ public class PCPCategoricalAxis extends PCPAxis {
                     int overallCategoryCount = histogram.getCategoryCount(category);
                     int nonQueryCategoryCount = overallCategoryCount - queryCategoryCount;
 
-                    Rectangle queryRectangle = new Rectangle (overallCategoryRectangle.getLayoutBounds().getMinX() + 3,
-                            0, overallCategoryRectangle.getLayoutBounds().getWidth() - 6d, 0);
-                    Rectangle nonQueryRectangle = new Rectangle (overallCategoryRectangle.getLayoutBounds().getMinX() + 3,
-                            0, overallCategoryRectangle.getLayoutBounds().getWidth() - 6d, 0);
+                    Rectangle queryRectangle = new Rectangle (overallCategoryRectangle.getLayoutBounds().getMinX() + 4,
+                            0, overallCategoryRectangle.getLayoutBounds().getWidth() - 8d, 0);
+                    Rectangle nonQueryRectangle = new Rectangle (overallCategoryRectangle.getLayoutBounds().getMinX() + 4,
+                            0, overallCategoryRectangle.getLayoutBounds().getWidth() - 8d, 0);
 
                     if (queryCategoryCount > 0) {
                         queryRectangle.setY(overallCategoryRectangle.getY() + 2d);

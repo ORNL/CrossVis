@@ -95,13 +95,13 @@ public class PCPDoubleAxis extends PCPAxis {
 
     public Rectangle getQueryDispersionRectangle () { return queryDispersionRectangle; }
 
-    public Rectangle getNonqueryDispersionRectangle () { return nonqueryDispersionRectangle; }
+    public Rectangle getNonQueryDispersionRectangle () { return nonqueryDispersionRectangle; }
 
     public Line getOverallTypicalLine () { return overallTypicalLine; }
 
     public Line getQueryTypicalLine () { return queryTypicalLine; }
 
-    public Line getNonqueryTypicalLine () { return nonqueryTypicalLine; }
+    public Line getNonQueryTypicalLine () { return nonqueryTypicalLine; }
 
     @Override
     protected void handleAxisBarMousePressed() {
