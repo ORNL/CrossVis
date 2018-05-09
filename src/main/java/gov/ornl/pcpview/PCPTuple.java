@@ -10,11 +10,14 @@ import javafx.scene.shape.Rectangle;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.logging.Logger;
 
 /**
  * Created by csg on 8/24/16.
  */
 public class PCPTuple {
+    public static Logger log = Logger.getLogger(PCPTuple.class.getName());
+
     public static final Color DEFAULT_LINE_COLOR = new Color(Color.STEELBLUE.getRed(), Color.STEELBLUE.getGreen(), Color.STEELBLUE.getBlue(), 0.2);
 
     private Tuple tuple;
@@ -63,9 +66,22 @@ public class PCPTuple {
             } else if (axis instanceof PCPCategoricalAxis) {
                 PCPCategoricalAxis categoricalAxis = (PCPCategoricalAxis)axis;
                 String category = (String)tuple.getElement(i);
-                Rectangle categoryRectangle = categoricalAxis.getCategoryRectangle(category);
+//                Rectangle rectangle;
+//                if (!axis.dataModel.getActiveQuery().hasColumnSelections()) {
+//                    log.info("nothing is queried");
+//                    rectangle = categoricalAxis.getCategoryRectangle(category);
+//                } else {
+//                    if (tuple.getQueryFlag()) {
+//                        log.info("tuple queried");
+//                        rectangle = categoricalAxis.getQueryCategoryRectangle(category);
+//                    } else {
+//                        log.info("tuple nonqueried");
+//                        rectangle = categoricalAxis.getNonQueryCategoryRectangle(category);
+//                    }
+//                }
+                Rectangle rectangle = categoricalAxis.getCategoryRectangle(category);
                 xPoints[i] = axis.getCenterX();
-                yPoints[i] = categoryRectangle.getY() + (categoryRectangle.getHeight() / 2.);
+                yPoints[i] = rectangle.getY() + (rectangle.getHeight() / 2.);
             }
         }
     }

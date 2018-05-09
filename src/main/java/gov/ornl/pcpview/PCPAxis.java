@@ -47,7 +47,7 @@ public abstract class PCPAxis {
     public final static double DEFAULT_TEXT_SIZE = 10d;
     public final static double DEFAULT_STROKE_WIDTH = 1.5;
     public final static double DEFAULT_CORRELATION_INDICATOR_HEIGHT = 24d;
-    public final static double DEFAULT_CORRELATION_INDICATOR_WIDTH = 6.;
+    public final static double DEFAULT_CORRELATION_INDICATOR_WIDTH = 4.;
     public final static double DEFAULT_CORRELATION_INDICATOR_PADDING = 1.;
 
     protected DataModel dataModel;
@@ -344,7 +344,6 @@ public abstract class PCPAxis {
                     if (!(newColumnIndex == dataModel.getColumnIndex(column))) {
                         dataModel.changeColumnOrder(getColumn(), newColumnIndex);
                     }
-
                 }
             }
         });
@@ -497,7 +496,13 @@ public abstract class PCPAxis {
                         rectangle.setFill(DEFAULT_CORRELATION_INDICATOR_FILL_COLOR.grayscale());
                         Tooltip.install(rectangle, new Tooltip(getColumn().getName() + " Correlation Indicators"));
                     } else {
-                        double corrCoef = ((DoubleColumnSummaryStats) getColumn().getStatistics()).getCorrelationCoefficientList().get(iaxis);
+                        double corrCoef;
+                        if (dataModel.getActiveQuery().hasColumnSelections()) {
+                            corrCoef = ((DoubleColumnSummaryStats)dataModel.getActiveQuery().getColumnQuerySummaryStats(getColumn())).getCorrelationCoefficientList().get(iaxis);
+                        } else {
+                            corrCoef = ((DoubleColumnSummaryStats) getColumn().getStatistics()).getCorrelationCoefficientList().get(iaxis);
+                        }
+
                         if (corrCoef >= 0) {
                             double topY = GraphicsUtil.mapValue(corrCoef, 0d, 1d,
                                     correlationIndicatorRectangleMiddleY, correlationCoefficientIndicatorRectangle.getLayoutBounds().getMinY());

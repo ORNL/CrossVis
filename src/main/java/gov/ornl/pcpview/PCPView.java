@@ -245,12 +245,15 @@ public class PCPView extends Region implements DataModelListener {
     }
 
     private void drawSummaryShapes() {
+        SummaryShapeRenderer.render(selectedCanvas, unselectedCanvas, axisList, getOverallSummaryFillColor(),
+                getOverallSummaryStrokeColor(), getSelectedItemsColor(), getQuerySummaryStrokeColor(),
+                getUnselectedItemsColor(), getQuerySummaryStrokeColor());
 //        lineCanvas.setCache(false);
 //        lineGC.setLineCap(StrokeLineCap.BUTT);
 //        lineGC.clearRect(0, 0, getWidth(), getHeight());
 //        lineGC.setLineWidth(2);
 //        lineGC.setLineWidth(2d);
-        selectedCanvas.getGraphicsContext2D().setLineCap(StrokeLineCap.BUTT);
+        /*selectedCanvas.getGraphicsContext2D().setLineCap(StrokeLineCap.BUTT);
         selectedCanvas.getGraphicsContext2D().clearRect(0, 0, getWidth(), getHeight());
         selectedCanvas.getGraphicsContext2D().setLineWidth(2d);
         selectedCanvas.getGraphicsContext2D().setLineDashes(2d, 2d);
@@ -270,7 +273,6 @@ public class PCPView extends Region implements DataModelListener {
 
                 if (!(Double.isNaN(dAxis0.getOverallTypicalLine().getEndY())) &&
                         !(Double.isNaN(dAxis1.getOverallTypicalLine().getStartY()))) {
-
                     double xValues[] = new double[]{dAxis0.getOverallDispersionRectangle().getLayoutBounds().getMaxX(),
                             dAxis1.getOverallDispersionRectangle().getLayoutBounds().getMinX(),
                             dAxis1.getOverallDispersionRectangle().getLayoutBounds().getMinX(),
@@ -314,6 +316,7 @@ public class PCPView extends Region implements DataModelListener {
                 }
             }
         }
+        */
     }
 
 
@@ -691,8 +694,10 @@ public class PCPView extends Region implements DataModelListener {
             pcpAxis.layout(left + (iaxis * axisSpacing), top, axisSpacing, pcpHeight);
 
             if (getDisplayMode() == DISPLAY_MODE.HISTOGRAM) {
-                pane.getChildren().add(0, pcpAxis.getHistogramBinRectangleGroup());
-                pane.getChildren().add(1, pcpAxis.getQueryHistogramBinRectangleGroup());
+                if (!(pcpAxis instanceof PCPCategoricalAxis)) {
+                    pane.getChildren().add(0, pcpAxis.getHistogramBinRectangleGroup());
+                    pane.getChildren().add(1, pcpAxis.getQueryHistogramBinRectangleGroup());
+                }
             }
         }
 

@@ -23,11 +23,12 @@ public class PCPCategoricalAxis extends PCPAxis {
 
     private static final DecimalFormat percentageFormat = new DecimalFormat("0.0#%");
 
-    private final static Color DEFAULT_CATEGORY_STROKE_COLOR = new Color(0.1, 0.1, 0.2, 1.0);
-    private final static Color DEFAULT_SELECTED_CATEGORY_STROKE_COLOR = Color.YELLOW;
+    private final static double DEFAULT_CATEGORY_STROKE_WIDTH = 1.5f;
+    private final static Color DEFAULT_CATEGORY_STROKE_COLOR = new Color(0.1, 0.1, 0.1, 1.0);
     private final static Color DEFAULT_CATEGORY_FILL_COLOR = Color.LIGHTGRAY;
+    private final static Color DEFAULT_QUERY_STROKE_COLOR = new Color(0.5, 0.5, 0.5, 1.0);
+    private final static Color DEFAULT_SELECTED_CATEGORY_STROKE_COLOR = Color.YELLOW;
     private final static Color DEFAULT_SELECTED_CATEGORY_FILL_COLOR = Color.YELLOW;
-    private final static Color DEFAULT_QUERY_STROKE_COLOR = new Color(0.2, 0.2, 0.2, 1.0);
 
     // category rectangles
     private Group categoriesRectangleGroup;
@@ -63,6 +64,10 @@ public class PCPCategoricalAxis extends PCPAxis {
         return queryCategoriesRectangleMap.get(category);
     }
 
+    public Rectangle getNonQueryCategoryRectangle(String category) {
+        return nonQueryCategoriesRectangleMap.get(category);
+    }
+
     private CategoricalColumn categoricalColumn() {
         return (CategoricalColumn)getColumn();
     }
@@ -95,6 +100,7 @@ public class PCPCategoricalAxis extends PCPAxis {
                 Rectangle rectangle = new Rectangle(getAxisBar().getX(), y, getAxisBar().getWidth(), categoryHeight);
                 rectangle.setStroke(DEFAULT_CATEGORY_STROKE_COLOR);
                 rectangle.setFill(DEFAULT_CATEGORY_FILL_COLOR);
+                rectangle.setStrokeWidth(DEFAULT_CATEGORY_STROKE_WIDTH);
                 rectangle.setArcHeight(6);
                 rectangle.setArcWidth(6);
 

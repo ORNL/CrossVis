@@ -22,7 +22,8 @@ public abstract class PCPAxisSelection {
 
     public final static Color DEFAULT_TEXT_FILL = Color.BLACK;
     public final static double DEFAULT_TEXT_SIZE = 8d;
-    public final static Color DEFAULT_SELECTION_RECTANGLE_FILL_COLOR = new Color(Color.YELLOW.getRed(), Color.YELLOW.getGreen(), Color.YELLOW.getBlue(), 0.2);
+    public final static Color DEFAULT_SELECTION_RECTANGLE_FILL_COLOR = new Color(Color.YELLOW.getRed(),
+            Color.YELLOW.getGreen(), Color.YELLOW.getBlue(), 0.3);
 
     private DataModel dataModel;
     private PCPAxis pcpAxis;
@@ -72,6 +73,7 @@ public abstract class PCPAxisSelection {
 
         graphicsGroup = new Group(topCrossbar, bottomCrossbar, rectangle);
         pane.getChildren().add(graphicsGroup);
+//        graphicsGroup.toBack();
 
         registerListeners();
     }

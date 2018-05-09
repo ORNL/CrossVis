@@ -4,6 +4,7 @@ import gov.ornl.util.GraphicsUtil;
 import gov.ornl.datatable.*;
 import javafx.geometry.Point2D;
 import javafx.scene.Group;
+import javafx.scene.effect.DropShadow;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
@@ -62,7 +63,9 @@ public class PCPDoubleAxis extends PCPAxis {
         graphicsGroup.getChildren().add(overallSummaryStatisticsGroup);
 
         queryDispersionRectangle = new Rectangle();
-        queryDispersionRectangle.setFill(pcpView.getSelectedItemsColor());
+        Color dispersionFill = new Color(pcpView.getSelectedItemsColor().getRed(), pcpView.getSelectedItemsColor().getGreen(),
+                pcpView.getSelectedItemsColor().getBlue(), 1.);
+        queryDispersionRectangle.setFill(dispersionFill);
         queryDispersionRectangle.setStroke(Color.DARKGRAY);
         queryDispersionRectangle.setSmooth(true);
         queryDispersionRectangle.setStrokeWidth(DEFAULT_STROKE_WIDTH);
@@ -71,7 +74,9 @@ public class PCPDoubleAxis extends PCPAxis {
         queryTypicalLine.setStroke(queryTypicalStroke);
 
         nonqueryDispersionRectangle = new Rectangle();
-        nonqueryDispersionRectangle.setFill(pcpView.getUnselectedItemsColor());
+        dispersionFill = new Color(pcpView.getUnselectedItemsColor().getRed(), pcpView.getUnselectedItemsColor().getGreen(),
+                pcpView.getUnselectedItemsColor().getBlue(), 1.);
+        nonqueryDispersionRectangle.setFill(dispersionFill);
         nonqueryDispersionRectangle.setStroke(Color.DARKGRAY);
         nonqueryDispersionRectangle.setSmooth(true);
         nonqueryDispersionRectangle.setStrokeWidth(DEFAULT_STROKE_WIDTH);
@@ -270,9 +275,10 @@ public class PCPDoubleAxis extends PCPAxis {
                 nonqueryDispersionRectangle.setY(nonqueryDispersionTop);
                 nonqueryDispersionRectangle.setHeight(nonqueryDispersionBottom - nonqueryDispersionTop);
 
-                if (!graphicsGroup.getChildren().contains(querySummaryStatisticsGroup)) {
-                    graphicsGroup.getChildren().add(querySummaryStatisticsGroup);
+                if (!pane.getChildren().contains(querySummaryStatisticsGroup)) {
+                    pane.getChildren().add(querySummaryStatisticsGroup);
                 }
+                querySummaryStatisticsGroup.toFront();
 
                 // layout query histogram bins
                 DoubleHistogram queryHistogram = ((DoubleColumnSummaryStats)dataModel.getActiveQuery().getColumnQuerySummaryStats(doubleColumn())).getHistogram();
@@ -291,7 +297,7 @@ public class PCPDoubleAxis extends PCPAxis {
                     }
                 }
             } else {
-                graphicsGroup.getChildren().remove(querySummaryStatisticsGroup);
+                pane.getChildren().remove(querySummaryStatisticsGroup);
             }
         }
     }
