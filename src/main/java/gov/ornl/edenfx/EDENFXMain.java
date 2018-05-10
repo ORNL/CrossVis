@@ -66,7 +66,7 @@ import java.util.prefs.Preferences;
 public class EDENFXMain extends Application implements DataModelListener {
     private static final Logger log = LoggerFactory.getLogger(EDENFXMain.class);
 
-    public static final String SPLASH_IMAGE = "EDENFX-SplashScreen.png";
+    public static final String SPLASH_IMAGE = "/EDENFX-SplashScreen.png";
     private static final int SPLASH_WIDTH = 650;
     private static final int SPLASH_HEIGHT = 350;
 
@@ -127,29 +127,30 @@ public class EDENFXMain extends Application implements DataModelListener {
 
     @Override
     public void init() {
-        ImageView splash = new ImageView(new Image(SPLASH_IMAGE));
-        String copyrightString = "© " + LocalDate.now().getYear() + " All Rights Reserved";
-        Text copyrightText = new Text(splash.getLayoutBounds().getWidth()/2., 100., copyrightString);
-        copyrightText.setFont(Font.font(16.));
-        copyrightText.setFill(Color.WHITE);
-        copyrightText.setTranslateY(80.);
-        StackPane pane = new StackPane();
-        pane.getChildren().add(splash);
-        pane.getChildren().add(copyrightText);
-
-        loadProgress = new ProgressBar();
-        loadProgress.setPrefWidth(SPLASH_WIDTH - 20);
-        loadProgressText = new Label("Loading EDENFX . . .");
-        loadProgressText.setTextFill(Color.WHITESMOKE);
-        splashLayout = new VBox();
-        splashLayout.getChildren().addAll(pane, loadProgress, loadProgressText);
-        splashLayout.setStyle(
-                "-fx-padding: 5; " +
-                        "-fx-background-color: black; " +
-                        "-fx-border-width:5; " +
-                        "-fx-border-color: black;"
-        );
-        splashLayout.setEffect(new DropShadow());
+//        ImageView splash = new ImageView(new Image(getClass().getResource(SPLASH_IMAGE).toExternalForm()));
+////        ImageView splash = new ImageView(new Image(SPLASH_IMAGE));
+//        String copyrightString = "© " + LocalDate.now().getYear() + " All Rights Reserved";
+//        Text copyrightText = new Text(splash.getLayoutBounds().getWidth()/2., 100., copyrightString);
+//        copyrightText.setFont(Font.font(16.));
+//        copyrightText.setFill(Color.WHITE);
+//        copyrightText.setTranslateY(80.);
+//        StackPane pane = new StackPane();
+//        pane.getChildren().add(splash);
+//        pane.getChildren().add(copyrightText);
+//
+//        loadProgress = new ProgressBar();
+//        loadProgress.setPrefWidth(SPLASH_WIDTH - 20);
+//        loadProgressText = new Label("Loading EDENFX . . .");
+//        loadProgressText.setTextFill(Color.WHITESMOKE);
+//        splashLayout = new VBox();
+//        splashLayout.getChildren().addAll(pane, loadProgress, loadProgressText);
+//        splashLayout.setStyle(
+//                "-fx-padding: 5; " +
+//                        "-fx-background-color: black; " +
+//                        "-fx-border-width:5; " +
+//                        "-fx-border-color: black;"
+//        );
+//        splashLayout.setEffect(new DropShadow());
 
         preferences = Preferences.userNodeForPackage(this.getClass());
 
@@ -668,23 +669,24 @@ public class EDENFXMain extends Application implements DataModelListener {
 
     @Override
     public void start(final Stage initStage) throws Exception {
-        final Task<Integer> startUpTask = new Task<Integer>() {
-            @Override
-            public Integer call() throws InterruptedException {
-                updateMessage("Initializing . . . ");
-                for (int i = 0; i < 20; i++) {
-                    Thread.sleep(150);
-                    updateProgress(i+1, 10);
-                }
-                Thread.sleep(100);
-                updateMessage("Finished initializing.");
-
-                return 1;
-            }
-        };
-
-        showSplash(initStage, startUpTask, () -> showMainStage());
-        new Thread(startUpTask).start();
+//        final Task<Integer> startUpTask = new Task<Integer>() {
+//            @Override
+//            public Integer call() throws InterruptedException {
+//                updateMessage("Initializing . . . ");
+//                for (int i = 0; i < 20; i++) {
+//                    Thread.sleep(150);
+//                    updateProgress(i+1, 10);
+//                }
+//                Thread.sleep(100);
+//                updateMessage("Finished initializing.");
+//
+//                return 1;
+//            }
+//        };
+//
+//        showSplash(initStage, startUpTask, () -> showMainStage());
+//        new Thread(startUpTask).start();
+        showMainStage();
     }
 
     private void showSplash(final Stage initStage, Task<?> task, InitCompletionHandler initCompletionHandler) {
