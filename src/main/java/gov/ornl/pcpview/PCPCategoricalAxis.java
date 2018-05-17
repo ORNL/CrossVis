@@ -57,6 +57,18 @@ public class PCPCategoricalAxis extends PCPAxis {
         registerListeners();
     }
 
+    @Override
+    protected Object getValueForAxisPosition(double axisPosition) {
+        for (String category : categoriesRectangleMap.keySet()) {
+            Rectangle rectangle = categoriesRectangleMap.get(category);
+            if (axisPosition >= rectangle.getLayoutBounds().getMinY() &&
+                    axisPosition < rectangle.getLayoutBounds().getMaxY()) {
+                return category;
+            }
+        }
+        return null;
+    }
+
     public List<String> getCategories() {
         return categoricalColumn().getCategories();
     }

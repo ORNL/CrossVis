@@ -93,6 +93,13 @@ public class PCPDoubleAxis extends PCPAxis {
         registerListeners();
     }
 
+    @Override
+    protected Object getValueForAxisPosition(double axisPosition) {
+        double value = GraphicsUtil.mapValue(axisPosition, getFocusBottomY(), getFocusTopY(),
+                doubleColumn().getStatistics().getMinValue(), doubleColumn().getStatistics().getMaxValue());
+        return value;
+    }
+
     public Rectangle getOverallDispersionRectangle() { return overallDispersionRectangle; }
 
     public Rectangle getQueryDispersionRectangle () { return queryDispersionRectangle; }

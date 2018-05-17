@@ -35,6 +35,13 @@ public class PCPTemporalAxis extends PCPAxis {
         registerListeners();
     }
 
+    @Override
+    protected Object getValueForAxisPosition(double axisPosition) {
+        Instant value = GraphicsUtil.mapValue(axisPosition, getFocusBottomY(), getFocusTopY(),
+                temporalColumn().getStatistics().getStartInstant(), temporalColumn().getStatistics().getEndInstant());
+        return value;
+    }
+
     private TemporalColumn temporalColumn() {
         return (TemporalColumn)getColumn();
     }

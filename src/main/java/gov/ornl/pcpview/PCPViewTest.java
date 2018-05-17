@@ -70,8 +70,8 @@ public class PCPViewTest extends Application {
             public void handle(ActionEvent event) {
                 try {
                     long start = System.currentTimeMillis();
-                    IOUtilities.readCSV(new File("data/csv/cars.csv"), null, null,
-                            null, null, dataModel);
+//                    IOUtilities.readCSV(new File("data/csv/cars.csv"), null, null,
+//                            null, null, dataModel);
 //                    IOUtilities.readCSV(new File("/Users/csg/Dropbox (ORNL)/projects/SciDAC/data/2018-01-RiccuitoEnsemble/QMCdaily_US_combined.csv"),
 //                            null, null, null, null, dataModel);
                     long elapsed = System.currentTimeMillis() - start;
@@ -80,15 +80,15 @@ public class PCPViewTest extends Application {
 //                    categoricalColumnNames.add("Origin");
 //                    IOUtilities.readCSV(new File("data/csv/cars-cat.csv"), null, categoricalColumnNames,
 //                            null, null, dataModel);
-//                    ArrayList<String> temporalColumnNames = new ArrayList<>();
-//                    temporalColumnNames.add("Date");
-//                    ArrayList<DateTimeFormatter> temporalColumnFormatters = new ArrayList<>();
-//                    temporalColumnFormatters.add(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss"));
+                    ArrayList<String> temporalColumnNames = new ArrayList<>();
+                    temporalColumnNames.add("Date");
+                    ArrayList<DateTimeFormatter> temporalColumnFormatters = new ArrayList<>();
+                    temporalColumnFormatters.add(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss"));
 //                    ArrayList<String> ignoreColumnNames = new ArrayList<>();
 ////                    ignoreColumnNames.add("StageoutPilots");
 //
-//                    IOUtilities.readCSV(new File("data/csv/titan-performance.csv"), ignoreColumnNames, null,
-//                            temporalColumnNames, temporalColumnFormatters, dataModel);
+                    IOUtilities.readCSV(new File("data/csv/titan-performance.csv"), null, null,
+                            temporalColumnNames, temporalColumnFormatters, dataModel);
                 } catch (IOException e) {
                     System.exit(0);
                     e.printStackTrace();

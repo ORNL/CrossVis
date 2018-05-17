@@ -12,11 +12,14 @@ import javafx.beans.property.SimpleDoubleProperty;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Point2D;
+import javafx.geometry.Pos;
+import javafx.geometry.VPos;
 import javafx.scene.Group;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.Tooltip;
 import javafx.scene.effect.DropShadow;
+import javafx.scene.effect.Glow;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseEvent;
@@ -27,10 +30,14 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
+import javafx.scene.text.TextAlignment;
 
 import java.util.ArrayList;
+import java.util.logging.Logger;
 
 public abstract class PCPAxis {
+    public final static Logger log = Logger.getLogger(PCPAxis.class.getName());
+
     public final static int DEFAULT_MAX_HISTOGRAM_BIN_WIDTH = 30;
     public final static Color DEFAULT_HISTOGRAM_FILL = new Color(Color.LIGHTSTEELBLUE.getRed(), Color.LIGHTSTEELBLUE.getGreen(), Color.LIGHTSTEELBLUE.getBlue(), 0.8d);
     public final static Color DEFAULT_QUERY_HISTOGRAM_FILL = new Color(Color.STEELBLUE.getRed(), Color.STEELBLUE.getGreen(), Color.STEELBLUE.getBlue(), 0.8d);
@@ -45,6 +52,7 @@ public abstract class PCPAxis {
     public final static double DEFAULT_CONTEXT_HEIGHT = 20d;
     public final static double DEFAULT_BAR_WIDTH = 14d;
     public final static double DEFAULT_TEXT_SIZE = 10d;
+    public final static double HOVER_TEXT_SIZE = 8d;
     public final static double DEFAULT_STROKE_WIDTH = 1.5;
     public final static double DEFAULT_CORRELATION_INDICATOR_HEIGHT = 24d;
     public final static double DEFAULT_CORRELATION_INDICATOR_WIDTH = 4.;
@@ -62,6 +70,8 @@ public abstract class PCPAxis {
     protected DoubleProperty nameTextRotation;
     protected BooleanProperty highlighted;
 
+    protected Text hoverValueText;
+
     protected Color labelColor = DEFAULT_LABEL_COLOR;
 
     protected Pane pane;
@@ -76,11 +86,13 @@ public abstract class PCPAxis {
     private double contextRegionHeight = DEFAULT_CONTEXT_HEIGHT;
 
     //    private Group graphicsGroup;
-    private Line topCrossBarLine;
-    private Line bottomCrossBarLine;
-    private Line topFocusCrossBarLine;
-    private Line bottomFocusCrossBarLine;
+//    private Line topCrossBarLine;
+//    private Line bottomCrossBarLine;
+//    private Line topFocusCrossBarLine;
+//    private Line bottomFocusCrossBarLine;
 
+    private Rectangle topContexBar;
+    private Rectangle bottomContextBar;
     private Rectangle axisBar;
 
     private Rectangle correlationCoefficientIndicatorRectangle;
@@ -115,10 +127,10 @@ public abstract class PCPAxis {
     protected Point2D dragEndPoint;
     protected boolean dragging = false;
 
-    private Line draggingTopCrossBarLine;
-    private Line draggingBottomCrossBarLine;
-    private Line draggingTopFocusCrossBarLine;
-    private Line draggingBottomFocusCrossBarLine;
+//    private Line draggingTopCrossBarLine;
+//    private Line draggingBottomCrossBarLine;
+//    private Line draggingTopFocusCrossBarLine;
+//    private Line draggingBottomFocusCrossBarLine;
     private Rectangle draggingAxisBar;
     private Text draggingNameText;
 
@@ -182,13 +194,22 @@ public abstract class PCPAxis {
         axisBar.setSmooth(true);
         axisBar.setStrokeWidth(DEFAULT_STROKE_WIDTH);
 
-        topCrossBarLine = makeLine();
-        bottomCrossBarLine = makeLine();
-        topFocusCrossBarLine = makeLine();
-        bottomFocusCrossBarLine = makeLine();
+        hoverValueText = new Text();
+        hoverValueText.setFont(new Font(HOVER_TEXT_SIZE));
+        hoverValueText.setSmooth(true);
+        hoverValueText.setVisible(false);
+        hoverValueText.setFill(DEFAULT_LABEL_COLOR);
+        hoverValueText.setTextOrigin(VPos.BOTTOM);
+        hoverValueText.setMouseTransparent(true);
+        pane.getChildren().add(hoverValueText);
 
-        graphicsGroup = new Group(nameText, axisBar, topCrossBarLine, bottomCrossBarLine, topFocusCrossBarLine,
-                bottomFocusCrossBarLine, minValueText, maxValueText, focusMinValueText, focusMaxValueText);
+//        topCrossBarLine = makeLine();
+//        bottomCrossBarLine = makeLine();
+//        topFocusCrossBarLine = makeLine();
+//        bottomFocusCrossBarLine = makeLine();
+
+        graphicsGroup = new Group(nameText, axisBar, /*topCrossBarLine, bottomCrossBarLine, topFocusCrossBarLine,
+                bottomFocusCrossBarLine,*/ minValueText, maxValueText, focusMinValueText, focusMaxValueText);
 
         if (getColumn() instanceof DoubleColumn) {
             graphicsGroup.getChildren().addAll(correlationCoefficientIndicatorZeroLine, correlationCoefficientIndicatorGroup);
@@ -201,9 +222,12 @@ public abstract class PCPAxis {
         return axisSelectionList;
     }
 
+    protected abstract Object getValueForAxisPosition(double axisPosition);
+
     protected abstract void handleAxisBarMousePressed();
     protected abstract void handleAxisBarMouseDragged(MouseEvent event);
     protected abstract void handleAxisBarMouseReleased();
+
     public abstract Group getHistogramBinRectangleGroup();
     public abstract Group getQueryHistogramBinRectangleGroup();
 
@@ -212,26 +236,26 @@ public abstract class PCPAxis {
         draggingAxisBar.setStroke(getAxisBar().getStroke());
         draggingAxisBar.setFill(getAxisBar().getFill());
 
-        draggingBottomCrossBarLine = new Line(bottomCrossBarLine.getStartX(), bottomCrossBarLine.getStartY(),
-                bottomCrossBarLine.getEndX(), bottomCrossBarLine.getEndY());
-        draggingBottomCrossBarLine.setStroke(bottomCrossBarLine.getStroke());
-        draggingTopCrossBarLine = new Line(topCrossBarLine.getStartX(), topCrossBarLine.getStartY(),
-                topCrossBarLine.getEndX(), topCrossBarLine.getEndY());
-        draggingTopCrossBarLine.setStroke(topCrossBarLine.getStroke());
-        draggingBottomFocusCrossBarLine = new Line(bottomFocusCrossBarLine.getStartX(), bottomFocusCrossBarLine.getStartY(),
-                bottomFocusCrossBarLine.getEndX(), bottomFocusCrossBarLine.getEndY());
-        draggingBottomFocusCrossBarLine.setStroke(bottomFocusCrossBarLine.getStroke());
-        draggingTopFocusCrossBarLine = new Line(topFocusCrossBarLine.getStartX(), topFocusCrossBarLine.getStartY(),
-                topFocusCrossBarLine.getEndX(), topFocusCrossBarLine.getEndY());
-        draggingTopFocusCrossBarLine.setStroke(topFocusCrossBarLine.getStroke());
+//        draggingBottomCrossBarLine = new Line(bottomCrossBarLine.getStartX(), bottomCrossBarLine.getStartY(),
+//                bottomCrossBarLine.getEndX(), bottomCrossBarLine.getEndY());
+//        draggingBottomCrossBarLine.setStroke(bottomCrossBarLine.getStroke());
+//        draggingTopCrossBarLine = new Line(topCrossBarLine.getStartX(), topCrossBarLine.getStartY(),
+//                topCrossBarLine.getEndX(), topCrossBarLine.getEndY());
+//        draggingTopCrossBarLine.setStroke(topCrossBarLine.getStroke());
+//        draggingBottomFocusCrossBarLine = new Line(bottomFocusCrossBarLine.getStartX(), bottomFocusCrossBarLine.getStartY(),
+//                bottomFocusCrossBarLine.getEndX(), bottomFocusCrossBarLine.getEndY());
+//        draggingBottomFocusCrossBarLine.setStroke(bottomFocusCrossBarLine.getStroke());
+//        draggingTopFocusCrossBarLine = new Line(topFocusCrossBarLine.getStartX(), topFocusCrossBarLine.getStartY(),
+//                topFocusCrossBarLine.getEndX(), topFocusCrossBarLine.getEndY());
+//        draggingTopFocusCrossBarLine.setStroke(topFocusCrossBarLine.getStroke());
 
         draggingNameText = new Text(nameText.getText());
         draggingNameText.setX(nameText.getX());
         draggingNameText.setY(nameText.getY());
         draggingNameText.setFont(nameText.getFont());
 
-        axisDraggingGraphicsGroup = new Group(draggingNameText, draggingAxisBar, draggingBottomCrossBarLine,
-                draggingTopCrossBarLine, draggingBottomFocusCrossBarLine, draggingTopFocusCrossBarLine);
+        axisDraggingGraphicsGroup = new Group(draggingNameText, draggingAxisBar/*, draggingBottomCrossBarLine,
+                draggingTopCrossBarLine, draggingBottomFocusCrossBarLine, draggingTopFocusCrossBarLine*/);
         axisDraggingGraphicsGroup.setTranslateY(5);
     }
 
@@ -371,6 +395,30 @@ public abstract class PCPAxis {
             }
         });
 
+        axisBar.setOnMouseMoved(event -> {
+//            log.info("mouse y position is " + event.getY() + " value is " + getValueForAxisPosition(event.getY()));
+            Object value = getValueForAxisPosition(event.getY());
+            if (value != null) {
+                hoverValueText.setText(getValueForAxisPosition(event.getY()).toString());
+                hoverValueText.setY(event.getY());
+                hoverValueText.setX(getCenterX() - hoverValueText.getLayoutBounds().getWidth() / 2.);
+            } else {
+                hoverValueText.setText("");
+            }
+//            hoverValueText.toFront();
+        });
+
+        axisBar.setOnMouseEntered(event -> {
+//            log.info("mouse entered axis Bar");
+            hoverValueText.setVisible(true);
+            hoverValueText.toFront();
+        });
+
+        axisBar.setOnMouseExited(event -> {
+//            log.info("mouse exited axis bar");
+            hoverValueText.setVisible(false);
+        });
+
         highlighted.addListener((observable, oldValue, newValue) -> {
             if (newValue) {
                 nameText.setFont(Font.font(nameText.getFont().getFamily(), FontWeight.BOLD, DEFAULT_NAME_TEXT_SIZE));
@@ -434,29 +482,29 @@ public abstract class PCPAxis {
         maxHistogramBinWidth = bounds.getWidth() / 2;
 
         axisBar.setX(centerX - (DEFAULT_BAR_WIDTH / 2.));
-        axisBar.setY(barTopY);
+        axisBar.setY(focusTopY);
         axisBar.setWidth(DEFAULT_BAR_WIDTH);
-        axisBar.setHeight(barBottomY - barTopY);
+        axisBar.setHeight(focusBottomY - focusTopY);
 
-        topCrossBarLine.setStartY(barTopY);
-        topCrossBarLine.setEndY(barTopY);
-        topCrossBarLine.setStartX(centerX - (DEFAULT_BAR_WIDTH / 2.));
-        topCrossBarLine.setEndX(centerX + (DEFAULT_BAR_WIDTH / 2.));
-
-        bottomCrossBarLine.setStartY(barBottomY);
-        bottomCrossBarLine.setEndY(barBottomY);
-        bottomCrossBarLine.setStartX(centerX - (DEFAULT_BAR_WIDTH / 2.));
-        bottomCrossBarLine.setEndX(centerX + (DEFAULT_BAR_WIDTH / 2.));
-
-        topFocusCrossBarLine.setStartY(focusTopY);
-        topFocusCrossBarLine.setEndY(focusTopY);
-        topFocusCrossBarLine.setStartX(centerX - (DEFAULT_BAR_WIDTH / 2.));
-        topFocusCrossBarLine.setEndX(centerX + (DEFAULT_BAR_WIDTH / 2.));
-
-        bottomFocusCrossBarLine.setStartY(focusBottomY);
-        bottomFocusCrossBarLine.setEndY(focusBottomY);
-        bottomFocusCrossBarLine.setStartX(centerX - (DEFAULT_BAR_WIDTH / 2.));
-        bottomFocusCrossBarLine.setEndX(centerX + (DEFAULT_BAR_WIDTH / 2.));
+//        topCrossBarLine.setStartY(barTopY);
+//        topCrossBarLine.setEndY(barTopY);
+//        topCrossBarLine.setStartX(centerX - (DEFAULT_BAR_WIDTH / 2.));
+//        topCrossBarLine.setEndX(centerX + (DEFAULT_BAR_WIDTH / 2.));
+//
+//        bottomCrossBarLine.setStartY(barBottomY);
+//        bottomCrossBarLine.setEndY(barBottomY);
+//        bottomCrossBarLine.setStartX(centerX - (DEFAULT_BAR_WIDTH / 2.));
+//        bottomCrossBarLine.setEndX(centerX + (DEFAULT_BAR_WIDTH / 2.));
+//
+//        topFocusCrossBarLine.setStartY(focusTopY);
+//        topFocusCrossBarLine.setEndY(focusTopY);
+//        topFocusCrossBarLine.setStartX(centerX - (DEFAULT_BAR_WIDTH / 2.));
+//        topFocusCrossBarLine.setEndX(centerX + (DEFAULT_BAR_WIDTH / 2.));
+//
+//        bottomFocusCrossBarLine.setStartY(focusBottomY);
+//        bottomFocusCrossBarLine.setEndY(focusBottomY);
+//        bottomFocusCrossBarLine.setStartX(centerX - (DEFAULT_BAR_WIDTH / 2.));
+//        bottomFocusCrossBarLine.setEndX(centerX + (DEFAULT_BAR_WIDTH / 2.));
 
         if (!axisSelectionList.isEmpty()) {
             for (PCPAxisSelection pcpAxisSelection : axisSelectionList) {
