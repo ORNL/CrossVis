@@ -497,7 +497,7 @@ public abstract class PCPAxis {
                         Tooltip.install(rectangle, new Tooltip(getColumn().getName() + " Correlation Indicators"));
                     } else {
                         double corrCoef;
-                        if (dataModel.getActiveQuery().hasColumnSelections()) {
+                        if (dataModel.getActiveQuery().hasColumnSelections() && dataModel.getCalculateQueryStatistics()) {
                             corrCoef = ((DoubleColumnSummaryStats)dataModel.getActiveQuery().getColumnQuerySummaryStats(getColumn())).getCorrelationCoefficientList().get(iaxis);
                         } else {
                             corrCoef = ((DoubleColumnSummaryStats) getColumn().getStatistics()).getCorrelationCoefficientList().get(iaxis);

@@ -87,5 +87,6 @@ public class PCPTuple {
     }
 
     public double[] getXPoints() { return xPoints; }
+
     public double[] getYPoints() { return yPoints; }
 }

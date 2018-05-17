@@ -4,6 +4,7 @@ import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
+import org.apache.commons.math3.util.FastMath;
 
 import java.util.List;
 import java.util.logging.Logger;
@@ -79,7 +80,7 @@ public class DoubleColumnSummaryStats extends ColumnSummaryStats {
     @Override
     public void calculateStatistics() {
         DescriptiveStatistics stats = new DescriptiveStatistics(values);
-        
+
         setMinValue(stats.getMin());
         setMaxValue(stats.getMax());
         setMeanValue(stats.getMean());
@@ -123,7 +124,6 @@ public class DoubleColumnSummaryStats extends ColumnSummaryStats {
         }
 
         calculateHistogram();
-
         calculateCorrelations();
     }
 

@@ -749,6 +749,11 @@ public class PCPView extends Region implements DataModelListener {
     }
 
     @Override
+    public void dataModelStatisticsChanged(DataModel dataModel) {
+        handleQueryChange();
+    }
+
+    @Override
     public void dataModelNumHistogramBinsChanged(DataModel dataModel) {
         if (getDisplayMode() == DISPLAY_MODE.HISTOGRAM) {
             double left = getInsets().getLeft() + (axisSpacing / 2.);

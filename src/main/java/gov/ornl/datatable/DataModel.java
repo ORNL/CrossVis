@@ -1,5 +1,7 @@
 package gov.ornl.datatable;
 
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.SetChangeListener;
 
 import java.util.ArrayList;
@@ -45,6 +47,11 @@ public class DataModel {
     // Current maximum 2D histogram bin count (the max count of all 2D histograms)
     private int maxHistogram2DBinCount = 0;
 
+    // boolean property controls where or not query statistics are calculated
+    private BooleanProperty calculateQueryStatistics = new SimpleBooleanProperty(true);
+
+    // boolean property controls whether or not nonquery statistics are calculated
+    private BooleanProperty calculateNonQueryStatistics = new SimpleBooleanProperty(false);
 
 	public DataModel() {
         tuples = new ArrayList<>();
@@ -55,6 +62,26 @@ public class DataModel {
 		activeQuery = new Query("Q1", this);
         listeners = new ArrayList<>();
 	}
+
+	public boolean getCalculateQueryStatistics() {
+	    return calculateQueryStatistics.get();
+    }
+
+    public boolean getCalculateNonQueryStatistics() {
+	    return calculateNonQueryStatistics.get();
+    }
+
+    public void setCalculateQueryStatistics(boolean enabled) {
+	    calculateQueryStatistics.set(enabled);
+	    getActiveQuery().calculateStatistics();
+	    fireDataModelStatisticsChanged();
+    }
+
+    public void setCalculateNonQueryStatistics(boolean enabled) {
+	    calculateNonQueryStatistics.set(enabled);
+	    getActiveQuery().calculateStatistics();
+	    fireDataModelStatisticsChanged();
+    }
 
 	public int getNumHistogramBins() {
 		return numHistogramBins;
@@ -676,11 +703,18 @@ public class DataModel {
     }
 
     private void calculateStatistics() {
+        long start = System.currentTimeMillis();
         for (Column column : columns) {
             column.calculateStatistics();
         }
 
+        long elapsed = System.currentTimeMillis() - start;
+        log.info("Calling column.calculateStatistics for all columns took " + elapsed + " ms");
+
+        start = System.currentTimeMillis();
         calculateColumn2DHistograms();
+        elapsed = System.currentTimeMillis() - start;
+        log.info("Calling calculatedColumn2DHistograms() took " + elapsed + " ms");
     }
 
     private void calculateColumn2DHistograms() {
@@ -720,6 +754,12 @@ public class DataModel {
 			listener.dataModelColumnEnabled(this, column);
 		}
 	}
+
+	private void fireDataModelStatisticsChanged() {
+	    for (DataModelListener listener : listeners) {
+	        listener.dataModelStatisticsChanged(this);
+        }
+    }
 
 	private void fireColumnOrderChanged() {
 		for (DataModelListener listener : listeners) {

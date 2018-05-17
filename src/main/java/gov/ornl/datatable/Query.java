@@ -7,8 +7,11 @@ import javafx.collections.ObservableList;
 
 import java.time.Instant;
 import java.util.*;
+import java.util.logging.Logger;
 
 public class Query {
+    private final static Logger log = Logger.getLogger(Query.class.getName());
+
     private String id;
 
     private ListProperty<ColumnSelectionRange> columnSelectionRanges;
@@ -122,6 +125,8 @@ public class Query {
     }
 
     public void calculateStatistics() {
+        long start = System.currentTimeMillis();
+
         if (!queriedTuples.isEmpty()) {
             for (int icolumn = 0; icolumn < dataModel.getColumnCount(); icolumn++) {
                 Column column = dataModel.getColumn(icolumn);
@@ -143,19 +148,27 @@ public class Query {
                     }
                     ((TemporalColumnSummaryStats)nonqueryColumnSummaryStats).setValues(nonqueriedValues);
                 } else if (column instanceof DoubleColumn) {
-                    double queriedValues[] = ((DoubleColumn)column).getQueriedValues();
-                    if (queryColumnSummaryStats == null) {
-                        queryColumnSummaryStats = new DoubleColumnSummaryStats(column, dataModel.getNumHistogramBins(), this);
-                        columnQuerySummaryStatsMap.put(column, queryColumnSummaryStats);
+                    if (dataModel.getCalculateQueryStatistics()) {
+                        double queriedValues[] = ((DoubleColumn) column).getQueriedValues();
+                        if (queryColumnSummaryStats == null) {
+                            queryColumnSummaryStats = new DoubleColumnSummaryStats(column, dataModel.getNumHistogramBins(), this);
+                            columnQuerySummaryStatsMap.put(column, queryColumnSummaryStats);
+                        }
+                        ((DoubleColumnSummaryStats) queryColumnSummaryStats).setValues(queriedValues);
+                    } else {
+                        columnQuerySummaryStatsMap.remove(column);
                     }
-                    ((DoubleColumnSummaryStats)queryColumnSummaryStats).setValues(queriedValues);
 
-                    double nonqueriedValues[] = ((DoubleColumn)column).getNonqueriedValues();
-                    if (nonqueryColumnSummaryStats == null) {
-                        nonqueryColumnSummaryStats = new DoubleColumnSummaryStats(column, dataModel.getNumHistogramBins(), this);
-                        columnNonquerySummaryStatsMap.put(column, nonqueryColumnSummaryStats);
+                    if (dataModel.getCalculateNonQueryStatistics()) {
+                        double nonqueriedValues[] = ((DoubleColumn) column).getNonqueriedValues();
+                        if (nonqueryColumnSummaryStats == null) {
+                            nonqueryColumnSummaryStats = new DoubleColumnSummaryStats(column, dataModel.getNumHistogramBins(), this);
+                            columnNonquerySummaryStatsMap.put(column, nonqueryColumnSummaryStats);
+                        }
+                        ((DoubleColumnSummaryStats) nonqueryColumnSummaryStats).setValues(nonqueriedValues);
+                    } else {
+                        columnNonquerySummaryStatsMap.remove(column);
                     }
-                    ((DoubleColumnSummaryStats)nonqueryColumnSummaryStats).setValues(nonqueriedValues);
                 } else if (column instanceof CategoricalColumn) {
                     String queriedValues[] = ((CategoricalColumn)column).getQueriedValues();
                     if (queryColumnSummaryStats == null) {
@@ -174,6 +187,8 @@ public class Query {
             }
             calculateColumn2DHistograms();
         }
+        long elapsed = System.currentTimeMillis() - start;
+        log.info("calculateStatistics() took " + elapsed + "ms");
     }
 
     private void calculateColumn2DHistograms() {

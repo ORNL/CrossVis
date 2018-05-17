@@ -7,6 +7,8 @@ public interface DataModelListener {
 	// Called when the tuples and columns have been cleared and possibly replaced with new values
 	public void dataModelReset(DataModel dataModel);
 
+	public void dataModelStatisticsChanged(DataModel dataModel);
+
 	// Called when the number of histogram bins is changed
 	public void dataModelNumHistogramBinsChanged(DataModel dataModel);
 

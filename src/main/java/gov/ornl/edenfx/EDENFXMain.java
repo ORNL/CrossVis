@@ -1,8 +1,8 @@
 package gov.ornl.edenfx;
 
+import gov.ornl.datatable.*;
 import gov.ornl.pcpview.ColumnSpecification;
 import gov.ornl.pcpview.PCPView;
-import gov.ornl.datatable.*;
 import gov.ornl.pcpview.QueryTableFactory;
 import javafx.animation.FadeTransition;
 import javafx.application.Application;
@@ -27,16 +27,11 @@ import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.control.cell.ComboBoxTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
-import javafx.scene.effect.DropShadow;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
-import javafx.scene.text.Font;
-import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
@@ -44,8 +39,6 @@ import javafx.stage.StageStyle;
 import javafx.util.Callback;
 import javafx.util.Duration;
 import org.controlsfx.control.StatusBar;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -53,18 +46,19 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.time.Instant;
-import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
-import java.util.*;
-import java.util.function.Predicate;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Optional;
+import java.util.Set;
+import java.util.logging.Logger;
 import java.util.prefs.Preferences;
 
 /**
  * Created by csg on 8/29/16.
  */
 public class EDENFXMain extends Application implements DataModelListener {
-    private static final Logger log = LoggerFactory.getLogger(EDENFXMain.class);
+    private static final Logger log = Logger.getLogger(EDENFXMain.class.getName());
 
     public static final String SPLASH_IMAGE = "/EDENFX-SplashScreen.png";
     private static final int SPLASH_WIDTH = 650;
@@ -124,6 +118,10 @@ public class EDENFXMain extends Application implements DataModelListener {
     private VBox splashLayout;
 
     private Stage mainStage;
+
+    private Menu queryStatisticsMenu;
+    private CheckMenuItem showQueryStatisticsCheckMI;
+    private CheckMenuItem showNonQueryStatisticsCheckMI;
 
     @Override
     public void init() {
@@ -1098,6 +1096,23 @@ public class EDENFXMain extends Application implements DataModelListener {
             }
         });
 
+        queryStatisticsMenu = new Menu("Show Query Statistics");
+        showQueryStatisticsCheckMI = new CheckMenuItem("Show Selected Data Statistics");
+        showQueryStatisticsCheckMI.setSelected(dataModel.getCalculateQueryStatistics());
+        showQueryStatisticsCheckMI.setDisable(false);
+        showQueryStatisticsCheckMI.selectedProperty().addListener(((observable, oldValue, newValue) -> {
+            dataModel.setCalculateQueryStatistics(newValue);
+        }));
+
+        showNonQueryStatisticsCheckMI = new CheckMenuItem("Show Unselected Data Statistics");
+        showNonQueryStatisticsCheckMI.setSelected(dataModel.getCalculateNonQueryStatistics());
+        showNonQueryStatisticsCheckMI.setDisable(false);
+        showNonQueryStatisticsCheckMI.selectedProperty().addListener(((observable, oldValue, newValue) -> {
+            dataModel.setCalculateNonQueryStatistics(newValue);
+        }));
+        queryStatisticsMenu.getItems().addAll(showQueryStatisticsCheckMI, showNonQueryStatisticsCheckMI);
+        viewMenu.getItems().add(queryStatisticsMenu);
+
         axisLayoutMenu = new Menu("Axis Layout");
         fitPCPAxesToWidthCheckMI = new CheckMenuItem("Fit Axis Spacing to Width");
         fitPCPAxesToWidthCheckMI.setSelected(pcpView.getFitAxisSpacingToWidthEnabled());
@@ -1127,14 +1142,14 @@ public class EDENFXMain extends Application implements DataModelListener {
         removeSelectedDataMenuItem = new MenuItem("Remove Selected Data");
         removeSelectedDataMenuItem.setOnAction(event -> {
             int removedTuples = dataModel.removeSelectedTuples();
-            log.debug("Removed " + removedTuples + " tuples");
+            log.info("Removed " + removedTuples + " tuples");
         });
 
         // create menu item to keep selected data and remove unselected data
         removeUnselectedDataMenuItem = new MenuItem("Remove Unselected Data");
         removeUnselectedDataMenuItem.setOnAction(event -> {
             int removedTuples = dataModel.removeUnselectedTuples();
-            log.debug("Removed " + removedTuples + " tuples");
+            log.info("Removed " + removedTuples + " tuples");
         });
         removeDataMenu.getItems().addAll(removeSelectedDataMenuItem, removeUnselectedDataMenuItem);
         viewMenu.getItems().add(removeDataMenu);
@@ -1285,7 +1300,7 @@ public class EDENFXMain extends Application implements DataModelListener {
         long start = System.currentTimeMillis();
         IOUtilities.readCSV(f, ignoreColumnNames, categoricalColumnNames, temporalColumnNames, temporalColumnFormatters, dataModel);
         long elasped = System.currentTimeMillis() - start;
-        log.debug("Reading file data took " + elasped + "ms");
+        log.info("Reading file data took " + elasped + "ms");
 
         if (lastDateTimeParsePattern != null) {
             preferences.put(EDENFXPreferenceKeys.LAST_CSV_IMPORT_DATETIME_PARSE_PATTERN, lastDateTimeParsePattern);
@@ -1326,7 +1341,7 @@ public class EDENFXMain extends Application implements DataModelListener {
         start = System.currentTimeMillis();
         setDataTableItems();
         elasped = System.currentTimeMillis() - start;
-        log.debug("Setting data datamodel items took " + elasped + "ms");
+        log.info("Setting data datamodel items took " + elasped + "ms");
 
         displayModeMenu.setDisable(false);
     }
@@ -1497,7 +1512,7 @@ public class EDENFXMain extends Application implements DataModelListener {
                         public ObservableValue<Instant> call(TableColumn.CellDataFeatures<Tuple, Instant> t) {
                             int columnIndex = dataModel.getColumnIndex(column);
                             if (columnIndex == -1) {
-                                log.debug("Weird!");
+                                log.info("Weird!");
                             }
                             return new ReadOnlyObjectWrapper((Instant)t.getValue().getElement(columnIndex));
 
@@ -1510,7 +1525,7 @@ public class EDENFXMain extends Application implements DataModelListener {
                         public ObservableValue<Double> call(TableColumn.CellDataFeatures<Tuple, Double> t) {
                             int columnIndex = dataModel.getColumnIndex(column);
                             if (columnIndex == -1) {
-                                log.debug("Weird!");
+                                log.info("Weird!");
                             }
                             return new ReadOnlyObjectWrapper((Double)t.getValue().getElement(columnIndex));
 
@@ -1524,7 +1539,7 @@ public class EDENFXMain extends Application implements DataModelListener {
                         public ObservableValue<String> call(TableColumn.CellDataFeatures<Tuple, String> param) {
                             int columnIndex = dataModel.getColumnIndex(column);
                             if (columnIndex == -1) {
-                                log.debug("Weird!");
+                                log.info("Weird!");
                             }
                             return new ReadOnlyObjectWrapper<>((String)param.getValue().getElement(columnIndex));
                         }
@@ -1622,6 +1637,9 @@ public class EDENFXMain extends Application implements DataModelListener {
 
     @Override
     public void dataModelNumHistogramBinsChanged(DataModel dataModel) {}
+
+    @Override
+    public void dataModelStatisticsChanged(DataModel dataModel) { }
 
     @Override
     public void dataModelColumnDisabled(DataModel dataModel, Column disabledColumn) {

@@ -22,7 +22,7 @@ public class DoubleColumn extends Column {
 
         double values[] = new double[getDataModel().getTupleCount()];
         for (int i = 0; i < getDataModel().getTupleCount(); i++) {
-            values[i] = (Double) getDataModel().getTuple(i).getElement(columnIndex);
+            values[i] = (double)getDataModel().getTuple(i).getElement(columnIndex);
         }
         
         return values;

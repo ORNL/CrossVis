@@ -20,11 +20,14 @@ import java.io.File;
 import java.io.IOException;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.logging.Logger;
 
 /**
  * Created by csg on 8/22/16.
  */
 public class PCPViewTest extends Application {
+    public static final Logger log = Logger.getLogger(PCPViewTest.class.getName());
+
     private PCPView pcpView;
     private DataModel dataModel;
     @Override
@@ -66,10 +69,17 @@ public class PCPViewTest extends Application {
             @Override
             public void handle(ActionEvent event) {
                 try {
-                    ArrayList<String> categoricalColumnNames = new ArrayList<>();
-                    categoricalColumnNames.add("Origin");
-                    IOUtilities.readCSV(new File("data/csv/cars-cat.csv"), null, categoricalColumnNames,
+                    long start = System.currentTimeMillis();
+                    IOUtilities.readCSV(new File("data/csv/cars.csv"), null, null,
                             null, null, dataModel);
+//                    IOUtilities.readCSV(new File("/Users/csg/Dropbox (ORNL)/projects/SciDAC/data/2018-01-RiccuitoEnsemble/QMCdaily_US_combined.csv"),
+//                            null, null, null, null, dataModel);
+                    long elapsed = System.currentTimeMillis() - start;
+                    log.info("Reading data and populating data model took " + elapsed + " ms");
+//                    ArrayList<String> categoricalColumnNames = new ArrayList<>();
+//                    categoricalColumnNames.add("Origin");
+//                    IOUtilities.readCSV(new File("data/csv/cars-cat.csv"), null, categoricalColumnNames,
+//                            null, null, dataModel);
 //                    ArrayList<String> temporalColumnNames = new ArrayList<>();
 //                    temporalColumnNames.add("Date");
 //                    ArrayList<DateTimeFormatter> temporalColumnFormatters = new ArrayList<>();

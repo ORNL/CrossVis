@@ -325,9 +325,11 @@ public class IOUtilities {
 
 		log.info("Finished reading CSV file '" + f.getName() + "': Read " + tuples.size() + " rows with " + columns.size() + " columns; " + numLinesIgnored + " rows ignored.");
 
+		long start = System.currentTimeMillis();
 		dataModel.setData(tuples, columns);
+		long elapsed = System.currentTimeMillis() - start;
 
-		log.info("Finished setting data in datamodel");
+		log.info("Finished setting data in datamodel (it took " + elapsed + " ms");
 	}
 
 	public static void main (String args[]) throws IOException {
