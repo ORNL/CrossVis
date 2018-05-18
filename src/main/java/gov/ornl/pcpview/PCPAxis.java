@@ -49,7 +49,7 @@ public abstract class PCPAxis {
 
     public final static double DEFAULT_NAME_LABEL_HEIGHT = 30d;
     public final static double DEFAULT_NAME_TEXT_SIZE = 12d;
-    public final static double DEFAULT_CONTEXT_HEIGHT = 20d;
+    public final static double DEFAULT_CONTEXT_HEIGHT = 10d;
     public final static double DEFAULT_BAR_WIDTH = 14d;
     public final static double DEFAULT_TEXT_SIZE = 10d;
     public final static double HOVER_TEXT_SIZE = 8d;
@@ -194,6 +194,18 @@ public abstract class PCPAxis {
         axisBar.setSmooth(true);
         axisBar.setStrokeWidth(DEFAULT_STROKE_WIDTH);
 
+        topContexBar = new Rectangle();
+        topContexBar.setStroke(Color.DARKGRAY);
+        topContexBar.setFill(Color.WHITESMOKE);
+        topContexBar.setSmooth(true);
+        topContexBar.setStrokeWidth(DEFAULT_STROKE_WIDTH);
+
+        bottomContextBar = new Rectangle();
+        bottomContextBar.setStroke(Color.DARKGRAY);
+        bottomContextBar.setFill(Color.WHITESMOKE);
+        bottomContextBar.setSmooth(true);
+        bottomContextBar.setStrokeWidth(DEFAULT_STROKE_WIDTH);
+
         hoverValueText = new Text();
         hoverValueText.setFont(new Font(HOVER_TEXT_SIZE));
         hoverValueText.setSmooth(true);
@@ -208,7 +220,7 @@ public abstract class PCPAxis {
 //        topFocusCrossBarLine = makeLine();
 //        bottomFocusCrossBarLine = makeLine();
 
-        graphicsGroup = new Group(nameText, axisBar, /*topCrossBarLine, bottomCrossBarLine, topFocusCrossBarLine,
+        graphicsGroup = new Group(nameText, topContexBar, bottomContextBar, axisBar, /*topCrossBarLine, bottomCrossBarLine, topFocusCrossBarLine,
                 bottomFocusCrossBarLine,*/ minValueText, maxValueText, focusMinValueText, focusMaxValueText);
 
         if (getColumn() instanceof DoubleColumn) {
@@ -486,6 +498,15 @@ public abstract class PCPAxis {
         axisBar.setWidth(DEFAULT_BAR_WIDTH);
         axisBar.setHeight(focusBottomY - focusTopY);
 
+        topContexBar.setX(axisBar.getX());
+        topContexBar.setWidth(axisBar.getWidth());
+        topContexBar.setY(barTopY);
+        topContexBar.setHeight(contextRegionHeight);
+
+        bottomContextBar.setX(axisBar.getX());
+        bottomContextBar.setWidth(axisBar.getWidth());
+        bottomContextBar.setY(focusBottomY);
+        bottomContextBar.setHeight(contextRegionHeight);
 //        topCrossBarLine.setStartY(barTopY);
 //        topCrossBarLine.setEndY(barTopY);
 //        topCrossBarLine.setStartX(centerX - (DEFAULT_BAR_WIDTH / 2.));
