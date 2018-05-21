@@ -131,6 +131,8 @@ public abstract class PCPAxis {
 //    private Line draggingBottomCrossBarLine;
 //    private Line draggingTopFocusCrossBarLine;
 //    private Line draggingBottomFocusCrossBarLine;
+    private Rectangle draggingTopContextBar;
+    private Rectangle draggingBottomContextBar;
     private Rectangle draggingAxisBar;
     private Text draggingNameText;
 
@@ -248,26 +250,23 @@ public abstract class PCPAxis {
         draggingAxisBar.setStroke(getAxisBar().getStroke());
         draggingAxisBar.setFill(getAxisBar().getFill());
 
-//        draggingBottomCrossBarLine = new Line(bottomCrossBarLine.getStartX(), bottomCrossBarLine.getStartY(),
-//                bottomCrossBarLine.getEndX(), bottomCrossBarLine.getEndY());
-//        draggingBottomCrossBarLine.setStroke(bottomCrossBarLine.getStroke());
-//        draggingTopCrossBarLine = new Line(topCrossBarLine.getStartX(), topCrossBarLine.getStartY(),
-//                topCrossBarLine.getEndX(), topCrossBarLine.getEndY());
-//        draggingTopCrossBarLine.setStroke(topCrossBarLine.getStroke());
-//        draggingBottomFocusCrossBarLine = new Line(bottomFocusCrossBarLine.getStartX(), bottomFocusCrossBarLine.getStartY(),
-//                bottomFocusCrossBarLine.getEndX(), bottomFocusCrossBarLine.getEndY());
-//        draggingBottomFocusCrossBarLine.setStroke(bottomFocusCrossBarLine.getStroke());
-//        draggingTopFocusCrossBarLine = new Line(topFocusCrossBarLine.getStartX(), topFocusCrossBarLine.getStartY(),
-//                topFocusCrossBarLine.getEndX(), topFocusCrossBarLine.getEndY());
-//        draggingTopFocusCrossBarLine.setStroke(topFocusCrossBarLine.getStroke());
+        draggingTopContextBar = new Rectangle(topContexBar.getX(), topContexBar.getY(),
+                topContexBar.getWidth(), topContexBar.getHeight());
+        draggingTopContextBar.setStroke(topContexBar.getStroke());
+        draggingTopContextBar.setFill(topContexBar.getFill());
+        
+        draggingBottomContextBar = new Rectangle(bottomContextBar.getX(), bottomContextBar.getY(),
+                bottomContextBar.getWidth(), bottomContextBar.getHeight());
+        draggingBottomContextBar.setStroke(bottomContextBar.getStroke());
+        draggingBottomContextBar.setFill(bottomContextBar.getFill());
 
         draggingNameText = new Text(nameText.getText());
         draggingNameText.setX(nameText.getX());
         draggingNameText.setY(nameText.getY());
         draggingNameText.setFont(nameText.getFont());
 
-        axisDraggingGraphicsGroup = new Group(draggingNameText, draggingAxisBar/*, draggingBottomCrossBarLine,
-                draggingTopCrossBarLine, draggingBottomFocusCrossBarLine, draggingTopFocusCrossBarLine*/);
+        axisDraggingGraphicsGroup = new Group(draggingNameText, draggingTopContextBar, draggingBottomContextBar,
+                draggingAxisBar);
         axisDraggingGraphicsGroup.setTranslateY(5);
     }
 
