@@ -965,7 +965,13 @@ public class EDENFXMain extends Application implements DataModelListener {
                         fileChooser.setInitialDirectory(new File(lastCSVDirectoryPath));
                     }
                 }
+
                 fileChooser.setTitle("Open CSV File");
+                fileChooser.getExtensionFilters().addAll(
+                        new FileChooser.ExtensionFilter("All Files", "*.*"),
+                        new FileChooser.ExtensionFilter("CSV", "*.csv")
+                );
+
                 File csvFile = fileChooser.showOpenDialog(stage);
                 if (csvFile != null) {
                     try {

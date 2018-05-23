@@ -5,7 +5,7 @@
 	<groupId>gov.ornl.edenfx</groupId>
 	<artifactId>edenfx</artifactId>
 	<packaging>jar</packaging>
-	<version>1.1.1</version>
+	<version>1.1.2</version>
 
 	<name>edenfx</name>
     <organization>
