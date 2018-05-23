@@ -300,6 +300,11 @@ public class PCPCategoricalAxis extends PCPAxis {
     }
 
     @Override
+    public void removeAllGraphics(Pane pane) {
+        pane.getChildren().remove(graphicsGroup);
+    }
+
+    @Override
     public Group getHistogramBinRectangleGroup() {
         return null;
     }

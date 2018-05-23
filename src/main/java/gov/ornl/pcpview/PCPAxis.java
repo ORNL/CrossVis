@@ -238,6 +238,8 @@ public abstract class PCPAxis {
 
     protected abstract Object getValueForAxisPosition(double axisPosition);
 
+    public abstract void removeAllGraphics(Pane pane);
+
     protected abstract void handleAxisBarMousePressed();
     protected abstract void handleAxisBarMouseDragged(MouseEvent event);
     protected abstract void handleAxisBarMouseReleased();

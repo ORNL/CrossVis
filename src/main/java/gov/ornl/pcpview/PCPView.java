@@ -845,6 +845,8 @@ public class PCPView extends Region implements DataModelListener {
                 axisList.remove(pcpAxis);
 
                 // remove axis graphics from pane
+                pcpAxis.removeAllGraphics(pane);
+                /*
                 pane.getChildren().remove(pcpAxis.getGraphicsGroup());
                 pane.getChildren().remove(pcpAxis.getHistogramBinRectangleGroup());
                 pane.getChildren().remove(pcpAxis.getQueryHistogramBinRectangleGroup());
@@ -855,6 +857,7 @@ public class PCPView extends Region implements DataModelListener {
                         pane.getChildren().remove(axisSelection.getGraphicsGroup());
                     }
                 }
+                */
 
                 // create PCPBinSets for axis configuration
                 PCPBinSetList = new ArrayList<>();

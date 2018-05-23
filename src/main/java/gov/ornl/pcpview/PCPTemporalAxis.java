@@ -42,6 +42,19 @@ public class PCPTemporalAxis extends PCPAxis {
         return value;
     }
 
+    @Override
+    public void removeAllGraphics(Pane pane) {
+        pane.getChildren().remove(graphicsGroup);
+        pane.getChildren().remove(histogramBinRectangleGroup);
+        pane.getChildren().remove(queryHistogramBinRectangleGroup);
+
+        if (!getAxisSelectionList().isEmpty()) {
+            for (PCPAxisSelection axisSelection : getAxisSelectionList()) {
+                pane.getChildren().remove(axisSelection.getGraphicsGroup());
+            }
+        }
+    }
+
     private TemporalColumn temporalColumn() {
         return (TemporalColumn)getColumn();
     }

@@ -113,6 +113,8 @@ public class Query {
                 tuple.setQueryFlag(false);
                 nonQueriedTuples.add(tuple);
             }
+            columnQuerySummaryStatsMap.clear();
+            columnNonquerySummaryStatsMap.clear();
         }
     }
 

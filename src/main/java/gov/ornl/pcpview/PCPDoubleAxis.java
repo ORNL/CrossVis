@@ -28,9 +28,11 @@ public class PCPDoubleAxis extends PCPAxis {
     private Group overallSummaryStatisticsGroup;
     private Rectangle overallDispersionRectangle;
     private Line overallTypicalLine;
+
     private Group querySummaryStatisticsGroup;
     private Rectangle queryDispersionRectangle;
     private Line queryTypicalLine;
+
     private Group nonquerySummaryStatisticsGroup;
     private Rectangle nonqueryDispersionRectangle;
     private Line nonqueryTypicalLine;
@@ -91,6 +93,22 @@ public class PCPDoubleAxis extends PCPAxis {
         querySummaryStatisticsGroup.setMouseTransparent(true);
 
         registerListeners();
+    }
+
+    @Override
+    public void removeAllGraphics(Pane pane) {
+        pane.getChildren().remove(graphicsGroup);
+        pane.getChildren().remove(histogramBinRectangleGroup);
+        pane.getChildren().remove(queryHistogramBinRectangleGroup);
+        pane.getChildren().remove(overallSummaryStatisticsGroup);
+        pane.getChildren().remove(querySummaryStatisticsGroup);
+        pane.getChildren().remove(nonquerySummaryStatisticsGroup);
+
+        if (!getAxisSelectionList().isEmpty()) {
+            for (PCPAxisSelection axisSelection : getAxisSelectionList()) {
+                pane.getChildren().remove(axisSelection.getGraphicsGroup());
+            }
+        }
     }
 
     @Override
