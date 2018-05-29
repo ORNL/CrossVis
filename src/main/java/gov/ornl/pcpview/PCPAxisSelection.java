@@ -11,14 +11,12 @@ import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Polyline;
 import javafx.scene.shape.Rectangle;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.xml.crypto.Data;
+import java.util.logging.Logger;
 
 public abstract class PCPAxisSelection {
-
-    private final static Logger log = LoggerFactory.getLogger(PCPAxisSelection.class);
+    private final static Logger log = Logger.getLogger(PCPAxisSelection.class.getName());
 
     public final static Color DEFAULT_TEXT_FILL = Color.BLACK;
     public final static double DEFAULT_TEXT_SIZE = 8d;
