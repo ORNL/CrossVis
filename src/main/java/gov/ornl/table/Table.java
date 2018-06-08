@@ -10,6 +10,7 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
@@ -18,16 +19,64 @@ public class Table {
 
     private ArrayList<Column> columns = new ArrayList<>();
 
-    public Table() {
-
-    }
+    public Table() { }
 
     public void clear() {
         columns.clear();
     }
 
+    public Table selectData(TableFilter tableSelector) {
+        // make new Table object for selected data
+        Table newTable = new Table();
+        newTable.copyTableColumns(this);
+
+        // for each row test
+        for (int i = 0; i < getRowCount(); i++) {
+            if (tableSelector.accept(i)) {
+                // add row to new table
+                newTable.addRow(getRow(i));
+            }
+        }
+
+        return newTable;
+    }
+
+    public List<String> getColumnTitles() {
+        ArrayList<String> columnTitles = new ArrayList<>();
+        for (Column column : columns) {
+            columnTitles.add(column.getTitle());
+        }
+        return columnTitles;
+    }
+
+    public void copyTableColumns(Table srcTable) {
+        for (Column column : srcTable.columns) {
+            if (column instanceof DoubleColumn) {
+                addDoubleColumn(column.getTitle());
+            } else if (column instanceof TemporalColumn) {
+                addTemporalColumn(column.getTitle());
+            } else if (column instanceof CategoricalColumn) {
+                addCategoricalColumn(column.getTitle());
+            } else if (column instanceof ImageColumn) {
+                addImageColumn(column.getTitle());
+            } else if (column instanceof IntegerColumn) {
+                addIntegerColumn(column.getTitle());
+            } else if (column instanceof LongColumn) {
+                addLongColumn(column.getTitle());
+            } else if (column instanceof FloatColumn) {
+                addFloatColumn(column.getTitle());
+            }
+        }
+    }
+
     public DoubleColumn addDoubleColumn(String title) {
         DoubleColumn column = new DoubleColumn(title);
+        columns.add(column);
+        return column;
+    }
+
+    public ImageColumn addImageColumn (String title) {
+        ImageColumn column = new ImageColumn(title);
         columns.add(column);
         return column;
     }

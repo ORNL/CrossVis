@@ -2,6 +2,8 @@ package gov.ornl.util;
 
 
 import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.Text;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -10,6 +12,14 @@ import java.time.Instant;
  * Created by csg on 3/10/16.
  */
 public class GraphicsUtil {
+    static public void adjustTextSize(Text text, double maxWidth, double fontSize) {
+        String fontName = text.getFont().getName();
+        while (text.getLayoutBounds().getWidth() > maxWidth && fontSize > 0) {
+            fontSize -= 0.005;
+            text.setFont(new Font(fontName, fontSize));
+        }
+    }
+
     static public final java.awt.Color lerpColor(java.awt.Color c1, java.awt.Color c2, double amount) {
         int opacity = (int)Math.round(c1.getAlpha() + (c2.getAlpha() - c1.getAlpha()) * amount);
         int red = (int)Math.round(c1.getRed() + (c2.getRed() - c1.getRed()) * amount);
