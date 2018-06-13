@@ -5,10 +5,14 @@ import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Orientation;
+import javafx.geometry.Point2D;
 import javafx.geometry.VPos;
 import javafx.scene.Group;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 
 import java.text.DecimalFormat;
@@ -32,10 +36,16 @@ public class HistogramView extends Region {
 //    private Rectangle plotAreaRectangle;
 //    private Rectangle yAxisRectangle;
 //    private Rectangle xAxisRectangle;
+    private BoundingBox plotBounds;
 
     private Orientation orientation;
     private boolean showAxes;
     private boolean showTitle;
+
+    private Point2D startDragPoint;
+    private Point2D endDragPoint;
+    private boolean dragging;
+    private Rectangle draggingRectangle;
 
     public HistogramView(Orientation orientation) {
         this(orientation, true, true);
@@ -92,9 +102,57 @@ public class HistogramView extends Region {
     private void registerListeners() {
         widthProperty().addListener(o -> layoutView());
         heightProperty().addListener(o -> layoutView());
+        xAxisHeight.addListener(o -> layoutView());
+        yAxisWidth.addListener(o -> layoutView());
+        titleFontSize.addListener(o -> titleText.setFont(Font.font(titleFontSize.get())));
+        axisFontSize.addListener(o -> {
+            binCountAxis.setFontSize(axisFontSize.get());
+            valueAxis.setFontSize(axisFontSize.get());
+        });
+
+        setOnMousePressed(event -> {
+            if (plotBounds.contains(event.getX(), event.getY())) {
+                startDragPoint = new Point2D(event.getX(), event.getY());
+            }
+        });
+
+        setOnMouseReleased(event -> {
+            if (dragging) {
+                dragging = false;
+                pane.getChildren().remove(draggingRectangle);
+            }
+        });
+
+        setOnMouseDragged(event -> {
+            if (!dragging) {
+                dragging = true;
+                pane.getChildren().add(draggingRectangle);
+            }
+
+            endDragPoint = new Point2D(event.getX(), event.getY());
+
+            // find min and max x for dragging points
+            double minDragX = startDragPoint.getX() < endDragPoint.getX() ? startDragPoint.getX() : endDragPoint.getX();
+            double maxDragX = startDragPoint.getX() > endDragPoint.getX() ? startDragPoint.getX() : endDragPoint.getX();
+
+            // clamp to plot boundaries
+            minDragX = minDragX < plotBounds.getMinX() ? plotBounds.getMinX() : minDragX;
+            maxDragX = maxDragX > plotBounds.getMaxX() ? plotBounds.getMaxX() : maxDragX;
+
+            draggingRectangle.setX(minDragX);
+            draggingRectangle.setWidth(maxDragX - minDragX);
+            draggingRectangle.setY(plotBounds.getMinY());
+            draggingRectangle.setHeight(plotBounds.getHeight());
+        });
     }
 
     private void initialize() {
+        this.plotBounds = new BoundingBox(0, 0, 0, 0);
+
+        draggingRectangle = new Rectangle();
+        draggingRectangle.setStroke(Color.BLACK);
+        draggingRectangle.setFill(Color.TRANSPARENT);
+
         titleText = new Text();
         titleText.setTextOrigin(VPos.BOTTOM);
 
@@ -232,6 +290,8 @@ public class HistogramView extends Region {
                 double plotTop = showTitle ? getInsets().getTop() + (titleText.getLayoutBounds().getHeight() + 2) : getInsets().getTop();
 //                double plotTop = getInsets().getTop() + titleText.getLayoutBounds().getHeight();
                 double plotBottom = plotTop + plotHeight;
+
+                plotBounds = new BoundingBox(plotLeft, plotTop, plotWidth, plotHeight);
 
 //                plotAreaRectangle.setX(plotLeft);
 //                plotAreaRectangle.setY(plotTop);
