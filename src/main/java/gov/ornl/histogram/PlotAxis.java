@@ -13,6 +13,7 @@ public abstract class PlotAxis {
     protected HashSet<Line> tickLines;
     protected double tickLineLength = 8;
     protected Orientation orientation;
+    protected double fontSize = 10;
 
     protected Group graphicsGroup;
 
@@ -21,6 +22,10 @@ public abstract class PlotAxis {
         graphicsGroup = new Group();
         axisLine = new Line();
         axisLine.setStroke(Color.GRAY);
+    }
+
+    public void setFontSize(double fontSize) {
+        this.fontSize = fontSize;
     }
 
     public void layout(Bounds bounds) {

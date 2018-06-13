@@ -4,6 +4,7 @@ import gov.ornl.util.GraphicsUtil;
 import javafx.geometry.Bounds;
 import javafx.geometry.Orientation;
 import javafx.geometry.VPos;
+import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 
 import java.util.ArrayList;
@@ -23,6 +24,7 @@ public class CategoricalPlotAxis extends PlotAxis {
     private void initialize() {
         categories.forEach(category -> {
             Text categoryText = new Text(category);
+            categoryText.setFont(Font.font(fontSize));
             if (orientation == Orientation.HORIZONTAL) {
                 categoryText.setTextOrigin(VPos.TOP);
             } else {

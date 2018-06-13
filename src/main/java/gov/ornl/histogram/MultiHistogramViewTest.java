@@ -1,18 +1,22 @@
 package gov.ornl.histogram;
 
+import gov.ornl.table.CategoricalColumn;
 import gov.ornl.table.Column;
 import gov.ornl.table.DoubleColumn;
 import gov.ornl.table.Table;
 import javafx.application.Application;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.SceneAntialiasing;
-import javafx.scene.control.Button;
-import javafx.scene.control.ContentDisplay;
-import javafx.scene.control.ListCell;
-import javafx.scene.control.ListView;
+import javafx.scene.control.*;
+import javafx.scene.input.ClipboardContent;
+import javafx.scene.input.DragEvent;
+import javafx.scene.input.Dragboard;
+import javafx.scene.input.TransferMode;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.text.Text;
@@ -20,10 +24,13 @@ import javafx.stage.Stage;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MultiHistogramViewTest extends Application {
-    Table table;
-    ListView<Column> histogramListView;
+    private Table table;
+//    private static final ObservableList<Column> columns = FXCollections.observableArrayList();
+//    ListView<Column> histogramListView;
 
     public static void main(String[] args) {
         launch(args);
@@ -31,10 +38,10 @@ public class MultiHistogramViewTest extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        histogramListView = new ListView<>();
-//        listView.getItems().addAll("One", "Two", "Three", "Four");
+        ListView<Column> histogramListView = new ListView<>();
         histogramListView.setCellFactory(param -> new HistogramCell());
         histogramListView.setPrefWidth(400);
+        histogramListView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 
         Button loadDataButton = new Button("Load Data");
         loadDataButton.setOnAction(event -> {
@@ -56,6 +63,7 @@ public class MultiHistogramViewTest extends Application {
                 for (int i = 0; i < table.getColumnCount(); i++) {
                     Column column = table.getColumn(i);
                     histogramListView.getItems().add(column);
+//                    columns.add(column);
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -86,14 +94,94 @@ public class MultiHistogramViewTest extends Application {
 
         public HistogramCell() {
             setPrefWidth(0);
-//            prefWidthProperty().bind(histogramListView.widthProperty().subtract(2));
             ListCell thisCell = this;
-//            histogramView.prefWidthProperty().bind(getListView().widthProperty());
-            histogramView.setPrefHeight(80);
-            histogramView.setPadding(new Insets(10));
-//            histogramView.setPrefSize(list, 80);
+            histogramView.setShowAxes(false);
+            histogramView.setPrefHeight(60);
+
             setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
             setAlignment(Pos.CENTER);
+
+            setOnDragDetected(event -> {
+                if (getItem() == null) {
+                    return;
+                }
+
+                ObservableList<Column> items = getListView().getItems();
+
+                Dragboard dragboard = startDragAndDrop(TransferMode.MOVE);
+                ClipboardContent content = new ClipboardContent();
+                content.putString(getItem().getTitle());
+
+                dragboard.setDragView(histogramView.snapshot(null, null));
+
+                dragboard.setContent(content);
+                event.consume();
+            });
+
+            setOnDragOver(event -> {
+                if (event.getGestureSource() != thisCell &&
+                        event.getDragboard().hasString()) {
+                    event.acceptTransferModes(TransferMode.MOVE);
+                }
+
+                event.consume();
+            });
+
+            setOnDragEntered(event -> {
+                if (event.getGestureSource() != thisCell &&
+                        event.getDragboard().hasString()) {
+                    setOpacity(0.3);
+                }
+            });
+
+            setOnDragExited(event -> {
+                if (event.getGestureSource() != thisCell &&
+                        event.getDragboard().hasString()) {
+                    setOpacity(1.);
+                }
+            });
+
+            setOnDragDropped(event -> {
+                if (getItem() == null) {
+                    return;
+                }
+
+                Dragboard db = event.getDragboard();
+                boolean success = false;
+
+                if (db.hasString()) {
+                    ObservableList<Column> items = getListView().getItems();
+                    int draggedIndex = -1;
+                    int thisIndex = -1;
+                    for (int i = 0; i < items.size(); i++) {
+                        if (items.get(i).getTitle().equals(db.getString())) {
+                            draggedIndex = i;
+                        }
+                        if (items.get(i).getTitle().equals(getItem().getTitle())) {
+                            thisIndex = i;
+                        }
+                    }
+
+//                    Column temp = items.get(draggedIndex);
+//                    columns.set(draggedIndex, columns.get(thisIndex));
+//                    columns.set(thisIndex, temp);
+//
+                    Column draggingItem = items.remove(draggedIndex);
+//                    items.set(draggedIndex, getItem());
+                    items.add(thisIndex, draggingItem);
+                    getListView().getSelectionModel().clearAndSelect(thisIndex);
+
+//                    List<Column> itemsCopy = new ArrayList<>(getListView().getItems());
+//                    getListView().getItems().setAll(itemsCopy);
+
+                    success = true;
+                }
+
+                event.setDropCompleted(success);
+                event.consume();
+            });
+
+            setOnDragDone(DragEvent::consume);
         }
 
         @Override
@@ -106,6 +194,11 @@ public class MultiHistogramViewTest extends Application {
                 if (column instanceof DoubleColumn) {
                     DoubleHistogramDataModel histogramDataModel = new DoubleHistogramDataModel(column.getValues());
                     histogramView.setHistogramDataModel(histogramDataModel);
+                    histogramView.setTitle(column.getTitle());
+                    setGraphic(histogramView);
+                } else if (column instanceof CategoricalColumn) {
+                    CategoricalHistogramDataModel categoricalHistogramDataModel = new CategoricalHistogramDataModel(column.getValues());
+                    histogramView.setHistogramDataModel(categoricalHistogramDataModel);
                     histogramView.setTitle(column.getTitle());
                     setGraphic(histogramView);
                 }

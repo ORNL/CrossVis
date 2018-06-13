@@ -11,6 +11,7 @@ import javafx.geometry.Orientation;
 import javafx.scene.Scene;
 import javafx.scene.SceneAntialiasing;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Control;
 import javafx.scene.layout.*;
@@ -23,6 +24,8 @@ import java.util.List;
 public class HistogramViewTest extends Application {
     Table table;
     ChoiceBox<String> variableChoiceBox;
+    CheckBox showAxesCheckBox;
+    CheckBox showTitleCheckBox;
 
     public static void main(String[] args) {
         launch(args);
@@ -33,11 +36,11 @@ public class HistogramViewTest extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        HistogramView horizontalHistogramView = new HistogramView(Orientation.HORIZONTAL);
+        HistogramView horizontalHistogramView = new HistogramView(Orientation.HORIZONTAL, true, true);
         horizontalHistogramView.setPrefHeight(500);
         horizontalHistogramView.setPadding(new Insets(20));
 
-        HistogramView verticalHistogramView = new HistogramView(Orientation.VERTICAL);
+        HistogramView verticalHistogramView = new HistogramView(Orientation.VERTICAL, true, true);
         verticalHistogramView.setPrefHeight(500);
         verticalHistogramView.setPadding(new Insets(20));
 
@@ -62,6 +65,8 @@ public class HistogramViewTest extends Application {
                 System.exit(0);
             }
 
+            showAxesCheckBox.setDisable(false);
+            showTitleCheckBox.setDisable(false);
             variableChoiceBox.setDisable(false);
             variableChoiceBox.getItems().add("NONE");
             variableChoiceBox.getItems().addAll(FXCollections.observableArrayList(table.getColumnTitles()));
@@ -92,11 +97,27 @@ public class HistogramViewTest extends Application {
             }
         });
 
+        showAxesCheckBox = new CheckBox(" Show Axes ");
+        showAxesCheckBox.setDisable(true);
+        showAxesCheckBox.setSelected(horizontalHistogramView.getShowAxes());
+        showAxesCheckBox.setOnAction(event -> {
+            horizontalHistogramView.setShowAxes(showAxesCheckBox.isSelected());
+            verticalHistogramView.setShowAxes(showAxesCheckBox.isSelected());
+        });
+
+        showTitleCheckBox = new CheckBox(" Show Title ");
+        showTitleCheckBox.setDisable(true);
+        showTitleCheckBox.setSelected(horizontalHistogramView.getShowTitle());
+        showTitleCheckBox.setOnAction(event -> {
+            horizontalHistogramView.setShowTitle(showTitleCheckBox.isSelected());
+            verticalHistogramView.setShowTitle(showTitleCheckBox.isSelected());
+        });
+
 
         BorderPane rootNode = new BorderPane();
 
         HBox buttonBox = new HBox();
-        buttonBox.getChildren().addAll(loadDataButton, variableChoiceBox);
+        buttonBox.getChildren().addAll(loadDataButton, variableChoiceBox, showTitleCheckBox, showAxesCheckBox);
 
         GridPane histogramViewPane = new GridPane();
         histogramViewPane.setGridLinesVisible(true);

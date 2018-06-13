@@ -6,6 +6,7 @@ import javafx.geometry.VPos;
 import javafx.scene.Group;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
+import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 
@@ -33,7 +34,9 @@ public class DoublePlotAxis extends PlotAxis {
 
     private void initialize() {
         minText = new Text(numberFormat.format(minValue));
+        minText.setFont(Font.font(fontSize));
         maxText = new Text(numberFormat.format(maxValue));
+        maxText.setFont(Font.font(fontSize));
         if (orientation == Orientation.HORIZONTAL) {
             minText.setTextOrigin(VPos.TOP);
             maxText.setTextOrigin(VPos.TOP);
