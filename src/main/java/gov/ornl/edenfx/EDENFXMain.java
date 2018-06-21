@@ -1,7 +1,7 @@
 package gov.ornl.edenfx;
 
 import gov.ornl.datatable.*;
-import gov.ornl.pcpview.ColumnSpecification;
+import gov.ornl.scout.TableColumnSpecification;
 import gov.ornl.pcpview.PCPView;
 import gov.ornl.pcpview.QueryTableFactory;
 import javafx.animation.FadeTransition;
@@ -1275,7 +1275,7 @@ public class EDENFXMain extends Application implements DataModelListener {
         String columnNames[] = IOUtilities.readCSVHeader(f);
         int lineCount = IOUtilities.getCSVLineCount(f);
 
-        ArrayList<ColumnSpecification> columnSpecifications = getColumnSpecifications(columnNames);
+        ArrayList<TableColumnSpecification> columnSpecifications = getColumnSpecifications(columnNames);
         if (columnSpecifications == null) {
             return;
         }
@@ -1291,7 +1291,7 @@ public class EDENFXMain extends Application implements DataModelListener {
         ArrayList<String> categoricalColumnNames = new ArrayList<>();
 
         String lastDateTimeParsePattern = null;
-        for (ColumnSpecification columnSpecification : columnSpecifications) {
+        for (TableColumnSpecification columnSpecification : columnSpecifications) {
             if (columnSpecification.getIgnore()) {
                 ignoreColumnNames.add(columnSpecification.getName());
             } else if (columnSpecification.getType().equalsIgnoreCase("Temporal")) {
@@ -1352,29 +1352,29 @@ public class EDENFXMain extends Application implements DataModelListener {
         displayModeMenu.setDisable(false);
     }
 
-    private ArrayList<ColumnSpecification> getColumnSpecifications (String columnNames[]) {
-        ObservableList<ColumnSpecification> tableColumnSpecs = FXCollections.observableArrayList();
+    private ArrayList<TableColumnSpecification> getColumnSpecifications (String columnNames[]) {
+        ObservableList<TableColumnSpecification> tableColumnSpecs = FXCollections.observableArrayList();
         for (String columnName : columnNames) {
-            ColumnSpecification columnSpec = new ColumnSpecification(columnName, "Double",
+            TableColumnSpecification columnSpec = new TableColumnSpecification(columnName, "Double",
                     "", false);
             tableColumnSpecs.add(columnSpec);
         }
-        final ObservableList<ColumnSpecification> temporalColumnSpecs = FXCollections.observableArrayList();
-        final ObservableList<ColumnSpecification> categoricalColumnSpecs = FXCollections.observableArrayList();
+        final ObservableList<TableColumnSpecification> temporalColumnSpecs = FXCollections.observableArrayList();
+        final ObservableList<TableColumnSpecification> categoricalColumnSpecs = FXCollections.observableArrayList();
 
-        Dialog<ObservableList<ColumnSpecification>> dialog = new Dialog<>();
+        Dialog<ObservableList<TableColumnSpecification>> dialog = new Dialog<>();
         dialog.setTitle("CSV Column Specifications");
         dialog.setHeaderText("Specify Details for each Column");
 
         dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
 
         // Create tableview for temporal column details
-        TableView<ColumnSpecification> temporalSpecsTableView = new TableView<>();
+        TableView<TableColumnSpecification> temporalSpecsTableView = new TableView<>();
         temporalSpecsTableView.setEditable(true);
 
-        TableColumn<ColumnSpecification, String> nameColumn = new TableColumn<>("Column Name");
+        TableColumn<TableColumnSpecification, String> nameColumn = new TableColumn<>("Column Name");
         nameColumn.setMinWidth(180);
-        nameColumn.setCellValueFactory(new PropertyValueFactory<ColumnSpecification, String>("name"));
+        nameColumn.setCellValueFactory(new PropertyValueFactory<TableColumnSpecification, String>("name"));
         nameColumn.setCellFactory(TextFieldTableCell.forTableColumn());
         nameColumn.setEditable(false);
 
@@ -1386,13 +1386,13 @@ public class EDENFXMain extends Application implements DataModelListener {
                 "yyyy-MM-ddTHH:mm:ssz"));
         parsePatterns.add("dd.MM.yyy HH:mm:ss");
 
-        TableColumn<ColumnSpecification, String> parseColumn = new TableColumn<>("DateTime Parse Pattern");
+        TableColumn<TableColumnSpecification, String> parseColumn = new TableColumn<>("DateTime Parse Pattern");
         parseColumn.setMinWidth(180);
-        parseColumn.setCellValueFactory(new PropertyValueFactory<ColumnSpecification, String>("parsePattern"));
-        parseColumn.setCellFactory(new Callback<TableColumn<ColumnSpecification, String>, TableCell<ColumnSpecification, String>>() {
+        parseColumn.setCellValueFactory(new PropertyValueFactory<TableColumnSpecification, String>("parsePattern"));
+        parseColumn.setCellFactory(new Callback<TableColumn<TableColumnSpecification, String>, TableCell<TableColumnSpecification, String>>() {
             @Override
-            public TableCell<ColumnSpecification, String> call(TableColumn<ColumnSpecification, String> param) {
-                return new ComboBoxTableCell<ColumnSpecification, String>(FXCollections.observableArrayList(parsePatterns)) {
+            public TableCell<TableColumnSpecification, String> call(TableColumn<TableColumnSpecification, String> param) {
+                return new ComboBoxTableCell<TableColumnSpecification, String>(FXCollections.observableArrayList(parsePatterns)) {
                     {
                         setComboBoxEditable(true);
                     }
@@ -1405,29 +1405,29 @@ public class EDENFXMain extends Application implements DataModelListener {
         temporalColumnSpecs.addAll(temporalColumnSpecs);
         
         // create tableview for other column details
-        TableView<ColumnSpecification> columnSpecsTableView = new TableView<>();
+        TableView<TableColumnSpecification> columnSpecsTableView = new TableView<>();
         columnSpecsTableView.setEditable(true);
 
         nameColumn = new TableColumn<>("Column Name");
         nameColumn.setMinWidth(180);
-        nameColumn.setCellValueFactory(new PropertyValueFactory<ColumnSpecification, String>("name"));
+        nameColumn.setCellValueFactory(new PropertyValueFactory<TableColumnSpecification, String>("name"));
         nameColumn.setCellFactory(TextFieldTableCell.forTableColumn());
         nameColumn.setEditable(false);
 
-        TableColumn<ColumnSpecification, Boolean> ignoreColumn = new TableColumn<>("Ignore");
+        TableColumn<TableColumnSpecification, Boolean> ignoreColumn = new TableColumn<>("Ignore");
         ignoreColumn.setMinWidth(20);
-        ignoreColumn.setCellValueFactory(new PropertyValueFactory<ColumnSpecification, Boolean>("ignore"));
+        ignoreColumn.setCellValueFactory(new PropertyValueFactory<TableColumnSpecification, Boolean>("ignore"));
         ignoreColumn.setCellFactory(column -> new CheckBoxTableCell());
         ignoreColumn.setEditable(true);
 
-        TableColumn<ColumnSpecification, String> typeColumn = new TableColumn<>("Column Type");
+        TableColumn<TableColumnSpecification, String> typeColumn = new TableColumn<>("Column Type");
         typeColumn.setMinWidth(180);
-        typeColumn.setCellValueFactory(new PropertyValueFactory<ColumnSpecification, String>("type"));
+        typeColumn.setCellValueFactory(new PropertyValueFactory<TableColumnSpecification, String>("type"));
         typeColumn.setEditable(true);
-        typeColumn.setCellFactory(new Callback<TableColumn<ColumnSpecification, String>, TableCell<ColumnSpecification, String>>() {
+        typeColumn.setCellFactory(new Callback<TableColumn<TableColumnSpecification, String>, TableCell<TableColumnSpecification, String>>() {
             @Override
-            public TableCell<ColumnSpecification, String> call(TableColumn<ColumnSpecification, String> param) {
-                return new ComboBoxTableCell<ColumnSpecification, String>(FXCollections.observableArrayList("Temporal", "Double", "Categorical")) {
+            public TableCell<TableColumnSpecification, String> call(TableColumn<TableColumnSpecification, String> param) {
+                return new ComboBoxTableCell<TableColumnSpecification, String>(FXCollections.observableArrayList("Temporal", "Double", "Categorical")) {
                     @Override
                     public void updateItem(String item, boolean empty) {
                         if (!empty) {
@@ -1480,10 +1480,10 @@ public class EDENFXMain extends Application implements DataModelListener {
             return null;
         });
 
-        Optional<ObservableList<ColumnSpecification>> result = dialog.showAndWait();
+        Optional<ObservableList<TableColumnSpecification>> result = dialog.showAndWait();
 
         if (result.isPresent()) {
-            return new ArrayList<ColumnSpecification>(result.get());
+            return new ArrayList<TableColumnSpecification>(result.get());
         }
 
         return null;

@@ -1,17 +1,17 @@
-package gov.ornl.pcpview;
+package gov.ornl.scout;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
-public class ColumnSpecification {
+public class TableColumnSpecification {
     private StringProperty name;
     private StringProperty type;
     private StringProperty parsePattern;
     private BooleanProperty ignore;
 
-    public ColumnSpecification (String name, String type, String timeParsePattern, boolean ignore) {
+    public TableColumnSpecification(String name, String type, String timeParsePattern, boolean ignore) {
         setName(name);
         setType(type);
         setParsePattern(timeParsePattern);
