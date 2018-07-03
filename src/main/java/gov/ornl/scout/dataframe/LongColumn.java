@@ -1,4 +1,4 @@
-package gov.ornl.table;
+package gov.ornl.scout.dataframe;
 
 import java.util.ArrayList;
 import java.util.List;

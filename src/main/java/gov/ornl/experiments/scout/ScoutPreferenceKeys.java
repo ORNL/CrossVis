@@ -1,4 +1,4 @@
-package gov.ornl.scout;
+package gov.ornl.experiments.scout;
 
 public class ScoutPreferenceKeys {
     public final static String SCOUT_PREFIX = "SCOUT:";

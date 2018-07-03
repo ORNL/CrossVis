@@ -1,8 +1,8 @@
 package gov.ornl.histogram;
 
-import gov.ornl.table.Column;
-import gov.ornl.table.DoubleColumn;
-import gov.ornl.table.Table;
+import gov.ornl.scout.dataframe.Column;
+import gov.ornl.scout.dataframe.DataFrame;
+import gov.ornl.scout.dataframe.DoubleColumn;
 import javafx.application.Application;
 import javafx.geometry.Orientation;
 import javafx.scene.Scene;
@@ -17,7 +17,7 @@ import java.io.File;
 import java.io.IOException;
 
 public class MultiHistogramViewTest2 extends Application {
-    Table table;
+    DataFrame table;
     VBox histogramViewBox;
 
     public static void main(String[] args) {
@@ -32,10 +32,10 @@ public class MultiHistogramViewTest2 extends Application {
         loadDataButton.setOnAction(event -> {
             File f = new File("data/csv/cars-cat.csv");
 
-            table = new Table();
+            table = new DataFrame();
             String columnTitles[] = new String[0];
             try {
-                columnTitles = Table.getFileHeader(f);
+                columnTitles = DataFrame.getFileHeader(f);
                 for (String columnTitle : columnTitles) {
                     if (columnTitle.equalsIgnoreCase("Origin")) {
                         table.addCategoricalColumn(columnTitle);

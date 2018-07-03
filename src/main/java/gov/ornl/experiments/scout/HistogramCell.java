@@ -1,11 +1,11 @@
-package gov.ornl.scout;
+package gov.ornl.experiments.scout;
 
 import gov.ornl.histogram.CategoricalHistogramDataModel;
 import gov.ornl.histogram.DoubleHistogramDataModel;
 import gov.ornl.histogram.HistogramView;
-import gov.ornl.table.CategoricalColumn;
-import gov.ornl.table.Column;
-import gov.ornl.table.DoubleColumn;
+import gov.ornl.scout.dataframe.CategoricalColumn;
+import gov.ornl.scout.dataframe.Column;
+import gov.ornl.scout.dataframe.DoubleColumn;
 import javafx.collections.ObservableList;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;

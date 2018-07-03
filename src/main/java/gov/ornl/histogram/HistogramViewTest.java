@@ -1,9 +1,9 @@
 package gov.ornl.histogram;
 
-import gov.ornl.table.CategoricalColumn;
-import gov.ornl.table.Column;
-import gov.ornl.table.DoubleColumn;
-import gov.ornl.table.Table;
+import gov.ornl.scout.dataframe.CategoricalColumn;
+import gov.ornl.scout.dataframe.Column;
+import gov.ornl.scout.dataframe.DataFrame;
+import gov.ornl.scout.dataframe.DoubleColumn;
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
@@ -19,10 +19,9 @@ import javafx.stage.Stage;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
 
 public class HistogramViewTest extends Application {
-    Table table;
+    DataFrame table;
     ChoiceBox<String> variableChoiceBox;
     CheckBox showAxesCheckBox;
     CheckBox showTitleCheckBox;
@@ -48,10 +47,10 @@ public class HistogramViewTest extends Application {
         loadDataButton.setOnAction(event -> {
             File f = new File("data/csv/cars-cat.csv");
 
-            table = new Table();
+            table = new DataFrame();
             String columnTitles[] = new String[0];
             try {
-                columnTitles = Table.getFileHeader(f);
+                columnTitles = DataFrame.getFileHeader(f);
                 for (String columnTitle : columnTitles) {
                     if (columnTitle.equalsIgnoreCase("Origin")) {
                         table.addCategoricalColumn(columnTitle);

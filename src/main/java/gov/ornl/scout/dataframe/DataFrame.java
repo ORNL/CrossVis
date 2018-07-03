@@ -1,4 +1,4 @@
-package gov.ornl.table;
+package gov.ornl.scout.dataframe;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -14,26 +14,26 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
-public class Table {
-    private final static Logger log = Logger.getLogger(Table.class.getName());
+public class DataFrame {
+    private final static Logger log = Logger.getLogger(DataFrame.class.getName());
 
     private ArrayList<Column> columns = new ArrayList<>();
 
-    public Table() { }
+    public DataFrame() { }
 
     public void clear() {
         columns.clear();
     }
 
-    public Table selectData(TableFilter tableSelector) {
-        // make new Table object for selected data
-        Table newTable = new Table();
+    public DataFrame selectData(TableFilter tableSelector) {
+        // make new DataFrame object for selected data
+        DataFrame newTable = new DataFrame();
         newTable.copyTableColumns(this);
 
         // for each row test
         for (int i = 0; i < getRowCount(); i++) {
             if (tableSelector.accept(i)) {
-                // add row to new table
+                // add row to new dataframe
                 newTable.addRow(getRow(i));
             }
         }
@@ -49,7 +49,7 @@ public class Table {
         return columnTitles;
     }
 
-    public void copyTableColumns(Table srcTable) {
+    public void copyTableColumns(DataFrame srcTable) {
         for (Column column : srcTable.columns) {
             if (column instanceof DoubleColumn) {
                 addDoubleColumn(column.getTitle());
@@ -266,11 +266,11 @@ public class Table {
     public static void main (String args[]) throws IOException {
 //        File f = new File("data/csv/cars-cat.csv");
         File f = new File("data/csv/titan-performance.csv");
-        Table table = new Table();
+        DataFrame table = new DataFrame();
 
         HashMap<Column, DateTimeFormatter> timeFormatterMap = new HashMap<>();
 
-        String columnTitles[] = Table.getFileHeader(f);
+        String columnTitles[] = DataFrame.getFileHeader(f);
         for (String columnTitle : columnTitles) {
             if (columnTitle.equals("Origin")) {
                 table.addCategoricalColumn(columnTitle);

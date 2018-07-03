@@ -1,7 +1,7 @@
 package gov.ornl.edenfx;
 
 import gov.ornl.datatable.*;
-import gov.ornl.scout.TableColumnSpecification;
+import gov.ornl.experiments.scout.TableColumnSpecification;
 import gov.ornl.pcpview.PCPView;
 import gov.ornl.pcpview.QueryTableFactory;
 import javafx.animation.FadeTransition;
@@ -259,7 +259,7 @@ public class EDENFXMain extends Application implements DataModelListener {
 //    }
 
     private void createColumnTableViews() {
-        // create table view for categorical columns
+        // create dataframe view for categorical columns
         categoricalColumnTableView = new TableView<>();
         categoricalColumnTableView.setEditable(true);
         categoricalColumnTableView.getSelectionModel().selectedItemProperty().addListener(((observable, oldValue, newValue) -> {
@@ -330,7 +330,7 @@ public class EDENFXMain extends Application implements DataModelListener {
 
         categoricalColumnTableView.getColumns().addAll(categoricalEnabledColumn, categoricalNameColumn);
 
-        // create table view for temporal columns
+        // create dataframe view for temporal columns
         temporalColumnTableView = new TableView<>();
         temporalColumnTableView.setEditable(true);
         temporalColumnTableView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
@@ -402,7 +402,7 @@ public class EDENFXMain extends Application implements DataModelListener {
         temporalColumnTableView.getColumns().addAll(temporalEnabledColumn, temporalNameColumn, startColumn, endColumn);
         
 
-        // create table view for double columns
+        // create dataframe view for double columns
         doubleColumnTableView = new TableView<>();
         doubleColumnTableView.setEditable(true);
         doubleColumnTableView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
@@ -773,23 +773,23 @@ public class EDENFXMain extends Application implements DataModelListener {
 
         // create datamodel tab pane
         tabPane = new TabPane();
-        Tab quantitativeColumnTableTab = new Tab(" Quantitative Column Table ");
+        Tab quantitativeColumnTableTab = new Tab(" Quantitative Column DataFrame ");
         quantitativeColumnTableTab.setClosable(false);
         quantitativeColumnTableTab.setContent(doubleColumnTableView);
 
-        Tab temporalColumnTableTab = new Tab(" Temporal Column Table ");
+        Tab temporalColumnTableTab = new Tab(" Temporal Column DataFrame ");
         temporalColumnTableTab.setClosable(false);
         temporalColumnTableTab.setContent(temporalColumnTableView);
 
-        Tab categoricalColumnTableTab = new Tab(" Categorical Column Table ");
+        Tab categoricalColumnTableTab = new Tab(" Categorical Column DataFrame ");
         categoricalColumnTableTab.setClosable(false);
         categoricalColumnTableTab.setContent(categoricalColumnTableView);
 
-        Tab dataTableTab = new Tab(" Data Table ");
+        Tab dataTableTab = new Tab(" Data DataFrame ");
         dataTableTab.setClosable(false);
         dataTableTab.setContent(dataTableView);
 
-        Tab queryTableTab = new Tab(" Query Table ");
+        Tab queryTableTab = new Tab(" Query DataFrame ");
         queryTableTab.setClosable(false);
 //        queryTableGrid.prefWidthProperty().bind(tabPane.widthProperty());
         queryTableTab.setContent(queryTablePane);
@@ -1169,7 +1169,7 @@ public class EDENFXMain extends Application implements DataModelListener {
         viewMenu.getItems().add(removeAllQueriesMI);
 
         // create menu item to enabled/disable data datamodel updates
-        enableDataTableUpdatesCheckMenuItem = new CheckMenuItem("Enable Data Table Updates");
+        enableDataTableUpdatesCheckMenuItem = new CheckMenuItem("Enable Data DataFrame Updates");
         enableDataTableUpdatesCheckMenuItem.setSelected(false);
         enableDataTableUpdatesCheckMenuItem.selectedProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue != null && newValue) {
@@ -1436,12 +1436,12 @@ public class EDENFXMain extends Application implements DataModelListener {
                                 int rowNumber = row.getIndex();
 //                                TableView.TableViewSelectionModel sm = getTableView().getSelectionModel();
                                 if (item.equalsIgnoreCase("Temporal")) {
-                                    // add row to temporal column specs table
+                                    // add row to temporal column specs dataframe
                                     if (!temporalSpecsTableView.getItems().contains(tableColumnSpecs.get(rowNumber))) {
                                         temporalSpecsTableView.getItems().add(tableColumnSpecs.get(rowNumber));
                                     }
                                 } else if (item.equalsIgnoreCase("Double")) {
-                                    // check temporal column specs table for column and remove if found
+                                    // check temporal column specs dataframe for column and remove if found
                                     temporalSpecsTableView.getItems().remove(tableColumnSpecs.get(rowNumber));
                                 } else if (item.equalsIgnoreCase("Categorical")) {
                                     temporalSpecsTableView.getItems().remove(tableColumnSpecs.get(rowNumber));

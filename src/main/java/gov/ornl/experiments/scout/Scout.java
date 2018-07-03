@@ -1,8 +1,8 @@
-package gov.ornl.scout;
+package gov.ornl.experiments.scout;
 
-import gov.ornl.table.Column;
-import gov.ornl.table.Table;
-import gov.ornl.table.TemporalColumn;
+import gov.ornl.scout.dataframe.Column;
+import gov.ornl.scout.dataframe.DataFrame;
+import gov.ornl.scout.dataframe.TemporalColumn;
 import javafx.application.Application;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
@@ -27,7 +27,7 @@ import java.util.prefs.Preferences;
 public class Scout extends Application {
 
     private Preferences preferences;
-    private Table table;
+    private DataFrame table;
     private ListView<Column> histogramListView;
 
     public static void main(String[] args) {
@@ -114,7 +114,7 @@ public class Scout extends Application {
                 ArrayList<TableColumnSpecification> columnSpecifications = TableColumnSpecificationDialog.getColumnSpecifications(csvFile);
 
                 if (columnSpecifications != null) {
-                    Table newTable = new Table();
+                    DataFrame newTable = new DataFrame();
 
                     HashMap<Column, DateTimeFormatter> timeColumnFormatterMap = new HashMap<>();
                     for (TableColumnSpecification columnSpecification : columnSpecifications) {
@@ -138,7 +138,7 @@ public class Scout extends Application {
         }
     }
 
-    public void setTable(Table table) {
+    public void setTable(DataFrame table) {
         this.table = table;
         for (int i = 0; i < table.getColumnCount(); i++) {
             Column column = table.getColumn(i);

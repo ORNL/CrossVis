@@ -1,4 +1,4 @@
-package gov.ornl.scout;
+package gov.ornl.experiments.scout;
 
 import gov.ornl.scout.dataframe.DataFrame;
 import javafx.application.Platform;

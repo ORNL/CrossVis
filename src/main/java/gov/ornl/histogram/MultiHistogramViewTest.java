@@ -1,13 +1,11 @@
 package gov.ornl.histogram;
 
-import gov.ornl.table.CategoricalColumn;
-import gov.ornl.table.Column;
-import gov.ornl.table.DoubleColumn;
-import gov.ornl.table.Table;
+import gov.ornl.scout.dataframe.CategoricalColumn;
+import gov.ornl.scout.dataframe.Column;
+import gov.ornl.scout.dataframe.DataFrame;
+import gov.ornl.scout.dataframe.DoubleColumn;
 import javafx.application.Application;
-import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -19,16 +17,13 @@ import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 public class MultiHistogramViewTest extends Application {
-    private Table table;
+    private DataFrame table;
 //    private static final ObservableList<Column> columns = FXCollections.observableArrayList();
 //    ListView<Column> histogramListView;
 
@@ -47,10 +42,10 @@ public class MultiHistogramViewTest extends Application {
         loadDataButton.setOnAction(event -> {
             File f = new File("data/csv/cars-cat.csv");
 
-            table = new Table();
+            table = new DataFrame();
             String columnTitles[] = new String[0];
             try {
-                columnTitles = Table.getFileHeader(f);
+                columnTitles = DataFrame.getFileHeader(f);
                 for (String columnTitle : columnTitles) {
                     if (columnTitle.equalsIgnoreCase("Origin")) {
                         table.addCategoricalColumn(columnTitle);
