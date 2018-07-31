@@ -11,6 +11,10 @@ public class CategoricalColumn extends Column {
         super(title);
     }
 
+    public int getTotalCount() {
+        return values.size();
+    }
+
     @Override
     protected void addValue(Object value) {
         addValue(values.size(), value);
@@ -25,7 +29,7 @@ public class CategoricalColumn extends Column {
             categoriesCounts.put(category, categoriesCounts.get(category) + 1);
         } else {
             categories.add(category);
-            categoriesCounts.put(category, 0);
+            categoriesCounts.put(category, 1);
         }
     }
 

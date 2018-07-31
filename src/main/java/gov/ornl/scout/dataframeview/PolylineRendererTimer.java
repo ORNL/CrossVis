@@ -4,6 +4,7 @@ import javafx.animation.AnimationTimer;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.geometry.Orientation;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.paint.Color;
 
@@ -20,13 +21,15 @@ public class PolylineRendererTimer extends AnimationTimer {
     private ArrayBlockingQueue<RowPolyline> polylineQueue;
     private int maxPolylinesPerFrame;
     private ArrayList<Axis> axisList;
+    private Orientation orientation;
     private BooleanProperty running;
     public long id;
 
     public PolylineRendererTimer (Canvas canvas, Collection<RowPolyline> polylines, ArrayList<Axis> axisList,
-                                  Color polylineColor, int maxPolylinesPerFrame) {
+                                  Color polylineColor, int maxPolylinesPerFrame, Orientation orientation) {
         id = System.currentTimeMillis();
         this.canvas = canvas;
+        this.orientation = orientation;
         this.axisList = axisList;
         this.color = polylineColor;
         polylineQueue = new ArrayBlockingQueue<>(polylines.size());
@@ -50,8 +53,13 @@ public class PolylineRendererTimer extends AnimationTimer {
                 break;
             } else {
                 for (int i = 1; i < polyline.getRow().length; i++) {
-                    canvas.getGraphicsContext2D().strokeLine(polyline.getXValues()[i-1], polyline.getyValues()[i-1],
-                            polyline.getXValues()[i], polyline.getyValues()[i]);
+                    if (orientation == Orientation.HORIZONTAL) {
+                        canvas.getGraphicsContext2D().strokeLine(axisList.get(i-1).getAxisBarRight(), polyline.getyValues()[i - 1],
+                                axisList.get(i).getAxisBarLeft(), polyline.getyValues()[i]);
+                    } else {
+                        canvas.getGraphicsContext2D().strokeLine(polyline.getXValues()[i-1], axisList.get(i-1).getAxisBarBottom(),
+                                polyline.getXValues()[i], axisList.get(i).getAxisBarTop());
+                    }
                 }
             }
         }

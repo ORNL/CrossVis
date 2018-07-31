@@ -47,7 +47,8 @@ public abstract class PCPAxisSelection {
         rectangle = null;
     }
 
-    public PCPAxisSelection(PCPAxis pcpAxis, ColumnSelectionRange selectionRange, double minValueY, double maxValueY, Pane pane, DataModel dataModel) {
+    public PCPAxisSelection(PCPAxis pcpAxis, ColumnSelectionRange selectionRange, double minValueY, double maxValueY,
+                            Pane pane, DataModel dataModel) {
         this(pcpAxis, selectionRange, pane, dataModel);
 //        this.pcpAxis = pcpAxis;
 //        this.selectionRange = selectionRange;

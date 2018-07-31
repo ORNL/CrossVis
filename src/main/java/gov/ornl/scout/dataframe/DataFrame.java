@@ -249,6 +249,8 @@ public class DataFrame {
             }
             rowCounter++;
         }
+
+        log.info("read " + rowCounter + " rows");
     }
 
     public static String[] getFileHeader(File f) throws IOException {

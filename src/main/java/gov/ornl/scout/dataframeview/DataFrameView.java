@@ -1,8 +1,6 @@
 package gov.ornl.scout.dataframeview;
 
-import gov.ornl.scout.dataframe.Column;
-import gov.ornl.scout.dataframe.DataFrame;
-import gov.ornl.scout.dataframe.DoubleColumn;
+import gov.ornl.scout.dataframe.*;
 import javafx.beans.property.*;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Insets;
@@ -26,6 +24,9 @@ public class DataFrameView extends Region {
     private final Logger log = Logger.getLogger(DataFrameView.class.getName());
 
     private DataFrame dataFrame;
+    private DataFrame selectedDataFrame;
+    private DataFrame unselectedDataFrame;
+
     private Pane pane;
     private Group titleTextGroup;
 
@@ -33,9 +34,13 @@ public class DataFrameView extends Region {
     private Canvas unselectedCanvas;
 
     private BoundingBox titleTextBounds;
+    private BoundingBox scatterplotRegionBounds;
+    private BoundingBox pcpRegionBounds;
 
     private ArrayList<Axis> axisList = new ArrayList<>();
     private ArrayList<Text> axisTitleList = new ArrayList<>();
+
+    private ArrayList<Scatterplot> scatterplotList = new ArrayList<>();
 
     private ObjectProperty<Color> unselectedItemsColor = new SimpleObjectProperty<>(DataFrameViewDefaultSettings.DEFAULT_UNSELECTED_ITEMS_COLOR);
     private ObjectProperty<Color> selectedItemsColor = new SimpleObjectProperty<>(DataFrameViewDefaultSettings.DEFAULT_SELECTED_ITEMS_COLOR);
@@ -50,8 +55,12 @@ public class DataFrameView extends Region {
     private Orientation orientation;
     private double axisSpacing = 50.;
     private double polylineStrokeWidth = 1.5;
+    private double plotAreaPadding = 4;
 
     private Rectangle plotAreaRectangle = new Rectangle();
+    private Rectangle pcpAreaRectangle = new Rectangle();
+    private Rectangle scatterplotAreaRectangle = new Rectangle();
+    private Rectangle titleAreaRectangle = new Rectangle();
 
     private ArrayList<RowPolyline> polylines = new ArrayList<>();
     private HashSet<RowPolyline> selectedPolylineSet = new HashSet<>();
@@ -66,6 +75,27 @@ public class DataFrameView extends Region {
         registerListeners();
     }
 
+    public Color getBackgroundColor() {
+        return backgroundColor.get();
+    }
+
+    public void setBackgroundColor(Color newBackgroundColor) {
+        this.backgroundColor.set(newBackgroundColor);
+        pane.setBackground(new Background(new BackgroundFill(backgroundColor.get(), new CornerRadii(0), Insets.EMPTY)));
+    }
+
+    public ObjectProperty<Color> backgroundColorProperty() {
+        return backgroundColor;
+    }
+
+    public final double getPolylineOpacity() { return polylineOpacity.get(); }
+
+    public final void setPolylineOpacity(double opacity) {
+        polylineOpacity.set(opacity);
+    }
+
+    public DoubleProperty polylineOpacityProperty() { return polylineOpacity; }
+
     public Color getUnselectedItemsColor() { return unselectedItemsColor.get(); }
 
     public void setUnselectedItemsColor(Color color) { unselectedItemsColor.set(color); }
@@ -74,9 +104,9 @@ public class DataFrameView extends Region {
 
     public Color getSelectedItemsColor() { return selectedItemsColor.get(); }
 
-    public ObjectProperty<Color> selectedItemsColorProperty() { return selectedItemsColor; }
-
     public void setSelectedItemsColor(Color color) { selectedItemsColor.set(color); }
+
+    public ObjectProperty<Color> selectedItemsColorProperty() { return selectedItemsColor; }
 
     public final boolean isShowingSelectedItems() { return showSelectedItems.get(); }
 
@@ -92,15 +122,6 @@ public class DataFrameView extends Region {
 
     public DataFrame getDataFrame() {
         return dataFrame;
-    }
-
-    private void fillPolylineSets() {
-        unselectedPolylineSet.clear();
-        selectedPolylineSet.clear();
-
-        if (polylines != null && !polylines.isEmpty()) {
-            selectedPolylineSet.addAll(polylines);
-        }
     }
 
     public void setDataFrame(DataFrame dataFrame) {
@@ -121,18 +142,36 @@ public class DataFrameView extends Region {
         layoutView();
     }
 
+    private void fillPolylineSets() {
+        unselectedPolylineSet.clear();
+        selectedPolylineSet.clear();
+
+        if (polylines != null && !polylines.isEmpty()) {
+            selectedPolylineSet.addAll(polylines);
+        }
+    }
+
     private void initialize() {
         titleTextGroup = new Group();
 
         plotAreaRectangle.setStroke(Color.BLUE);
         plotAreaRectangle.setFill(Color.TRANSPARENT);
+        pcpAreaRectangle.setStroke(Color.ORANGE);
+        pcpAreaRectangle.setFill(Color.TRANSPARENT);
+        pcpAreaRectangle.setStrokeWidth(2.);
+        scatterplotAreaRectangle.setStroke(Color.YELLOWGREEN);
+        scatterplotAreaRectangle.setFill(Color.TRANSPARENT);
+        scatterplotAreaRectangle.setStrokeWidth(2.);
+        titleAreaRectangle.setStroke(Color.RED);
+        titleAreaRectangle.setFill(Color.TRANSPARENT);
 
         selectedCanvas = new Canvas(getWidth(), getHeight());
         unselectedCanvas = new Canvas(getWidth(), getHeight());
 
         pane = new Pane();
         pane.setBackground(new Background(new BackgroundFill(backgroundColor.get(), new CornerRadii(0), Insets.EMPTY)));
-        pane.getChildren().addAll(unselectedCanvas, selectedCanvas, titleTextGroup, plotAreaRectangle);
+        pane.getChildren().addAll(unselectedCanvas, selectedCanvas, titleTextGroup, plotAreaRectangle, pcpAreaRectangle,
+                scatterplotAreaRectangle, titleAreaRectangle);
 
         getChildren().add(pane);
     }
@@ -144,6 +183,22 @@ public class DataFrameView extends Region {
         backgroundColor.addListener(observable -> {
             pane.setBackground(new Background(new BackgroundFill(backgroundColor.get(), new CornerRadii(0), Insets.EMPTY)));
         });
+
+        polylineOpacity.addListener(((observable, oldValue, newValue) -> {
+            setSelectedItemsColor(new Color(getSelectedItemsColor().getRed(), getSelectedItemsColor().getGreen(),
+                    getSelectedItemsColor().getBlue(), newValue.doubleValue()));
+            setUnselectedItemsColor(new Color(getUnselectedItemsColor().getRed(), getUnselectedItemsColor().getGreen(),
+                    getUnselectedItemsColor().getBlue(), newValue.doubleValue()));
+            redrawView();
+        }));
+
+        selectedItemsColor.addListener((observable, oldValue, newValue) -> redrawView());
+
+        unselectedItemsColor.addListener((observable, oldValue, newValue) -> redrawView());
+
+        showSelectedItems.addListener(observable -> redrawView());
+
+        showUnselectedItems.addListener(observable -> redrawView());
     }
 
     public Orientation getOrientation() { return orientation; }
@@ -179,6 +234,7 @@ public class DataFrameView extends Region {
     }
 
     protected void layoutView() {
+        // clear the current window view
         if (dataFrame != null && dataFrame.getColumnCount() > 0) {
             if (axisList.isEmpty()) {
                 titleTextGroup.getChildren().clear();
@@ -186,6 +242,10 @@ public class DataFrameView extends Region {
                     Axis axis = null;
                     if (dataFrame.getColumn(iaxis) instanceof DoubleColumn) {
                         axis = new DoubleAxis(this, dataFrame.getColumn(iaxis), orientation);
+                    } else if (dataFrame.getColumn(iaxis) instanceof TemporalColumn) {
+                        axis = new TemporalAxis(this, dataFrame.getColumn(iaxis), orientation);
+                    } else if (dataFrame.getColumn(iaxis) instanceof CategoricalColumn) {
+                        axis = new CategoricalAxis(this, dataFrame.getColumn(iaxis), orientation);
                     }
 
                     if (axis != null) {
@@ -199,13 +259,26 @@ public class DataFrameView extends Region {
                 }
             }
 
+            if (scatterplotList.isEmpty()) {
+                for (int iaxis = 0; iaxis < axisList.size()-1; iaxis++) {
+                    Axis yAxis = axisList.get(iaxis);
+                    Axis xAxis = axisList.get(iaxis+1);
+                    Scatterplot scatterplot = new Scatterplot(xAxis, yAxis);
+                    scatterplot.pointStrokeOpacityProperty().bind(polylineOpacity);
+                    scatterplot.selectedPointStrokeColorProperty().bind(selectedItemsColor);
+                    scatterplot.unselectedPointStrokeColorProperty().bind(unselectedItemsColor);
+                    scatterplotList.add(scatterplot);
+                    pane.getChildren().add(scatterplot.getGraphicsGroup());
+                }
+            }
+
             plotAreaRectangle.setX(getInsets().getLeft());
             plotAreaRectangle.setY(getInsets().getTop());
             plotAreaRectangle.setWidth(getWidth() - (getInsets().getLeft() + getInsets().getRight()));
             plotAreaRectangle.setHeight(getHeight() - (getInsets().getTop() + getInsets().getBottom()));
 
             if (orientation == Orientation.HORIZONTAL) {
-                double plotHeight = getHeight() - (getInsets().getTop() + getInsets().getBottom());
+//                double plotHeight = getHeight() - (getInsets().getTop() + getInsets().getBottom());
                 double plotWidth;
                 double width;
 
@@ -218,6 +291,11 @@ public class DataFrameView extends Region {
                     width = plotWidth + getInsets().getLeft() + getInsets().getRight();
                 }
 
+                double plotHeight = getHeight() - (getInsets().getTop() + getInsets().getBottom());
+
+                double scatterplotHeight = axisSpacing * .7;
+                scatterplotHeight = scatterplotHeight > (plotHeight * .3) ? (plotHeight * .3) : scatterplotHeight;
+
                 if (plotWidth > 0 && plotHeight > 0) {
                     pane.setPrefSize(width, getHeight());
                     pane.setMinWidth(width);
@@ -229,16 +307,46 @@ public class DataFrameView extends Region {
 
                     if (axisList != null) {
                         titleTextBounds = new BoundingBox(getInsets().getLeft(), getInsets().getTop(), plotWidth,
-                                axisTitleList.get(0).getLayoutBounds().getHeight() + 4);
+                                axisTitleList.get(0).getLayoutBounds().getHeight() + 2);
+                        titleAreaRectangle.setX(titleTextBounds.getMinX());
+                        titleAreaRectangle.setY(titleTextBounds.getMinY());
+                        titleAreaRectangle.setWidth(titleTextBounds.getWidth());
+                        titleAreaRectangle.setHeight(titleTextBounds.getHeight());
+
+                        pcpRegionBounds = new BoundingBox(getInsets().getLeft(),
+                                titleTextBounds.getMaxY() + plotAreaPadding, plotWidth,
+                                plotHeight-(titleTextBounds.getHeight() + scatterplotHeight + 2 * plotAreaPadding));
+                        pcpAreaRectangle.setX(pcpRegionBounds.getMinX());
+                        pcpAreaRectangle.setY(pcpRegionBounds.getMinY());
+                        pcpAreaRectangle.setWidth(pcpRegionBounds.getWidth());
+                        pcpAreaRectangle.setHeight(pcpRegionBounds.getHeight());
+
+                        scatterplotRegionBounds = new BoundingBox(getInsets().getLeft(),
+                                pcpRegionBounds.getMaxY() + plotAreaPadding, plotWidth, scatterplotHeight);
+                        scatterplotAreaRectangle.setX(scatterplotRegionBounds.getMinX());
+                        scatterplotAreaRectangle.setY(scatterplotRegionBounds.getMinY());
+                        scatterplotAreaRectangle.setWidth(scatterplotRegionBounds.getWidth());
+                        scatterplotAreaRectangle.setHeight(scatterplotRegionBounds.getHeight());
 
                         for (int iaxis = 0; iaxis < axisList.size(); iaxis++) {
                             double axisLeft = getInsets().getLeft() + (iaxis * axisSpacing);
                             Axis axis = axisList.get(iaxis);
-                            axis.resize(axisLeft, titleTextBounds.getMaxY(),
-                                    axisSpacing, plotHeight-titleTextBounds.getHeight());
+                            axis.resize(axisLeft, pcpRegionBounds.getMinY(),
+                                    axisSpacing, pcpRegionBounds.getHeight());
+//                            axis.resize(axisLeft, titleTextBounds.getMaxY(),
+//                                    axisSpacing, plotHeight-titleTextBounds.getHeight());
+
                             Text titleText = axisTitleList.get(iaxis);
                             titleText.setX(axisLeft + (axisSpacing / 2.) - (titleText.getLayoutBounds().getWidth() / 2.));
                             titleText.setY(titleTextBounds.getMinY() + (titleTextBounds.getHeight() / 2.));
+                        }
+
+                        for (int i = 0; i < scatterplotList.size(); i++) {
+                            Scatterplot scatterplot = scatterplotList.get(i);
+                            double centerX = (scatterplot.getYAxis().getCenterX() + scatterplot.getXAxis().getCenterX()) / 2.;
+                            double left = centerX - (scatterplotHeight / 2.) - scatterplot.getAxisSize();
+                            scatterplot.layout(left, scatterplotRegionBounds.getMinY(),
+                                    scatterplotHeight, scatterplotHeight);
                         }
                     }
                 }
@@ -256,14 +364,16 @@ public class DataFrameView extends Region {
                     height = plotHeight + getInsets().getLeft() + getInsets().getRight();
                 }
 
+                double scatterplotWidth = axisSpacing * .7;
+                scatterplotWidth = scatterplotWidth > (plotWidth * .3) ? (plotWidth * .3) : scatterplotWidth;
+
+
                 if (plotWidth > 0 && plotHeight > 0) {
                     pane.setPrefSize(getWidth(), height);
                     pane.setMinHeight(height);
 
                     selectedCanvas.setWidth(getWidth());
                     selectedCanvas.setHeight(height);
-//                    selectedCanvas.resize(getWidth(), height);
-//                    unselectedCanvas.resize(getWidth(), height);
 
                     if (axisList != null) {
                         double longestTitle = 0.;
@@ -274,16 +384,54 @@ public class DataFrameView extends Region {
                         }
 
                         titleTextBounds = new BoundingBox(getInsets().getLeft(), getInsets().getTop(),
-                                longestTitle + 4, plotHeight);
+                                longestTitle + 2, plotHeight);
+                        titleAreaRectangle.setX(titleTextBounds.getMinX());
+                        titleAreaRectangle.setY(titleTextBounds.getMinY());
+                        titleAreaRectangle.setWidth(titleTextBounds.getWidth());
+                        titleAreaRectangle.setHeight(titleTextBounds.getHeight());
+
+                        pcpRegionBounds = new BoundingBox(titleTextBounds.getMaxX() + plotAreaPadding, getInsets().getTop(),
+                                plotWidth - (titleTextBounds.getWidth() + scatterplotWidth + (2 * plotAreaPadding)), plotHeight);
+//                        pcpRegionBounds = new BoundingBox(getInsets().getLeft(),
+//                                titleTextBounds.getMaxY() + plotAreaPadding, plotWidth,
+//                                plotHeight-(titleTextBounds.getHeight() + scatterplotHeight + 2 * plotAreaPadding));
+                        pcpAreaRectangle.setX(pcpRegionBounds.getMinX());
+                        pcpAreaRectangle.setY(pcpRegionBounds.getMinY());
+                        pcpAreaRectangle.setWidth(pcpRegionBounds.getWidth());
+                        pcpAreaRectangle.setHeight(pcpRegionBounds.getHeight());
+
+                        scatterplotRegionBounds = new BoundingBox(pcpRegionBounds.getMaxX() + plotAreaPadding,
+                                getInsets().getTop(), scatterplotWidth, plotHeight);
+                        scatterplotAreaRectangle.setX(scatterplotRegionBounds.getMinX());
+                        scatterplotAreaRectangle.setY(scatterplotRegionBounds.getMinY());
+                        scatterplotAreaRectangle.setWidth(scatterplotRegionBounds.getWidth());
+                        scatterplotAreaRectangle.setHeight(scatterplotRegionBounds.getHeight());
 
                         for (int iaxis = 0; iaxis < axisList.size(); iaxis++) {
-                            double axisTop = getInsets().getTop() + (iaxis * axisSpacing);
+                            double axisTop = titleTextBounds.getMinY() + (iaxis * axisSpacing);
+
                             Axis axis = axisList.get(iaxis);
-                            axis.resize(titleTextBounds.getMaxX() + 4, axisTop,
-                                    plotWidth - titleTextBounds.getWidth() - 6, axisSpacing);
+                            axis.resize(pcpRegionBounds.getMinX(), axisTop, pcpRegionBounds.getWidth(), axisSpacing);
+
                             Text axisTitleText = axisTitleList.get(iaxis);
                             axisTitleText.setX(titleTextBounds.getMaxX() - axisTitleText.getLayoutBounds().getWidth());
                             axisTitleText.setY(axis.getCenterY());
+
+//                            double axisTop = getInsets().getTop() + (iaxis * axisSpacing);
+//                            Axis axis = axisList.get(iaxis);
+//                            axis.resize(titleTextBounds.getMaxX() + 4, axisTop,
+//                                    plotWidth - titleTextBounds.getWidth() - 6, axisSpacing);
+//                            Text axisTitleText = axisTitleList.get(iaxis);
+//                            axisTitleText.setX(titleTextBounds.getMaxX() - axisTitleText.getLayoutBounds().getWidth());
+//                            axisTitleText.setY(axis.getCenterY());
+                        }
+
+                        for (int i = 0; i < scatterplotList.size(); i++) {
+                            Scatterplot scatterplot = scatterplotList.get(i);
+                            double centerY = (scatterplot.getYAxis().getCenterY() + scatterplot.getXAxis().getCenterY()) / 2.;
+                            double top = centerY - (scatterplotWidth / 2.) + scatterplot.getAxisSize();
+//                                    centerX - (scatterplotHeight / 2.) - scatterplot.getAxisSize();
+                            scatterplot.layout(scatterplotRegionBounds.getMinX(), top, scatterplotWidth, scatterplotWidth);
                         }
                     }
                 }
@@ -306,12 +454,10 @@ public class DataFrameView extends Region {
         selectedCanvas.getGraphicsContext2D().setLineCap(StrokeLineCap.BUTT);
         selectedCanvas.getGraphicsContext2D().clearRect(0, 0, selectedCanvas.getWidth(), selectedCanvas.getHeight());
         selectedCanvas.getGraphicsContext2D().setLineWidth(polylineStrokeWidth);
-//        selectedCanvas.getGraphicsContext2D().setLineDashes(null);
 
         unselectedCanvas.getGraphicsContext2D().setLineCap(StrokeLineCap.BUTT);
         unselectedCanvas.getGraphicsContext2D().clearRect(0, 0, unselectedCanvas.getWidth(), unselectedCanvas.getHeight());
         unselectedCanvas.getGraphicsContext2D().setLineWidth(polylineStrokeWidth);
-//        unselectedCanvas.getGraphicsContext2D().setLineDashes(null);
 
         if ((isShowingUnselectedItems()) && (unselectedPolylineSet != null) && (!unselectedPolylineSet.isEmpty())) {
             if (unselectedPolylineRendererTimer != null && unselectedPolylineRendererTimer.isRunning()) {
@@ -321,7 +467,7 @@ public class DataFrameView extends Region {
             Color lineColor = new Color(getUnselectedItemsColor().getRed(), getUnselectedItemsColor().getGreen(),
                     getUnselectedItemsColor().getBlue(), getPolylineOpacity());
             unselectedPolylineRendererTimer = new PolylineRendererTimer(unselectedCanvas, unselectedPolylineSet,
-                    axisList, lineColor, 100);
+                    axisList, lineColor, 100, orientation);
             unselectedPolylineRendererTimer.start();
         }
 
@@ -333,16 +479,9 @@ public class DataFrameView extends Region {
             Color lineColor = new Color(getSelectedItemsColor().getRed(), getSelectedItemsColor().getGreen(),
                     getSelectedItemsColor().getBlue(), getPolylineOpacity());
             selectedPolylineRendererTimer = new PolylineRendererTimer(selectedCanvas, selectedPolylineSet,
-                    axisList, lineColor, 100);
+                    axisList, lineColor, 100, orientation);
             selectedPolylineRendererTimer.start();
         }
-//        for (RowPolyline polyline : polylines) {
-//            selectedCanvas.getGraphicsContext2D().setStroke(polyline.getColor());
-//            for (int i = 1; i < polyline.getRow().length; i++) {
-//                selectedCanvas.getGraphicsContext2D().strokeLine(polyline.getXValues()[i-1], polyline.getyValues()[i-1],
-//                        polyline.getXValues()[i], polyline.getyValues()[i]);
-//            }
-//        }
     }
 
     public boolean getFitToWidth() { return fitToWidth.get(); }
@@ -358,28 +497,14 @@ public class DataFrameView extends Region {
     public BooleanProperty fitToHeightProperty() { return fitToHeight; }
 
     protected void clearView() {
+        for (Axis axis : axisList) {
+            pane.getChildren().remove(axis.getGraphicsGroup());
+        }
         axisList.clear();
-        pane.getChildren().clear();
+        axisTitleList.clear();
+        titleTextGroup.getChildren().clear();
+        polylines.clear();
+        selectedPolylineSet.clear();
+        unselectedPolylineSet.clear();
     }
-
-    public Color getBackgroundColor() {
-        return backgroundColor.get();
-    }
-
-    public void setBackgroundColor(Color newBackgroundColor) {
-        this.backgroundColor.set(newBackgroundColor);
-        pane.setBackground(new Background(new BackgroundFill(backgroundColor.get(), new CornerRadii(0), Insets.EMPTY)));
-    }
-
-    public ObjectProperty<Color> backgroundColorProperty() {
-        return backgroundColor;
-    }
-
-    public final double getPolylineOpacity() { return polylineOpacity.get(); }
-
-    public final void setPolylineOpacity(double opacity) {
-        polylineOpacity.set(opacity);
-    }
-
-    public DoubleProperty polylineOpacityProperty() { return polylineOpacity; }
 }

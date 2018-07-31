@@ -93,7 +93,7 @@ public class TableColumnSpecificationDialog {
 
         ArrayList<String> parsePatterns = new ArrayList<>();
         parsePatterns.add("dd.MM.yyy HH:mm:ss");
-        parsePatterns.add("yyyy-MM-ddTHH:mm:ssz");
+        parsePatterns.add("yyyy-MM-dd'T'HH:mm:ss");
 
         TableColumn<TableColumnSpecification, String> parseColumn = new TableColumn<>("DateTime Parse Pattern");
         parseColumn.setMinWidth(180);
