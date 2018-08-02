@@ -1,7 +1,7 @@
 package gov.ornl.pcpview;
 
-import gov.ornl.datatable.ColumnSelectionRange;
-import gov.ornl.datatable.DataModel;
+import gov.ornl.datatable.ColumnSelection;
+import gov.ornl.datatable.DataTable;
 import javafx.event.EventHandler;
 import javafx.geometry.Point2D;
 import javafx.scene.Cursor;
@@ -12,7 +12,6 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Polyline;
 import javafx.scene.shape.Rectangle;
 
-import javax.xml.crypto.Data;
 import java.util.logging.Logger;
 
 public abstract class PCPAxisSelection {
@@ -23,10 +22,10 @@ public abstract class PCPAxisSelection {
     public final static Color DEFAULT_SELECTION_RECTANGLE_FILL_COLOR = new Color(Color.YELLOW.getRed(),
             Color.YELLOW.getGreen(), Color.YELLOW.getBlue(), 0.3);
 
-    private DataModel dataModel;
+    private DataTable dataModel;
     private PCPAxis pcpAxis;
     private Pane pane;
-    private ColumnSelectionRange selectionRange;
+    private ColumnSelection selectionRange;
 
     private Rectangle rectangle;
     private Polyline topCrossbar;
@@ -38,7 +37,7 @@ public abstract class PCPAxisSelection {
     protected Point2D dragEndPoint;
     protected boolean dragging;
 
-    public PCPAxisSelection(PCPAxis pcpAxis, ColumnSelectionRange selectionRange, Pane pane, DataModel dataModel) {
+    public PCPAxisSelection(PCPAxis pcpAxis, ColumnSelection selectionRange, Pane pane, DataTable dataModel) {
         this.pcpAxis = pcpAxis;
         this.selectionRange = selectionRange;
         this.pane = pane;
@@ -47,8 +46,8 @@ public abstract class PCPAxisSelection {
         rectangle = null;
     }
 
-    public PCPAxisSelection(PCPAxis pcpAxis, ColumnSelectionRange selectionRange, double minValueY, double maxValueY,
-                            Pane pane, DataModel dataModel) {
+    public PCPAxisSelection(PCPAxis pcpAxis, ColumnSelection selectionRange, double minValueY, double maxValueY,
+                            Pane pane, DataTable dataModel) {
         this(pcpAxis, selectionRange, pane, dataModel);
 //        this.pcpAxis = pcpAxis;
 //        this.selectionRange = selectionRange;
@@ -268,7 +267,7 @@ public abstract class PCPAxisSelection {
 
     public Rectangle getRectangle() { return rectangle; }
 
-    public ColumnSelectionRange getColumnSelectionRange() {
+    public ColumnSelection getColumnSelectionRange() {
         return selectionRange;
     }
 
@@ -276,7 +275,7 @@ public abstract class PCPAxisSelection {
 
     public Pane getPane() { return pane; }
 
-    public DataModel getDataModel() {
+    public DataTable getDataModel() {
         return dataModel;
     }
 }

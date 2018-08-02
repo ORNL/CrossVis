@@ -4,7 +4,6 @@ import gov.ornl.util.GraphicsUtil;
 import gov.ornl.datatable.*;
 import javafx.geometry.Point2D;
 import javafx.scene.Group;
-import javafx.scene.effect.DropShadow;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
@@ -51,7 +50,7 @@ public class PCPDoubleAxis extends PCPAxis {
 
     private PCPDoubleAxisSelection draggingSelection;
 
-    public PCPDoubleAxis(PCPView pcpView, Column column, DataModel dataModel, Pane pane) {
+    public PCPDoubleAxis(PCPView pcpView, Column column, DataTable dataModel, Pane pane) {
         super(pcpView, column, dataModel, pane);
 
         overallDispersionRectangle = new Rectangle();

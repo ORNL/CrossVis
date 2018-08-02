@@ -1,6 +1,6 @@
 package gov.ornl.pcpview;
 
-import gov.ornl.datatable.DataModel;
+import gov.ornl.datatable.DataTable;
 import gov.ornl.datatable.DoubleColumn;
 import gov.ornl.datatable.DoubleColumnSelectionRange;
 import gov.ornl.util.GraphicsUtil;
@@ -29,7 +29,7 @@ public class PCPDoubleAxisSelection extends PCPAxisSelection {
     private DoubleProperty draggingMinValue;
     private DoubleProperty draggingMaxValue;
 
-    public PCPDoubleAxisSelection(PCPAxis pcpAxis, DoubleColumnSelectionRange selectionRange, double minValueY, double maxValueY, Pane pane, DataModel dataModel) {
+    public PCPDoubleAxisSelection(PCPAxis pcpAxis, DoubleColumnSelectionRange selectionRange, double minValueY, double maxValueY, Pane pane, DataTable dataModel) {
         super(pcpAxis, selectionRange, minValueY, maxValueY, pane, dataModel);
 
         minText = new Text(String.valueOf(selectionRange.getMinValue()));

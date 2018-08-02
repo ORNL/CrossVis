@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.logging.Logger;
 
-public class PCPView extends Region implements DataModelListener {
+public class PCPView extends Region implements DataTableListener {
     public final static Color DEFAULT_LABEL_COLOR = Color.BLACK;
     public final static Color DEFAULT_OVERALL_SUMMARY_FILL_COLOR = new Color(Color.LIGHTSTEELBLUE.getRed(), Color.LIGHTSTEELBLUE.getGreen(), Color.LIGHTSTEELBLUE.getBlue(), 0.6d);
     public final static Color DEFAULT_QUERY_SUMMARY_FILL_COLOR = new Color(Color.STEELBLUE.getRed(), Color.STEELBLUE.getGreen(), Color.STEELBLUE.getBlue(), 0.6d);
@@ -47,7 +47,7 @@ public class PCPView extends Region implements DataModelListener {
     private BooleanProperty showUnselectedItems;
     private Pane pane;
     private double axisSpacing = 40d;
-    private DataModel dataModel;
+    private DataTable dataModel;
     private ArrayList<PCPAxis> axisList;
     private ArrayList<PCPTuple> tupleList;
     private HashSet<PCPTuple> unselectedTupleSet;
@@ -107,7 +107,6 @@ public class PCPView extends Region implements DataModelListener {
 
         displayMode.addListener(((observable, oldValue, newValue) -> {
             if ((oldValue == DISPLAY_MODE.PCP_LINES) || (oldValue == DISPLAY_MODE.PCP_BINS) || (oldValue == DISPLAY_MODE.SUMMARY)) {
-//                lineGC.clearRect(0, 0, getWidth(), getHeight());
                 selectedCanvas.getGraphicsContext2D().clearRect(0, 0, getWidth(), getHeight());
                 unselectedCanvas.getGraphicsContext2D().clearRect(0, 0, getWidth(), getHeight());
 
@@ -413,7 +412,7 @@ public class PCPView extends Region implements DataModelListener {
         // clear all axis selection graphics
 //        for (PCPAxis pcpAxis : axisList) {
 //            if (!pcpAxis.getAxisSelectionList().isEmpty()) {
-//                for (PCPAxisSelection pcpAxisSelection : pcpAxis.getAxisSelectionList()) {
+//                for (AxisSelection pcpAxisSelection : pcpAxis.getAxisSelectionList()) {
 //                    pane.getChildren().remove(pcpAxisSelection.getGraphicsGroup());
 //                }
 //                pcpAxis.getAxisSelectionList().clear();
@@ -514,7 +513,7 @@ public class PCPView extends Region implements DataModelListener {
 //        lineCanvas.setCacheHint(CacheHint.QUALITY);
     }
 
-    public void setDataModel(DataModel dataModel) {
+    public void setDataModel(DataTable dataModel) {
         this.dataModel = dataModel;
         dataModel.addDataModelListener(this);
         resizeView();
@@ -733,7 +732,7 @@ public class PCPView extends Region implements DataModelListener {
     }
 
     @Override
-    public void dataModelReset(DataModel dataModel) {
+    public void dataModelReset(DataTable dataModel) {
         removeAllAxisSelectionGraphics();
         selectedCanvas.getGraphicsContext2D().clearRect(0, 0, getWidth(), getHeight());
         unselectedCanvas.getGraphicsContext2D().clearRect(0, 0, getWidth(), getHeight());
@@ -749,12 +748,12 @@ public class PCPView extends Region implements DataModelListener {
     }
 
     @Override
-    public void dataModelStatisticsChanged(DataModel dataModel) {
+    public void dataModelStatisticsChanged(DataTable dataModel) {
         handleQueryChange();
     }
 
     @Override
-    public void dataModelNumHistogramBinsChanged(DataModel dataModel) {
+    public void dataModelNumHistogramBinsChanged(DataTable dataModel) {
         if (getDisplayMode() == DISPLAY_MODE.HISTOGRAM) {
             double left = getInsets().getLeft() + (axisSpacing / 2.);
             double top = getInsets().getTop();
@@ -778,32 +777,32 @@ public class PCPView extends Region implements DataModelListener {
     }
 
     @Override
-    public void dataModelQueryCleared(DataModel dataModel) {
+    public void dataModelQueryCleared(DataTable dataModel) {
         handleQueryChange();
     }
 
     @Override
-    public void dataModelQueryColumnCleared(DataModel dataModel, Column column) {
+    public void dataModelQueryColumnCleared(DataTable dataModel, Column column) {
         handleQueryChange();
     }
 
     @Override
-    public void dataModelColumnSelectionAdded(DataModel dataModel, ColumnSelectionRange columnSelectionRange) {
+    public void dataModelColumnSelectionAdded(DataTable dataModel, ColumnSelection columnSelectionRange) {
         handleQueryChange();
     }
 
     @Override
-    public void dataModelColumnSelectionRemoved(DataModel dataModel, ColumnSelectionRange columnSelectionRange) {
+    public void dataModelColumnSelectionRemoved(DataTable dataModel, ColumnSelection columnSelectionRange) {
         handleQueryChange();
     }
 
     @Override
-    public void dataModelColumnSelectionChanged(DataModel dataModel, ColumnSelectionRange columnSelectionRange) {
+    public void dataModelColumnSelectionChanged(DataTable dataModel, ColumnSelection columnSelectionRange) {
         handleQueryChange();
     }
 
     @Override
-    public void dataModelHighlightedColumnChanged(DataModel dataModel, Column oldHighlightedColumn, Column newHighlightedColumn) {
+    public void dataModelHighlightedColumnChanged(DataTable dataModel, Column oldHighlightedColumn, Column newHighlightedColumn) {
         if (dataModel.getHighlightedColumn() == null) {
             for (PCPAxis pcpAxis : axisList) {
                 pcpAxis.setHighlighted(false);
@@ -820,12 +819,12 @@ public class PCPView extends Region implements DataModelListener {
     }
 
     @Override
-    public void dataModelTuplesAdded(DataModel dataModel, ArrayList<Tuple> newTuples) {
+    public void dataModelTuplesAdded(DataTable dataModel, ArrayList<Tuple> newTuples) {
         reinitializeLayout();
     }
 
     @Override
-    public void dataModelTuplesRemoved(DataModel dataModel, int numTuplesRemoved) {
+    public void dataModelTuplesRemoved(DataTable dataModel, int numTuplesRemoved) {
         // clear
         for (PCPAxis pcpAxis : axisList) {
             for (PCPAxisSelection pcpAxisSelection : pcpAxis.getAxisSelectionList()) {
@@ -838,7 +837,7 @@ public class PCPView extends Region implements DataModelListener {
     }
 
     @Override
-    public void dataModelColumnDisabled(DataModel dataModel, Column disabledColumn) {
+    public void dataModelColumnDisabled(DataTable dataModel, Column disabledColumn) {
         for (int iaxis = 0; iaxis < axisList.size(); iaxis++) {
             PCPAxis pcpAxis = axisList.get(iaxis);
             if (pcpAxis.getColumn() == disabledColumn) {
@@ -853,7 +852,7 @@ public class PCPView extends Region implements DataModelListener {
 
                 // remove axis selection graphics
                 if (!pcpAxis.getAxisSelectionList().isEmpty()) {
-                    for (PCPAxisSelection axisSelection : pcpAxis.getAxisSelectionList()) {
+                    for (AxisSelection axisSelection : pcpAxis.getAxisSelectionList()) {
                         pane.getChildren().remove(axisSelection.getGraphicsGroup());
                     }
                 }
@@ -883,12 +882,12 @@ public class PCPView extends Region implements DataModelListener {
     }
 
     @Override
-    public void dataModelColumnsDisabled(DataModel dataModel, ArrayList<Column> disabledColumns) {
+    public void dataModelColumnsDisabled(DataTable dataModel, ArrayList<Column> disabledColumns) {
 
     }
 
     @Override
-    public void dataModelColumnEnabled(DataModel dataModel, Column enabledColumn) {
+    public void dataModelColumnEnabled(DataTable dataModel, Column enabledColumn) {
 // add axis lines to the pane
         addAxis(enabledColumn);
 
@@ -913,12 +912,12 @@ public class PCPView extends Region implements DataModelListener {
     }
 
     @Override
-    public void dataModelColumnOrderChanged(DataModel dataModel) {
+    public void dataModelColumnOrderChanged(DataTable dataModel) {
         reinitializeLayout();
     }
 
     @Override
-    public void dataModelColumnNameChanged(DataModel dataModel, Column column) {
+    public void dataModelColumnNameChanged(DataTable dataModel, Column column) {
 
     }
 

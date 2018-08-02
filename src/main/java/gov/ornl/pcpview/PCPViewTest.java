@@ -1,6 +1,6 @@
 package gov.ornl.pcpview;
 
-import gov.ornl.datatable.DataModel;
+import gov.ornl.datatable.DataTable;
 import gov.ornl.datatable.IOUtilities;
 import javafx.application.Application;
 import javafx.collections.FXCollections;
@@ -18,7 +18,6 @@ import javafx.stage.Stage;
 
 import java.io.File;
 import java.io.IOException;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.logging.Logger;
 
@@ -29,7 +28,7 @@ public class PCPViewTest extends Application {
     public static final Logger log = Logger.getLogger(PCPViewTest.class.getName());
 
     private PCPView pcpView;
-    private DataModel dataModel;
+    private DataTable dataModel;
     @Override
     public void init() {
 
@@ -121,7 +120,7 @@ public class PCPViewTest extends Application {
         stage.setScene(scene);
         stage.show();
 
-        dataModel = new DataModel();
+        dataModel = new DataTable();
         pcpView.setDataModel(dataModel);
 
 //        try {

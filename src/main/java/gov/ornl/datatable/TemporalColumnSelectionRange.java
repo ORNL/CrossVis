@@ -7,7 +7,7 @@ import javafx.collections.ObservableList;
 
 import java.time.Instant;
 
-public class TemporalColumnSelectionRange extends ColumnSelectionRange {
+public class TemporalColumnSelectionRange extends ColumnSelection {
     private ListProperty<Instant> rangeInstants;
 
     public TemporalColumnSelectionRange(TemporalColumn column, Instant startInstant, Instant endInstant) {

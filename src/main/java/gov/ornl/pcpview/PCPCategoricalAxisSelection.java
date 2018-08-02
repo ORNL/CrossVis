@@ -1,14 +1,13 @@
 package gov.ornl.pcpview;
 
 import gov.ornl.datatable.CategoricalColumnSelection;
-import gov.ornl.datatable.CategoricalColumnSummaryStats;
-import gov.ornl.datatable.DataModel;
+import gov.ornl.datatable.DataTable;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 
 public class PCPCategoricalAxisSelection extends PCPAxisSelection {
 
-    public PCPCategoricalAxisSelection(PCPAxis pcpAxis, CategoricalColumnSelection selection, Pane pane, DataModel dataModel) {
+    public PCPCategoricalAxisSelection(PCPAxis pcpAxis, CategoricalColumnSelection selection, Pane pane, DataTable dataModel) {
         super(pcpAxis, selection, pane, dataModel);
         registerListeners();
     }

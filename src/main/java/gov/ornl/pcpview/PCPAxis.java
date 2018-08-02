@@ -1,7 +1,7 @@
 package gov.ornl.pcpview;
 
 import gov.ornl.datatable.Column;
-import gov.ornl.datatable.DataModel;
+import gov.ornl.datatable.DataTable;
 import gov.ornl.datatable.DoubleColumn;
 import gov.ornl.datatable.DoubleColumnSummaryStats;
 import gov.ornl.util.GraphicsUtil;
@@ -12,14 +12,12 @@ import javafx.beans.property.SimpleDoubleProperty;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Point2D;
-import javafx.geometry.Pos;
 import javafx.geometry.VPos;
 import javafx.scene.Group;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.Tooltip;
 import javafx.scene.effect.DropShadow;
-import javafx.scene.effect.Glow;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseEvent;
@@ -30,7 +28,6 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
-import javafx.scene.text.TextAlignment;
 
 import java.util.ArrayList;
 import java.util.logging.Logger;
@@ -58,7 +55,7 @@ public abstract class PCPAxis {
     public final static double DEFAULT_CORRELATION_INDICATOR_WIDTH = 4.;
     public final static double DEFAULT_CORRELATION_INDICATOR_PADDING = 1.;
 
-    protected DataModel dataModel;
+    protected DataTable dataModel;
     protected Column column;
 
     protected double centerX;
@@ -136,7 +133,7 @@ public abstract class PCPAxis {
     private Rectangle draggingAxisBar;
     private Text draggingNameText;
 
-    public PCPAxis (PCPView pcpView, Column column, DataModel dataModel, Pane pane) {
+    public PCPAxis (PCPView pcpView, Column column, DataTable dataModel, Pane pane) {
         this.pcpView = pcpView;
         this.column = column;
         this.dataModel = dataModel;
@@ -342,7 +339,7 @@ public abstract class PCPAxis {
             public void handle(MouseEvent event) {
                 if (event.isSecondaryButtonDown()) {
                     final ContextMenu contextMenu = new ContextMenu();
-                    MenuItem hideMenuItem = new MenuItem("Hide Axis");
+                    MenuItem hideMenuItem = new MenuItem("Hide ParallelAxis");
                     MenuItem closeMenuItem = new MenuItem("Close Popup");
                     contextMenu.getItems().addAll(hideMenuItem, closeMenuItem);
                     hideMenuItem.setOnAction(new EventHandler<ActionEvent>() {

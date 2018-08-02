@@ -1,6 +1,6 @@
-package gov.ornl.scout.dataframeview;
+package gov.ornl.datatableview;
 
-import gov.ornl.scout.dataframe.*;
+import gov.ornl.datatable.*;
 import javafx.beans.property.*;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Insets;
@@ -20,12 +20,10 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.logging.Logger;
 
-public class DataFrameView extends Region {
-    private final Logger log = Logger.getLogger(DataFrameView.class.getName());
+public class DataTableView extends Region implements DataTableListener {
+    private final Logger log = Logger.getLogger(DataTableView.class.getName());
 
-    private DataFrame dataFrame;
-    private DataFrame selectedDataFrame;
-    private DataFrame unselectedDataFrame;
+    private DataTable dataTable;
 
     private Pane pane;
     private Group titleTextGroup;
@@ -42,11 +40,11 @@ public class DataFrameView extends Region {
 
     private ArrayList<Scatterplot> scatterplotList = new ArrayList<>();
 
-    private ObjectProperty<Color> unselectedItemsColor = new SimpleObjectProperty<>(DataFrameViewDefaultSettings.DEFAULT_UNSELECTED_ITEMS_COLOR);
-    private ObjectProperty<Color> selectedItemsColor = new SimpleObjectProperty<>(DataFrameViewDefaultSettings.DEFAULT_SELECTED_ITEMS_COLOR);
-    private ObjectProperty<Color> titleTextColor = new SimpleObjectProperty<>(DataFrameViewDefaultSettings.DEFAULT_LABEL_COLOR);
-    private ObjectProperty<Color> backgroundColor = new SimpleObjectProperty<>(DataFrameViewDefaultSettings.DEFAULT_BACKGROUND_COLOR);
-    private DoubleProperty polylineOpacity = new SimpleDoubleProperty(DataFrameViewDefaultSettings.DEFAULT_LINE_OPACITY);
+    private ObjectProperty<Color> unselectedItemsColor = new SimpleObjectProperty<>(DataTableViewDefaultSettings.DEFAULT_UNSELECTED_ITEMS_COLOR);
+    private ObjectProperty<Color> selectedItemsColor = new SimpleObjectProperty<>(DataTableViewDefaultSettings.DEFAULT_SELECTED_ITEMS_COLOR);
+    private ObjectProperty<Color> titleTextColor = new SimpleObjectProperty<>(DataTableViewDefaultSettings.DEFAULT_LABEL_COLOR);
+    private ObjectProperty<Color> backgroundColor = new SimpleObjectProperty<>(DataTableViewDefaultSettings.DEFAULT_BACKGROUND_COLOR);
+    private DoubleProperty polylineOpacity = new SimpleDoubleProperty(DataTableViewDefaultSettings.DEFAULT_LINE_OPACITY);
     private BooleanProperty showSelectedItems = new SimpleBooleanProperty(true);
     private BooleanProperty showUnselectedItems = new SimpleBooleanProperty(true);
     private BooleanProperty fitToWidth = new SimpleBooleanProperty(true);
@@ -62,17 +60,23 @@ public class DataFrameView extends Region {
     private Rectangle scatterplotAreaRectangle = new Rectangle();
     private Rectangle titleAreaRectangle = new Rectangle();
 
-    private ArrayList<RowPolyline> polylines = new ArrayList<>();
-    private HashSet<RowPolyline> selectedPolylineSet = new HashSet<>();
-    private HashSet<RowPolyline> unselectedPolylineSet = new HashSet<>();
+    private ArrayList<TuplePolyline> tuplePolylines = new ArrayList<>();
+    private HashSet<TuplePolyline> selectedPolylineSet = new HashSet<>();
+    private HashSet<TuplePolyline> unselectedPolylineSet = new HashSet<>();
 
     private PolylineRendererTimer unselectedPolylineRendererTimer;
     private PolylineRendererTimer selectedPolylineRendererTimer;
 
-    public DataFrameView(Orientation orientation) {
+    public DataTableView(Orientation orientation) {
         this.orientation = orientation;
         initialize();
         registerListeners();
+    }
+
+    public void setDataTable(DataTable dataTable) {
+        this.dataTable = dataTable;
+        dataTable.addDataModelListener(this);
+        initView();
     }
 
     public Color getBackgroundColor() {
@@ -120,34 +124,26 @@ public class DataFrameView extends Region {
 
     public BooleanProperty showUnselectedItemsProperty() { return showUnselectedItems; }
 
-    public DataFrame getDataFrame() {
-        return dataFrame;
-    }
-
-    public void setDataFrame(DataFrame dataFrame) {
-        // clear everything
-        if (this.dataFrame != null) {
-            clearView();
-        }
-
-        this.dataFrame = dataFrame;
-
-        polylines.clear();
-        for (int irow = 0; irow < dataFrame.getRowCount(); irow++) {
-            RowPolyline polyline = new RowPolyline(dataFrame.getRow(irow));
-            polylines.add(polyline);
-        }
-
-        fillPolylineSets();
-        layoutView();
+    public DataTable getDataTable() {
+        return dataTable;
     }
 
     private void fillPolylineSets() {
         unselectedPolylineSet.clear();
         selectedPolylineSet.clear();
 
-        if (polylines != null && !polylines.isEmpty()) {
-            selectedPolylineSet.addAll(polylines);
+        if (tuplePolylines != null && !tuplePolylines.isEmpty()) {
+            if (dataTable.getActiveQuery().hasColumnSelections()) {
+                for (TuplePolyline tuplePolyline : tuplePolylines) {
+                    if (tuplePolyline.getTuple().getQueryFlag()) {
+                        selectedPolylineSet.add(tuplePolyline);
+                    } else {
+                        unselectedPolylineSet.add(tuplePolyline);
+                    }
+                }
+            } else {
+                selectedPolylineSet.addAll(tuplePolylines);
+            }
         }
     }
 
@@ -177,8 +173,8 @@ public class DataFrameView extends Region {
     }
 
     private void registerListeners() {
-        widthProperty().addListener(observable -> layoutView());
-        heightProperty().addListener(observable -> layoutView());
+        widthProperty().addListener(observable -> resizeView());
+        heightProperty().addListener(observable -> resizeView());
 
         backgroundColor.addListener(observable -> {
             pane.setBackground(new Background(new BackgroundFill(backgroundColor.get(), new CornerRadii(0), Insets.EMPTY)));
@@ -211,7 +207,7 @@ public class DataFrameView extends Region {
                 axis.setOrientation(this.orientation);
             }
 
-            layoutView();
+            resizeView();
         }
     }
 
@@ -219,58 +215,105 @@ public class DataFrameView extends Region {
 
     public void setAxisSpacing(double axisSpacing) {
         this.axisSpacing = axisSpacing;
-        layoutView();
+        resizeView();
     }
 
     private Text createTitleText(Column column) {
-        Text titleText = new Text(column.getTitle());
+        Text titleText = new Text(column.getName());
         Tooltip tooltip = new Tooltip();
-        tooltip.textProperty().bindBidirectional(column.titleProperty());
+        tooltip.textProperty().bindBidirectional(column.nameProperty());
         Tooltip.install(titleText, tooltip);
-        titleText.setFont(new Font(DataFrameViewDefaultSettings.DEFAULT_COLUMN_TITLE_TEXT_SIZE));
+        titleText.setFont(new Font(DataTableViewDefaultSettings.DEFAULT_COLUMN_TITLE_TEXT_SIZE));
         titleText.setSmooth(true);
         titleText.setFill(titleTextColor.get());
         return titleText;
     }
 
-    protected void layoutView() {
-        // clear the current window view
-        if (dataFrame != null && dataFrame.getColumnCount() > 0) {
-            if (axisList.isEmpty()) {
-                titleTextGroup.getChildren().clear();
-                for (int iaxis = 0; iaxis < dataFrame.getColumnCount(); iaxis++) {
-                    Axis axis = null;
-                    if (dataFrame.getColumn(iaxis) instanceof DoubleColumn) {
-                        axis = new DoubleAxis(this, dataFrame.getColumn(iaxis), orientation);
-                    } else if (dataFrame.getColumn(iaxis) instanceof TemporalColumn) {
-                        axis = new TemporalAxis(this, dataFrame.getColumn(iaxis), orientation);
-                    } else if (dataFrame.getColumn(iaxis) instanceof CategoricalColumn) {
-                        axis = new CategoricalAxis(this, dataFrame.getColumn(iaxis), orientation);
-                    }
+    private void initView() {
+        if (axisList.isEmpty()) {
+            titleTextGroup.getChildren().clear();
+            for (int iaxis = 0; iaxis < dataTable.getColumnCount(); iaxis++) {
+                Axis axis = null;
+                if (dataTable.getColumn(iaxis) instanceof DoubleColumn) {
+                    axis = new DoubleAxis(this, dataTable.getColumn(iaxis), orientation);
+                } else if (dataTable.getColumn(iaxis) instanceof TemporalColumn) {
+                    axis = new TemporalAxis(this, dataTable.getColumn(iaxis), orientation);
+                } else if (dataTable.getColumn(iaxis) instanceof CategoricalColumn) {
+                    axis = new CategoricalAxis(this, dataTable.getColumn(iaxis), orientation);
+                }
 
-                    if (axis != null) {
-                        Text axisTitleText = createTitleText(dataFrame.getColumn(iaxis));
-                        axisTitleText.setTextOrigin(VPos.CENTER);
-                        titleTextGroup.getChildren().add(axisTitleText);
-                        pane.getChildren().add(axis.getGraphicsGroup());
-                        axisList.add(axis);
-                        axisTitleList.add(axisTitleText);
-                    }
+                if (axis != null) {
+                    Text axisTitleText = createTitleText(dataTable.getColumn(iaxis));
+                    axisTitleText.setTextOrigin(VPos.CENTER);
+                    titleTextGroup.getChildren().add(axisTitleText);
+                    pane.getChildren().add(axis.getGraphicsGroup());
+                    axisList.add(axis);
+                    axisTitleList.add(axisTitleText);
                 }
             }
+        }
 
-            if (scatterplotList.isEmpty()) {
-                for (int iaxis = 0; iaxis < axisList.size()-1; iaxis++) {
-                    Axis yAxis = axisList.get(iaxis);
-                    Axis xAxis = axisList.get(iaxis+1);
-                    Scatterplot scatterplot = new Scatterplot(xAxis, yAxis);
-                    scatterplot.pointStrokeOpacityProperty().bind(polylineOpacity);
-                    scatterplot.selectedPointStrokeColorProperty().bind(selectedItemsColor);
-                    scatterplot.unselectedPointStrokeColorProperty().bind(unselectedItemsColor);
-                    scatterplotList.add(scatterplot);
-                    pane.getChildren().add(scatterplot.getGraphicsGroup());
-                }
+        tuplePolylines = new ArrayList<>();
+        for (Tuple tuple : dataTable.getTuples()) {
+            TuplePolyline tuplePolyline = new TuplePolyline(tuple);
+            tuplePolylines.add(tuplePolyline);
+        }
+
+        fillPolylineSets();
+
+        if (scatterplotList.isEmpty()) {
+            for (int iaxis = 0; iaxis < axisList.size() - 1; iaxis++) {
+                Axis yAxis = axisList.get(iaxis);
+                Axis xAxis = axisList.get(iaxis + 1);
+                Scatterplot scatterplot = new Scatterplot(xAxis, yAxis);
+                scatterplot.pointStrokeOpacityProperty().bind(polylineOpacity);
+                scatterplot.selectedPointStrokeColorProperty().bind(selectedItemsColor);
+                scatterplot.unselectedPointStrokeColorProperty().bind(unselectedItemsColor);
+                scatterplotList.add(scatterplot);
+                pane.getChildren().add(scatterplot.getGraphicsGroup());
             }
+        }
+
+        resizeView();
+    }
+
+    protected void resizeView() {
+        if (dataTable != null && dataTable.getColumnCount() > 0) {
+//            if (axisList.isEmpty()) {
+//                titleTextGroup.getChildren().clear();
+//                for (int iaxis = 0; iaxis < dataTable.getColumnCount(); iaxis++) {
+//                    Axis axis = null;
+//                    if (dataTable.getColumn(iaxis) instanceof DoubleColumn) {
+//                        axis = new DoubleAxis(this, dataTable.getColumn(iaxis), orientation);
+//                    } else if (dataTable.getColumn(iaxis) instanceof TemporalColumn) {
+//                        axis = new TemporalAxis(this, dataTable.getColumn(iaxis), orientation);
+//                    } else if (dataTable.getColumn(iaxis) instanceof CategoricalColumn) {
+//                        axis = new CategoricalAxis(this, dataTable.getColumn(iaxis), orientation);
+//                    }
+//
+//                    if (axis != null) {
+//                        Text axisTitleText = createTitleText(dataTable.getColumn(iaxis));
+//                        axisTitleText.setTextOrigin(VPos.CENTER);
+//                        titleTextGroup.getChildren().add(axisTitleText);
+//                        pane.getChildren().add(axis.getGraphicsGroup());
+//                        axisList.add(axis);
+//                        axisTitleList.add(axisTitleText);
+//                    }
+//                }
+//            }
+//
+//            if (scatterplotList.isEmpty()) {
+//                for (int iaxis = 0; iaxis < axisList.size()-1; iaxis++) {
+//                    Axis yAxis = axisList.get(iaxis);
+//                    Axis xAxis = axisList.get(iaxis+1);
+//                    Scatterplot scatterplot = new Scatterplot(xAxis, yAxis);
+//                    scatterplot.pointStrokeOpacityProperty().bind(polylineOpacity);
+//                    scatterplot.selectedPointStrokeColorProperty().bind(selectedItemsColor);
+//                    scatterplot.unselectedPointStrokeColorProperty().bind(unselectedItemsColor);
+//                    scatterplotList.add(scatterplot);
+//                    pane.getChildren().add(scatterplot.getGraphicsGroup());
+//                }
+//            }
 
             plotAreaRectangle.setX(getInsets().getLeft());
             plotAreaRectangle.setY(getInsets().getTop());
@@ -293,13 +336,21 @@ public class DataFrameView extends Region {
 
                 double plotHeight = getHeight() - (getInsets().getTop() + getInsets().getBottom());
 
-                double scatterplotHeight = axisSpacing * .7;
-                scatterplotHeight = scatterplotHeight > (plotHeight * .3) ? (plotHeight * .3) : scatterplotHeight;
+                double pcpHeight = plotHeight * .7;
+                double scatterplotSize = plotHeight - pcpHeight;
+
+                if (scatterplotSize > (axisSpacing * .8)) {
+                    scatterplotSize = axisSpacing * .8;
+                    pcpHeight = plotHeight - scatterplotSize;
+                }
+//                double scatterplotHeight = axisSpacing * .7;
+//                scatterplotHeight = scatterplotHeight > (plotHeight * .3) ? (plotHeight * .3) : scatterplotHeight;
 
                 if (plotWidth > 0 && plotHeight > 0) {
                     pane.setPrefSize(width, getHeight());
                     pane.setMinWidth(width);
 
+                    // TODO: Constrain to size of parallel axis plot not full window
                     selectedCanvas.setWidth(width);
                     selectedCanvas.setHeight(getHeight());
                     unselectedCanvas.setWidth(width);
@@ -315,14 +366,14 @@ public class DataFrameView extends Region {
 
                         pcpRegionBounds = new BoundingBox(getInsets().getLeft(),
                                 titleTextBounds.getMaxY() + plotAreaPadding, plotWidth,
-                                plotHeight-(titleTextBounds.getHeight() + scatterplotHeight + 2 * plotAreaPadding));
+                                plotHeight-(titleTextBounds.getHeight() + scatterplotSize + 2 * plotAreaPadding));
                         pcpAreaRectangle.setX(pcpRegionBounds.getMinX());
                         pcpAreaRectangle.setY(pcpRegionBounds.getMinY());
                         pcpAreaRectangle.setWidth(pcpRegionBounds.getWidth());
                         pcpAreaRectangle.setHeight(pcpRegionBounds.getHeight());
 
                         scatterplotRegionBounds = new BoundingBox(getInsets().getLeft(),
-                                pcpRegionBounds.getMaxY() + plotAreaPadding, plotWidth, scatterplotHeight);
+                                pcpRegionBounds.getMaxY() + plotAreaPadding, plotWidth, scatterplotSize);
                         scatterplotAreaRectangle.setX(scatterplotRegionBounds.getMinX());
                         scatterplotAreaRectangle.setY(scatterplotRegionBounds.getMinY());
                         scatterplotAreaRectangle.setWidth(scatterplotRegionBounds.getWidth());
@@ -344,9 +395,9 @@ public class DataFrameView extends Region {
                         for (int i = 0; i < scatterplotList.size(); i++) {
                             Scatterplot scatterplot = scatterplotList.get(i);
                             double centerX = (scatterplot.getYAxis().getCenterX() + scatterplot.getXAxis().getCenterX()) / 2.;
-                            double left = centerX - (scatterplotHeight / 2.) - scatterplot.getAxisSize();
+                            double left = centerX - (scatterplotSize / 2.) - scatterplot.getAxisSize();
                             scatterplot.layout(left, scatterplotRegionBounds.getMinY(),
-                                    scatterplotHeight, scatterplotHeight);
+                                    scatterplotSize, scatterplotSize);
                         }
                     }
                 }
@@ -364,8 +415,16 @@ public class DataFrameView extends Region {
                     height = plotHeight + getInsets().getLeft() + getInsets().getRight();
                 }
 
-                double scatterplotWidth = axisSpacing * .7;
-                scatterplotWidth = scatterplotWidth > (plotWidth * .3) ? (plotWidth * .3) : scatterplotWidth;
+                double pcpHeight = plotHeight * .7;
+                double scatterplotSize = plotHeight - pcpHeight;
+
+                if (scatterplotSize > (axisSpacing * .8)) {
+                    scatterplotSize = axisSpacing * .8;
+                    pcpHeight = plotHeight - scatterplotSize;
+                }
+
+//                double scatterplotWidth = axisSpacing * .7;
+//                scatterplotWidth = scatterplotWidth > (plotWidth * .3) ? (plotWidth * .3) : scatterplotWidth;
 
 
                 if (plotWidth > 0 && plotHeight > 0) {
@@ -391,7 +450,7 @@ public class DataFrameView extends Region {
                         titleAreaRectangle.setHeight(titleTextBounds.getHeight());
 
                         pcpRegionBounds = new BoundingBox(titleTextBounds.getMaxX() + plotAreaPadding, getInsets().getTop(),
-                                plotWidth - (titleTextBounds.getWidth() + scatterplotWidth + (2 * plotAreaPadding)), plotHeight);
+                                plotWidth - (titleTextBounds.getWidth() + scatterplotSize + (2 * plotAreaPadding)), plotHeight);
 //                        pcpRegionBounds = new BoundingBox(getInsets().getLeft(),
 //                                titleTextBounds.getMaxY() + plotAreaPadding, plotWidth,
 //                                plotHeight-(titleTextBounds.getHeight() + scatterplotHeight + 2 * plotAreaPadding));
@@ -401,7 +460,7 @@ public class DataFrameView extends Region {
                         pcpAreaRectangle.setHeight(pcpRegionBounds.getHeight());
 
                         scatterplotRegionBounds = new BoundingBox(pcpRegionBounds.getMaxX() + plotAreaPadding,
-                                getInsets().getTop(), scatterplotWidth, plotHeight);
+                                getInsets().getTop(), scatterplotSize, plotHeight);
                         scatterplotAreaRectangle.setX(scatterplotRegionBounds.getMinX());
                         scatterplotAreaRectangle.setY(scatterplotRegionBounds.getMinY());
                         scatterplotAreaRectangle.setWidth(scatterplotRegionBounds.getWidth());
@@ -429,17 +488,17 @@ public class DataFrameView extends Region {
                         for (int i = 0; i < scatterplotList.size(); i++) {
                             Scatterplot scatterplot = scatterplotList.get(i);
                             double centerY = (scatterplot.getYAxis().getCenterY() + scatterplot.getXAxis().getCenterY()) / 2.;
-                            double top = centerY - (scatterplotWidth / 2.) + scatterplot.getAxisSize();
+                            double top = centerY - (scatterplotSize / 2.);
 //                                    centerX - (scatterplotHeight / 2.) - scatterplot.getAxisSize();
-                            scatterplot.layout(scatterplotRegionBounds.getMinX(), top, scatterplotWidth, scatterplotWidth);
+                            scatterplot.layout(scatterplotRegionBounds.getMinX(), top, scatterplotSize, scatterplotSize);
                         }
                     }
                 }
             }
 
 
-            for (RowPolyline rowPolyline : polylines) {
-                rowPolyline.layout(axisList);
+            for (TuplePolyline tuplePolyline : tuplePolylines) {
+                tuplePolyline.layout(axisList);
             }
 
             redrawView();
@@ -503,8 +562,96 @@ public class DataFrameView extends Region {
         axisList.clear();
         axisTitleList.clear();
         titleTextGroup.getChildren().clear();
-        polylines.clear();
+        tuplePolylines.clear();
         selectedPolylineSet.clear();
         unselectedPolylineSet.clear();
+        selectedCanvas.getGraphicsContext2D().clearRect(0, 0, selectedCanvas.getWidth(), selectedCanvas.getHeight());
+        unselectedCanvas.getGraphicsContext2D().clearRect(0, 0, unselectedCanvas.getWidth(), unselectedCanvas.getHeight());
+    }
+
+    @Override
+    public void dataModelReset(DataTable dataModel) {
+        clearView();
+        initView();
+    }
+
+    private void handleSelectionChanged() {
+        fillPolylineSets();
+        redrawView();
+    }
+
+    @Override
+    public void dataModelStatisticsChanged(DataTable dataModel) {
+
+    }
+
+    @Override
+    public void dataModelNumHistogramBinsChanged(DataTable dataModel) {
+
+    }
+
+    @Override
+    public void dataModelQueryCleared(DataTable dataModel) {
+        handleSelectionChanged();
+    }
+
+    @Override
+    public void dataModelQueryColumnCleared(DataTable dataModel, Column column) {
+        handleSelectionChanged();
+    }
+
+    @Override
+    public void dataModelColumnSelectionAdded(DataTable dataModel, ColumnSelection columnSelectionRange) {
+        handleSelectionChanged();
+    }
+
+    @Override
+    public void dataModelColumnSelectionRemoved(DataTable dataModel, ColumnSelection columnSelectionRange) {
+        handleSelectionChanged();
+    }
+
+    @Override
+    public void dataModelColumnSelectionChanged(DataTable dataModel, ColumnSelection columnSelectionRange) {
+        handleSelectionChanged();
+    }
+
+    @Override
+    public void dataModelHighlightedColumnChanged(DataTable dataModel, Column oldHighlightedColumn, Column newHighlightedColumn) {
+
+    }
+
+    @Override
+    public void dataModelTuplesAdded(DataTable dataModel, ArrayList<Tuple> newTuples) {
+
+    }
+
+    @Override
+    public void dataModelTuplesRemoved(DataTable dataModel, int numTuplesRemoved) {
+
+    }
+
+    @Override
+    public void dataModelColumnDisabled(DataTable dataModel, Column disabledColumn) {
+
+    }
+
+    @Override
+    public void dataModelColumnsDisabled(DataTable dataModel, ArrayList<Column> disabledColumns) {
+
+    }
+
+    @Override
+    public void dataModelColumnEnabled(DataTable dataModel, Column enabledColumn) {
+
+    }
+
+    @Override
+    public void dataModelColumnOrderChanged(DataTable dataModel) {
+
+    }
+
+    @Override
+    public void dataModelColumnNameChanged(DataTable dataModel, Column column) {
+
     }
 }

@@ -2,11 +2,8 @@ package gov.ornl.pcpview;
 
 import gov.ornl.datatable.*;
 import gov.ornl.util.GraphicsUtil;
-import javafx.event.EventHandler;
-import javafx.geometry.Point2D;
 import javafx.scene.Group;
 import javafx.scene.control.Tooltip;
-import javafx.scene.effect.DropShadow;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
@@ -20,7 +17,7 @@ import java.util.List;
 import java.util.logging.Logger;
 
 public class PCPCategoricalAxis extends PCPAxis {
-    private final static Logger log = Logger.getLogger(DataModel.class.getName());
+    private final static Logger log = Logger.getLogger(DataTable.class.getName());
 
     private static final DecimalFormat percentageFormat = new DecimalFormat("0.0#%");
 
@@ -45,7 +42,7 @@ public class PCPCategoricalAxis extends PCPAxis {
     // dragging selection
 //    Rectangle draggingSelectionRectangle;
 
-    public PCPCategoricalAxis(PCPView pcpView, Column column, DataModel dataModel, Pane pane) {
+    public PCPCategoricalAxis(PCPView pcpView, Column column, DataTable dataModel, Pane pane) {
         super(pcpView, column, dataModel, pane);
 
         categoriesRectangleGroup = new Group();

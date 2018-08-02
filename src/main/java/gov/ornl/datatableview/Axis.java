@@ -1,23 +1,27 @@
-package gov.ornl.scout.dataframeview;
+package gov.ornl.datatableview;
 
-import gov.ornl.scout.dataframe.Column;
-import javafx.beans.property.*;
+import gov.ornl.datatable.Column;
+import gov.ornl.datatable.DataTable;
+import gov.ornl.scout.dataframeview.DoubleAxisRangeSelection;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.geometry.*;
 import javafx.scene.Group;
-import javafx.scene.control.Tooltip;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Logger;
 
 public abstract class Axis {
     public final static Logger log = Logger.getLogger(Axis.class.getName());
 
-    protected DataFrameView dataTableView;
+    protected DataTableView dataTableView;
     protected Column column;
 
     protected Orientation orientation;
@@ -29,7 +33,7 @@ public abstract class Axis {
 
     protected Group graphicsGroup;
 
-    private DoubleProperty axisBarSize = new SimpleDoubleProperty(DataFrameViewDefaultSettings.DEFAULT_BAR_SIZE);
+    private DoubleProperty axisBarSize = new SimpleDoubleProperty(DataTableViewDefaultSettings.DEFAULT_BAR_SIZE);
 
 //    protected Text titleText;
     protected Rectangle axisBar;
@@ -44,7 +48,10 @@ public abstract class Axis {
 
     protected BooleanProperty highlighted;
 
-    public Axis(DataFrameView dataTableView, Column column, Orientation orientation) {
+    private ArrayList<AxisSelection> axisSelectionList = new ArrayList<>();
+
+
+    public Axis(DataTableView dataTableView, Column column, Orientation orientation) {
         this.dataTableView = dataTableView;
         this.column = column;
         this.orientation = orientation;
@@ -53,13 +60,13 @@ public abstract class Axis {
         axisBar.setStroke(Color.DARKGRAY);
         axisBar.setFill(Color.WHITESMOKE);
         axisBar.setSmooth(true);
-        axisBar.setStrokeWidth(DataFrameViewDefaultSettings.DEFAULT_STROKE_WIDTH);
+        axisBar.setStrokeWidth(DataTableViewDefaultSettings.DEFAULT_STROKE_WIDTH);
 
         hoverValueText = new Text();
-        hoverValueText.setFont(new Font(DataFrameViewDefaultSettings.HOVER_TEXT_SIZE));
+        hoverValueText.setFont(new Font(DataTableViewDefaultSettings.HOVER_TEXT_SIZE));
         hoverValueText.setSmooth(true);
         hoverValueText.setVisible(false);
-        hoverValueText.setFill(DataFrameViewDefaultSettings.DEFAULT_LABEL_COLOR);
+        hoverValueText.setFill(DataTableViewDefaultSettings.DEFAULT_LABEL_COLOR);
         hoverValueText.setTextOrigin(VPos.BOTTOM);
         hoverValueText.setMouseTransparent(true);
 
@@ -67,6 +74,14 @@ public abstract class Axis {
 
         registerListeners();
     }
+
+    public DataTable getDataTable() {
+        return dataTableView.getDataTable();
+    }
+
+    public List<AxisSelection> getAxisSelectionList() { return axisSelectionList; }
+
+    public Column getColumn() { return column; }
 
     protected abstract Object getValueForAxisPosition(double axisPosition);
 

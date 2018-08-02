@@ -1,6 +1,6 @@
 package gov.ornl.pcpview;
 
-import gov.ornl.datatable.DataModel;
+import gov.ornl.datatable.DataTable;
 import gov.ornl.datatable.Histogram2D;
 import gov.ornl.datatable.Histogram2DDimension;
 import gov.ornl.util.GraphicsUtil;
@@ -29,13 +29,13 @@ public class PCPBinSet {
 
     private PCPAxis leftAxis;
     private PCPAxis rightAxis;
-    private DataModel dataModel;
+    private DataTable dataModel;
 
     private int binsWithQueries;
 
     private ArrayList<PCPBin> bins;
 
-    public PCPBinSet(PCPAxis leftAxis, PCPAxis rightAxis, DataModel dataModel) {
+    public PCPBinSet(PCPAxis leftAxis, PCPAxis rightAxis, DataTable dataModel) {
         this.leftAxis = leftAxis;
         this.rightAxis = rightAxis;
         this.dataModel = dataModel;

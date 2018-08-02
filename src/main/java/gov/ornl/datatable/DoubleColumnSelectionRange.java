@@ -5,7 +5,7 @@ import javafx.beans.property.SimpleListProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
-public class DoubleColumnSelectionRange extends ColumnSelectionRange {
+public class DoubleColumnSelectionRange extends ColumnSelection {
     private ListProperty<Double> rangeValues;
 
     public DoubleColumnSelectionRange(DoubleColumn column, double minValue, double maxValue) {

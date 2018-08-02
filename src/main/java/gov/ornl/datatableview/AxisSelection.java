@@ -1,8 +1,7 @@
-package gov.ornl.scout.dataframeview;
+package gov.ornl.datatableview;
 
 import javafx.scene.Group;
 
-import java.awt.geom.Point2D;
 import java.util.logging.Logger;
 
 public abstract class AxisSelection {
@@ -10,10 +9,9 @@ public abstract class AxisSelection {
 
     protected Axis axis;
     protected Group graphicsGroup = new Group();
-//
-//    public AxisSelection(ParallelAxis axis) {
+
+//    public AxisSelection(Axis axis) {
 //        this.axis = axis;
-//        graphicsGroup = new Group();
 //    }
 
     public abstract void layout();

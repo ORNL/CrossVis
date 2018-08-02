@@ -57,7 +57,7 @@ import java.util.prefs.Preferences;
 /**
  * Created by csg on 8/29/16.
  */
-public class EDENFXMain extends Application implements DataModelListener {
+public class EDENFXMain extends Application implements DataTableListener {
     private static final Logger log = Logger.getLogger(EDENFXMain.class.getName());
 
     public static final String SPLASH_IMAGE = "/EDENFX-SplashScreen.png";
@@ -65,7 +65,7 @@ public class EDENFXMain extends Application implements DataModelListener {
     private static final int SPLASH_HEIGHT = 350;
 
     private PCPView pcpView;
-    private DataModel dataModel;
+    private DataTable dataModel;
 
     private HashMap<String, PCPView.DISPLAY_MODE> displayModeMap;
     private Preferences preferences;
@@ -81,10 +81,10 @@ public class EDENFXMain extends Application implements DataModelListener {
     private TableView<TemporalColumn> temporalColumnTableView;
     private TableView<CategoricalColumn> categoricalColumnTableView;
 
-    private TableView<ColumnSelectionRange> queryTableView = new TableView<>();
-    private TableView<ColumnSelectionRange> doubleQueryTableView;
-    private TableView<ColumnSelectionRange> temporalQueryTableView;
-    private TableView<ColumnSelectionRange> categoricalQueryTableView;
+    private TableView<ColumnSelection> queryTableView = new TableView<>();
+    private TableView<ColumnSelection> doubleQueryTableView;
+    private TableView<ColumnSelection> temporalQueryTableView;
+    private TableView<ColumnSelection> categoricalQueryTableView;
 
     private TableView<Tuple> dataTableView;
     private MenuItem removeAllQueriesMI;
@@ -159,7 +159,7 @@ public class EDENFXMain extends Application implements DataModelListener {
         displayModeMap.put("Parallel Coordinates Bins", PCPView.DISPLAY_MODE.PCP_BINS);
         displayModeMap.put("Parallel Coordinates Lines", PCPView.DISPLAY_MODE.PCP_LINES);
 
-        dataModel = new DataModel();
+        dataModel = new DataTable();
         dataModel.addDataModelListener(this);
     }
 
@@ -167,14 +167,14 @@ public class EDENFXMain extends Application implements DataModelListener {
 //        queryTableView = new TableView();
 //        queryTableView.setEditable(true);
 //
-//        TableColumn<ColumnSelectionRange, String> columnNameColumn = new TableColumn<>("Column");
+//        TableColumn<ColumnSelection, String> columnNameColumn = new TableColumn<>("Column");
 //        columnNameColumn.setMinWidth(160);
-//        columnNameColumn.setCellValueFactory(new PropertyValueFactory<ColumnSelectionRange, String>("column"));
+//        columnNameColumn.setCellValueFactory(new PropertyValueFactory<ColumnSelection, String>("column"));
 //
-//        TableColumn<ColumnSelectionRange, String> minColumn = new TableColumn<>("Minimum Value");
+//        TableColumn<ColumnSelection, String> minColumn = new TableColumn<>("Minimum Value");
 //        minColumn.setMinWidth(200);
-//        minColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<ColumnSelectionRange, String>, ObservableValue<String>>() {
-//            public ObservableValue<String> call(TableColumn.CellDataFeatures<ColumnSelectionRange, String> t) {
+//        minColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<ColumnSelection, String>, ObservableValue<String>>() {
+//            public ObservableValue<String> call(TableColumn.CellDataFeatures<ColumnSelection, String> t) {
 //                if (t.getValue() instanceof TemporalColumnSelectionRange) {
 //                    return new ReadOnlyObjectWrapper(((TemporalColumnSelectionRange)t.getValue()).getStartInstant().toString());
 //                } else {
@@ -182,7 +182,7 @@ public class EDENFXMain extends Application implements DataModelListener {
 //                }
 //            }
 //        });
-//        minColumn.setOnEditCommit((TableColumn.CellEditEvent<ColumnSelectionRange, String> t) -> {
+//        minColumn.setOnEditCommit((TableColumn.CellEditEvent<ColumnSelection, String> t) -> {
 //            if (t.getRowValue() instanceof TemporalColumnSelectionRange) {
 //                try {
 //                    Instant instant = Instant.parse(t.getNewValue());
@@ -214,7 +214,7 @@ public class EDENFXMain extends Application implements DataModelListener {
 //        minColumn.setCellFactory(TextFieldTableCell.forTableColumn());
 //        minColumn.setEditable(true);
 //
-//        TableColumn<ColumnSelectionRange, String> maxColumn = new TableColumn<>("Maximum Value");
+//        TableColumn<ColumnSelection, String> maxColumn = new TableColumn<>("Maximum Value");
 //        maxColumn.setMinWidth(200);
 //        maxColumn.setCellValueFactory(t -> {
 //            if (t.getValue() instanceof TemporalColumnSelectionRange) {
@@ -224,7 +224,7 @@ public class EDENFXMain extends Application implements DataModelListener {
 //            }
 //        });
 //        maxColumn.setCellFactory(TextFieldTableCell.forTableColumn());
-//        maxColumn.setOnEditCommit((TableColumn.CellEditEvent<ColumnSelectionRange, String> t) -> {
+//        maxColumn.setOnEditCommit((TableColumn.CellEditEvent<ColumnSelection, String> t) -> {
 //            if (t.getRowValue() instanceof TemporalColumnSelectionRange) {
 //                try {
 //                    Instant instant = Instant.parse(t.getNewValue());
@@ -890,7 +890,7 @@ public class EDENFXMain extends Application implements DataModelListener {
 
     private void changeAxisSpacing() {
         Dialog<Integer> axisSpacingDialog = new Dialog<>();
-        axisSpacingDialog.setTitle("Axis Spacing");
+        axisSpacingDialog.setTitle("ParallelAxis Spacing");
         axisSpacingDialog.setHeaderText("Set the pixel spacing between axes");
 
         GridPane grid = new GridPane();
@@ -902,7 +902,7 @@ public class EDENFXMain extends Application implements DataModelListener {
         spinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 800, pcpView.getAxisSpacing(), 1));
         spinner.setEditable(true);
 
-        grid.add(new Label("Axis Spacing: "), 0, 0);
+        grid.add(new Label("ParallelAxis Spacing: "), 0, 0);
         grid.add(spinner, 1, 0);
 
         axisSpacingDialog.getDialogPane().setContent(grid);
@@ -1119,8 +1119,8 @@ public class EDENFXMain extends Application implements DataModelListener {
         queryStatisticsMenu.getItems().addAll(showQueryStatisticsCheckMI, showNonQueryStatisticsCheckMI);
         viewMenu.getItems().add(queryStatisticsMenu);
 
-        axisLayoutMenu = new Menu("Axis Layout");
-        fitPCPAxesToWidthCheckMI = new CheckMenuItem("Fit Axis Spacing to Width");
+        axisLayoutMenu = new Menu("ParallelAxis Layout");
+        fitPCPAxesToWidthCheckMI = new CheckMenuItem("Fit ParallelAxis Spacing to Width");
         fitPCPAxesToWidthCheckMI.setSelected(pcpView.getFitAxisSpacingToWidthEnabled());
         fitPCPAxesToWidthCheckMI.setDisable(true);
         fitPCPAxesToWidthCheckMI.selectedProperty().addListener((observable, oldValue, newValue) -> {
@@ -1134,7 +1134,7 @@ public class EDENFXMain extends Application implements DataModelListener {
             }
         });
 
-        changeAxisSpacingMI = new MenuItem("Change Axis Spacing...");
+        changeAxisSpacingMI = new MenuItem("Change ParallelAxis Spacing...");
         changeAxisSpacingMI.setDisable(true);
         changeAxisSpacingMI.setOnAction(event -> {
             changeAxisSpacing();
@@ -1557,7 +1557,7 @@ public class EDENFXMain extends Application implements DataModelListener {
     }
 
     @Override
-    public void dataModelReset(DataModel dataModel) {
+    public void dataModelReset(DataTable dataModel) {
         removeAllQueriesMI.setDisable(!dataModel.getActiveQuery().hasColumnSelections());
 //        doubleQueryTableView.getItems().clear();
 //        temporalQueryTableView.getItems().clear();
@@ -1567,7 +1567,7 @@ public class EDENFXMain extends Application implements DataModelListener {
     }
 
     @Override
-    public void dataModelQueryCleared(DataModel dataModel) {
+    public void dataModelQueryCleared(DataTable dataModel) {
         removeAllQueriesMI.setDisable(!dataModel.getActiveQuery().hasColumnSelections());
         setDataTableItems();
         updatePercentSelected();
@@ -1575,7 +1575,7 @@ public class EDENFXMain extends Application implements DataModelListener {
 //        doubleQueryTableView.getItems().clear();
 //        temporalQueryTableView.getItems().clear();
 //        categoricalQueryTableView.getItems().clear();
-//        Predicate<ColumnSelectionRange> isDoubleSelection = (selection -> selection instanceof DoubleColumnSelectionRange);
+//        Predicate<ColumnSelection> isDoubleSelection = (selection -> selection instanceof DoubleColumnSelectionRange);
         doubleQueryTableView.setItems(dataModel.getActiveQuery().columnSelectionRangesProperty().filtered(selection -> selection instanceof DoubleColumnSelectionRange));
         temporalQueryTableView.setItems(dataModel.getActiveQuery().columnSelectionRangesProperty().filtered(selection -> selection instanceof TemporalColumnSelectionRange));
         categoricalQueryTableView.setItems(dataModel.getActiveQuery().columnSelectionRangesProperty().filtered(selection -> selection instanceof CategoricalColumnSelection));
@@ -1584,28 +1584,28 @@ public class EDENFXMain extends Application implements DataModelListener {
     }
 
     @Override
-    public void dataModelQueryColumnCleared(DataModel dataModel, Column column) {
+    public void dataModelQueryColumnCleared(DataTable dataModel, Column column) {
         removeAllQueriesMI.setDisable(!dataModel.getActiveQuery().hasColumnSelections());
         setDataTableItems();
         updatePercentSelected();
     }
 
     @Override
-    public void dataModelColumnSelectionAdded(DataModel dataModel, ColumnSelectionRange columnSelectionRange) {
+    public void dataModelColumnSelectionAdded(DataTable dataModel, ColumnSelection columnSelectionRange) {
         removeAllQueriesMI.setDisable(!dataModel.getActiveQuery().hasColumnSelections());
         setDataTableItems();
         updatePercentSelected();
     }
 
     @Override
-    public void dataModelColumnSelectionRemoved(DataModel dataModel, ColumnSelectionRange columnSelectionRange) {
+    public void dataModelColumnSelectionRemoved(DataTable dataModel, ColumnSelection columnSelectionRange) {
         removeAllQueriesMI.setDisable(!dataModel.getActiveQuery().hasColumnSelections());
         setDataTableItems();
         updatePercentSelected();
     }
 
     @Override
-    public void dataModelColumnSelectionChanged(DataModel dataModel, ColumnSelectionRange columnSelectionRange) {
+    public void dataModelColumnSelectionChanged(DataTable dataModel, ColumnSelection columnSelectionRange) {
         removeAllQueriesMI.setDisable(!dataModel.getActiveQuery().hasColumnSelections());
         queryTableView.refresh();
         doubleQueryTableView.refresh();
@@ -1618,7 +1618,7 @@ public class EDENFXMain extends Application implements DataModelListener {
     }
 
     @Override
-    public void dataModelHighlightedColumnChanged(DataModel dataModel, Column oldHighlightedColumn, Column newHighlightedColumn) {
+    public void dataModelHighlightedColumnChanged(DataTable dataModel, Column oldHighlightedColumn, Column newHighlightedColumn) {
         if (newHighlightedColumn != null) {
             if (newHighlightedColumn instanceof TemporalColumn) {
                 temporalColumnTableView.getSelectionModel().select((TemporalColumn)newHighlightedColumn);
@@ -1632,23 +1632,23 @@ public class EDENFXMain extends Application implements DataModelListener {
     }
 
     @Override
-    public void dataModelTuplesAdded(DataModel dataModel, ArrayList<Tuple> newTuples) {
+    public void dataModelTuplesAdded(DataTable dataModel, ArrayList<Tuple> newTuples) {
         updatePercentSelected();
     }
 
     @Override
-    public void dataModelTuplesRemoved(DataModel dataModel, int numTuplesRemoved) {
+    public void dataModelTuplesRemoved(DataTable dataModel, int numTuplesRemoved) {
         updatePercentSelected();
     }
 
     @Override
-    public void dataModelNumHistogramBinsChanged(DataModel dataModel) {}
+    public void dataModelNumHistogramBinsChanged(DataTable dataModel) {}
 
     @Override
-    public void dataModelStatisticsChanged(DataModel dataModel) { }
+    public void dataModelStatisticsChanged(DataTable dataModel) { }
 
     @Override
-    public void dataModelColumnDisabled(DataModel dataModel, Column disabledColumn) {
+    public void dataModelColumnDisabled(DataTable dataModel, Column disabledColumn) {
         // reset the data datamodel columns
         dataTableView.getItems().clear();
         dataTableView.getColumns().clear();
@@ -1661,22 +1661,22 @@ public class EDENFXMain extends Application implements DataModelListener {
     }
 
     @Override
-    public void dataModelColumnsDisabled(DataModel dataModel, ArrayList<Column> disabledColumns) {
+    public void dataModelColumnsDisabled(DataTable dataModel, ArrayList<Column> disabledColumns) {
 
     }
 
     @Override
-    public void dataModelColumnEnabled(DataModel dataModel, Column enabledColumn) {
+    public void dataModelColumnEnabled(DataTable dataModel, Column enabledColumn) {
 
     }
 
     @Override
-    public void dataModelColumnOrderChanged(DataModel dataModel) {
+    public void dataModelColumnOrderChanged(DataTable dataModel) {
 
     }
 
     @Override
-    public void dataModelColumnNameChanged(DataModel dataModel, Column column) {
+    public void dataModelColumnNameChanged(DataTable dataModel, Column column) {
 
     }
 }

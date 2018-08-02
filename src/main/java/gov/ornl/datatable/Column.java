@@ -6,7 +6,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
 public abstract class Column {
-    protected DataModel dataModel;
+    protected DataTable dataModel;
     private StringProperty name;
     private BooleanProperty enabled;
 
@@ -15,11 +15,11 @@ public abstract class Column {
         setEnabled(true);
     }
 
-    protected void setDataModel(DataModel dataModel) {
+    protected void setDataModel(DataTable dataModel) {
         this.dataModel = dataModel;
     }
 
-    public DataModel getDataModel() {
+    public DataTable getDataModel() {
         return dataModel;
     }
 

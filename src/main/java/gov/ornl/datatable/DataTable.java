@@ -8,11 +8,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
-public class DataModel {
+public class DataTable {
 	private static final int DEFAULT_NUM_HISTOGRAM_BINS = 50;
     private static final int MAX_NUM_HISTOGRAM_BINS = 100;
 
-    private final static Logger log = Logger.getLogger(DataModel.class.getName());
+    private final static Logger log = Logger.getLogger(DataTable.class.getName());
 
     // List of enabled tuples
 	protected ArrayList<Tuple> tuples;
@@ -27,7 +27,7 @@ public class DataModel {
     protected ArrayList<Tuple> disabledColumnTuples;
 
     // List of active listeners
-	private ArrayList<DataModelListener> listeners;
+	private ArrayList<DataTableListener> listeners;
 
     // Special columns
 	private Column highlightedColumn = null;
@@ -53,7 +53,7 @@ public class DataModel {
     // boolean property controls whether or not nonquery statistics are calculated
     private BooleanProperty calculateNonQueryStatistics = new SimpleBooleanProperty(false);
 
-	public DataModel() {
+	public DataTable() {
         tuples = new ArrayList<>();
         columns = new ArrayList<>();
         disabledColumnTuples = new ArrayList<>();
@@ -281,13 +281,13 @@ public class DataModel {
 		return values;
 	}
 
-	public void addDataModelListener(DataModelListener listener) {
+	public void addDataModelListener(DataTableListener listener) {
 		if (!listeners.contains(listener)) {
 			listeners.add(listener);
 		}
 	}
 
-	public boolean removeDataModelListener(DataModelListener listener) {
+	public boolean removeDataModelListener(DataTableListener listener) {
         return listeners.remove(listener);
     }
 
@@ -382,7 +382,7 @@ public class DataModel {
 		return disabledColumns;
 	}
 
-	public void clearColumnSelectionRange (ColumnSelectionRange selectionRange) {
+	public void clearColumnSelectionRange (ColumnSelection selectionRange) {
 		getActiveQuery().removeColumnSelectionRange(selectionRange);
 		getActiveQuery().setQueriedTuples();
 		fireColumnSelectionRemoved(selectionRange);
@@ -474,7 +474,7 @@ public class DataModel {
 //		return null;
 //	}
 
-	public void addColumnSelectionRangeToActiveQuery(ColumnSelectionRange newColumnSelectionRange) {
+	public void addColumnSelectionRangeToActiveQuery(ColumnSelection newColumnSelectionRange) {
 		getActiveQuery().addColumnSelectionRange(newColumnSelectionRange);
 
         getActiveQuery().setQueriedTuples();
@@ -732,97 +732,97 @@ public class DataModel {
     }
 
     public void fireNumHistogramBinsChanged() {
-		for (DataModelListener listener : listeners) {
+		for (DataTableListener listener : listeners) {
 			listener.dataModelNumHistogramBinsChanged(this);
 		}
 	}
 
 	private void fireColumnDisabled(Column column) {
-		for (DataModelListener listener : listeners) {
+		for (DataTableListener listener : listeners) {
 			listener.dataModelColumnDisabled(this, column);
 		}
 	}
 
 	private void fireColumnsDisabled(ArrayList<Column> disabledColumns) {
-		for (DataModelListener listener : listeners) {
+		for (DataTableListener listener : listeners) {
 			listener.dataModelColumnsDisabled(this, disabledColumns);
 		}
 	}
 
 	private void fireColumnEnabled(Column column) {
-		for (DataModelListener listener : listeners) {
+		for (DataTableListener listener : listeners) {
 			listener.dataModelColumnEnabled(this, column);
 		}
 	}
 
 	private void fireDataModelStatisticsChanged() {
-	    for (DataModelListener listener : listeners) {
+	    for (DataTableListener listener : listeners) {
 	        listener.dataModelStatisticsChanged(this);
         }
     }
 
 	private void fireColumnOrderChanged() {
-		for (DataModelListener listener : listeners) {
+		for (DataTableListener listener : listeners) {
 			listener.dataModelColumnOrderChanged(this);
 		}
 	}
 
 	private void fireColumnNameChanged(Column column) {
-		for (DataModelListener listener : listeners) {
+		for (DataTableListener listener : listeners) {
 			listener.dataModelColumnNameChanged(this, column);
 		}
 	}
 
 	private void fireDataModelReset() {
-		for (DataModelListener listener : listeners) {
+		for (DataTableListener listener : listeners) {
 			listener.dataModelReset(this);
 		}
 	}
 
 	private void fireTuplesAdded(ArrayList<Tuple> newTuples) {
-		for (DataModelListener listener : listeners) {
+		for (DataTableListener listener : listeners) {
 			listener.dataModelTuplesAdded(this, newTuples);
 		}
 	}
 
 	private void fireTuplesRemoved(int numTuplesRemoved) {
-		for (DataModelListener listener : listeners) {
+		for (DataTableListener listener : listeners) {
 			listener.dataModelTuplesRemoved(this, numTuplesRemoved);
 		}
 	}
 
 	public void fireHighlightedColumnChanged(Column oldHighlightedColumn) {
-		for (DataModelListener listener : listeners) {
+		for (DataTableListener listener : listeners) {
 			listener.dataModelHighlightedColumnChanged(this, oldHighlightedColumn, highlightedColumn);
 		}
 	}
 
-	public void fireColumnSelectionAdded(ColumnSelectionRange columnSelectionRange) {
-		for (DataModelListener listener : listeners) {
+	public void fireColumnSelectionAdded(ColumnSelection columnSelectionRange) {
+		for (DataTableListener listener : listeners) {
 			listener.dataModelColumnSelectionAdded(this, columnSelectionRange);
 		}
 	}
 
-	public void fireColumnSelectionRemoved(ColumnSelectionRange columnSelectionRange) {
-		for (DataModelListener listener : listeners) {
+	public void fireColumnSelectionRemoved(ColumnSelection columnSelectionRange) {
+		for (DataTableListener listener : listeners) {
 			listener.dataModelColumnSelectionRemoved(this, columnSelectionRange);
 		}
 	}
 
-	public void fireColumnSelectionChanged(ColumnSelectionRange columnSelectionRange) {
-		for (DataModelListener listener : listeners) {
+	public void fireColumnSelectionChanged(ColumnSelection columnSelectionRange) {
+		for (DataTableListener listener : listeners) {
 			listener.dataModelColumnSelectionChanged(this, columnSelectionRange);
 		}
 	}
 
 	public void fireQueryCleared() {
-		for (DataModelListener listener : listeners) {
+		for (DataTableListener listener : listeners) {
 			listener.dataModelQueryCleared(this);
 		}
 	}
 
 	public void fireQueryColumnCleared(Column column) {
-        for (DataModelListener listener : listeners) {
+        for (DataTableListener listener : listeners) {
             listener.dataModelQueryColumnCleared(this, column);
         }
     }

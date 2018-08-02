@@ -1,6 +1,6 @@
 package gov.ornl.pcpview;
 
-import gov.ornl.datatable.DataModel;
+import gov.ornl.datatable.DataTable;
 import gov.ornl.datatable.TemporalColumn;
 import gov.ornl.datatable.TemporalColumnSelectionRange;
 import gov.ornl.util.GraphicsUtil;
@@ -28,7 +28,7 @@ public class PCPTemporalAxisSelection extends PCPAxisSelection {
     private ObjectProperty<Instant> draggingMinValue;
     private ObjectProperty<Instant> draggingMaxValue;
 
-    public PCPTemporalAxisSelection(PCPAxis pcpAxis, TemporalColumnSelectionRange selectionRange, double minValueY, double maxValueY, Pane pane, DataModel dataModel) {
+    public PCPTemporalAxisSelection(PCPAxis pcpAxis, TemporalColumnSelectionRange selectionRange, double minValueY, double maxValueY, Pane pane, DataTable dataModel) {
         super(pcpAxis, selectionRange, minValueY, maxValueY, pane, dataModel);
 
         minText = new Text(String.valueOf(selectionRange.getStartInstant()));

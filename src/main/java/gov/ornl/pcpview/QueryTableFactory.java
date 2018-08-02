@@ -1,7 +1,7 @@
 package gov.ornl.pcpview;
 
 import gov.ornl.datatable.CategoricalColumnSelection;
-import gov.ornl.datatable.ColumnSelectionRange;
+import gov.ornl.datatable.ColumnSelection;
 import gov.ornl.datatable.DoubleColumnSelectionRange;
 import gov.ornl.datatable.TemporalColumnSelectionRange;
 import javafx.beans.property.ReadOnlyObjectWrapper;
@@ -16,12 +16,10 @@ import javafx.util.Callback;
 
 import java.time.Instant;
 import java.time.format.DateTimeParseException;
-import java.util.HashMap;
-import java.util.Map;
 
 public class QueryTableFactory {
-    private static TableColumn<ColumnSelectionRange, String> createMaxValueColumn(TableView tableView, boolean isTemporal) {
-        TableColumn<ColumnSelectionRange, String> maxColumn;
+    private static TableColumn<ColumnSelection, String> createMaxValueColumn(TableView tableView, boolean isTemporal) {
+        TableColumn<ColumnSelection, String> maxColumn;
         if (isTemporal) {
             maxColumn = new TableColumn<>("End");
         } else {
@@ -37,7 +35,7 @@ public class QueryTableFactory {
             }
         });
         maxColumn.setCellFactory(TextFieldTableCell.forTableColumn());
-        maxColumn.setOnEditCommit((TableColumn.CellEditEvent<ColumnSelectionRange, String> t) -> {
+        maxColumn.setOnEditCommit((TableColumn.CellEditEvent<ColumnSelection, String> t) -> {
             if (t.getRowValue() instanceof TemporalColumnSelectionRange) {
                 try {
                     Instant instant = Instant.parse(t.getNewValue());
@@ -71,11 +69,11 @@ public class QueryTableFactory {
         return maxColumn;
     }
 
-    private static TableColumn<ColumnSelectionRange, String> createMinValueColumn(TableView tableView, boolean isTemporal) {
-        TableColumn<ColumnSelectionRange, String> minColumn = new TableColumn<>("Minimum Value");
+    private static TableColumn<ColumnSelection, String> createMinValueColumn(TableView tableView, boolean isTemporal) {
+        TableColumn<ColumnSelection, String> minColumn = new TableColumn<>("Minimum Value");
         minColumn.setMinWidth(200);
-        minColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<ColumnSelectionRange, String>, ObservableValue<String>>() {
-            public ObservableValue<String> call(TableColumn.CellDataFeatures<ColumnSelectionRange, String> t) {
+        minColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<ColumnSelection, String>, ObservableValue<String>>() {
+            public ObservableValue<String> call(TableColumn.CellDataFeatures<ColumnSelection, String> t) {
                 if (t.getValue() instanceof TemporalColumnSelectionRange) {
                     return new ReadOnlyObjectWrapper(((TemporalColumnSelectionRange)t.getValue()).getStartInstant().toString());
                 } else {
@@ -83,7 +81,7 @@ public class QueryTableFactory {
                 }
             }
         });
-        minColumn.setOnEditCommit((TableColumn.CellEditEvent<ColumnSelectionRange, String> t) -> {
+        minColumn.setOnEditCommit((TableColumn.CellEditEvent<ColumnSelection, String> t) -> {
             if (t.getRowValue() instanceof TemporalColumnSelectionRange) {
                 try {
                     Instant instant = Instant.parse(t.getNewValue());
@@ -118,21 +116,21 @@ public class QueryTableFactory {
         return minColumn;
     }
 
-    private static TableColumn<ColumnSelectionRange, String> createColorColumn(TableView tableView) {
-        TableColumn<ColumnSelectionRange, String> colorColumn = new TableColumn<>("Color");
+    private static TableColumn<ColumnSelection, String> createColorColumn(TableView tableView) {
+        TableColumn<ColumnSelection, String> colorColumn = new TableColumn<>("Color");
         colorColumn.setMinWidth(100);
 //        colorColumn.setCellValueFactory(cellData -> "Blue");
         colorColumn.setCellFactory(ComboBoxTableCell.forTableColumn("Friends", "Family", "Work Contacts"));
-//        colorColumn.setCellFactory(new ColorTableCell<ColumnSelectionRange>(colorColumn));
+//        colorColumn.setCellFactory(new ColorTableCell<ColumnSelection>(colorColumn));
         colorColumn.setEditable(true);
         return colorColumn;
     }
 
-    private static TableColumn<ColumnSelectionRange, String> createCategoriesColumn(TableView tableView) {
-        TableColumn<ColumnSelectionRange, String> categoriesColumn = new TableColumn<>("Selected Categories");
+    private static TableColumn<ColumnSelection, String> createCategoriesColumn(TableView tableView) {
+        TableColumn<ColumnSelection, String> categoriesColumn = new TableColumn<>("Selected Categories");
         categoriesColumn.setMinWidth(200);
-        categoriesColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<ColumnSelectionRange, String>, ObservableValue<String>>() {
-            public ObservableValue<String> call(TableColumn.CellDataFeatures<ColumnSelectionRange, String> t) {
+        categoriesColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<ColumnSelection, String>, ObservableValue<String>>() {
+            public ObservableValue<String> call(TableColumn.CellDataFeatures<ColumnSelection, String> t) {
 //                if (t.getValue() instanceof CategoricalColumnSelection) {
                     return new ReadOnlyObjectWrapper(((CategoricalColumnSelection)t.getValue()).getSelectedCategories().toString());
 //                    return new ReadOnlyObjectWrapper(((TemporalColumnSelectionRange)t.getValue()).getStartInstant().toString());
@@ -141,7 +139,7 @@ public class QueryTableFactory {
 //                }
             }
         });
-        categoriesColumn.setOnEditCommit((TableColumn.CellEditEvent<ColumnSelectionRange, String> t) -> {
+        categoriesColumn.setOnEditCommit((TableColumn.CellEditEvent<ColumnSelection, String> t) -> {
             String categoriesString = t.getNewValue();
             System.out.println("categoriesString in setOnEditCommit() is " + categoriesString);
 //            if (t.getRowValue() instanceof TemporalColumnSelectionRange) {
@@ -178,52 +176,52 @@ public class QueryTableFactory {
         return categoriesColumn;
     }
 
-    public static TableView<ColumnSelectionRange> buildDoubleSelectionTable() {
+    public static TableView<ColumnSelection> buildDoubleSelectionTable() {
         // create tableview for double column selections
-        TableView<ColumnSelectionRange> doubleSelectionTableView = new TableView<>();
+        TableView<ColumnSelection> doubleSelectionTableView = new TableView<>();
         doubleSelectionTableView.setEditable(true);
 
-        TableColumn<ColumnSelectionRange, String> nameColumn = new TableColumn<>("Column");
+        TableColumn<ColumnSelection, String> nameColumn = new TableColumn<>("Column");
         nameColumn.setMinWidth(140);
-        nameColumn.setCellValueFactory(new PropertyValueFactory<ColumnSelectionRange, String>("column"));
+        nameColumn.setCellValueFactory(new PropertyValueFactory<ColumnSelection, String>("column"));
 
-        TableColumn<ColumnSelectionRange, String> minValueColumn = createMinValueColumn(doubleSelectionTableView, false);
+        TableColumn<ColumnSelection, String> minValueColumn = createMinValueColumn(doubleSelectionTableView, false);
 
-        TableColumn<ColumnSelectionRange, String> maxValueColumn = createMaxValueColumn(doubleSelectionTableView, false);
+        TableColumn<ColumnSelection, String> maxValueColumn = createMaxValueColumn(doubleSelectionTableView, false);
 
         doubleSelectionTableView.getColumns().addAll(nameColumn, minValueColumn, maxValueColumn);
 
         return doubleSelectionTableView;
     }
 
-    public static TableView<ColumnSelectionRange> buildTemporalSelectionTable() {
+    public static TableView<ColumnSelection> buildTemporalSelectionTable() {
         // create tableview for temporal column selections
-        TableView<ColumnSelectionRange> temporalSelectionTableView = new TableView<>();
+        TableView<ColumnSelection> temporalSelectionTableView = new TableView<>();
 
-        TableColumn<ColumnSelectionRange, String> nameColumn = new TableColumn<>("Column");
+        TableColumn<ColumnSelection, String> nameColumn = new TableColumn<>("Column");
         nameColumn.setMinWidth(140);
-        nameColumn.setCellValueFactory(new PropertyValueFactory<ColumnSelectionRange, String>("column"));
+        nameColumn.setCellValueFactory(new PropertyValueFactory<ColumnSelection, String>("column"));
 
-        TableColumn<ColumnSelectionRange, String> startValueColumn = createMinValueColumn(temporalSelectionTableView, true);
+        TableColumn<ColumnSelection, String> startValueColumn = createMinValueColumn(temporalSelectionTableView, true);
 
-        TableColumn<ColumnSelectionRange, String> endValueColumn = createMaxValueColumn(temporalSelectionTableView, true);
+        TableColumn<ColumnSelection, String> endValueColumn = createMaxValueColumn(temporalSelectionTableView, true);
 
         temporalSelectionTableView.getColumns().addAll(nameColumn, startValueColumn, endValueColumn);
 
         return temporalSelectionTableView;
     }
 
-    public static TableView<ColumnSelectionRange> buildCategoricalSelectionTable() {
+    public static TableView<ColumnSelection> buildCategoricalSelectionTable() {
         // create tableview for categorical column selections
-        TableView<ColumnSelectionRange> categoricalSelectionTableView = new TableView<>();
+        TableView<ColumnSelection> categoricalSelectionTableView = new TableView<>();
 
-        TableColumn<ColumnSelectionRange, String> nameColumn = new TableColumn<>("Column");
+        TableColumn<ColumnSelection, String> nameColumn = new TableColumn<>("Column");
         nameColumn.setMinWidth(140);
-        nameColumn.setCellValueFactory(new PropertyValueFactory<ColumnSelectionRange, String>("column"));
+        nameColumn.setCellValueFactory(new PropertyValueFactory<ColumnSelection, String>("column"));
 
-        TableColumn<ColumnSelectionRange, String> categoriesColumn = createCategoriesColumn(categoricalSelectionTableView);
+        TableColumn<ColumnSelection, String> categoriesColumn = createCategoriesColumn(categoricalSelectionTableView);
 
-//        TableColumn<ColumnSelectionRange, String> colorColumn = createColorColumn(categoricalSelectionTableView);
+//        TableColumn<ColumnSelection, String> colorColumn = createColorColumn(categoricalSelectionTableView);
 
         categoricalSelectionTableView.getColumns().addAll(nameColumn, categoriesColumn);
 

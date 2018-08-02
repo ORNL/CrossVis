@@ -27,7 +27,7 @@ public class PCPTemporalAxis extends PCPAxis {
     private Color histogramStroke = DEFAULT_HISTOGRAM_STROKE;
     private Color queryHistogramFill = DEFAULT_QUERY_HISTOGRAM_FILL;
     
-    public PCPTemporalAxis(PCPView pcpView, Column column, DataModel dataModel, Pane pane) {
+    public PCPTemporalAxis(PCPView pcpView, Column column, DataTable dataModel, Pane pane) {
         super(pcpView, column, dataModel, pane);
 
         minValueText.setText(((TemporalColumn)column).getStatistics().getStartInstant().toString());

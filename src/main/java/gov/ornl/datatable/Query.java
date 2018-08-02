@@ -14,16 +14,16 @@ public class Query {
 
     private String id;
 
-    private ListProperty<ColumnSelectionRange> columnSelectionRanges;
+    private ListProperty<ColumnSelection> columnSelectionRanges;
     private HashMap<Column, ColumnSummaryStats> columnQuerySummaryStatsMap;
     private HashMap<Column, ColumnSummaryStats> columnNonquerySummaryStatsMap;
     private int maxHistogram2DBinCount;
-    private DataModel dataModel;
+    private DataTable dataModel;
 
     private HashSet<Tuple> queriedTuples;
     private HashSet<Tuple> nonQueriedTuples;
 
-    public Query(String id, DataModel dataModel) {
+    public Query(String id, DataTable dataModel) {
         this.id = id;
         this.dataModel = dataModel;
         columnSelectionRanges = new SimpleListProperty<>(FXCollections.observableArrayList());
@@ -64,12 +64,12 @@ public class Query {
 
                 for (int icol = 0; icol < dataModel.getColumnCount(); icol++) {
                     Column column = dataModel.getColumn(icol);
-                    ArrayList<ColumnSelectionRange> selectionRanges = getColumnSelectionRanges(column);
+                    ArrayList<ColumnSelection> selectionRanges = getColumnSelectionRanges(column);
                     if (selectionRanges != null && (!selectionRanges.isEmpty())) {
                         boolean insideSelectionRange = false;
 
                         if (column instanceof DoubleColumn) {
-                            for (ColumnSelectionRange selectionRange : selectionRanges) {
+                            for (ColumnSelection selectionRange : selectionRanges) {
                                 if ((((Double)tuple.getElement(icol)) <= ((DoubleColumnSelectionRange)selectionRange).getMaxValue()) &&
                                         (((Double)tuple.getElement(icol)) >= ((DoubleColumnSelectionRange)selectionRange).getMinValue())) {
                                     insideSelectionRange = true;
@@ -77,7 +77,7 @@ public class Query {
                                 }
                             }
                         } else if (column instanceof TemporalColumn) {
-                            for (ColumnSelectionRange selectionRange : selectionRanges) {
+                            for (ColumnSelection selectionRange : selectionRanges) {
                                 if (!((((Instant)tuple.getElement(icol)).isBefore(((TemporalColumnSelectionRange)selectionRange).getStartInstant())) ||
                                         ((Instant)tuple.getElement(icol)).isAfter(((TemporalColumnSelectionRange)selectionRange).getEndInstant()))) {
                                     insideSelectionRange = true;
@@ -85,7 +85,7 @@ public class Query {
 							    }
                             }
                         } else if (column instanceof CategoricalColumn) {
-                            for (ColumnSelectionRange selectionRange : selectionRanges) {
+                            for (ColumnSelection selectionRange : selectionRanges) {
                                 if (((CategoricalColumnSelection)selectionRange).getSelectedCategories().contains((String)tuple.getElement(icol))) {
                                     insideSelectionRange = true;
                                     break;
@@ -207,9 +207,9 @@ public class Query {
         }
     }
 
-    public final ObservableList<ColumnSelectionRange> getColumnSelectionRanges() { return columnSelectionRanges.get(); }
+    public final ObservableList<ColumnSelection> getColumnSelectionRanges() { return columnSelectionRanges.get(); }
 
-    public ListProperty<ColumnSelectionRange> columnSelectionRangesProperty() { return columnSelectionRanges; }
+    public ListProperty<ColumnSelection> columnSelectionRangesProperty() { return columnSelectionRanges; }
 
     public int getMaxHistogram2DBinCount() { return maxHistogram2DBinCount; }
 
@@ -250,10 +250,10 @@ public class Query {
         columnNonquerySummaryStatsMap.clear();
     }
 
-    public ArrayList<ColumnSelectionRange> getColumnSelectionRanges (Column column) {
-        ArrayList<ColumnSelectionRange> rangeList = new ArrayList<>();
+    public ArrayList<ColumnSelection> getColumnSelectionRanges (Column column) {
+        ArrayList<ColumnSelection> rangeList = new ArrayList<>();
 
-        for (ColumnSelectionRange columnSelectionRange : columnSelectionRanges) {
+        for (ColumnSelection columnSelectionRange : columnSelectionRanges) {
             if (columnSelectionRange.getColumn() == column) {
                 rangeList.add(columnSelectionRange);
             }
@@ -261,28 +261,28 @@ public class Query {
         return rangeList;
     }
 
-    public List<ColumnSelectionRange> getAllColumnSelectionRanges() {
+    public List<ColumnSelection> getAllColumnSelectionRanges() {
         return columnSelectionRanges;
     }
 
-    public void addColumnSelectionRange (ColumnSelectionRange columnSelectionRange) {
+    public void addColumnSelectionRange (ColumnSelection columnSelectionRange) {
         //TODO: See if an identical range selection exists or if this selection overlaps with another
         // ignore if identical exists and merge if overlapping selection exists
         columnSelectionRanges.add(columnSelectionRange);
     }
 
-    public boolean removeColumnSelectionRange(ColumnSelectionRange columnSelectionRange) {
+    public boolean removeColumnSelectionRange(ColumnSelection columnSelectionRange) {
         if (!columnSelectionRanges.isEmpty()) {
             return columnSelectionRanges.remove(columnSelectionRange);
         }
         return false;
     }
 
-    public ArrayList<ColumnSelectionRange> removeColumnSelectionRanges(Column column) {
+    public ArrayList<ColumnSelection> removeColumnSelectionRanges(Column column) {
         if (!columnSelectionRanges.isEmpty()) {
-            ArrayList<ColumnSelectionRange> removedRanges = new ArrayList<>();
+            ArrayList<ColumnSelection> removedRanges = new ArrayList<>();
 
-            for (ColumnSelectionRange rangeSelection : columnSelectionRanges) {
+            for (ColumnSelection rangeSelection : columnSelectionRanges) {
                 if (rangeSelection.getColumn() == column) {
                     removedRanges.add(rangeSelection);
                 }

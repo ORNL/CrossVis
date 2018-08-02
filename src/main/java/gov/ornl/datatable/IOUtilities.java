@@ -13,7 +13,7 @@ import java.util.logging.Logger;
 public class IOUtilities {
 	private static final Logger log = Logger.getLogger(IOUtilities.class.getName());
 
-//	public static void readCSVSample(File f, DataModel dataModel,
+//	public static void readCSVSample(File f, DataTable dataModel,
 //			double sampleFactor) throws IOException {
 //		BufferedReader reader = new BufferedReader(new FileReader(f));
 //		int totalLineCount = 0;
@@ -124,7 +124,7 @@ public class IOUtilities {
 	}
 
 	public static void readCSV(File f, ArrayList<String> ignoreColumnNames, ArrayList<String> categoricalColumnNames, ArrayList<String> temporalColumnNames,
-							   ArrayList<DateTimeFormatter> temporalColumnFormatters, DataModel dataModel) throws IOException {
+							   ArrayList<DateTimeFormatter> temporalColumnFormatters, DataTable dataModel) throws IOException {
 		BufferedReader reader = new BufferedReader(new FileReader(f));
 
 		ArrayList<Tuple> tuples = new ArrayList<>();
@@ -333,7 +333,7 @@ public class IOUtilities {
 	}
 
 	public static void main (String args[]) throws IOException {
-	    DataModel dataModel = new DataModel();
+	    DataTable dataModel = new DataTable();
 
 	    ArrayList<String> categoricalColumnNames = new ArrayList<>();
 	    categoricalColumnNames.add("Origin");

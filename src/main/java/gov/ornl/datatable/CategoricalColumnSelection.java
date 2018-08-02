@@ -6,7 +6,7 @@ import javafx.collections.FXCollections;
 
 import java.util.Set;
 
-public class CategoricalColumnSelection extends ColumnSelectionRange {
+public class CategoricalColumnSelection extends ColumnSelection {
     private SetProperty<String> selectedCategories;
 
     public CategoricalColumnSelection(CategoricalColumn column, Set<String> categories) {
