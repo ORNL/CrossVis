@@ -11,6 +11,8 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+import javafx.geometry.BoundingBox;
+import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.geometry.VPos;
 import javafx.scene.Group;
@@ -59,12 +61,13 @@ public abstract class PCPAxis {
     protected Column column;
 
     protected double centerX;
-    protected Rectangle bounds;
+    protected double centerY;
+    protected BoundingBox bounds;
 
     protected Group graphicsGroup;
 
-    protected Text nameText;
-    protected DoubleProperty nameTextRotation;
+    protected Text titleText;
+    protected DoubleProperty titleTextRotation;
     protected BooleanProperty highlighted;
 
     protected Text hoverValueText;
@@ -75,18 +78,12 @@ public abstract class PCPAxis {
 
     protected PCPView pcpView;
 
-    private double barTopY;
-    private double barBottomY;
-    private double focusTopY;
-    private double focusBottomY;
+//    private double barTopY;
+//    private double barBottomY;
+//    private double focusTopY;
+//    private double focusBottomY;
 
     private double contextRegionHeight = DEFAULT_CONTEXT_HEIGHT;
-
-    //    private Group graphicsGroup;
-//    private Line topCrossBarLine;
-//    private Line bottomCrossBarLine;
-//    private Line topFocusCrossBarLine;
-//    private Line bottomFocusCrossBarLine;
 
     private Rectangle topContexBar;
     private Rectangle bottomContextBar;
@@ -94,12 +91,7 @@ public abstract class PCPAxis {
 
     private Rectangle correlationCoefficientIndicatorRectangle;
     private Line correlationCoefficientIndicatorZeroLine;
-//    private ArrayList<Line> correlationCoefficientIndicatorList = new ArrayList<>();
     private Group correlationCoefficientIndicatorGroup = new Group();
-
-    // axis column name label
-//    private Text nameText;
-//    private DoubleProperty nameTextRotation;
 
     // value labels
     protected Text maxValueText;
@@ -124,10 +116,6 @@ public abstract class PCPAxis {
     protected Point2D dragEndPoint;
     protected boolean dragging = false;
 
-//    private Line draggingTopCrossBarLine;
-//    private Line draggingBottomCrossBarLine;
-//    private Line draggingTopFocusCrossBarLine;
-//    private Line draggingBottomFocusCrossBarLine;
     private Rectangle draggingTopContextBar;
     private Rectangle draggingBottomContextBar;
     private Rectangle draggingAxisBar;
@@ -140,24 +128,24 @@ public abstract class PCPAxis {
         this.pane = pane;
 
         centerX = 0d;
-        bounds = new Rectangle();
-        barTopY = 0d;
-        barBottomY = 0d;
-        focusTopY = 0d;
-        focusBottomY = 0d;
+        centerY = 0d;
+//        barTopY = 0d;
+//        barBottomY = 0d;
+//        focusTopY = 0d;
+//        focusBottomY = 0d;
 
-        nameTextRotation = new SimpleDoubleProperty(0.0);
+        titleTextRotation = new SimpleDoubleProperty(0.0);
         highlighted = new SimpleBooleanProperty(false);
 
-        nameText = new Text(column.getName());
-//        nameText.textProperty().bindBidirectional(column.nameProperty());
+        titleText = new Text(column.getName());
+//        titleText.textProperty().bindBidirectional(column.nameProperty());
         Tooltip tooltip = new Tooltip();
         tooltip.textProperty().bindBidirectional(column.nameProperty());
-        Tooltip.install(nameText, tooltip);
-        nameText.setFont(new Font(DEFAULT_NAME_TEXT_SIZE));
-        nameText.setSmooth(true);
-        nameText.setFill(labelColor);
-        nameText.rotateProperty().bindBidirectional(nameTextRotation);
+        Tooltip.install(titleText, tooltip);
+        titleText.setFont(new Font(DEFAULT_NAME_TEXT_SIZE));
+        titleText.setSmooth(true);
+        titleText.setFill(labelColor);
+        titleText.rotateProperty().bindBidirectional(titleTextRotation);
 
         correlationCoefficientIndicatorRectangle = new Rectangle();
         correlationCoefficientIndicatorRectangle.setStroke(Color.BLACK);
@@ -219,7 +207,7 @@ public abstract class PCPAxis {
 //        topFocusCrossBarLine = makeLine();
 //        bottomFocusCrossBarLine = makeLine();
 
-        graphicsGroup = new Group(nameText, topContexBar, bottomContextBar, axisBar, /*topCrossBarLine, bottomCrossBarLine, topFocusCrossBarLine,
+        graphicsGroup = new Group(titleText, topContexBar, bottomContextBar, axisBar, /*topCrossBarLine, bottomCrossBarLine, topFocusCrossBarLine,
                 bottomFocusCrossBarLine,*/ minValueText, maxValueText, focusMinValueText, focusMaxValueText);
 
         if (getColumn() instanceof DoubleColumn) {
@@ -227,6 +215,12 @@ public abstract class PCPAxis {
         }
 
         registerListeners();
+    }
+
+    public PCPView getPCPView() { return pcpView; }
+
+    public double getTitleTextWidth() {
+        return titleText.getLayoutBounds().getWidth();
     }
 
     public ArrayList<PCPAxisSelection> getAxisSelectionList() {
@@ -259,10 +253,10 @@ public abstract class PCPAxis {
         draggingBottomContextBar.setStroke(bottomContextBar.getStroke());
         draggingBottomContextBar.setFill(bottomContextBar.getFill());
 
-        draggingNameText = new Text(nameText.getText());
-        draggingNameText.setX(nameText.getX());
-        draggingNameText.setY(nameText.getY());
-        draggingNameText.setFont(nameText.getFont());
+        draggingNameText = new Text(titleText.getText());
+        draggingNameText.setX(titleText.getX());
+        draggingNameText.setY(titleText.getY());
+        draggingNameText.setFont(titleText.getFont());
 
         axisDraggingGraphicsGroup = new Group(draggingNameText, draggingTopContextBar, draggingBottomContextBar,
                 draggingAxisBar);
@@ -270,12 +264,12 @@ public abstract class PCPAxis {
     }
 
     private void registerListeners() {
-        nameText.textProperty().addListener((observable, oldValue, newValue) -> {
-            nameText.setX(bounds.getX() + ((bounds.getWidth() - nameText.getLayoutBounds().getWidth()) / 2.));
-            nameText.setY(bounds.getY() + nameText.getLayoutBounds().getHeight());
+        titleText.textProperty().addListener((observable, oldValue, newValue) -> {
+            titleText.setX(bounds.getMinX() + ((bounds.getWidth() - titleText.getLayoutBounds().getWidth()) / 2.));
+            titleText.setY(bounds.getMinY() + titleText.getLayoutBounds().getHeight());
         });
 
-        nameText.setOnMouseClicked(event -> {
+        titleText.setOnMouseClicked(event -> {
             if (event.getClickCount() == 2) {
                 if (dataModel.getHighlightedColumn() == getColumn()) {
                     dataModel.setHighlightedColumn(null);
@@ -285,7 +279,7 @@ public abstract class PCPAxis {
             }
         });
 
-        nameText.setOnMouseDragged(new EventHandler<MouseEvent>() {
+        titleText.setOnMouseDragged(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
                 if (!dragging) {
@@ -334,7 +328,7 @@ public abstract class PCPAxis {
             }
         });
 
-        nameText.setOnMousePressed(new EventHandler<MouseEvent>() {
+        titleText.setOnMousePressed(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
                 if (event.isSecondaryButtonDown()) {
@@ -359,7 +353,7 @@ public abstract class PCPAxis {
             }
         });
 
-        nameText.setOnMouseReleased(new EventHandler<MouseEvent>() {
+        titleText.setOnMouseReleased(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
                 if (dragging) {
@@ -431,11 +425,11 @@ public abstract class PCPAxis {
 
         highlighted.addListener((observable, oldValue, newValue) -> {
             if (newValue) {
-                nameText.setFont(Font.font(nameText.getFont().getFamily(), FontWeight.BOLD, DEFAULT_NAME_TEXT_SIZE));
-                nameText.setEffect(new DropShadow());
+                titleText.setFont(Font.font(titleText.getFont().getFamily(), FontWeight.BOLD, DEFAULT_NAME_TEXT_SIZE));
+                titleText.setEffect(new DropShadow());
             } else {
-                nameText.setFont(Font.font(nameText.getFont().getFamily(), FontWeight.NORMAL, DEFAULT_NAME_TEXT_SIZE));
-                nameText.setEffect(null);
+                titleText.setFont(Font.font(titleText.getFont().getFamily(), FontWeight.NORMAL, DEFAULT_NAME_TEXT_SIZE));
+                titleText.setEffect(null);
             }
         });
     }
@@ -454,39 +448,40 @@ public abstract class PCPAxis {
         return highlighted;
     }
 
-    public void layout(double center, double top, double width, double height) {
-        this.centerX = center;
-        double left = centerX - (width / 2.);
-        bounds = new Rectangle(left, top, width, height);
+    public void resize(double left, double top, double width, double height) {
+        bounds = new BoundingBox(left, top, width, height);
+        centerX = left + (width / 2.);
+        centerY = top + (height / 2.);
 
-        nameText.setText(column.getName());
-        if (nameText.getLayoutBounds().getWidth() > bounds.getWidth()) {
+        titleText.setText(column.getName());
+        if (titleText.getLayoutBounds().getWidth() > bounds.getWidth()) {
             // truncate the column name to fit axis bounds
-            while (nameText.getLayoutBounds().getWidth() > bounds.getWidth()) {
-                nameText.setText(nameText.getText().substring(0, nameText.getText().length() - 1));
+            while (titleText.getLayoutBounds().getWidth() > bounds.getWidth()) {
+                titleText.setText(titleText.getText().substring(0, titleText.getText().length() - 1));
             }
         }
-        nameText.setX(bounds.getX() + ((width - nameText.getLayoutBounds().getWidth()) / 2.));
-        nameText.setY(bounds.getY() + nameText.getLayoutBounds().getHeight());
-        nameText.setRotate(getNameTextRotation());
+        titleText.setX(bounds.getMinX() + ((width - titleText.getLayoutBounds().getWidth()) / 2.));
+        titleText.setY(bounds.getMinY() + titleText.getLayoutBounds().getHeight());
+        titleText.setRotate(getTitleTextRotation());
 
-        correlationCoefficientIndicatorRectangle.setY(nameText.getLayoutBounds().getMaxY() + 4);
-        correlationCoefficientIndicatorRectangle.setX(bounds.getLayoutBounds().getMinX());
-        correlationCoefficientIndicatorRectangle.setWidth(bounds.getLayoutBounds().getWidth());
+        correlationCoefficientIndicatorRectangle.setY(titleText.getLayoutBounds().getMaxY() + 4);
+        correlationCoefficientIndicatorRectangle.setX(bounds.getMinX());
+        correlationCoefficientIndicatorRectangle.setWidth(bounds.getWidth());
 
-        barTopY = correlationCoefficientIndicatorRectangle.getLayoutBounds().getMaxY() + minValueText.getLayoutBounds().getHeight() + 4;
-        barBottomY = bounds.getY() + bounds.getHeight() - maxValueText.getLayoutBounds().getHeight();
-        focusTopY = barTopY + contextRegionHeight;
-        focusBottomY = barBottomY - contextRegionHeight;
+        double barTopY = correlationCoefficientIndicatorRectangle.getLayoutBounds().getMaxY() + minValueText.getLayoutBounds().getHeight() + 4;
+        double barBottomY = bounds.getMinY() + bounds.getHeight() - maxValueText.getLayoutBounds().getHeight();
+        double focusTopY = barTopY + contextRegionHeight;
+        double focusBottomY = barBottomY - contextRegionHeight;
 //        barTopY = top + DEFAULT_NAME_LABEL_HEIGHT;
 //        barBottomY = bounds.getY() + bounds.getHeight() - maxValueText.getLayoutBounds().getHeight();
 //        focusTopY = top + DEFAULT_NAME_LABEL_HEIGHT + contextRegionHeight;
 //        focusBottomY = barBottomY - contextRegionHeight;
 
-        minValueText.setX(bounds.getX() + ((width - minValueText.getLayoutBounds().getWidth()) / 2.));
+        minValueText.setX(bounds.getMinX() + ((width - minValueText.getLayoutBounds().getWidth()) / 2.));
+//        minValueText.setX(titleText.getX());
         minValueText.setY(barBottomY + minValueText.getLayoutBounds().getHeight());
 
-        maxValueText.setX(bounds.getX() + ((width - maxValueText.getLayoutBounds().getWidth()) / 2.));
+        maxValueText.setX(bounds.getMinX() + ((width - maxValueText.getLayoutBounds().getWidth()) / 2.));
         maxValueText.setY(barTopY - 4d);
 
         maxHistogramBinWidth = bounds.getWidth() / 2;
@@ -505,25 +500,6 @@ public abstract class PCPAxis {
         bottomContextBar.setWidth(axisBar.getWidth());
         bottomContextBar.setY(focusBottomY);
         bottomContextBar.setHeight(contextRegionHeight);
-//        topCrossBarLine.setStartY(barTopY);
-//        topCrossBarLine.setEndY(barTopY);
-//        topCrossBarLine.setStartX(centerX - (DEFAULT_BAR_WIDTH / 2.));
-//        topCrossBarLine.setEndX(centerX + (DEFAULT_BAR_WIDTH / 2.));
-//
-//        bottomCrossBarLine.setStartY(barBottomY);
-//        bottomCrossBarLine.setEndY(barBottomY);
-//        bottomCrossBarLine.setStartX(centerX - (DEFAULT_BAR_WIDTH / 2.));
-//        bottomCrossBarLine.setEndX(centerX + (DEFAULT_BAR_WIDTH / 2.));
-//
-//        topFocusCrossBarLine.setStartY(focusTopY);
-//        topFocusCrossBarLine.setEndY(focusTopY);
-//        topFocusCrossBarLine.setStartX(centerX - (DEFAULT_BAR_WIDTH / 2.));
-//        topFocusCrossBarLine.setEndX(centerX + (DEFAULT_BAR_WIDTH / 2.));
-//
-//        bottomFocusCrossBarLine.setStartY(focusBottomY);
-//        bottomFocusCrossBarLine.setEndY(focusBottomY);
-//        bottomFocusCrossBarLine.setStartX(centerX - (DEFAULT_BAR_WIDTH / 2.));
-//        bottomFocusCrossBarLine.setEndX(centerX + (DEFAULT_BAR_WIDTH / 2.));
 
         if (!axisSelectionList.isEmpty()) {
             for (PCPAxisSelection pcpAxisSelection : axisSelectionList) {
@@ -668,7 +644,7 @@ public abstract class PCPAxis {
     public void setLabelColor(Color labelColor) {
         if (this.labelColor != labelColor) {
             this.labelColor = labelColor;
-            nameText.setFill(labelColor);
+            titleText.setFill(labelColor);
 //            minValueText.setFill(labelColor);
 //            maxValueText.setFill(labelColor);
         }
@@ -682,33 +658,33 @@ public abstract class PCPAxis {
 
     public Group getGraphicsGroup() { return graphicsGroup; }
 
-    public Text getNameText() { return nameText; }
+    public Text getTitleText() { return titleText; }
 
-    public final double getNameTextRotation() { return nameTextRotation.get(); }
+    public final double getTitleTextRotation() { return titleTextRotation.get(); }
 
-    public final void setNameTextRotation(double value) { nameTextRotation.set(value); }
+    public final void setTitleTextRotation(double value) { titleTextRotation.set(value); }
 
-    public DoubleProperty nameTextRotationProperty() { return nameTextRotation; }
+    public DoubleProperty titleTextRotationProperty() { return titleTextRotation; }
 
     public double getBarLeftX() { return axisBar.getX(); }
     public double getBarRightX() { return axisBar.getX() + axisBar.getWidth(); }
 
-    public Rectangle getBounds() { return bounds; }
+    public Bounds getBounds() { return bounds; }
 
     public Rectangle getAxisBar() { return axisBar; }
 
     //    public DoubleColumn getColumn() { return column; }
     public int getColumnDataModelIndex() { return dataModel.getColumnIndex(getColumn()); }
 
-    public double getFocusTopY() { return focusTopY; }
-    public double getFocusBottomY() { return focusBottomY; }
-    public double getUpperContextTopY() { return barTopY; }
-    public double getUpperContextBottomY() { return focusTopY; }
-    public double getLowerContextTopY() { return focusBottomY; }
-    public double getLowerContextBottomY() { return barBottomY; }
+    public double getFocusTopY() { return topContexBar.getY() + topContexBar.getHeight()/*focusTopY*/; }
+    public double getFocusBottomY() { return bottomContextBar.getY()/*focusBottomY*/; }
+//    public double getUpperContextTopY() { return axisBar.getY()/*barTopY*/; }
+//    public double getUpperContextBottomY() { return focusTopY; }
+//    public double getLowerContextTopY() { return focusBottomY; }
+//    public double getLowerContextBottomY() { return barBottomY; }
 
-    public double getVerticalBarTop() { return barTopY; }
-    public double getVerticalBarBottom() { return barBottomY; }
+//    public double getVerticalBarTop() { return barTopY; }
+//    public double getVerticalBarBottom() { return barBottomY; }
 
     private void adjustTextSize(Text text, double maxWidth, double fontSize) {
         String fontName = text.getFont().getName();

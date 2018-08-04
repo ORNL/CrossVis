@@ -106,7 +106,7 @@ public abstract class Axis {
     public void setOrientation(Orientation orientation) {
         if (this.orientation != orientation) {
             this.orientation = orientation;
-//            layout();
+//            resize();
         }
     }
 

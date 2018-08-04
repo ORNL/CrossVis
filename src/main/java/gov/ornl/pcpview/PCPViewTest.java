@@ -7,6 +7,7 @@ import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
+import javafx.geometry.Orientation;
 import javafx.scene.Scene;
 import javafx.scene.SceneAntialiasing;
 import javafx.scene.control.Button;
@@ -60,8 +61,8 @@ public class PCPViewTest extends Application {
         pcpView.setDisplayMode(PCPView.DISPLAY_MODE.PCP_LINES);
 
         ScrollPane scrollPane = new ScrollPane(pcpView);
-        scrollPane.setFitToWidth(pcpView.getFitAxisSpacingToWidthEnabled());
-        scrollPane.setFitToHeight(true);
+        scrollPane.setFitToWidth(pcpView.getFitToWidth());
+        scrollPane.setFitToHeight(pcpView.getFitToHeight());
 
         Button dataButton = new Button("Load Data");
         dataButton.setOnAction(new EventHandler<ActionEvent>() {
@@ -107,8 +108,15 @@ public class PCPViewTest extends Application {
             }
         });
 
+        ChoiceBox<Orientation> orientationChoiceBox = new ChoiceBox<>(FXCollections.observableArrayList(Orientation.HORIZONTAL, Orientation.VERTICAL));
+        orientationChoiceBox.getSelectionModel().select(pcpView.getOrientation());
+        orientationChoiceBox.setOnAction(event -> {
+            pcpView.setOrientation(orientationChoiceBox.getValue());
+        });
+
         HBox buttonBox = new HBox();
-        buttonBox.getChildren().addAll(dataButton, displayModeChoiceBox);
+        buttonBox.setSpacing(2.);
+        buttonBox.getChildren().addAll(dataButton, displayModeChoiceBox, orientationChoiceBox);
 
         BorderPane rootNode = new BorderPane();
         rootNode.setCenter(scrollPane);
@@ -122,17 +130,7 @@ public class PCPViewTest extends Application {
 
         dataModel = new DataTable();
         pcpView.setDataModel(dataModel);
-
-//        try {
-//            IOUtilities.readCSV(new File("data/csv/titan-performance.csv"),
-//                    DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss"), "Date", dataModel);
-//        } catch (IOException e) {
-//            System.exit(0);
-//            e.printStackTrace();
-//        }
     }
-
-
 
     @Override
     public void stop() {

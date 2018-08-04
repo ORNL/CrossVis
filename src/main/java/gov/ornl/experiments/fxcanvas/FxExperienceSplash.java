@@ -84,7 +84,7 @@ public class FxExperienceSplash extends Application {
         webView.getEngine().load("http://fxexperience.com/");
         loadProgress.progressProperty().bind(webView.getEngine().getLoadWorker().workDoneProperty().divide(100));
 
-        // layout the scene.
+        // resize the scene.
         Scene scene = new Scene(webView, 1000, 600);
         webView.prefWidthProperty().bind(scene.widthProperty());
         webView.prefHeightProperty().bind(scene.heightProperty());

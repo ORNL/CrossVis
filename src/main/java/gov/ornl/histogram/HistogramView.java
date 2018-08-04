@@ -328,8 +328,8 @@ public class HistogramView extends Region {
 
                 if (orientation == Orientation.HORIZONTAL) {
 //                    if (showAxes) {
-//                        valueAxis.layout(xAxisBounds);
-//                        binCountAxis.layout(yAxisBounds);
+//                        valueAxis.resize(xAxisBounds);
+//                        binCountAxis.resize(yAxisBounds);
 //                    }
 
                     double binWidth = plotWidth / histogramDataModel.getNumBins();
@@ -349,8 +349,8 @@ public class HistogramView extends Region {
                     }
                 } else {
 //                    if (showAxes) {
-//                        valueAxis.layout(yAxisBounds);
-//                        binCountAxis.layout(xAxisBounds);
+//                        valueAxis.resize(yAxisBounds);
+//                        binCountAxis.resize(xAxisBounds);
 //                    }
 
                     double binHeight = plotHeight / histogramDataModel.getNumBins();

@@ -122,6 +122,7 @@ public class EDENFXMain extends Application implements DataTableListener {
     private Menu queryStatisticsMenu;
     private CheckMenuItem showQueryStatisticsCheckMI;
     private CheckMenuItem showNonQueryStatisticsCheckMI;
+    private Menu orientationMenu;
 
     @Override
     public void init() {
@@ -640,12 +641,12 @@ public class EDENFXMain extends Application implements DataTableListener {
 //        HBox nameTextRotationBox = new HBox();
 //        nameTextRotationBox.setAlignment(Pos.CENTER);
 //
-//        Spinner<Double> nameTextRotationSpinner = new Spinner<Double>(-30., 30., pcpView.getNameTextRotation());
-//        pcpView.nameTextRotationProperty().bind(nameTextRotationSpinner.valueProperty());
+//        Spinner<Double> nameTextRotationSpinner = new Spinner<Double>(-30., 30., pcpView.getTitleTextRotation());
+//        pcpView.titleTextRotationProperty().bind(nameTextRotationSpinner.valueProperty());
 //        nameTextRotationSpinner.setEditable(true);
 //        nameTextRotationBox.getChildren().addAll(new Label(" Name Label Rotation: "), nameTextRotationSpinner);
 
-        // add all items to layout
+        // add all items to resize
         toolBar.getItems().addAll(summaryDisplayModeButton, histogramDisplayModeButton, binDisplayModeButton, lineDisplayModeButton, new Separator(),
                 showUnselectedButton, showSelectedButton, new Separator(), selectedItemsColorBox, unselectedItemsColorBox, new Separator(), opacityBox);
 //        , backgroundColorBox, labelColorBox, nameTextRotationBox);
@@ -729,8 +730,8 @@ public class EDENFXMain extends Application implements DataTableListener {
         pcpView.setPadding(new Insets(10));
 
         pcpScrollPane = new ScrollPane(pcpView);
-        pcpScrollPane.setFitToHeight(true);
-        pcpScrollPane.setFitToWidth(pcpView.getFitAxisSpacingToWidthEnabled());
+        pcpScrollPane.setFitToHeight(pcpView.getFitToHeight());
+        pcpScrollPane.setFitToWidth(pcpView.getFitToWidth());
 
         ToolBar toolBar = createToolBar(mainStage);
 
@@ -978,7 +979,7 @@ public class EDENFXMain extends Application implements DataTableListener {
                         openCSVFile(csvFile);
                         displayModeMenu.setDisable(false);
                         fitPCPAxesToWidthCheckMI.setDisable(false);
-                        changeAxisSpacingMI.setDisable(pcpView.getFitAxisSpacingToWidthEnabled());
+                        changeAxisSpacingMI.setDisable(pcpView.getFitToWidth());
                         preferences.put(EDENFXPreferenceKeys.LAST_CSV_READ_DIRECTORY, csvFile.getParentFile().getAbsolutePath());
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -1053,6 +1054,35 @@ public class EDENFXMain extends Application implements DataTableListener {
             }
         });
 
+        orientationMenu = new Menu("Orientation");
+        ToggleGroup orientationMenuGroup = new ToggleGroup();
+
+        RadioMenuItem horizontalOrientationMenuItem = new RadioMenuItem("Horizontal");
+        horizontalOrientationMenuItem.setToggleGroup(orientationMenuGroup);
+        if (pcpView.getOrientation() == Orientation.HORIZONTAL) {
+            horizontalOrientationMenuItem.setSelected(true);
+        }
+
+        RadioMenuItem verticalOrientationMenuItem = new RadioMenuItem("Vertical");
+        verticalOrientationMenuItem.setToggleGroup(orientationMenuGroup);
+        if (pcpView.getOrientation() == Orientation.VERTICAL) {
+            verticalOrientationMenuItem.setSelected(true);
+        }
+
+        orientationMenu.getItems().addAll(horizontalOrientationMenuItem, verticalOrientationMenuItem);
+
+        orientationMenuGroup.selectedToggleProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue != null) {
+                RadioMenuItem toggleItem = (RadioMenuItem)newValue;
+                if (toggleItem.getText().equals("Horizontal")) {
+                    pcpView.setOrientation(Orientation.HORIZONTAL);
+                } else {
+                    pcpView.setOrientation(Orientation.VERTICAL);
+                }
+            }
+        });
+        viewMenu.getItems().add(orientationMenu);
+
         displayModeMenu = new Menu("Display Mode");
         displayModeMenu.setDisable(true);
         displayModeMenuGroup = new ToggleGroup();
@@ -1121,11 +1151,11 @@ public class EDENFXMain extends Application implements DataTableListener {
 
         axisLayoutMenu = new Menu("ParallelAxis Layout");
         fitPCPAxesToWidthCheckMI = new CheckMenuItem("Fit ParallelAxis Spacing to Width");
-        fitPCPAxesToWidthCheckMI.setSelected(pcpView.getFitAxisSpacingToWidthEnabled());
+        fitPCPAxesToWidthCheckMI.setSelected(pcpView.getFitToWidth());
         fitPCPAxesToWidthCheckMI.setDisable(true);
         fitPCPAxesToWidthCheckMI.selectedProperty().addListener((observable, oldValue, newValue) -> {
-            pcpView.setFitAxisSpacingToWidthEnabled(fitPCPAxesToWidthCheckMI.isSelected());
-            if (pcpView.getFitAxisSpacingToWidthEnabled()) {
+            pcpView.setFitToWidth(fitPCPAxesToWidthCheckMI.isSelected());
+            if (pcpView.getFitToWidth()) {
                 changeAxisSpacingMI.setDisable(true);
                 pcpScrollPane.setFitToWidth(true);
             } else {

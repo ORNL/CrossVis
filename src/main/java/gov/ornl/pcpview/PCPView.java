@@ -2,11 +2,14 @@ package gov.ornl.pcpview;
 
 import gov.ornl.datatable.*;
 import javafx.beans.property.*;
+import javafx.geometry.BoundingBox;
 import javafx.geometry.Insets;
+import javafx.geometry.Orientation;
 import javafx.scene.Group;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.StrokeLineCap;
 
 import java.util.ArrayList;
@@ -53,9 +56,24 @@ public class PCPView extends Region implements DataTableListener {
     private HashSet<PCPTuple> unselectedTupleSet;
     private HashSet<PCPTuple> selectedTupleSet;
     private ObjectProperty<DISPLAY_MODE> displayMode;
-    private boolean fitAxisSpacingToWidthEnabled = true;
+    private BooleanProperty fitToWidth = new SimpleBooleanProperty(true);
+    private BooleanProperty fitToHeight = new SimpleBooleanProperty(true);
+//    private boolean fitAxisSpacingToWidthEnabled = true;
     private DoubleProperty nameTextRotation;
     private ArrayList<PCPBinSet> PCPBinSetList;
+
+    private BoundingBox plotRegionBounds;
+    private BoundingBox pcpRegionBounds;
+//    private BoundingBox pcpTitleRegionBounds;
+    private BoundingBox scatterplotRegionBounds;
+    private double plotRegionPadding = 4.;
+
+    private Rectangle plotRegionRectangle;
+    private Rectangle pcpRegionRectangle;
+//    private Rectangle pcpTitleRegionRectangle;
+    private Rectangle scatterplotRegionRectangle;
+
+    private ObjectProperty<Orientation> orientation = new SimpleObjectProperty<>(Orientation.HORIZONTAL);
 
     private Group summaryShapeGroup;
 
@@ -64,9 +82,45 @@ public class PCPView extends Region implements DataTableListener {
         registerListeners();
     }
 
+    public void setOrientation(Orientation orientation) {
+        if (getOrientation() != orientation) {
+            this.orientation.set(orientation);
+        }
+    }
+
+    public boolean getFitToWidth() { return fitToWidth.get(); }
+
+    public void setFitToWidth(boolean enabled) {
+        if (getFitToWidth() != enabled) {
+            fitToWidth.set(enabled);
+        }
+    }
+
+    public BooleanProperty fitToWidthProperty() { return fitToWidth; }
+
+    public boolean getFitToHeight() { return fitToHeight.get(); }
+
+    public void setSitToHeight(boolean enabled) {
+        if (getFitToHeight() == enabled) {
+            fitToHeight.set(enabled);
+        }
+    }
+
+    public BooleanProperty fitToHeightProperty() { return fitToHeight; }
+
+    public Orientation getOrientation() { return orientation.get(); }
+
+    public ObjectProperty<Orientation> orientationProperty() { return orientation; }
+
     private void registerListeners() {
         widthProperty().addListener(o -> resizeView());
         heightProperty().addListener(o -> resizeView());
+
+        orientation.addListener(observable -> resizeView());
+
+        fitToHeight.addListener(observable -> resizeView());
+
+        fitToWidth.addListener(observable -> resizeView());
 
         backgroundColor.addListener((observable, oldValue, newValue) -> {
             pane.setBackground(new Background(new BackgroundFill(backgroundColor.get(), new CornerRadii(0), Insets.EMPTY)));
@@ -174,9 +228,27 @@ public class PCPView extends Region implements DataTableListener {
 
         summaryShapeGroup = new Group();
 
+        plotRegionRectangle = new Rectangle();
+        plotRegionRectangle.setStroke(Color.DARKBLUE);
+        plotRegionRectangle.setFill(Color.TRANSPARENT);
+        plotRegionRectangle.setMouseTransparent(true);
+        plotRegionRectangle.setStrokeWidth(1.5);
+
+        pcpRegionRectangle = new Rectangle();
+        pcpRegionRectangle.setStroke(Color.ORANGE);
+        pcpRegionRectangle.setStrokeWidth(1.5);
+        pcpRegionRectangle.setFill(Color.TRANSPARENT);
+        pcpRegionRectangle.setMouseTransparent(true);
+
+        scatterplotRegionRectangle = new Rectangle();
+        scatterplotRegionRectangle.setStroke(Color.RED);
+        scatterplotRegionRectangle.setStrokeWidth(1.5);
+        scatterplotRegionRectangle.setFill(Color.TRANSPARENT);
+        scatterplotRegionRectangle.setMouseTransparent(true);
+
         pane = new Pane();
         pane.setBackground(new Background(new BackgroundFill(backgroundColor.get(), new CornerRadii(0), Insets.EMPTY)));
-        pane.getChildren().addAll(unselectedCanvas, selectedCanvas, summaryShapeGroup);
+        pane.getChildren().addAll(unselectedCanvas, selectedCanvas, summaryShapeGroup, plotRegionRectangle, pcpRegionRectangle, scatterplotRegionRectangle);
 
         getChildren().add(pane);
     }
@@ -325,73 +397,201 @@ public class PCPView extends Region implements DataTableListener {
         */
     }
 
-
     private void resizeView() {
         if (dataModel != null && !dataModel.isEmpty()) {
-            double pcpHeight = getHeight() - (getInsets().getTop() + getInsets().getBottom());
-            double pcpWidth;
-            double width;
+            plotRegionBounds = new BoundingBox(getInsets().getLeft(), getInsets().getTop(),
+                    getWidth() - (getInsets().getLeft() + getInsets().getRight()),
+                    getHeight() - (getInsets().getTop() + getInsets().getBottom()));
+            plotRegionRectangle.setX(plotRegionBounds.getMinX());
+            plotRegionRectangle.setY(plotRegionBounds.getMinY());
+            plotRegionRectangle.setWidth(plotRegionBounds.getWidth());
+            plotRegionRectangle.setHeight(plotRegionBounds.getHeight());
 
-            if (fitAxisSpacingToWidthEnabled) {
-                width = getWidth();
-                pcpWidth = width - (getInsets().getLeft() + getInsets().getRight());
-                axisSpacing = pcpWidth / dataModel.getColumnCount();
-            } else {
-                pcpWidth = axisSpacing * dataModel.getColumnCount();
-                width = (getInsets().getLeft() + getInsets().getRight()) + pcpWidth;
-            }
+            if (getOrientation() == Orientation.HORIZONTAL) {
+                double plotWidth;
+                double width;
 
-            if (pcpWidth > 0 && pcpHeight > 0) {
-                pane.setPrefSize(width, getHeight());
-                pane.setMinWidth(width);
-
-                selectedCanvas.setWidth(width);
-                selectedCanvas.setHeight(getHeight());
-                unselectedCanvas.setWidth(width);
-                unselectedCanvas.setHeight(getHeight());
-
-                double left = getInsets().getLeft() + (axisSpacing / 2.);
-                double top = getInsets().getTop();
-
-                if (axisList != null) {
-                    for (int iaxis = 0; iaxis < axisList.size(); iaxis++) {
-                        PCPAxis pcpAxis = axisList.get(iaxis);
-                        pcpAxis.layout(left + (iaxis * axisSpacing), top, axisSpacing, pcpHeight);
-
-                        if (getDisplayMode() == DISPLAY_MODE.HISTOGRAM) {
-                            if (!(pcpAxis instanceof PCPCategoricalAxis)) {
-                                pane.getChildren().add(0, pcpAxis.getHistogramBinRectangleGroup());
-                                pane.getChildren().add(1, pcpAxis.getQueryHistogramBinRectangleGroup());
-                            }
-                        }
-                    }
-
-                    if (!summaryShapeGroup.getChildren().isEmpty()) {
-                        summaryShapeGroup.getChildren().clear();
-                    }
-
-                    // add tuples polylines from data model
-                    if (getDisplayMode() == DISPLAY_MODE.PCP_LINES) {
-                        if (tupleList != null) {
-                            for (PCPTuple pcpTuple : tupleList) {
-                                pcpTuple.layout(axisList);
-                            }
-                        }
-                    } else if (getDisplayMode() == DISPLAY_MODE.PCP_BINS) {
-                        // layout PCPBins
-                        for (PCPBinSet PCPBinSet : PCPBinSetList) {
-                            PCPBinSet.layoutBins();
-                        }
-                    } else if (getDisplayMode() == DISPLAY_MODE.SUMMARY) {
-                        // build summary shapes and add to pane
-//                        SummaryShapeBuilder.buildShapes(axisList, this, summaryShapeGroup);
-//                        pane.getChildren().add(summaryShapeGroup);
-                    }
+                if (getFitToWidth()) {
+                    width = getWidth();
+                    plotWidth = width - (getInsets().getLeft() + getInsets().getRight());
+                    axisSpacing = plotWidth / dataModel.getColumnCount();
+                } else {
+                    plotWidth = axisSpacing * dataModel.getColumnCount();
+                    width = (getInsets().getLeft() + getInsets().getRight()) + plotWidth;
                 }
 
+                double plotHeight = getHeight() - (getInsets().getTop() + getInsets().getBottom());
 
-                redrawView();
+                double pcpHeight = plotHeight * .7;
+                double scatterplotSize = plotHeight - pcpHeight;
+
+                if (scatterplotSize > (axisSpacing * .8)) {
+                    scatterplotSize = axisSpacing * .8;
+                    pcpHeight = plotHeight - scatterplotSize;
+                }
+
+                if (plotWidth > 0 && plotHeight > 0) {
+                    pane.setPrefSize(width, getHeight());
+                    pane.setMinWidth(width);
+
+                    selectedCanvas.setWidth(width);
+                    selectedCanvas.setHeight(getHeight());
+                    unselectedCanvas.setWidth(width);
+                    unselectedCanvas.setHeight(getHeight());
+
+//                    double left = getInsets().getLeft() + (axisSpacing / 2.);
+//                    double top = getInsets().getTop();
+
+                    if (axisList != null) {
+                        pcpRegionBounds = new BoundingBox(plotRegionBounds.getMinX(), plotRegionBounds.getMinY(),
+                                plotRegionBounds.getWidth(), plotHeight - (scatterplotSize + plotRegionPadding));
+                        pcpRegionRectangle.setX(pcpRegionBounds.getMinX());
+                        pcpRegionRectangle.setY(pcpRegionBounds.getMinY());
+                        pcpRegionRectangle.setWidth(pcpRegionBounds.getWidth());
+                        pcpRegionRectangle.setHeight(pcpRegionBounds.getHeight());
+
+                        scatterplotRegionBounds = new BoundingBox(plotRegionBounds.getMinX(), pcpRegionBounds.getMaxY() + plotRegionPadding,
+                                plotRegionBounds.getWidth(), scatterplotSize);
+                        scatterplotRegionRectangle.setX(scatterplotRegionBounds.getMinX());
+                        scatterplotRegionRectangle.setY(scatterplotRegionBounds.getMinY());
+                        scatterplotRegionRectangle.setWidth(scatterplotRegionBounds.getWidth());
+                        scatterplotRegionRectangle.setHeight(scatterplotRegionBounds.getHeight());
+
+                        for (int iaxis = 0; iaxis < axisList.size(); iaxis++) {
+                            PCPAxis pcpAxis = axisList.get(iaxis);
+                            double axisLeft = plotRegionBounds.getMinX() + (iaxis * axisSpacing);
+                            pcpAxis.resize(axisLeft, pcpRegionBounds.getMinY(), axisSpacing, pcpRegionBounds.getHeight());
+
+                            if (getDisplayMode() == DISPLAY_MODE.HISTOGRAM) {
+                                if (!(pcpAxis instanceof PCPCategoricalAxis)) {
+                                    pane.getChildren().add(0, pcpAxis.getHistogramBinRectangleGroup());
+                                    pane.getChildren().add(1, pcpAxis.getQueryHistogramBinRectangleGroup());
+                                }
+                            }
+                        }
+
+                        if (!summaryShapeGroup.getChildren().isEmpty()) {
+                            summaryShapeGroup.getChildren().clear();
+                        }
+
+                        // add tuples polylines from data model
+                        if (getDisplayMode() == DISPLAY_MODE.PCP_LINES) {
+                            if (tupleList != null) {
+                                for (PCPTuple pcpTuple : tupleList) {
+                                    pcpTuple.layout(axisList);
+                                }
+                            }
+                        } else if (getDisplayMode() == DISPLAY_MODE.PCP_BINS) {
+                            // resize PCPBins
+                            for (PCPBinSet PCPBinSet : PCPBinSetList) {
+                                PCPBinSet.layoutBins();
+                            }
+                        } else if (getDisplayMode() == DISPLAY_MODE.SUMMARY) {
+                            // build summary shapes and add to pane
+    //                        SummaryShapeBuilder.buildShapes(axisList, this, summaryShapeGroup);
+    //                        pane.getChildren().add(summaryShapeGroup);
+                        }
+                    }
+                }
+            } else if (getOrientation() == Orientation.VERTICAL) {
+                double plotHeight;
+                double height;
+
+                if (getFitToHeight()) {
+                    height = getHeight();
+                    plotHeight = height - (getInsets().getTop() + getInsets().getBottom());
+                    axisSpacing = plotHeight / dataModel.getColumnCount();
+                } else {
+                    plotHeight = axisSpacing * dataModel.getColumnCount();
+                    height = plotHeight + getInsets().getLeft() + getInsets().getRight();
+                }
+
+                double plotWidth = getWidth() - (getInsets().getLeft() + getInsets().getRight());
+
+                double pcpWidth = plotWidth * .7;
+                double scatterplotSize = plotWidth - pcpWidth;
+
+                if (scatterplotSize > (axisSpacing * .8)) {
+                    scatterplotSize = axisSpacing * .8;
+                    pcpWidth = plotWidth - scatterplotSize;
+                }
+
+                if (plotWidth > 0 && plotHeight > 0) {
+                    pane.setPrefSize(getWidth(), height);
+                    pane.setMinHeight(height);
+
+                    selectedCanvas.setWidth(getWidth());
+                    selectedCanvas.setHeight(height);
+                    unselectedCanvas.setWidth(getWidth());
+                    unselectedCanvas.setHeight(height);
+
+//                    double left = getInsets().getLeft() + (axisSpacing / 2.);
+//                    double top = getInsets().getTop();
+
+                    if (axisList != null) {
+                        double longestTitle = 0.;
+                        for (PCPAxis pcpAxis : axisList) {
+                            if (pcpAxis.getTitleTextWidth() > longestTitle) {
+                                longestTitle = pcpAxis.getTitleTextWidth();
+                            }
+                        }
+                        longestTitle += 2;
+
+                        pcpRegionBounds = new BoundingBox(plotRegionBounds.getMinX(), plotRegionBounds.getMinY(),
+                                plotWidth - (scatterplotSize + plotRegionPadding), plotHeight);
+                        pcpRegionRectangle.setX(pcpRegionBounds.getMinX());
+                        pcpRegionRectangle.setY(pcpRegionBounds.getMinY());
+                        pcpRegionRectangle.setWidth(pcpRegionBounds.getWidth());
+                        pcpRegionRectangle.setHeight(pcpRegionBounds.getHeight());
+
+                        scatterplotRegionBounds = new BoundingBox(pcpRegionBounds.getMaxX() + plotRegionPadding,
+                                pcpRegionBounds.getMinY(), scatterplotSize, plotHeight);
+                        scatterplotRegionRectangle.setX(scatterplotRegionBounds.getMinX());
+                        scatterplotRegionRectangle.setY(scatterplotRegionBounds.getMinY());
+                        scatterplotRegionRectangle.setWidth(scatterplotRegionBounds.getWidth());
+                        scatterplotRegionRectangle.setHeight(scatterplotRegionBounds.getHeight());
+
+                        for (int iaxis = 0; iaxis < axisList.size(); iaxis++) {
+                            PCPAxis pcpAxis = axisList.get(iaxis);
+                            double axisTop = pcpRegionBounds.getMinY() + (iaxis * axisSpacing);
+                            pcpAxis.resize(pcpRegionBounds.getMinX(), axisTop, pcpRegionBounds.getWidth(), axisSpacing);
+
+//                            pcpAxis.resize(pcpRegionBounds.getMinX() + (axisSpacing / 2.) + (iaxis * axisSpacing),
+//                                    pcpRegionBounds.getMinY(), axisSpacing, pcpRegionBounds.getHeight());
+
+                            if (getDisplayMode() == DISPLAY_MODE.HISTOGRAM) {
+                                if (!(pcpAxis instanceof PCPCategoricalAxis)) {
+                                    pane.getChildren().add(0, pcpAxis.getHistogramBinRectangleGroup());
+                                    pane.getChildren().add(1, pcpAxis.getQueryHistogramBinRectangleGroup());
+                                }
+                            }
+                        }
+
+                        if (!summaryShapeGroup.getChildren().isEmpty()) {
+                            summaryShapeGroup.getChildren().clear();
+                        }
+
+                        // add tuples polylines from data model
+                        if (getDisplayMode() == DISPLAY_MODE.PCP_LINES) {
+                            if (tupleList != null) {
+                                for (PCPTuple pcpTuple : tupleList) {
+                                    pcpTuple.layout(axisList);
+                                }
+                            }
+                        } else if (getDisplayMode() == DISPLAY_MODE.PCP_BINS) {
+                            // resize PCPBins
+                            for (PCPBinSet PCPBinSet : PCPBinSetList) {
+                                PCPBinSet.layoutBins();
+                            }
+                        } else if (getDisplayMode() == DISPLAY_MODE.SUMMARY) {
+                            // build summary shapes and add to pane
+                            //                        SummaryShapeBuilder.buildShapes(axisList, this, summaryShapeGroup);
+                            //                        pane.getChildren().add(summaryShapeGroup);
+                        }
+                    }
+                }
             }
+            redrawView();
         }
     }
 
@@ -408,18 +608,7 @@ public class PCPView extends Region implements DataTableListener {
 
     public void clearQuery() {
         dataModel.clearActiveQuery();
-
-        // clear all axis selection graphics
-//        for (PCPAxis pcpAxis : axisList) {
-//            if (!pcpAxis.getAxisSelectionList().isEmpty()) {
-//                for (AxisSelection pcpAxisSelection : pcpAxis.getAxisSelectionList()) {
-//                    pane.getChildren().remove(pcpAxisSelection.getGraphicsGroup());
-//                }
-//                pcpAxis.getAxisSelectionList().clear();
-//            }
-//        }
         removeAllAxisSelectionGraphics();
-
         handleQueryChange();
     }
 
@@ -431,13 +620,6 @@ public class PCPView extends Region implements DataTableListener {
     }
 
     private void drawPCPBins() {
-//        lineCanvas.setCache(false);
-//        lineGC.setLineCap(StrokeLineCap.BUTT);
-//        lineGC.clearRect(0, 0, getWidth(), getHeight());
-////        lineGC.setGlobalAlpha(lineOpacity);
-//        lineGC.setLineWidth(2);
-//        lineGC.setLineWidth(2d);
-
         selectedCanvas.getGraphicsContext2D().setLineCap(StrokeLineCap.BUTT);
         selectedCanvas.getGraphicsContext2D().clearRect(0, 0, getWidth(), getHeight());
         selectedCanvas.getGraphicsContext2D().setLineWidth(2d);
@@ -516,13 +698,6 @@ public class PCPView extends Region implements DataTableListener {
     public void setDataModel(DataTable dataModel) {
         this.dataModel = dataModel;
         dataModel.addDataModelListener(this);
-        resizeView();
-    }
-
-    public boolean getFitAxisSpacingToWidthEnabled() { return fitAxisSpacingToWidthEnabled; }
-
-    public void setFitAxisSpacingToWidthEnabled (boolean enabled) {
-        fitAxisSpacingToWidthEnabled = enabled;
         resizeView();
     }
 
@@ -643,7 +818,7 @@ public class PCPView extends Region implements DataTableListener {
                 }
 
                 if (pcpAxis != null) {
-                    pcpAxis.nameTextRotationProperty().bind(nameTextRotationProperty());
+                    pcpAxis.titleTextRotationProperty().bind(nameTextRotationProperty());
                     pane.getChildren().add(pcpAxis.getGraphicsGroup());
                     axisList.add(pcpAxis);
                 }
@@ -694,19 +869,27 @@ public class PCPView extends Region implements DataTableListener {
             pcpAxis = new PCPCategoricalAxis(this, column, dataModel, pane);
         }
 
-        pcpAxis.nameTextRotationProperty().bind(nameTextRotationProperty());
+        pcpAxis.titleTextRotationProperty().bind(nameTextRotationProperty());
         pane.getChildren().add(pcpAxis.getGraphicsGroup());
         axisList.add(pcpAxis);
     }
 
     private void handleQueryChange() {
-        double left = getInsets().getLeft() + (axisSpacing / 2.);
-        double top = getInsets().getTop();
-        double pcpHeight = getHeight() - (getInsets().getTop() + getInsets().getBottom());
+//        double left = getInsets().getLeft() + (axisSpacing / 2.);
+//        double top = getInsets().getTop();
+//        double pcpHeight = getHeight() - (getInsets().getTop() + getInsets().getBottom());
 
         for (int iaxis = 0; iaxis < axisList.size(); iaxis++) {
             PCPAxis pcpAxis = axisList.get(iaxis);
-            pcpAxis.layout(left + (iaxis * axisSpacing), top, axisSpacing, pcpHeight);
+
+            if (getOrientation() == Orientation.HORIZONTAL) {
+                double axisLeft = plotRegionBounds.getMinX() + (iaxis * axisSpacing);
+                pcpAxis.resize(axisLeft, pcpRegionBounds.getMinY(), axisSpacing, pcpRegionBounds.getHeight());
+            } else if (getOrientation() == Orientation.VERTICAL) {
+                double axisTop = pcpRegionBounds.getMinY() + (iaxis * axisSpacing);
+                pcpAxis.resize(pcpRegionBounds.getMinX(), axisTop, pcpRegionBounds.getWidth(), axisSpacing);
+            }
+//            pcpAxis.resize(left + (iaxis * axisSpacing), top, axisSpacing, pcpHeight);
 
             if (getDisplayMode() == DISPLAY_MODE.HISTOGRAM) {
                 if (!(pcpAxis instanceof PCPCategoricalAxis)) {
@@ -761,7 +944,7 @@ public class PCPView extends Region implements DataTableListener {
 
             for (int iaxis = 0; iaxis < axisList.size(); iaxis++) {
                 PCPAxis pcpAxis = axisList.get(iaxis);
-                pcpAxis.layout(left + (iaxis * axisSpacing), top, axisSpacing, pcpHeight);
+                pcpAxis.resize(left + (iaxis * axisSpacing), top, axisSpacing, pcpHeight);
 
                 if (getDisplayMode() == DISPLAY_MODE.HISTOGRAM) {
                     pane.getChildren().add(0, pcpAxis.getHistogramBinRectangleGroup());
@@ -845,18 +1028,6 @@ public class PCPView extends Region implements DataTableListener {
 
                 // remove axis graphics from pane
                 pcpAxis.removeAllGraphics(pane);
-                /*
-                pane.getChildren().remove(pcpAxis.getGraphicsGroup());
-                pane.getChildren().remove(pcpAxis.getHistogramBinRectangleGroup());
-                pane.getChildren().remove(pcpAxis.getQueryHistogramBinRectangleGroup());
-
-                // remove axis selection graphics
-                if (!pcpAxis.getAxisSelectionList().isEmpty()) {
-                    for (AxisSelection axisSelection : pcpAxis.getAxisSelectionList()) {
-                        pane.getChildren().remove(axisSelection.getGraphicsGroup());
-                    }
-                }
-                */
 
                 // create PCPBinSets for axis configuration
                 PCPBinSetList = new ArrayList<>();
@@ -888,7 +1059,7 @@ public class PCPView extends Region implements DataTableListener {
 
     @Override
     public void dataModelColumnEnabled(DataTable dataModel, Column enabledColumn) {
-// add axis lines to the pane
+    // add axis lines to the pane
         addAxis(enabledColumn);
 
         // add tuples polylines from data model

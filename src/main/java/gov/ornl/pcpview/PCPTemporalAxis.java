@@ -124,11 +124,11 @@ public class PCPTemporalAxis extends PCPAxis {
         });
     }
 
-    public void layout(double center, double top, double width, double height) {
-        super.layout(center, top, width, height);
+    public void resize(double center, double top, double width, double height) {
+        super.resize(center, top, width, height);
 
         if (!dataModel.isEmpty()) {
-            // layout histogram bin information
+            // resize histogram bin information
             TemporalHistogram histogram = temporalColumn().getStatistics().getHistogram();
             double binHeight = (getFocusBottomY() - getFocusTopY()) / histogram.getNumBins();
             histogramBinRectangleList = new ArrayList<>();
@@ -142,7 +142,7 @@ public class PCPTemporalAxis extends PCPAxis {
             for (int i = 0; i < histogram.getNumBins(); i++) {
                 double y = getFocusTopY() + ((histogram.getNumBins() - i - 1) * binHeight);
                 double binWidth = GraphicsUtil.mapValue(histogram.getBinCount(i), 0, histogram.getMaxBinCount(), DEFAULT_BAR_WIDTH + 2, DEFAULT_BAR_WIDTH + 2 + maxHistogramBinWidth);
-                double x = getBounds().getX() + ((width - binWidth) / 2.);
+                double x = getBounds().getMinX() + ((width - binWidth) / 2.);
                 Rectangle rectangle = new Rectangle(x, y, binWidth, binHeight);
                 rectangle.setStroke(histogramFill.darker());
                 rectangle.setFill(histogramFill);
@@ -159,7 +159,7 @@ public class PCPTemporalAxis extends PCPAxis {
             if (dataModel.getActiveQuery().hasColumnSelections()) {
                 TemporalColumnSummaryStats queryColumnSummaryStats = (TemporalColumnSummaryStats)dataModel.getActiveQuery().getColumnQuerySummaryStats(getColumn());
 
-                // layout query histogram bins
+                // resize query histogram bins
                 TemporalHistogram queryHistogram = ((TemporalColumnSummaryStats)dataModel.getActiveQuery().getColumnQuerySummaryStats(temporalColumn())).getHistogram();
 
                 if (histogram.getNumBins() != queryHistogram.getNumBins()) {
@@ -170,7 +170,7 @@ public class PCPTemporalAxis extends PCPAxis {
                     if (queryHistogram.getBinCount(i) > 0) {
                         double y = getFocusTopY() + ((histogram.getNumBins() - i - 1) * binHeight);
                         double binWidth = GraphicsUtil.mapValue(queryHistogram.getBinCount(i), 0, histogram.getMaxBinCount(), DEFAULT_BAR_WIDTH + 2, DEFAULT_BAR_WIDTH + 2 + maxHistogramBinWidth);
-                        double x = getBounds().getX() + ((width - binWidth) / 2.);
+                        double x = getBounds().getMinX() + ((width - binWidth) / 2.);
                         Rectangle rectangle = new Rectangle(x, y, binWidth, binHeight);
                         rectangle.setStroke(queryHistogramFill.darker());
                         rectangle.setFill(queryHistogramFill);

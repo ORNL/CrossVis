@@ -10,7 +10,6 @@ import javafx.scene.text.Text;
 
 import java.util.logging.Logger;
 
-
 public class DoubleAxisRangeSelection extends AxisSelection {
     private final static Logger log = Logger.getLogger(DoubleAxisRangeSelection.class.getName());
 

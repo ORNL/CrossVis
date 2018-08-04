@@ -89,8 +89,8 @@ public class PCPCategoricalAxis extends PCPAxis {
     private void registerListeners() {
     }
 
-    public void layout(double center, double top, double width, double height) {
-        super.layout(center, top, width, height);
+    public void resize(double center, double top, double width, double height) {
+        super.resize(center, top, width, height);
 
         if (!dataModel.isEmpty()) {
             CategoricalHistogram histogram = categoricalColumn().getStatistics().getHistogram();
