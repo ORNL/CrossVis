@@ -51,10 +51,12 @@ public class PCPView extends Region implements DataTableListener {
     private Pane pane;
     private double axisSpacing = 40d;
     private DataTable dataModel;
-    private ArrayList<PCPAxis> axisList;
+    private ArrayList<PCPAxis> axisList = new ArrayList<>();
+    private ArrayList<Scatterplot> scatterplotList = new ArrayList<>();
+
     private ArrayList<PCPTuple> tupleList;
-    private HashSet<PCPTuple> unselectedTupleSet;
-    private HashSet<PCPTuple> selectedTupleSet;
+    private HashSet<PCPTuple> unselectedTupleSet = new HashSet<>();
+    private HashSet<PCPTuple> selectedTupleSet = new HashSet<>();
     private ObjectProperty<DISPLAY_MODE> displayMode;
     private BooleanProperty fitToWidth = new SimpleBooleanProperty(true);
     private BooleanProperty fitToHeight = new SimpleBooleanProperty(true);
@@ -74,6 +76,7 @@ public class PCPView extends Region implements DataTableListener {
     private Rectangle scatterplotRegionRectangle;
 
     private ObjectProperty<Orientation> orientation = new SimpleObjectProperty<>(Orientation.HORIZONTAL);
+    private BooleanProperty showScatterplots = new SimpleBooleanProperty(true);
 
     private Group summaryShapeGroup;
 
@@ -81,6 +84,16 @@ public class PCPView extends Region implements DataTableListener {
         initialize();
         registerListeners();
     }
+
+    public boolean getShowScatterplots() { return showScatterplots.get(); }
+
+    public void setShowScatterplots(boolean show) {
+        if (getShowScatterplots() != show) {
+            showScatterplots.set(show);
+        }
+    }
+
+    public BooleanProperty showScatterplotsProperty() { return showScatterplots; }
 
     public void setOrientation(Orientation orientation) {
         if (getOrientation() != orientation) {
@@ -116,7 +129,7 @@ public class PCPView extends Region implements DataTableListener {
         widthProperty().addListener(o -> resizeView());
         heightProperty().addListener(o -> resizeView());
 
-        orientation.addListener(observable -> resizeView());
+//        orientation.addListener(observable -> resizeView());
 
         fitToHeight.addListener(observable -> resizeView());
 
@@ -201,9 +214,6 @@ public class PCPView extends Region implements DataTableListener {
     }
 
     private void initialize() {
-        axisList = new ArrayList<>();
-        unselectedTupleSet = new HashSet<>();
-        selectedTupleSet = new HashSet<>();
         nameTextRotation = new SimpleDoubleProperty(0.0);
         selectedItemsColor = new SimpleObjectProperty<>(DEFAULT_SELECTED_ITEMS_COLOR);
         unselectedItemsColor = new SimpleObjectProperty<>(DEFAULT_UNSELECTED_ITEMS_COLOR);
@@ -468,6 +478,13 @@ public class PCPView extends Region implements DataTableListener {
                                     pane.getChildren().add(1, pcpAxis.getQueryHistogramBinRectangleGroup());
                                 }
                             }
+                        }
+
+                        for (int i = 0; i < scatterplotList.size(); i++) {
+                            Scatterplot scatterplot = scatterplotList.get(i);
+                            double centerX = (scatterplot.getYAxis().getCenterX() + scatterplot.getXAxis().getCenterX()) / 2.;
+                            double left = centerX - (scatterplotSize / 2.) - scatterplot.getAxisSize();
+                            scatterplot.resize(left, scatterplotRegionBounds.getMinY(), scatterplotSize, scatterplotSize);
                         }
 
                         if (!summaryShapeGroup.getChildren().isEmpty()) {
@@ -821,6 +838,18 @@ public class PCPView extends Region implements DataTableListener {
                     pcpAxis.titleTextRotationProperty().bind(nameTextRotationProperty());
                     pane.getChildren().add(pcpAxis.getGraphicsGroup());
                     axisList.add(pcpAxis);
+
+                    if (iaxis > 0 && getShowScatterplots()) {
+                        PCPAxis xAxis = axisList.get(iaxis - 1);
+                        Scatterplot scatterplot = new Scatterplot(xAxis, pcpAxis);
+                        scatterplot.pointStrokeOpacityProperty().bind(opacityProperty());
+                        scatterplot.selectedPointStrokeColorProperty().bind(selectedItemsColor);
+                        scatterplot.unselectedPointStrokeColorProperty().bind(unselectedItemsColor);
+                        scatterplot.showSelectedPointsProperty().bind(showScatterplots);
+                        scatterplot.showUnselectedPointsProperty().bind(showUnselectedItems);
+                        scatterplotList.add(scatterplot);
+                        pane.getChildren().add(scatterplot.getGraphicsGroup());
+                    }
                 }
             }
         } else {
@@ -896,6 +925,13 @@ public class PCPView extends Region implements DataTableListener {
                     pane.getChildren().add(0, pcpAxis.getHistogramBinRectangleGroup());
                     pane.getChildren().add(1, pcpAxis.getQueryHistogramBinRectangleGroup());
                 }
+            }
+        }
+
+        if (getShowScatterplots()) {
+            for (Scatterplot scatterplot : scatterplotList) {
+                scatterplot.fillSelectionPointSets();
+                scatterplot.drawPoints();
             }
         }
 

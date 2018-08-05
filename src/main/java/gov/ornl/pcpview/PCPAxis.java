@@ -575,66 +575,6 @@ public abstract class PCPAxis {
                 }
             }
         }
-/*
-        double corrWidth = DEFAULT_CORRELATION_INDICATOR_STROKE_SPACING * (pcpView.getAxisCount() - 1);
-        double corrLeft = centerX - ( corrWidth / 2);
-        double corrMiddleY = correlationCoefficientIndicatorRectangle.getLayoutBounds().getMinY() +
-                (correlationCoefficientIndicatorRectangle.getLayoutBounds().getHeight()/2.);
-        correlationCoefficientIndicatorRectangle.setX(corrLeft);
-        correlationCoefficientIndicatorRectangle.setWidth(corrWidth);
-        correlationCoefficientIndicatorZeroLine.setStartX(correlationCoefficientIndicatorRectangle.getLayoutBounds().getMinX());
-        correlationCoefficientIndicatorZeroLine.setStartY(corrMiddleY);
-        correlationCoefficientIndicatorZeroLine.setEndX(correlationCoefficientIndicatorRectangle.getLayoutBounds().getMaxX());
-        correlationCoefficientIndicatorZeroLine.setEndY(corrMiddleY);
-
-//        correlationCoefficientIndicatorList.clear();
-        correlationCoefficientIndicatorGroup.getChildren().clear();
-        if (this instanceof PCPDoubleAxis) {
-            for (int iaxis = 0; iaxis < pcpView.getAxisCount(); iaxis++) {
-                PCPAxis pcpAxis = pcpView.getAxis(iaxis);
-                if (pcpAxis instanceof PCPDoubleAxis) {
-                    double x = correlationCoefficientIndicatorRectangle.getX() + (iaxis * DEFAULT_CORRELATION_INDICATOR_STROKE_SPACING);
-
-                    Line line = new Line(x, 0, x, 0);
-                    line.setStrokeWidth(DEFAULT_CORRELATION_INDICATOR_STROKE_WIDTH);
-                    line.setStrokeLineCap(StrokeLineCap.BUTT);
-
-                    if (this == pcpAxis) {
-                        line.setStartY(correlationCoefficientIndicatorRectangle.getLayoutBounds().getMinY());
-                        line.setEndY(correlationCoefficientIndicatorRectangle.getLayoutBounds().getMaxY());
-                        line.setStroke(DEFAULT_CORRELATION_INDICATOR_STROKE_COLOR.grayscale());
-                        Tooltip.install(line, new Tooltip(getColumn().getName() + " Correlation Indicators"));
-                    } else {
-                        double corrCoef = ((DoubleColumnSummaryStats) getColumn().getStatistics()).getCorrelationCoefficientList().get(iaxis);
-                        if (corrCoef >= 0) {
-                            double lineStartY = GraphicsUtil.mapValue(corrCoef, 0d, 1d, corrMiddleY, correlationCoefficientIndicatorRectangle.getLayoutBounds().getMinY());
-                            line.setStartY(lineStartY);
-                            line.setEndY(corrMiddleY);
-                        } else {
-                            double lineEndY = GraphicsUtil.mapValue(corrCoef, 0d, -1d, corrMiddleY, correlationCoefficientIndicatorRectangle.getLayoutBounds().getMaxY());
-                            line.setStartY(corrMiddleY);
-                            line.setEndY(lineEndY);
-                        }
-
-                        line.setStroke(DEFAULT_CORRELATION_INDICATOR_STROKE_COLOR);
-                        Tooltip.install(line, new Tooltip(this.column.getName() + " / " + pcpAxis.getColumn().getName() + " correlation = " + corrCoef));
-                    }
-
-                    line.setOnMouseEntered(new EventHandler<MouseEvent>() {
-                        @Override
-                        public void handle(MouseEvent event) {
-                            line.setEffect(new DropShadow());
-                        }
-                    });
-
-                    line.setOnMouseExited(event -> { line.setEffect(null); });
-
-//                    correlationCoefficientIndicatorList.add(line);
-                    correlationCoefficientIndicatorGroup.getChildren().add(line);
-                }
-            }
-        }
-        */
     }
 
     public double getCenterX() {
