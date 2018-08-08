@@ -1,7 +1,6 @@
 package gov.ornl.edenfx;
 
 import gov.ornl.datatable.*;
-import gov.ornl.experiments.scout.TableColumnSpecification;
 import gov.ornl.pcpview.PCPView;
 import gov.ornl.pcpview.QueryTableFactory;
 import javafx.animation.FadeTransition;

@@ -1,6 +1,6 @@
 package gov.ornl.edenfx;
 
-import gov.ornl.scout.dataframe.DataFrame;
+import gov.ornl.datatable.IOUtilities;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -22,7 +22,7 @@ public class TableColumnSpecificationDialog {
     private static final Logger log = Logger.getLogger(TableColumnSpecificationDialog.class.getName());
 
     public static ArrayList<TableColumnSpecification> getColumnSpecifications (File csvFile) throws IOException {
-        String columnNames[] = DataFrame.getFileHeader(csvFile);
+        String columnNames[] = IOUtilities.readCSVHeader(csvFile);
 
         ObservableList<TableColumnSpecification> tableColumnSpecs = FXCollections.observableArrayList();
         for (String columnName : columnNames) {
