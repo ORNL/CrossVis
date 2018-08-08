@@ -13,6 +13,7 @@ import javafx.scene.SceneAntialiasing;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.Slider;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
@@ -62,7 +63,7 @@ public class PCPViewTest extends Application {
 
         ScrollPane scrollPane = new ScrollPane(pcpView);
         scrollPane.setFitToWidth(pcpView.getFitToWidth());
-        scrollPane.setFitToHeight(pcpView.getFitToHeight());
+        scrollPane.setFitToHeight(true);
 
         Button dataButton = new Button("Load Data");
         dataButton.setOnAction(new EventHandler<ActionEvent>() {
@@ -108,15 +109,20 @@ public class PCPViewTest extends Application {
             }
         });
 
-        ChoiceBox<Orientation> orientationChoiceBox = new ChoiceBox<>(FXCollections.observableArrayList(Orientation.HORIZONTAL, Orientation.VERTICAL));
-        orientationChoiceBox.getSelectionModel().select(pcpView.getOrientation());
-        orientationChoiceBox.setOnAction(event -> {
-            pcpView.setOrientation(orientationChoiceBox.getValue());
-        });
+//        ChoiceBox<Orientation> orientationChoiceBox = new ChoiceBox<>(FXCollections.observableArrayList(Orientation.HORIZONTAL, Orientation.VERTICAL));
+//        orientationChoiceBox.getSelectionModel().select(pcpView.getOrientation());
+//        orientationChoiceBox.setOnAction(event -> {
+//            pcpView.setOrientation(orientationChoiceBox.getValue());
+//        });
+
+        Slider opacitySlider = new Slider(0., 1., pcpView.getDataItemsOpacity());
+        opacitySlider.valueProperty().bindBidirectional(pcpView.dataItemsOpacityProperty());
+        opacitySlider.setShowTickLabels(false);
+        opacitySlider.setShowTickMarks(false);
 
         HBox buttonBox = new HBox();
         buttonBox.setSpacing(2.);
-        buttonBox.getChildren().addAll(dataButton, displayModeChoiceBox, orientationChoiceBox);
+        buttonBox.getChildren().addAll(dataButton, displayModeChoiceBox, opacitySlider);
 
         BorderPane rootNode = new BorderPane();
         rootNode.setCenter(scrollPane);

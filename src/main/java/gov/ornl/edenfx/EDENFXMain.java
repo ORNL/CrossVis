@@ -730,7 +730,7 @@ public class EDENFXMain extends Application implements DataTableListener {
         pcpView.setPadding(new Insets(10));
 
         pcpScrollPane = new ScrollPane(pcpView);
-        pcpScrollPane.setFitToHeight(pcpView.getFitToHeight());
+        pcpScrollPane.setFitToHeight(true);
         pcpScrollPane.setFitToWidth(pcpView.getFitToWidth());
 
         ToolBar toolBar = createToolBar(mainStage);
@@ -1053,35 +1053,6 @@ public class EDENFXMain extends Application implements DataTableListener {
                 }
             }
         });
-
-        orientationMenu = new Menu("Orientation");
-        ToggleGroup orientationMenuGroup = new ToggleGroup();
-
-        RadioMenuItem horizontalOrientationMenuItem = new RadioMenuItem("Horizontal");
-        horizontalOrientationMenuItem.setToggleGroup(orientationMenuGroup);
-        if (pcpView.getOrientation() == Orientation.HORIZONTAL) {
-            horizontalOrientationMenuItem.setSelected(true);
-        }
-
-        RadioMenuItem verticalOrientationMenuItem = new RadioMenuItem("Vertical");
-        verticalOrientationMenuItem.setToggleGroup(orientationMenuGroup);
-        if (pcpView.getOrientation() == Orientation.VERTICAL) {
-            verticalOrientationMenuItem.setSelected(true);
-        }
-
-        orientationMenu.getItems().addAll(horizontalOrientationMenuItem, verticalOrientationMenuItem);
-
-        orientationMenuGroup.selectedToggleProperty().addListener((observable, oldValue, newValue) -> {
-            if (newValue != null) {
-                RadioMenuItem toggleItem = (RadioMenuItem)newValue;
-                if (toggleItem.getText().equals("Horizontal")) {
-                    pcpView.setOrientation(Orientation.HORIZONTAL);
-                } else {
-                    pcpView.setOrientation(Orientation.VERTICAL);
-                }
-            }
-        });
-        viewMenu.getItems().add(orientationMenu);
 
         displayModeMenu = new Menu("Display Mode");
         displayModeMenu.setDisable(true);

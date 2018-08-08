@@ -51,18 +51,18 @@ public class Scatterplot {
     private HashSet<double[]> selectedPoints = new HashSet<>();
     private HashSet<double[]> unselectedPoints = new HashSet<>();
 
-    private ObjectProperty<Color> axisStrokeColor = new SimpleObjectProperty<>(DEFAULT_AXIS_STROKE_COLOR);
-    private ObjectProperty<Color> axisTextColor = new SimpleObjectProperty<>(DEFAULT_AXIS_TEXT_COLOR);
-    private ObjectProperty<Color> selectedPointStrokeColor = new SimpleObjectProperty<>(DEFAULT_SELECTED_POINT_COLOR);
-    private ObjectProperty<Color> unselectedPointStrokeColor = new SimpleObjectProperty<>(DEFAULT_UNSELECTED_POINT_COLOR);
+    private Color axisStrokeColor = DEFAULT_AXIS_STROKE_COLOR;
+    private Color axisTextColor = DEFAULT_AXIS_TEXT_COLOR;
+    private Color selectedPointStrokeColor = DEFAULT_SELECTED_POINT_COLOR;
+    private Color unselectedPointStrokeColor = DEFAULT_UNSELECTED_POINT_COLOR;
 
-    private DoubleProperty axisSize = new SimpleDoubleProperty(12.);
-    private DoubleProperty pointSize = new SimpleDoubleProperty(4.);
-    private DoubleProperty pointStrokeWidth = new SimpleDoubleProperty(1.2);
-    private DoubleProperty pointStrokeOpacity = new SimpleDoubleProperty(DEFAULT_POINT_STROKE_OPACITY);
+    private double axisSize = 12.;
+    private double pointSize = 4.;
+    private double pointStrokeWidth = 1.2;
+    private double pointStrokeOpacity = DEFAULT_POINT_STROKE_OPACITY;
 
-    private BooleanProperty showSelectedPoints = new SimpleBooleanProperty(true);
-    private BooleanProperty showUnselectedPoints = new SimpleBooleanProperty(true);
+    private boolean showSelectedPoints = true;
+    private boolean showUnselectedPoints = true;
 
     public Scatterplot(PCPAxis xAxis, PCPAxis yAxis) {
         this.xAxis = xAxis;
@@ -95,20 +95,20 @@ public class Scatterplot {
     }
 
     private void registerListeners() {
-        pointStrokeOpacity.addListener((observable, oldValue, newValue) -> {
-            if (newValue != oldValue) {
-                setSelectedPointStrokeColor(new Color(getSelectedPointStrokeColor().getRed(), getSelectedPointStrokeColor().getGreen(),
-                        getSelectedPointStrokeColor().getBlue(), newValue.doubleValue()));
-                setUnselectedPointStrokeColor(new Color(getUnselectedPointStrokeColor().getRed(), getUnselectedPointStrokeColor().getGreen(),
-                        getUnselectedPointStrokeColor().getBlue(), newValue.doubleValue()));
-            }
-        });
+//        pointStrokeOpacity.addListener((observable, oldValue, newValue) -> {
+//            if (newValue != oldValue) {
+//                setSelectedPointStrokeColor(new Color(getSelectedPointStrokeColor().getRed(), getSelectedPointStrokeColor().getGreen(),
+//                        getSelectedPointStrokeColor().getBlue(), newValue.doubleValue()));
+//                setUnselectedPointStrokeColor(new Color(getUnselectedPointStrokeColor().getRed(), getUnselectedPointStrokeColor().getGreen(),
+//                        getUnselectedPointStrokeColor().getBlue(), newValue.doubleValue()));
+//            }
+//        });
 
-        selectedPointStrokeColor.addListener((observable, oldValue, newValue) -> drawPoints());
-        unselectedPointStrokeColor.addListener(((observable, oldValue, newValue) -> drawPoints()));
+//        selectedPointStrokeColor.addListener((observable, oldValue, newValue) -> drawPoints());
+//        unselectedPointStrokeColor.addListener(((observable, oldValue, newValue) -> drawPoints()));
 
-        showSelectedPoints.addListener(observable -> drawPoints());
-        showUnselectedPoints.addListener(observable -> drawPoints());
+//        showSelectedPoints.addListener(observable -> drawPoints());
+//        showUnselectedPoints.addListener(observable -> drawPoints());
     }
 
     public void resize(double left, double top, double width, double height) {
@@ -223,76 +223,112 @@ public class Scatterplot {
         }
     }
 
-    public boolean getShowSelectedPoints() { return showSelectedPoints.get(); }
+    public boolean getShowSelectedPoints() { return showSelectedPoints; }
 
-    public void setShowSelectedPoints(boolean showSelectedPoints) { this.showSelectedPoints.set(showSelectedPoints); }
+    public void setShowSelectedPoints(boolean showSelectedPoints) {
+        this.showSelectedPoints = showSelectedPoints;
+        drawPoints();
+    }
 
-    public BooleanProperty showSelectedPointsProperty() { return showSelectedPoints; }
+//    public boolean showSelectedPointsProperty() { return showSelectedPoints; }
 
-    public boolean getShowUnselectedPoints() { return showUnselectedPoints.get(); }
+    public boolean getShowUnselectedPoints() { return showUnselectedPoints; }
 
-    public void setShowUnselectedPoints(boolean showUnselectedPoints) { this.showUnselectedPoints.set(showUnselectedPoints); }
+    public void setShowUnselectedPoints(boolean showUnselectedPoints) {
+        this.showUnselectedPoints = showUnselectedPoints;
+        drawPoints();
+    }
 
-    public BooleanProperty showUnselectedPointsProperty() { return showUnselectedPoints; }
+    public boolean showUnselectedPointsProperty() { return showUnselectedPoints; }
 
-    public double getPointStrokeOpacity() { return pointStrokeOpacity.get(); }
+    public double getPointStrokeOpacity() { return pointStrokeOpacity; }
 
-    public void setPointStrokeOpacity(double opacity) { pointStrokeOpacity.set(opacity); }
+    public void setPointStrokeOpacity(double opacity) {
+        pointStrokeOpacity = opacity;
+        setSelectedPointStrokeColor(new Color(getSelectedPointStrokeColor().getRed(), getSelectedPointStrokeColor().getGreen(),
+                getSelectedPointStrokeColor().getBlue(), opacity));
+        setUnselectedPointStrokeColor(new Color(getUnselectedPointStrokeColor().getRed(), getUnselectedPointStrokeColor().getGreen(),
+                getUnselectedPointStrokeColor().getBlue(), opacity));
+        drawPoints();
+    }
 
-    public DoubleProperty pointStrokeOpacityProperty() { return pointStrokeOpacity; }
+//    public DoubleProperty pointStrokeOpacityProperty() { return pointStrokeOpacity; }
 
-    public Color getSelectedPointStrokeColor () { return selectedPointStrokeColor.get(); }
+    public Color getSelectedPointStrokeColor () { return selectedPointStrokeColor; }
 
-    public void setSelectedPointStrokeColor(Color color) { selectedPointStrokeColor.set(color); }
+    public void setSelectedPointStrokeColor(Color color) {
+        selectedPointStrokeColor = color;
+        drawPoints();
+    }
 
-    public ObjectProperty<Color> selectedPointStrokeColorProperty() { return selectedPointStrokeColor; }
+//    public ObjectProperty<Color> selectedPointStrokeColorProperty() { return selectedPointStrokeColor; }
 
-    public Color getUnselectedPointStrokeColor () { return unselectedPointStrokeColor.get(); }
+    public Color getUnselectedPointStrokeColor () { return unselectedPointStrokeColor; }
 
-    public void setUnselectedPointStrokeColor(Color color) { unselectedPointStrokeColor.set(color); }
+    public void setUnselectedPointStrokeColor(Color color) {
+        unselectedPointStrokeColor = color;
+        drawPoints();
+    }
 
-    public ObjectProperty<Color> unselectedPointStrokeColorProperty() { return unselectedPointStrokeColor; }
+//    public ObjectProperty<Color> unselectedPointStrokeColorProperty() { return unselectedPointStrokeColor; }
 
-    public double getPointSize () { return pointSize.get(); }
+    public double getPointSize () { return pointSize; }
 
-    public void setPointSize(double size) { pointSize.set(size); }
+    public void setPointSize(double size) {
+        pointSize = size;
+        drawPoints();
+    }
 
-    public DoubleProperty pointSizeProperty() { return pointSize; }
+//    public DoubleProperty pointSizeProperty() { return pointSize; }
 
-    public double getPointStrokeWidth() { return pointStrokeWidth.get(); }
+    public double getPointStrokeWidth() { return pointStrokeWidth; }
 
-    public void setPointStrokeWidth(double width) { pointStrokeWidth.set(width); }
+    public void setPointStrokeWidth(double width) {
+        pointStrokeWidth = width;
+        drawPoints();
+    }
 
-    public DoubleProperty pointStrokeWidth() { return pointStrokeWidth; }
+//    public DoubleProperty pointStrokeWidth() { return pointStrokeWidth; }
 
-    public double getAxisSize () { return axisSize.get(); }
+    public double getAxisSize () { return axisSize; }
 
-    public void setAxisSize(double size) { axisSize.set(size); }
+    public void setAxisSize(double size) {
+        axisSize = size;
+        drawPoints();
+    }
 
-    public DoubleProperty axisSizeProperty() { return axisSize; }
+//    public DoubleProperty axisSizeProperty() { return axisSize; }
 
-    public Color getAxisStrokeColor() { return axisStrokeColor.get(); }
+    public Color getAxisStrokeColor() { return axisStrokeColor; }
 
-    public void setAxisStrokeColor(Color color) { axisStrokeColor.set(color); }
+    public void setAxisStrokeColor(Color color) {
+        axisStrokeColor = color;
+        drawPoints();
+    }
 
-    public ObjectProperty<Color> axisStrokeColorProperty() { return axisStrokeColor; }
+//    public ObjectProperty<Color> axisStrokeColorProperty() { return axisStrokeColor; }
 
-    public Color getAxisTextColor() { return axisTextColor.get(); }
+    public Color getAxisTextColor() { return axisTextColor; }
 
-    public void setAxisTextColor(Color color) { axisTextColor.set(color); }
+    public void setAxisTextColor(Color color) {
+        axisTextColor = color;
+        drawPoints();
+    }
 
-    public ObjectProperty<Color> axisTextColorProperty () { return axisTextColor; }
+//    public ObjectProperty<Color> axisTextColorProperty () { return axisTextColor; }
 
     public PCPAxis getXAxis() { return xAxis; }
 
     public void setXAxis(PCPAxis xAxis) {
         this.xAxis = xAxis;
+        drawPoints();
     }
 
     public PCPAxis getYAxis() { return yAxis; }
 
     public void setYAxis(PCPAxis yAxis) {
         this.yAxis = yAxis;
+        drawPoints();
     }
 
     public Group getGraphicsGroup() { return graphicsGroup; }
