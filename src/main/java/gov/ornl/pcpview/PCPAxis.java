@@ -53,7 +53,7 @@ public abstract class PCPAxis {
     public final static double DEFAULT_TEXT_SIZE = 10d;
     public final static double HOVER_TEXT_SIZE = 8d;
     public final static double DEFAULT_STROKE_WIDTH = 1.5;
-    public final static double DEFAULT_CORRELATION_INDICATOR_HEIGHT = 24d;
+    public final static double DEFAULT_CORRELATION_INDICATOR_HEIGHT = 14d;
     public final static double DEFAULT_CORRELATION_INDICATOR_WIDTH = 4.;
     public final static double DEFAULT_CORRELATION_INDICATOR_PADDING = 1.;
 

@@ -313,18 +313,6 @@ public class PCPDoubleAxis extends PCPAxis {
                     pane.getChildren().remove(nonquerySummaryStatisticsGroup);
                 }
 
-//                if (!pane.getChildren().contains(querySummaryStatisticsGroup)) {
-//                    if (nonqueryColumnSummaryStats != null || queryColumnSummaryStats != null) {
-//                        pane.getChildren().add(querySummaryStatisticsGroup);
-//                    }
-//                }
-//
-//                if (nonqueryColumnSummaryStats == null && queryColumnSummaryStats == null) {
-//                    pane.getChildren().remove(querySummaryStatisticsGroup);
-//                } else {
-//                    querySummaryStatisticsGroup.toFront();
-//                }
-
                 // resize query histogram bins
                 if (dataModel.getCalculateQueryStatistics()) {
                     DoubleHistogram queryHistogram = ((DoubleColumnSummaryStats) dataModel.getActiveQuery().getColumnQuerySummaryStats(doubleColumn())).getHistogram();

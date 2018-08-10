@@ -4,7 +4,6 @@ import gov.ornl.datatable.*;
 import javafx.beans.property.*;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Insets;
-import javafx.geometry.Orientation;
 import javafx.scene.Group;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.layout.*;
@@ -50,7 +49,7 @@ public class PCPView extends Region implements DataTableListener {
     private BooleanProperty showUnselectedItems;
     private Pane pane;
     private double axisSpacing = 40d;
-    private DataTable dataModel;
+    private DataTable dataTable;
     private ArrayList<PCPAxis> axisList = new ArrayList<>();
     private ArrayList<Scatterplot> scatterplotList = new ArrayList<>();
 
@@ -59,14 +58,11 @@ public class PCPView extends Region implements DataTableListener {
     private HashSet<PCPTuple> selectedTupleSet = new HashSet<>();
     private ObjectProperty<DISPLAY_MODE> displayMode;
     private BooleanProperty fitToWidth = new SimpleBooleanProperty(true);
-//    private BooleanProperty fitToHeight = new SimpleBooleanProperty(true);
-//    private boolean fitAxisSpacingToWidthEnabled = true;
     private DoubleProperty nameTextRotation;
     private ArrayList<PCPBinSet> PCPBinSetList;
 
     private BoundingBox plotRegionBounds;
     private BoundingBox pcpRegionBounds;
-//    private BoundingBox pcpTitleRegionBounds;
     private BoundingBox scatterplotRegionBounds;
     private double plotRegionPadding = 4.;
 
@@ -79,7 +75,6 @@ public class PCPView extends Region implements DataTableListener {
     private BooleanProperty showScatterplots = new SimpleBooleanProperty(true);
 
     private Group summaryShapeGroup;
-    private Group scatterplotGraphicsGroup = new Group();
 
     public PCPView() {
         initialize();
@@ -226,7 +221,7 @@ public class PCPView extends Region implements DataTableListener {
         unselectedTupleSet.clear();
         selectedTupleSet.clear();
         if ((tupleList != null) && (!tupleList.isEmpty())) {
-            if (dataModel.getActiveQuery().hasColumnSelections()) {
+            if (dataTable.getActiveQuery().hasColumnSelections()) {
                 for (PCPTuple pcpTuple : tupleList) {
                     if (pcpTuple.getTuple().getQueryFlag()) {
                         selectedTupleSet.add(pcpTuple);
@@ -406,7 +401,7 @@ public class PCPView extends Region implements DataTableListener {
                             dAxis1.getBarLeftX(), dAxis1.getOverallTypicalLine().getStartY());
                 }
 
-                if (dataModel.getActiveQuery().hasColumnSelections()) {
+                if (dataTable.getActiveQuery().hasColumnSelections()) {
                     if (!(Double.isNaN(dAxis0.getQueryTypicalLine().getEndY())) &&
                             !(Double.isNaN(dAxis1.getQueryTypicalLine().getStartY()))) {
 
@@ -435,7 +430,7 @@ public class PCPView extends Region implements DataTableListener {
     }
 
     private void resizeView() {
-        if (dataModel != null && !dataModel.isEmpty()) {
+        if (dataTable != null && !dataTable.isEmpty()) {
             plotRegionBounds = new BoundingBox(getInsets().getLeft(), getInsets().getTop(),
                     getWidth() - (getInsets().getLeft() + getInsets().getRight()),
                     getHeight() - (getInsets().getTop() + getInsets().getBottom()));
@@ -450,9 +445,9 @@ public class PCPView extends Region implements DataTableListener {
             if (getFitToWidth()) {
                 width = getWidth();
                 plotWidth = width - (getInsets().getLeft() + getInsets().getRight());
-                axisSpacing = plotWidth / dataModel.getColumnCount();
+                axisSpacing = plotWidth / dataTable.getColumnCount();
             } else {
-                plotWidth = axisSpacing * dataModel.getColumnCount();
+                plotWidth = axisSpacing * dataTable.getColumnCount();
                 width = (getInsets().getLeft() + getInsets().getRight()) + plotWidth;
             }
 
@@ -553,7 +548,7 @@ public class PCPView extends Region implements DataTableListener {
     }
 
     public void clearQuery() {
-        dataModel.clearActiveQuery();
+        dataTable.clearActiveQuery();
         removeAllAxisSelectionGraphics();
         handleQueryChange();
     }
@@ -575,7 +570,7 @@ public class PCPView extends Region implements DataTableListener {
         unselectedCanvas.getGraphicsContext2D().setLineWidth(2d);
 
         if ((PCPBinSetList != null) && (!PCPBinSetList.isEmpty())) {
-            if (dataModel.getActiveQuery().hasColumnSelections()) {
+            if (dataTable.getActiveQuery().hasColumnSelections()) {
                 if (isShowingUnselectedItems()) {
                     for (PCPBinSet binSet : PCPBinSetList) {
                         for (PCPBin bin : binSet.getBins()) {
@@ -641,9 +636,9 @@ public class PCPView extends Region implements DataTableListener {
 //        lineCanvas.setCacheHint(CacheHint.QUALITY);
     }
 
-    public void setDataModel(DataTable dataModel) {
-        this.dataModel = dataModel;
-        dataModel.addDataModelListener(this);
+    public void setDataTable(DataTable dataTable) {
+        this.dataTable = dataTable;
+        dataTable.addDataModelListener(this);
         resizeView();
     }
 
@@ -752,15 +747,15 @@ public class PCPView extends Region implements DataTableListener {
 
     private void reinitializeLayout() {
         if (axisList.isEmpty()) {
-            for (int iaxis = 0; iaxis < dataModel.getColumnCount(); iaxis++) {
+            for (int iaxis = 0; iaxis < dataTable.getColumnCount(); iaxis++) {
 
                 PCPAxis pcpAxis = null;
-                if (dataModel.getColumn(iaxis) instanceof TemporalColumn) {
-                    pcpAxis = new PCPTemporalAxis(this, dataModel.getColumn(iaxis), dataModel, pane);
-                } else if (dataModel.getColumn(iaxis) instanceof CategoricalColumn) {
-                    pcpAxis = new PCPCategoricalAxis(this, dataModel.getColumn(iaxis), dataModel, pane);
-                } else if (dataModel.getColumn(iaxis) instanceof DoubleColumn){
-                    pcpAxis = new PCPDoubleAxis(this, dataModel.getColumn(iaxis), dataModel, pane);
+                if (dataTable.getColumn(iaxis) instanceof TemporalColumn) {
+                    pcpAxis = new PCPTemporalAxis(this, dataTable.getColumn(iaxis), dataTable, pane);
+                } else if (dataTable.getColumn(iaxis) instanceof CategoricalColumn) {
+                    pcpAxis = new PCPCategoricalAxis(this, dataTable.getColumn(iaxis), dataTable, pane);
+                } else if (dataTable.getColumn(iaxis) instanceof DoubleColumn){
+                    pcpAxis = new PCPDoubleAxis(this, dataTable.getColumn(iaxis), dataTable, pane);
                 }
 
                 if (pcpAxis != null) {
@@ -771,8 +766,8 @@ public class PCPView extends Region implements DataTableListener {
             }
         } else {
             ArrayList<PCPAxis> newAxisList = new ArrayList<>();
-            for (int icolumn = 0; icolumn < dataModel.getColumnCount(); icolumn++) {
-                Column column = dataModel.getColumn(icolumn);
+            for (int icolumn = 0; icolumn < dataTable.getColumnCount(); icolumn++) {
+                Column column = dataTable.getColumn(icolumn);
                 for (int iaxis = 0; iaxis < axisList.size(); iaxis++) {
                     PCPAxis pcpAxis = axisList.get(iaxis);
                     if (pcpAxis.getColumn() == column) {
@@ -802,8 +797,8 @@ public class PCPView extends Region implements DataTableListener {
 
         // add tuples polylines from data model
         tupleList = new ArrayList<>();
-        for (int iTuple = 0; iTuple < dataModel.getTupleCount(); iTuple++) {
-            Tuple tuple = dataModel.getTuple(iTuple);
+        for (int iTuple = 0; iTuple < dataTable.getTupleCount(); iTuple++) {
+            Tuple tuple = dataTable.getTuple(iTuple);
             PCPTuple pcpTuple = new PCPTuple(tuple);
             tupleList.add(pcpTuple);
         }
@@ -813,7 +808,7 @@ public class PCPView extends Region implements DataTableListener {
         // create PCPBinSets for axis configuration
         PCPBinSetList = new ArrayList<>();
         for (int iaxis = 0; iaxis < axisList.size()-1; iaxis++) {
-            PCPBinSet binSet = new PCPBinSet(axisList.get(iaxis), axisList.get(iaxis+1), dataModel);
+            PCPBinSet binSet = new PCPBinSet(axisList.get(iaxis), axisList.get(iaxis+1), dataTable);
             PCPBinSetList.add(binSet);
         }
 
@@ -823,11 +818,11 @@ public class PCPView extends Region implements DataTableListener {
     private void addAxis(Column column) {
         PCPAxis pcpAxis = null;
         if (column instanceof DoubleColumn) {
-            pcpAxis = new PCPDoubleAxis(this, column, dataModel, pane);
+            pcpAxis = new PCPDoubleAxis(this, column, dataTable, pane);
         } else if (column instanceof TemporalColumn) {
-            pcpAxis = new PCPTemporalAxis(this, column, dataModel, pane);
+            pcpAxis = new PCPTemporalAxis(this, column, dataTable, pane);
         } else if (column instanceof CategoricalColumn) {
-            pcpAxis = new PCPCategoricalAxis(this, column, dataModel, pane);
+            pcpAxis = new PCPCategoricalAxis(this, column, dataTable, pane);
         }
 
         pcpAxis.titleTextRotationProperty().bind(nameTextRotationProperty());

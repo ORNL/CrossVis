@@ -723,7 +723,7 @@ public class EDENFXMain extends Application implements DataTableListener {
         mainStage = new Stage(StageStyle.DECORATED);
 
         pcpView = new PCPView();
-        pcpView.setDataModel(dataModel);
+        pcpView.setDataTable(dataModel);
         pcpView.setPrefHeight(400);
         pcpView.setAxisSpacing(100);
         pcpView.setPadding(new Insets(10));
@@ -1119,8 +1119,8 @@ public class EDENFXMain extends Application implements DataTableListener {
         queryStatisticsMenu.getItems().addAll(showQueryStatisticsCheckMI, showNonQueryStatisticsCheckMI);
         viewMenu.getItems().add(queryStatisticsMenu);
 
-        axisLayoutMenu = new Menu("ParallelAxis Layout");
-        fitPCPAxesToWidthCheckMI = new CheckMenuItem("Fit ParallelAxis Spacing to Width");
+        axisLayoutMenu = new Menu("Axis Layout");
+        fitPCPAxesToWidthCheckMI = new CheckMenuItem("Fit Axis Spacing to Window Width");
         fitPCPAxesToWidthCheckMI.setSelected(pcpView.getFitToWidth());
         fitPCPAxesToWidthCheckMI.setDisable(true);
         fitPCPAxesToWidthCheckMI.selectedProperty().addListener((observable, oldValue, newValue) -> {
@@ -1134,7 +1134,7 @@ public class EDENFXMain extends Application implements DataTableListener {
             }
         });
 
-        changeAxisSpacingMI = new MenuItem("Change ParallelAxis Spacing...");
+        changeAxisSpacingMI = new MenuItem("Change Axis Spacing...");
         changeAxisSpacingMI.setDisable(true);
         changeAxisSpacingMI.setOnAction(event -> {
             changeAxisSpacing();
@@ -1169,7 +1169,7 @@ public class EDENFXMain extends Application implements DataTableListener {
         viewMenu.getItems().add(removeAllQueriesMI);
 
         // create menu item to enabled/disable data datamodel updates
-        enableDataTableUpdatesCheckMenuItem = new CheckMenuItem("Enable Data DataFrame Updates");
+        enableDataTableUpdatesCheckMenuItem = new CheckMenuItem("Enable Data Table View Updates");
         enableDataTableUpdatesCheckMenuItem.setSelected(false);
         enableDataTableUpdatesCheckMenuItem.selectedProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue != null && newValue) {

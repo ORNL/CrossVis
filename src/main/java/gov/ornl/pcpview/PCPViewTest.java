@@ -7,7 +7,6 @@ import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
-import javafx.geometry.Orientation;
 import javafx.scene.Scene;
 import javafx.scene.SceneAntialiasing;
 import javafx.scene.control.Button;
@@ -135,7 +134,7 @@ public class PCPViewTest extends Application {
         stage.show();
 
         dataModel = new DataTable();
-        pcpView.setDataModel(dataModel);
+        pcpView.setDataTable(dataModel);
     }
 
     @Override
