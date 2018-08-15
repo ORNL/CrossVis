@@ -2,7 +2,9 @@ package gov.ornl.correlationview;
 
 import gov.ornl.datatable.*;
 import gov.ornl.util.GraphicsUtil;
+import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Insets;
@@ -25,6 +27,7 @@ public class CorrelationMatrixView extends Region implements DataTableListener {
     public final static Color DEFAULT_NEGATIVE_COLOR = Color.DARKRED;
     public final static Color DEFAULT_DIAGONAL_COLOR = Color.LIGHTGRAY;
     public final static double DEFAULT_TEXT_SIZE = 10.;
+    public final static double DEFAULT_MAX_AXIS_SIZE = 50.;
 
     private final static Logger log = Logger.getLogger(CorrelationMatrixView.class.getName());
 
@@ -47,6 +50,7 @@ public class CorrelationMatrixView extends Region implements DataTableListener {
     private ObjectProperty<Color> positiveColor = new SimpleObjectProperty<>(DEFAULT_POSITIVE_COLOR);
     private ObjectProperty<Color> negativeColor = new SimpleObjectProperty<>(DEFAULT_NEGATIVE_COLOR);
     private ObjectProperty<Color> diagonalColor = new SimpleObjectProperty<>(DEFAULT_DIAGONAL_COLOR);
+    private DoubleProperty maxAxisSize = new SimpleDoubleProperty(DEFAULT_MAX_AXIS_SIZE);
 
     private ArrayList<Text> yColumnTitles = new ArrayList<>();
     private ArrayList<Text> xColumnTitles = new ArrayList<>();
@@ -209,7 +213,24 @@ public class CorrelationMatrixView extends Region implements DataTableListener {
             }
         }
 
+        if (longestTitle > getMaxAxisSize()) {
+            longestTitle = getMaxAxisSize();
+        }
+
         return longestTitle;
+    }
+
+    public double getMaxAxisSize() { return maxAxisSize.get(); }
+    public void setMaxAxisSize(double size) { maxAxisSize.set(size); }
+    public DoubleProperty maxAxisSizeProperty() { return maxAxisSize; }
+
+    private void fitColumnTitleToAxisSize(Text titleText, double axisSize) {
+        if (titleText.getLayoutBounds().getWidth() > axisSize) {
+            // truncate the column name to fit axis bounds
+            while (titleText.getLayoutBounds().getWidth() > axisSize) {
+                titleText.setText(titleText.getText().substring(0, titleText.getText().length() - 1));
+            }
+        }
     }
 
     private void resizeView() {
@@ -221,10 +242,10 @@ public class CorrelationMatrixView extends Region implements DataTableListener {
         viewRegionRectangle.setWidth(viewRegionBounds.getWidth());
         viewRegionRectangle.setHeight(viewRegionBounds.getHeight());
 
-        double longestColorTitle = findLongestColumnTitle();
+        double longestColumnTitle = findLongestColumnTitle();
 
-        double xAxisHeight = longestColorTitle;
-        double yAxisWidth = longestColorTitle;
+        double xAxisHeight = longestColumnTitle;
+        double yAxisWidth = longestColumnTitle;
         double plotRegionWidth = viewRegionBounds.getWidth() - yAxisWidth;
         double plotRegionHeight = viewRegionBounds.getHeight() - xAxisHeight;
         double plotRegionSize = plotRegionWidth < plotRegionHeight ? plotRegionWidth : plotRegionHeight;
@@ -259,6 +280,8 @@ public class CorrelationMatrixView extends Region implements DataTableListener {
             double cellY = plotRegionBounds.getMinY() + (irow * cellSize);
 
             Text yColumnTitleText = yColumnTitles.get(irow);
+            yColumnTitleText.setText(doubleColumns.get(irow).getName());
+            fitColumnTitleToAxisSize(yColumnTitleText, yAxisRegionBounds.getWidth());
             yColumnTitleText.setX(yAxisRegionBounds.getMaxX() - 2. - yColumnTitleText.getLayoutBounds().getWidth());
             yColumnTitleText.setY(cellY + (cellSize / 2.));
 
@@ -267,6 +290,8 @@ public class CorrelationMatrixView extends Region implements DataTableListener {
 
                 if (irow == 0) {
                     Text xColumnTitleText = xColumnTitles.get(icol);
+                    xColumnTitleText.setText(doubleColumns.get(icol).getName());
+                    fitColumnTitleToAxisSize(xColumnTitleText, xAxisRegionBounds.getWidth());
                     xColumnTitleText.relocate(cellX + (cellSize / 2.), xAxisRegionBounds.getMaxY() - 2.);
 //                    xColumnTitleText.setY(xAxisRegionBounds.getMaxY());
 //                    xColumnTitleText.setX(cellX);

@@ -639,7 +639,9 @@ public class PCPView extends Region implements DataTableListener {
     public void setDataTable(DataTable dataTable) {
         this.dataTable = dataTable;
         dataTable.addDataModelListener(this);
-        resizeView();
+        clearView();
+        reinitializeLayout();
+//        resizeView();
     }
 
     public double getNameTextRotation() {
@@ -867,8 +869,7 @@ public class PCPView extends Region implements DataTableListener {
         }
     }
 
-    @Override
-    public void dataModelReset(DataTable dataModel) {
+    private void clearView() {
         removeAllAxisSelectionGraphics();
         selectedCanvas.getGraphicsContext2D().clearRect(0, 0, getWidth(), getHeight());
         unselectedCanvas.getGraphicsContext2D().clearRect(0, 0, getWidth(), getHeight());
@@ -880,6 +881,22 @@ public class PCPView extends Region implements DataTableListener {
             }
             axisList.clear();
         }
+    }
+
+    @Override
+    public void dataModelReset(DataTable dataModel) {
+//        removeAllAxisSelectionGraphics();
+//        selectedCanvas.getGraphicsContext2D().clearRect(0, 0, getWidth(), getHeight());
+//        unselectedCanvas.getGraphicsContext2D().clearRect(0, 0, getWidth(), getHeight());
+//
+//        if (axisList != null && !axisList.isEmpty()) {
+//            for (PCPAxis pcpAxis : axisList) {
+//                pane.getChildren().removeAll(pcpAxis.getGraphicsGroup(), pcpAxis.getHistogramBinRectangleGroup(),
+//                        pcpAxis.getQueryHistogramBinRectangleGroup());
+//            }
+//            axisList.clear();
+//        }
+        clearView();
         reinitializeLayout();
     }
 

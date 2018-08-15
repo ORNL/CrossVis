@@ -30,6 +30,7 @@ public class PCPViewTest extends Application {
 
     private PCPView pcpView;
     private DataTable dataModel;
+
     @Override
     public void init() {
 

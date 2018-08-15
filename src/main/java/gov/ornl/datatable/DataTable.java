@@ -63,6 +63,29 @@ public class DataTable {
         listeners = new ArrayList<>();
 	}
 
+	public DataTable getDuplicate() {
+		DataTable newDataTable = new DataTable();
+		ArrayList<Column> newColumns = new ArrayList<>();
+		for (Column column : columns) {
+			if (column instanceof DoubleColumn) {
+				newColumns.add(new DoubleColumn(column.getName()));
+			} else if (column instanceof TemporalColumn) {
+				newColumns.add(new TemporalColumn(column.getName()));
+			} else if (column instanceof CategoricalColumn) {
+				newColumns.add(new CategoricalColumn(column.getName(), ((CategoricalColumn)column).getCategories()));
+			}
+		}
+
+		ArrayList<Tuple> newTuples = new ArrayList<>();
+		for (Tuple tuple : tuples) {
+			Tuple newTuple = tuple.createCopy();
+			newTuples.add(newTuple);
+		}
+
+		newDataTable.setData(newTuples, newColumns);
+		return newDataTable;
+	}
+
 	public boolean getCalculateQueryStatistics() {
 	    return calculateQueryStatistics.get();
     }

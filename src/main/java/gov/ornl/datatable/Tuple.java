@@ -9,6 +9,15 @@ public class Tuple implements Serializable {
 	private int orderFactor = 0;
 
 	public Tuple() {
+
+	}
+
+	public Tuple createCopy() {
+		Tuple copyTuple = new Tuple();
+		for (Object element : elements) {
+			copyTuple.addElement(element);
+		}
+		return copyTuple;
 	}
 
     public Tuple (Tuple copyTuple) {

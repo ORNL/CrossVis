@@ -14,57 +14,59 @@ import javafx.util.Callback;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Optional;
+import java.util.TreeMap;
 import java.util.logging.Logger;
 
-public class TableColumnSpecificationDialog {
-    private static final Logger log = Logger.getLogger(TableColumnSpecificationDialog.class.getName());
+public class DataTableColumnSpecificationDialog {
+    private static final Logger log = Logger.getLogger(DataTableColumnSpecificationDialog.class.getName());
 
-    public static ArrayList<TableColumnSpecification> getColumnSpecifications (File csvFile) throws IOException {
+    public static ArrayList<DataTableColumnSpecification> getColumnSpecifications (File csvFile) throws IOException {
         String columnNames[] = IOUtilities.readCSVHeader(csvFile);
 
-        ObservableList<TableColumnSpecification> tableColumnSpecs = FXCollections.observableArrayList();
+        ObservableList<DataTableColumnSpecification> tableColumnSpecs = FXCollections.observableArrayList();
         for (String columnName : columnNames) {
-            TableColumnSpecification columnSpec = new TableColumnSpecification(columnName, "Double",
+            DataTableColumnSpecification columnSpec = new DataTableColumnSpecification(columnName, "Double",
                     "", false);
             tableColumnSpecs.add(columnSpec);
         }
 
-        Dialog<ObservableList<TableColumnSpecification>> dialog = new Dialog<>();
+        Dialog<ObservableList<DataTableColumnSpecification>> dialog = new Dialog<>();
         dialog.setTitle("CSV Column Specifications");
         dialog.setHeaderText("Specify Details for each Column");
 
         dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
 
-        TableView<TableColumnSpecification> columnSpecificationTableView = new TableView<>();
+        TableView<DataTableColumnSpecification> columnSpecificationTableView = new TableView<>();
         columnSpecificationTableView.setEditable(true);
 
-        TableColumn<TableColumnSpecification, String> nameColumn = new TableColumn<>("Column Name");
+        TableColumn<DataTableColumnSpecification, String> nameColumn = new TableColumn<>("Column Name");
         nameColumn.setMinWidth(180);
-        nameColumn.setCellValueFactory(new PropertyValueFactory<TableColumnSpecification, String>("name"));
+        nameColumn.setCellValueFactory(new PropertyValueFactory<DataTableColumnSpecification, String>("name"));
         nameColumn.setCellFactory(TextFieldTableCell.forTableColumn());
         nameColumn.setEditable(false);
 
-        TableColumn<TableColumnSpecification, Boolean> ignoreColumn = new TableColumn<>("Ignore");
+        TableColumn<DataTableColumnSpecification, Boolean> ignoreColumn = new TableColumn<>("Ignore");
         ignoreColumn.setMinWidth(20);
         ignoreColumn.setCellValueFactory(new PropertyValueFactory<>("ignore"));
         ignoreColumn.setCellFactory(column -> new CheckBoxTableCell<>());
         ignoreColumn.setEditable(true);
 
-        TableColumn<TableColumnSpecification, String> typeColumn = new TableColumn<>("Column Type");
+        TableColumn<DataTableColumnSpecification, String> typeColumn = new TableColumn<>("Column Type");
         typeColumn.setMinWidth(180);
         typeColumn.setCellValueFactory(new PropertyValueFactory<>("type"));
         typeColumn.setEditable(true);
         typeColumn.setCellFactory(column -> new ComboBoxTableCell<>(FXCollections.observableArrayList("Temporal", "Double", "Categorical")));
-        /*typeColumn.setCellFactory(new Callback<TableColumn<TableColumnSpecification, String>, TableCell<TableColumnSpecification, String>>() {
+        /*typeColumn.setCellFactory(new Callback<TableColumn<DataTableColumnSpecification, String>, TableCell<DataTableColumnSpecification, String>>() {
             @Override
-            public TableCell<TableColumnSpecification, String> call(TableColumn<TableColumnSpecification, String> param) {
-                return new ComboBoxTableCell<TableColumnSpecification, String>(FXCollections.observableArrayList("Temporal", "Double", "Categorical")) {
+            public TableCell<DataTableColumnSpecification, String> call(TableColumn<DataTableColumnSpecification, String> param) {
+                return new ComboBoxTableCell<DataTableColumnSpecification, String>(FXCollections.observableArrayList("Temporal", "Double", "Categorical")) {
                     @Override
                     public void updateItem(String item, boolean empty) {
                         if (!empty) {
-                            TableColumnSpecification columnSpecification = getTableView().getItems().get(getIndex());
+                            DataTableColumnSpecification columnSpecification = getTableView().getItems().get(getIndex());
                             if (columnSpecification.getType().equals("Temporal")) {
 
                             } else {
@@ -92,16 +94,29 @@ public class TableColumnSpecificationDialog {
         });*/
 
         ArrayList<String> parsePatterns = new ArrayList<>();
-        parsePatterns.add("dd.MM.yyy HH:mm:ss");
-        parsePatterns.add("yyyy-MM-dd'T'HH:mm:ss");
+        parsePatterns.add("BASIC_ISO_DATE");
+        parsePatterns.add("ISO_DATE");
+        parsePatterns.add("ISO_DATE_TIME");
+        parsePatterns.add("ISO_INSTANT");
+        parsePatterns.add("ISO_LOCAL_DATE");
+        parsePatterns.add("ISO_LOCAL_DATE_TIME");
+        parsePatterns.add("ISO_LOCAL_TIME");
+        parsePatterns.add("ISO_OFFSET_DATE");
+        parsePatterns.add("ISO_OFFSET_DATE_TIME");
+        parsePatterns.add("ISO_OFFSET_TIME");
+        parsePatterns.add("ISO_ORDINAL_DATE");
+        parsePatterns.add("ISO_TIME");
+        parsePatterns.add("ISO_WEEK_DATE");
+        parsePatterns.add("ISO_ZONED_DATE_TIME");
+        parsePatterns.add("RFC_1123_DATE_TIME");
 
-        TableColumn<TableColumnSpecification, String> parseColumn = new TableColumn<>("DateTime Parse Pattern");
+        TableColumn<DataTableColumnSpecification, String> parseColumn = new TableColumn<>("Date Time Formatter");
         parseColumn.setMinWidth(180);
-        parseColumn.setCellValueFactory(new PropertyValueFactory<TableColumnSpecification, String>("parsePattern"));
-        parseColumn.setCellFactory(new Callback<TableColumn<TableColumnSpecification, String>, TableCell<TableColumnSpecification, String>>() {
+        parseColumn.setCellValueFactory(new PropertyValueFactory<DataTableColumnSpecification, String>("parsePattern"));
+        parseColumn.setCellFactory(new Callback<TableColumn<DataTableColumnSpecification, String>, TableCell<DataTableColumnSpecification, String>>() {
             @Override
-            public TableCell<TableColumnSpecification, String> call(TableColumn<TableColumnSpecification, String> param) {
-                return new ComboBoxTableCell<TableColumnSpecification, String>(FXCollections.observableArrayList(parsePatterns)) {
+            public TableCell<DataTableColumnSpecification, String> call(TableColumn<DataTableColumnSpecification, String> param) {
+                return new ComboBoxTableCell<DataTableColumnSpecification, String>(FXCollections.observableArrayList(parsePatterns)) {
                     {
                         setComboBoxEditable(true);
                     }
@@ -109,15 +124,15 @@ public class TableColumnSpecificationDialog {
             }
         });
         parseColumn.setEditable(true);
-//        parseColumn.setCellFactory(new Callback<TableColumn<TableColumnSpecification, String>, TableCell<TableColumnSpecification, String>>() {
+//        parseColumn.setCellFactory(new Callback<TableColumn<DataTableColumnSpecification, String>, TableCell<DataTableColumnSpecification, String>>() {
 //            @Override
-//            public TableCell<TableColumnSpecification, String> call(TableColumn<TableColumnSpecification, String> param) {
-//                ComboBoxTableCell<TableColumnSpecification, String> cell = new ComboBoxTableCell<>(FXCollections.observableArrayList(parsePatterns));
+//            public TableCell<DataTableColumnSpecification, String> call(TableColumn<DataTableColumnSpecification, String> param) {
+//                ComboBoxTableCell<DataTableColumnSpecification, String> cell = new ComboBoxTableCell<>(FXCollections.observableArrayList(parsePatterns));
 //                cell.setComboBoxEditable(true);
 //                cell.tableRowProperty().addListener((observable, oldValue, newValue) -> {
 //                    log.info("row listener");
 //                    if (newValue != null) {
-//                        TableColumnSpecification columnSpecification = ((TableColumnSpecification)newValue.getItem());
+//                        DataTableColumnSpecification columnSpecification = ((DataTableColumnSpecification)newValue.getItem());
 //                        if (columnSpecification.getType().equals("Temporal")) {
 //                            cell.setEditable(true);
 //                            cell.setStyle("");
@@ -130,7 +145,7 @@ public class TableColumnSpecificationDialog {
 //                    }
 //                });
 //                return cell;
-//                return new ComboBoxTableCell<TableColumnSpecification, String>(FXCollections.observableArrayList(parsePatterns)) {
+//                return new ComboBoxTableCell<DataTableColumnSpecification, String>(FXCollections.observableArrayList(parsePatterns)) {
 //                    {
 //                        setComboBoxEditable(true);
 //                    }
@@ -138,7 +153,7 @@ public class TableColumnSpecificationDialog {
 //                    @Override
 //                    public void updateItem(String item, boolean empty) {
 //                        if (!empty) {
-//                            TableColumnSpecification columnSpecification = getTableView().getItems().get(getIndex());
+//                            DataTableColumnSpecification columnSpecification = getTableView().getItems().get(getIndex());
 //                            if (columnSpecification.getType().equals("Temporal")) {
 //                                setDisable(false);
 //                                setEditable(true);
@@ -177,10 +192,10 @@ public class TableColumnSpecificationDialog {
             return null;
         });
 
-        Optional<ObservableList<TableColumnSpecification>> result = dialog.showAndWait();
+        Optional<ObservableList<DataTableColumnSpecification>> result = dialog.showAndWait();
 
         if (result.isPresent()) {
-            return new ArrayList<TableColumnSpecification>(result.get());
+            return new ArrayList<DataTableColumnSpecification>(result.get());
         }
 
         return null;

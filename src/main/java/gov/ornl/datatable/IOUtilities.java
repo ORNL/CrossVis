@@ -7,6 +7,7 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.logging.Logger;
 
@@ -102,6 +103,96 @@ public class IOUtilities {
 //		reader.close();
 //		dataModel.setData(tuples, columns);
 //	}
+
+	public static int exportUnselectedFromDataTableToCSV(File csvFile, DataTable dataTable) throws IOException{
+		BufferedWriter writer = new BufferedWriter(new FileWriter(csvFile));
+
+		// write header line with column names
+		StringBuffer headerLine = new StringBuffer();
+		for (int icol = 0; icol < dataTable.getColumnCount(); icol++) {
+			Column column = dataTable.getColumn(icol);
+			if (headerLine.length() == 0) {
+				headerLine.append(column.getName());
+			} else {
+				headerLine.append("," + column.getName());
+			}
+		}
+
+		writer.write(headerLine.toString().trim() + "\n");
+
+		// get data
+		Set<Tuple> tuples = dataTable.getActiveQuery().getNonQueriedTuples();
+
+		// write to csv file
+		int tupleCounter = 0;
+		for (Tuple tuple : tuples) {
+			StringBuffer lineBuffer = new StringBuffer();
+			for (int i = 0; i < tuple.getElementCount(); i++) {
+				if (lineBuffer.length() == 0) {
+					lineBuffer.append(tuple.getElement(i));
+				} else {
+					lineBuffer.append(", " + tuple.getElement(i));
+				}
+			}
+
+			if (tupleCounter == 0) {
+				writer.write(lineBuffer.toString().trim());
+			} else {
+				writer.write("\n" + lineBuffer.toString().trim());
+			}
+
+			tupleCounter++;
+		}
+
+		writer.close();
+
+		return tupleCounter;
+	}
+
+	public static int exportSelectedFromDataTableQueryToCSV(File csvFile, DataTable dataTable) throws IOException{
+		BufferedWriter writer = new BufferedWriter(new FileWriter(csvFile));
+
+		// write header line with column names
+		StringBuffer headerLine = new StringBuffer();
+		for (int icol = 0; icol < dataTable.getColumnCount(); icol++) {
+			Column column = dataTable.getColumn(icol);
+			if (headerLine.length() == 0) {
+				headerLine.append(column.getName());
+			} else {
+				headerLine.append("," + column.getName());
+			}
+		}
+
+		writer.write(headerLine.toString().trim() + "\n");
+
+		// get data
+		Set<Tuple> tuples = dataTable.getActiveQuery().getQueriedTuples();
+
+		// write to csv file
+		int tupleCounter = 0;
+		for (Tuple tuple : tuples) {
+			StringBuffer lineBuffer = new StringBuffer();
+			for (int i = 0; i < tuple.getElementCount(); i++) {
+				if (lineBuffer.length() == 0) {
+					lineBuffer.append(tuple.getElement(i));
+				} else {
+					lineBuffer.append(", " + tuple.getElement(i));
+				}
+			}
+
+			if (tupleCounter == 0) {
+				writer.write(lineBuffer.toString().trim());
+			} else {
+				writer.write("\n" + lineBuffer.toString().trim());
+			}
+
+			tupleCounter++;
+		}
+
+		writer.close();
+
+		return tupleCounter;
+	}
 
 	public static String[] readCSVHeader(File f) throws  IOException {
 		BufferedReader reader = new BufferedReader(new FileReader(f));
