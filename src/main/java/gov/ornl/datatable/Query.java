@@ -129,7 +129,7 @@ public class Query {
     public void calculateStatistics() {
         long start = System.currentTimeMillis();
 
-        if (!queriedTuples.isEmpty()) {
+//        if (!queriedTuples.isEmpty()) {
             for (int icolumn = 0; icolumn < dataModel.getColumnCount(); icolumn++) {
                 Column column = dataModel.getColumn(icolumn);
                 ColumnSummaryStats queryColumnSummaryStats = columnQuerySummaryStatsMap.get(column);
@@ -188,7 +188,7 @@ public class Query {
                 }
             }
             calculateColumn2DHistograms();
-        }
+//        }
         long elapsed = System.currentTimeMillis() - start;
         log.info("calculateStatistics() took " + elapsed + "ms");
     }
@@ -271,14 +271,14 @@ public class Query {
         columnSelectionRanges.add(columnSelectionRange);
     }
 
-    public boolean removeColumnSelectionRange(ColumnSelection columnSelectionRange) {
+    protected boolean removeColumnSelectionRange(ColumnSelection columnSelectionRange) {
         if (!columnSelectionRanges.isEmpty()) {
             return columnSelectionRanges.remove(columnSelectionRange);
         }
         return false;
     }
 
-    public ArrayList<ColumnSelection> removeColumnSelectionRanges(Column column) {
+    protected ArrayList<ColumnSelection> removeColumnSelectionRanges(Column column) {
         if (!columnSelectionRanges.isEmpty()) {
             ArrayList<ColumnSelection> removedRanges = new ArrayList<>();
 

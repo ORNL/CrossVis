@@ -2,10 +2,7 @@ package gov.ornl.correlationview;
 
 import gov.ornl.datatable.*;
 import gov.ornl.util.GraphicsUtil;
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.*;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Insets;
 import javafx.geometry.VPos;
@@ -17,6 +14,7 @@ import javafx.scene.text.Text;
 import javafx.scene.transform.Rotate;
 
 import java.util.ArrayList;
+import java.util.DoubleSummaryStatistics;
 import java.util.logging.Logger;
 
 public class CorrelationMatrixView extends Region implements DataTableListener {
@@ -51,6 +49,7 @@ public class CorrelationMatrixView extends Region implements DataTableListener {
     private ObjectProperty<Color> negativeColor = new SimpleObjectProperty<>(DEFAULT_NEGATIVE_COLOR);
     private ObjectProperty<Color> diagonalColor = new SimpleObjectProperty<>(DEFAULT_DIAGONAL_COLOR);
     private DoubleProperty maxAxisSize = new SimpleDoubleProperty(DEFAULT_MAX_AXIS_SIZE);
+    private BooleanProperty showQueryCorrelations = new SimpleBooleanProperty(false);
 
     private ArrayList<Text> yColumnTitles = new ArrayList<>();
     private ArrayList<Text> xColumnTitles = new ArrayList<>();
@@ -64,6 +63,16 @@ public class CorrelationMatrixView extends Region implements DataTableListener {
         initialize();
         registerListeners();
     }
+
+    public BooleanProperty showQueryCorrelationsProperty() { return showQueryCorrelations; }
+
+    public void setShowQueryCorrelations(boolean enabled) {
+        if (getShowQueryCorrelations() != enabled) {
+            showQueryCorrelations.set(enabled);
+        }
+    }
+
+    public boolean getShowQueryCorrelations() { return showQueryCorrelations.get(); }
 
     public void setDataTable(DataTable dataTable) {
         clearView();
@@ -119,6 +128,12 @@ public class CorrelationMatrixView extends Region implements DataTableListener {
 //            if (newValue != null) {
 //            }
         });
+
+        showQueryCorrelations.addListener(observable -> {
+            clearView();
+            initView();
+            resizeView();
+        });
     }
 
     private void setCellColors() {
@@ -159,7 +174,7 @@ public class CorrelationMatrixView extends Region implements DataTableListener {
 
     private void initView() {
         if (dataTable != null && !dataTable.isEmpty()) {
-            doubleColumns = dataTable.getDoubleColumns();
+            doubleColumns = dataTable.getEnabledDoubleColumns();
 
             for (int yColumnIndex = 0; yColumnIndex < doubleColumns.size(); yColumnIndex++) {
                 DoubleColumn yColumn = doubleColumns.get(yColumnIndex);
@@ -184,7 +199,12 @@ public class CorrelationMatrixView extends Region implements DataTableListener {
                         titleGraphics.getChildren().add(xColumnTitleText);
                     }
 
-                    double correlation = yColumn.getStatistics().getCorrelationCoefficientList().get(dataTable.getColumnIndex(xColumn));
+                    double correlation = 0;
+                    if (getShowQueryCorrelations() && dataTable.getActiveQuery().hasColumnSelections()) {
+                        correlation = ((DoubleColumnSummaryStats)dataTable.getActiveQuery().getColumnQuerySummaryStats(yColumn)).getCorrelationCoefficientList().get(dataTable.getColumnIndex(xColumn));
+                    } else {
+                        correlation = yColumn.getStatistics().getCorrelationCoefficientList().get(dataTable.getColumnIndex(xColumn));
+                    }
 
                     CorrelationMatrixCell cell = new CorrelationMatrixCell(xColumn, yColumn, correlation);
                     cellGraphics.getChildren().add(cell.getCellRectangle());
@@ -249,25 +269,31 @@ public class CorrelationMatrixView extends Region implements DataTableListener {
         double plotRegionWidth = viewRegionBounds.getWidth() - yAxisWidth;
         double plotRegionHeight = viewRegionBounds.getHeight() - xAxisHeight;
         double plotRegionSize = plotRegionWidth < plotRegionHeight ? plotRegionWidth : plotRegionHeight;
-        xAxisHeight = viewRegionBounds.getHeight() - plotRegionSize;
-        yAxisWidth = viewRegionBounds.getWidth() - plotRegionSize;
+        double xAxisTopOffset = ((viewRegionBounds.getHeight() - plotRegionSize) - xAxisHeight) / 2.;
+        double yAxisLeftOffset = ((viewRegionBounds.getWidth() - plotRegionSize) - yAxisWidth) / 2.;
+//        xAxisHeight = viewRegionBounds.getHeight() - plotRegionSize;
+//        yAxisWidth = viewRegionBounds.getWidth() - plotRegionSize;
 
-        plotRegionBounds = new BoundingBox(viewRegionBounds.getMinX() + yAxisWidth,
-                viewRegionBounds.getMinY() + xAxisHeight, plotRegionSize, plotRegionSize);
+        plotRegionBounds = new BoundingBox(viewRegionBounds.getMinX() + yAxisLeftOffset + yAxisWidth,
+                viewRegionBounds.getMinY() + xAxisTopOffset + xAxisHeight, plotRegionSize, plotRegionSize);
         plotRegionRectangle.setX(plotRegionBounds.getMinX());
         plotRegionRectangle.setY(plotRegionBounds.getMinY());
         plotRegionRectangle.setWidth(plotRegionBounds.getWidth());
         plotRegionRectangle.setHeight(plotRegionBounds.getHeight());
 
-        yAxisRegionBounds = new BoundingBox(viewRegionBounds.getMinX(), viewRegionBounds.getMinY() + xAxisHeight,
+        yAxisRegionBounds = new BoundingBox(viewRegionBounds.getMinX() + yAxisLeftOffset, plotRegionBounds.getMinY(),
                 yAxisWidth, plotRegionSize);
+//        yAxisRegionBounds = new BoundingBox(viewRegionBounds.getMinX(), viewRegionBounds.getMinY() + xAxisHeight,
+//                yAxisWidth, plotRegionSize);
         yAxisRegionRectangle.setX(yAxisRegionBounds.getMinX());
         yAxisRegionRectangle.setY(yAxisRegionBounds.getMinY());
         yAxisRegionRectangle.setWidth(yAxisRegionBounds.getWidth());
         yAxisRegionRectangle.setHeight(yAxisRegionBounds.getHeight());
 
-        xAxisRegionBounds = new BoundingBox(yAxisRegionBounds.getMaxX(), viewRegionBounds.getMinY(),
+        xAxisRegionBounds = new BoundingBox(plotRegionBounds.getMinX(), viewRegionBounds.getMinY() + xAxisTopOffset,
                 plotRegionSize, xAxisHeight);
+//        xAxisRegionBounds = new BoundingBox(yAxisRegionBounds.getMaxX(), viewRegionBounds.getMinY(),
+//                plotRegionSize, xAxisHeight);
         xAxisRegionRectangle.setX(xAxisRegionBounds.getMinX());
         xAxisRegionRectangle.setY(xAxisRegionBounds.getMinY());
         xAxisRegionRectangle.setWidth(xAxisRegionBounds.getWidth());
@@ -291,8 +317,9 @@ public class CorrelationMatrixView extends Region implements DataTableListener {
                 if (irow == 0) {
                     Text xColumnTitleText = xColumnTitles.get(icol);
                     xColumnTitleText.setText(doubleColumns.get(icol).getName());
-                    fitColumnTitleToAxisSize(xColumnTitleText, xAxisRegionBounds.getWidth());
-                    xColumnTitleText.relocate(cellX + (cellSize / 2.), xAxisRegionBounds.getMaxY() - 2.);
+                    fitColumnTitleToAxisSize(xColumnTitleText, xAxisRegionBounds.getHeight());
+                    xColumnTitleText.relocate(cellX + (cellSize / 2.) - (xColumnTitleText.getLayoutBounds().getHeight() / 2.),
+                            xAxisRegionBounds.getMaxY() - 2.);
 //                    xColumnTitleText.setY(xAxisRegionBounds.getMaxY());
 //                    xColumnTitleText.setX(cellX);
 //                    xColumnTitleText.setX(cellX + (cellSize / 2.));
@@ -342,7 +369,9 @@ public class CorrelationMatrixView extends Region implements DataTableListener {
 
     @Override
     public void dataModelStatisticsChanged(DataTable dataModel) {
-
+        clearView();
+        initView();
+        resizeView();
     }
 
     @Override
@@ -351,67 +380,93 @@ public class CorrelationMatrixView extends Region implements DataTableListener {
     }
 
     @Override
-    public void dataModelQueryCleared(DataTable dataModel) {
-
+    public void dataTableAllColumnSelectionsRemoved(DataTable dataModel) {
+        clearView();
+        initView();
+        resizeView();
     }
 
     @Override
-    public void dataModelQueryColumnCleared(DataTable dataModel, Column column) {
-
+    public void dataTableAllColumnSelectionsForColumnRemoved(DataTable dataModel, Column column) {
+        clearView();
+        initView();
+        resizeView();
     }
 
     @Override
     public void dataModelColumnSelectionAdded(DataTable dataModel, ColumnSelection columnSelectionRange) {
-
+        clearView();
+        initView();
+        resizeView();
     }
 
     @Override
     public void dataModelColumnSelectionRemoved(DataTable dataModel, ColumnSelection columnSelectionRange) {
-
+        clearView();
+        initView();
+        resizeView();
     }
 
     @Override
     public void dataModelColumnSelectionChanged(DataTable dataModel, ColumnSelection columnSelectionRange) {
-
+        clearView();
+        initView();
+        resizeView();
     }
 
     @Override
     public void dataModelHighlightedColumnChanged(DataTable dataModel, Column oldHighlightedColumn, Column newHighlightedColumn) {
-
+        clearView();
+        initView();
+        resizeView();
     }
 
     @Override
     public void dataModelTuplesAdded(DataTable dataModel, ArrayList<Tuple> newTuples) {
-
+        clearView();
+        initView();
+        resizeView();
     }
 
     @Override
     public void dataModelTuplesRemoved(DataTable dataModel, int numTuplesRemoved) {
-
+        clearView();
+        initView();
+        resizeView();
     }
 
     @Override
     public void dataModelColumnDisabled(DataTable dataModel, Column disabledColumn) {
-
+        clearView();
+        initView();
+        resizeView();
     }
 
     @Override
     public void dataModelColumnsDisabled(DataTable dataModel, ArrayList<Column> disabledColumns) {
-
+        clearView();
+        initView();
+        resizeView();
     }
 
     @Override
     public void dataModelColumnEnabled(DataTable dataModel, Column enabledColumn) {
-
+        clearView();
+        initView();
+        resizeView();
     }
 
     @Override
     public void dataModelColumnOrderChanged(DataTable dataModel) {
-
+        clearView();
+        initView();
+        resizeView();
     }
 
     @Override
     public void dataModelColumnNameChanged(DataTable dataModel, Column column) {
-
+        clearView();
+        initView();
+        resizeView();
     }
 }

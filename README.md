@@ -1,8 +1,8 @@
-## EDEN.fx
+## CrossVis
 
-**EDEN.fx** is an interactive visual analytics tool for exploring multivariate data.
+**CrossVis** is an interactive visual analytics tool for exploring multivariate data.
 
-<img src="images/edenfx-screenshot.png" width="600" vspace="6"> <br\>
+<img src="images/crossvis-screenshot.png" width="600" vspace="6"> <br\>
 
 **EDEN.fx** is written in Java and runs on Mac OS X, Windows, and Linux operating systems.
  The application is developed and maintained by the [Oak Ridge National Laboratory](http://www.ornl.gov)

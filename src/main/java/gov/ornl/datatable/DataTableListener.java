@@ -14,10 +14,10 @@ public interface DataTableListener {
 
 	// Methods affecting the query state of the data model
 	// Called when the active query is reset with no selections (all selections are removed)
-	public void dataModelQueryCleared(DataTable dataModel);
+	public void dataTableAllColumnSelectionsRemoved(DataTable dataModel);
 
     // Called when selections for a particular column are removed from the active query
-    public void dataModelQueryColumnCleared(DataTable dataModel, Column column);
+    public void dataTableAllColumnSelectionsForColumnRemoved(DataTable dataModel, Column column);
 
 	// Called when a selection is added to the active query
 	public void dataModelColumnSelectionAdded(DataTable dataModel, ColumnSelection columnSelectionRange);

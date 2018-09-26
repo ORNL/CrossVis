@@ -1,5 +1,6 @@
 package gov.ornl.pcpview;
 
+import gov.ornl.datatable.Column;
 import gov.ornl.datatable.DataTable;
 import gov.ornl.datatable.IOUtilities;
 import javafx.application.Application;
@@ -7,18 +8,20 @@ import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
+import javafx.geometry.Orientation;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
 import javafx.scene.SceneAntialiasing;
-import javafx.scene.control.Button;
-import javafx.scene.control.ChoiceBox;
-import javafx.scene.control.ScrollPane;
-import javafx.scene.control.Slider;
+import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.logging.Logger;
 
@@ -29,7 +32,7 @@ public class PCPViewTest extends Application {
     public static final Logger log = Logger.getLogger(PCPViewTest.class.getName());
 
     private PCPView pcpView;
-    private DataTable dataModel;
+    private DataTable dataTable;
 
     @Override
     public void init() {
@@ -38,28 +41,12 @@ public class PCPViewTest extends Application {
 
     @Override
     public void start(Stage stage) throws Exception {
-//        StackPane pane = new StackPane(pcpView);
-//        pane.setPadding(new Insets(20));
-
-//        stage.setOnShown(new EventHandler<WindowEvent>() {
-//            @Override
-//            public void handle(WindowEvent event) {
-//                try {
-//                    IOUtilities.readCSV(new File("data/csv/titan-performance.csv"),
-//                            DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss"), "Date", dataModel);
-//                } catch (IOException e) {
-//                    System.exit(0);
-//                    e.printStackTrace();
-//                }
-//            }
-//        });
-
         pcpView = new PCPView();
         pcpView.setPrefHeight(500);
         pcpView.setAxisSpacing(100);
         pcpView.setPadding(new Insets(10));
 
-        pcpView.setDisplayMode(PCPView.DISPLAY_MODE.PCP_LINES);
+        pcpView.setPolylineDisplayMode(PCPView.POLYLINE_DISPLAY_MODE.POLYLINES);
 
         ScrollPane scrollPane = new ScrollPane(pcpView);
         scrollPane.setFitToWidth(pcpView.getFitToWidth());
@@ -71,24 +58,42 @@ public class PCPViewTest extends Application {
             public void handle(ActionEvent event) {
                 try {
                     long start = System.currentTimeMillis();
+                    ArrayList<String> ignoreColumnNames = new ArrayList<>();
+                    ignoreColumnNames.add("CMEDV");
+                    ignoreColumnNames.add("INDUS");
+                    ignoreColumnNames.add("CHAS");
+                    ignoreColumnNames.add("NOX");
+                    ignoreColumnNames.add("RM");
+                    ignoreColumnNames.add("DIS");
+                    ignoreColumnNames.add("RAD");
+                    ignoreColumnNames.add("PTRATIO");
+                    ignoreColumnNames.add("B");
+                    ignoreColumnNames.add("LSTAT");
+                    IOUtilities.readCSV(new File("data/csv/boston_corrected_cleaned.csv"), ignoreColumnNames,
+                            null, null, null, dataTable);
 //                    IOUtilities.readCSV(new File("data/csv/cars.csv"), null, null,
-//                            null, null, dataModel);
+//                            null, null, dataTable);
 //                    IOUtilities.readCSV(new File("/Users/csg/Dropbox (ORNL)/projects/SciDAC/data/2018-01-RiccuitoEnsemble/QMCdaily_US_combined.csv"),
-//                            null, null, null, null, dataModel);
+//                            null, null, null, null, dataTable);
 
-                    ArrayList<String> categoricalColumnNames = new ArrayList<>();
-                    categoricalColumnNames.add("Origin");
-                    IOUtilities.readCSV(new File("data/csv/cars-cat.csv"), null, categoricalColumnNames,
-                            null, null, dataModel);
+//                    ArrayList<String> categoricalColumnNames = new ArrayList<>();
+//                    categoricalColumnNames.add("Origin");
+//                    IOUtilities.readCSV(new File("data/csv/cars-cat.csv"), null, categoricalColumnNames,
+//                            null, null, dataTable);
+
 //                    ArrayList<String> temporalColumnNames = new ArrayList<>();
 //                    temporalColumnNames.add("Date");
 //                    ArrayList<DateTimeFormatter> temporalColumnFormatters = new ArrayList<>();
 //                    temporalColumnFormatters.add(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss"));
-////                    ArrayList<String> ignoreColumnNames = new ArrayList<>();
-//////                    ignoreColumnNames.add("StageoutPilots");
-////
+//////                    ArrayList<String> ignoreColumnNames = new ArrayList<>();
+////////                    ignoreColumnNames.add("StageoutPilots");
+//////
 //                    IOUtilities.readCSV(new File("data/csv/titan-performance.csv"), null, null,
-//                            temporalColumnNames, temporalColumnFormatters, dataModel);
+//                            temporalColumnNames, temporalColumnFormatters, dataTable);
+                    Column latColumn = dataTable.getColumn("LAT");
+                    Column lonColumn = dataTable.getColumn("LON");
+                    pcpView.setGeographicAxes(latColumn, lonColumn);
+
                     long elapsed = System.currentTimeMillis() - start;
                     log.info("Reading data and populating data model took " + elapsed + " ms");
                 } catch (IOException e) {
@@ -98,44 +103,94 @@ public class PCPViewTest extends Application {
             }
         });
 
-        ChoiceBox<PCPView.DISPLAY_MODE> displayModeChoiceBox = new ChoiceBox<>(FXCollections.observableArrayList(PCPView.DISPLAY_MODE.PCP_LINES,
-                PCPView.DISPLAY_MODE.PCP_BINS, PCPView.DISPLAY_MODE.HISTOGRAM, PCPView.DISPLAY_MODE.SUMMARY));
-        displayModeChoiceBox.getSelectionModel().select(0);
-        displayModeChoiceBox.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                PCPView.DISPLAY_MODE newDisplayMode = displayModeChoiceBox.getValue();
-                pcpView.setDisplayMode(newDisplayMode);
+        ChoiceBox<PCPView.POLYLINE_DISPLAY_MODE> polylineDisplayModeChoiceBox =
+                new ChoiceBox<>(FXCollections.observableArrayList(PCPView.POLYLINE_DISPLAY_MODE.POLYLINES,
+                PCPView.POLYLINE_DISPLAY_MODE.BINNED_POLYLINES));
+        if (pcpView.getPolylineDisplayMode() == PCPView.POLYLINE_DISPLAY_MODE.POLYLINES) {
+            polylineDisplayModeChoiceBox.getSelectionModel().select(0);
+        } else {
+            polylineDisplayModeChoiceBox.getSelectionModel().select(1);
+        }
+        polylineDisplayModeChoiceBox.setOnAction(event -> {
+            pcpView.setPolylineDisplayMode(polylineDisplayModeChoiceBox.getValue());
+        });
+
+        ChoiceBox<PCPView.STATISTICS_DISPLAY_MODE> statisticsDisplayModeChoiceBox =
+                new ChoiceBox<>(FXCollections.observableArrayList(PCPView.STATISTICS_DISPLAY_MODE.MEAN_BOXPLOT,
+                        PCPView.STATISTICS_DISPLAY_MODE.MEDIAN_BOXPLOT));
+        if (pcpView.getSummaryStatisticsDisplayMode() == PCPView.STATISTICS_DISPLAY_MODE.MEAN_BOXPLOT) {
+            statisticsDisplayModeChoiceBox.getSelectionModel().select(0);
+        } else {
+            statisticsDisplayModeChoiceBox.getSelectionModel().select(1);
+        }
+        statisticsDisplayModeChoiceBox.setOnAction(event -> {
+            pcpView.setSummaryStatisticsDisplayMode(statisticsDisplayModeChoiceBox.getValue());
+        });
+
+        Slider opacitySlider = new Slider(0.01, 1., pcpView.getDataItemsOpacity());
+//        opacitySlider.valueProperty().bindBidirectional(pcpView.dataItemsOpacityProperty());
+        opacitySlider.setShowTickLabels(false);
+        opacitySlider.setShowTickMarks(false);
+        opacitySlider.valueChangingProperty().addListener((observable, oldValue, newValue) -> {
+            log.info("opacity slide value changing is " + newValue);
+            if (!newValue) {
+                pcpView.setDataItemsOpacity(opacitySlider.getValue());
             }
         });
 
-//        ChoiceBox<Orientation> orientationChoiceBox = new ChoiceBox<>(FXCollections.observableArrayList(Orientation.HORIZONTAL, Orientation.VERTICAL));
-//        orientationChoiceBox.getSelectionModel().select(pcpView.getOrientation());
-//        orientationChoiceBox.setOnAction(event -> {
-//            pcpView.setOrientation(orientationChoiceBox.getValue());
-//        });
+        CheckBox showScatterplotsCB = new CheckBox("Show Scatterplots");
+        showScatterplotsCB.selectedProperty().bindBidirectional(pcpView.showScatterplotsProperty());
 
-        Slider opacitySlider = new Slider(0., 1., pcpView.getDataItemsOpacity());
-        opacitySlider.valueProperty().bindBidirectional(pcpView.dataItemsOpacityProperty());
-        opacitySlider.setShowTickLabels(false);
-        opacitySlider.setShowTickMarks(false);
+        CheckBox showPolylinesCB = new CheckBox("Show Polylines");
+        showPolylinesCB.selectedProperty().bindBidirectional(pcpView.showPolylinesProperty());
 
-        HBox buttonBox = new HBox();
-        buttonBox.setSpacing(2.);
-        buttonBox.getChildren().addAll(dataButton, displayModeChoiceBox, opacitySlider);
+        CheckBox showSummaryStatsCB = new CheckBox("Show Summary Statistics");
+        showSummaryStatsCB.selectedProperty().bindBidirectional(pcpView.showSummaryStatisticsProperty());
+
+        CheckBox showHistogramCB = new CheckBox("Show Histograms");
+        showHistogramCB.selectedProperty().bindBidirectional(pcpView.showHistogramsProperty());
+
+        CheckBox showSelectedPolylinesCB = new CheckBox("Show Selected Polylines");
+        showSelectedPolylinesCB.selectedProperty().bindBidirectional(pcpView.showSelectedItemsProperty());
+
+        CheckBox showUnselectedPolylinesCB = new CheckBox("Show Unselected Polylines");
+        showUnselectedPolylinesCB.selectedProperty().bindBidirectional(pcpView.showUnselectedItemsProperty());
+
+        HBox settingsPane = new HBox();
+        settingsPane.setSpacing(2.);
+        settingsPane.setPadding(new Insets(4));
+
+        settingsPane.getChildren().add(dataButton);
+        settingsPane.getChildren().add(showPolylinesCB);
+        settingsPane.getChildren().add(showSelectedPolylinesCB);
+        settingsPane.getChildren().add(showUnselectedPolylinesCB);
+        settingsPane.getChildren().add(showHistogramCB);
+        settingsPane.getChildren().add(showSummaryStatsCB);
+        settingsPane.getChildren().add(showScatterplotsCB);
+        settingsPane.getChildren().add(statisticsDisplayModeChoiceBox);
+        settingsPane.getChildren().add(polylineDisplayModeChoiceBox);
+        settingsPane.getChildren().add(opacitySlider);
+
+//        SplitPane mainSplit = new SplitPane(settingsPane, scrollPane);
+//        mainSplit.setOrientation(Orientation.HORIZONTAL);
+//        mainSplit.setDividerPositions(0.2);
 
         BorderPane rootNode = new BorderPane();
         rootNode.setCenter(scrollPane);
-        rootNode.setBottom(buttonBox);
+        rootNode.setBottom(settingsPane);
 
-        Scene scene = new Scene(rootNode, 960, 500, true, SceneAntialiasing.BALANCED);
+        Rectangle2D screenVisualBounds = Screen.getPrimary().getVisualBounds();
+        double sceneWidth = screenVisualBounds.getWidth() - 40;
+        sceneWidth = sceneWidth > 2000 ? 2000 : sceneWidth;
+
+        Scene scene = new Scene(rootNode, sceneWidth, 600, true, SceneAntialiasing.BALANCED);
 
         stage.setTitle("PCPView Test");
         stage.setScene(scene);
         stage.show();
 
-        dataModel = new DataTable();
-        pcpView.setDataTable(dataModel);
+        dataTable = new DataTable();
+        pcpView.setDataTable(dataTable);
     }
 
     @Override

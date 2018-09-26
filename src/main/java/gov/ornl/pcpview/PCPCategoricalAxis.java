@@ -54,6 +54,37 @@ public class PCPCategoricalAxis extends PCPAxis {
         registerListeners();
     }
 
+//    @Override
+//    protected boolean removeAxisSelection(ColumnSelection columnSelection) {
+//        // find the axis selection for the given column selection
+//        PCPAxisSelection axisSelection = getAxisSelection(columnSelection);
+//        if (axisSelection != null) {
+//            // remove the axis selection's graphics
+//            pane.getChildren().remove(axisSelection.getGraphicsGroup());
+//            return getAxisSelectionList().remove(axisSelection);
+//        }
+//
+//        return false;
+//    }
+
+    @Override
+    protected PCPAxisSelection addAxisSelection(ColumnSelection columnSelection) {
+        // see if an axis selection already exists for the column selection
+        for (PCPAxisSelection axisSelection : getAxisSelectionList()) {
+            if (axisSelection.getColumnSelectionRange() == columnSelection) {
+                // an axis selection already exists for the given column selection so abort
+                return null;
+            }
+        }
+
+        CategoricalColumnSelection categoricalColumnSelection = (CategoricalColumnSelection)columnSelection;
+
+        PCPCategoricalAxisSelection newAxisSelection = new PCPCategoricalAxisSelection(this, categoricalColumnSelection, dataModel);
+        getAxisSelectionList().add(newAxisSelection);
+
+        return newAxisSelection;
+    }
+
     @Override
     protected Object getValueForAxisPosition(double axisPosition) {
         for (String category : categoriesRectangleMap.keySet()) {
@@ -233,7 +264,7 @@ public class PCPCategoricalAxis extends PCPAxis {
             HashSet<String> categories = new HashSet<>();
             categories.add(category);
             CategoricalColumnSelection columnSelection = new CategoricalColumnSelection(categoricalColumn(), categories);
-            PCPCategoricalAxisSelection axisSelection = new PCPCategoricalAxisSelection(this, columnSelection, pane, dataModel);
+            PCPCategoricalAxisSelection axisSelection = new PCPCategoricalAxisSelection(this, columnSelection, dataModel);
             getAxisSelectionList().add(axisSelection);
             dataModel.addColumnSelectionRangeToActiveQuery(columnSelection);
         } else {
@@ -301,13 +332,13 @@ public class PCPCategoricalAxis extends PCPAxis {
         pane.getChildren().remove(graphicsGroup);
     }
 
-    @Override
-    public Group getHistogramBinRectangleGroup() {
-        return null;
-    }
-
-    @Override
-    public Group getQueryHistogramBinRectangleGroup() {
-        return null;
-    }
+//    @Override
+//    public Group getHistogramBinRectangleGroup() {
+//        return null;
+//    }
+//
+//    @Override
+//    public Group getQueryHistogramBinRectangleGroup() {
+//        return null;
+//    }
 }

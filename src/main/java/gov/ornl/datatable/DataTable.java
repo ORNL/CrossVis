@@ -116,13 +116,28 @@ public class DataTable {
 			for (Column column : columns) {
 			    column.getStatistics().setNumHistogramBins(numHistogramBins);
             }
-			calculateStatistics();
-			if (activeQuery.hasColumnSelections()) {
-				activeQuery.calculateStatistics();
-			}
+
+            activeQuery.setNumHistogramBins(numHistogramBins);
+
+			calculateColumn2DHistograms();
 
 			fireNumHistogramBinsChanged();
 		}
+	}
+
+	public ArrayList<DoubleColumn> getEnabledDoubleColumns() {
+		ArrayList<DoubleColumn> doubleColumns = new ArrayList<>();
+		for (Column column : columns) {
+			if (column instanceof DoubleColumn) {
+				doubleColumns.add((DoubleColumn)column);
+			}
+		}
+
+		if (doubleColumns.isEmpty()) {
+			return null;
+		}
+
+		return doubleColumns;
 	}
 
 	public ArrayList<DoubleColumn> getDoubleColumns() {
@@ -132,6 +147,7 @@ public class DataTable {
 				doubleColumns.add((DoubleColumn)column);
 			}
 		}
+
 		for (Column column : disabledColumns) {
 			if (column instanceof DoubleColumn) {
 				doubleColumns.add((DoubleColumn)column);
@@ -249,7 +265,7 @@ public class DataTable {
 		tuples.clear();
 		disabledColumnTuples.clear();
 		activeQuery = new Query("Q" + (nextQueryNumber++), this);
-//		clearActiveQuery();
+//		removeColumnSelectionsFromActiveQuery();
 		columns.clear();
 		disabledColumns.clear();
 		highlightedColumn = null;
@@ -350,11 +366,13 @@ public class DataTable {
 
 			if (disabledColumn == this.highlightedColumn) {
 				highlightedColumn = null;
-//                fireHighlightedColumnChanged();
+//                fireHighlightedColumnChanged(disabledColumn);
 			}
 
 			disabledColumns.add(disabledColumn);
             columns.remove(disabledColumn);
+
+            calculateStatistics();
 
             getActiveQuery().removeColumnSelectionRanges(disabledColumn);
             getActiveQuery().setQueriedTuples();
@@ -371,14 +389,16 @@ public class DataTable {
 
                 if (column == this.highlightedColumn) {
 					highlightedColumn = null;
-//                    fireHighlightedColumnChanged();
+//                    fireHighlightedColumnChanged(column);
 				}
 
 				disabledColumns.add(column);
                 columns.remove(column);
-                clearActiveQueryColumnSelections(column);
+                removeColumnSelectionsFromActiveQuery(column);
 			}
 		}
+
+		calculateStatistics();
 
 		fireColumnsDisabled(columns);
 	}
@@ -405,7 +425,7 @@ public class DataTable {
 		return disabledColumns;
 	}
 
-	public void clearColumnSelectionRange (ColumnSelection selectionRange) {
+	public void removeColumnSelectionFromActiveQuery(ColumnSelection selectionRange) {
 		getActiveQuery().removeColumnSelectionRange(selectionRange);
 		getActiveQuery().setQueriedTuples();
 		fireColumnSelectionRemoved(selectionRange);
@@ -462,16 +482,16 @@ public class DataTable {
 //		}
 //	}
 
-	public void clearActiveQuery() {
+	public void removeColumnSelectionsFromActiveQuery() {
         activeQuery = new Query("Q" + (nextQueryNumber++), this);
         fireQueryCleared();
 	}
 
-	private void clearAllQueryColumnSelections() {
-		getActiveQuery().clear();
-	}
+//	private void clearAllQueryColumnSelections() {
+//		getActiveQuery().clear();
+//	}
 
-	public void clearActiveQueryColumnSelections(Column column) {
+	public void removeColumnSelectionsFromActiveQuery(Column column) {
 		if (activeQuery != null) {
             getActiveQuery().removeColumnSelectionRanges(column);
             getActiveQuery().setQueriedTuples();
@@ -564,7 +584,7 @@ public class DataTable {
 //            }
 //        }
 //
-//        // add negatively correlated axes
+//        // add negatively correlated crossvis
 //        if (!negativeColumnList.isEmpty()) {
 //            Object sortedRecords[] = negativeColumnList.toArray();
 //            Arrays.sort(sortedRecords);
@@ -575,10 +595,10 @@ public class DataTable {
 //            }
 //        }
 //
-//        // compare axis goes between negative and positive correlated axes
+//        // compare axis goes between negative and positive correlated crossvis
 //        newColumnList.add(compareColumn);
 //
-//        // add positively correlated axes
+//        // add positively correlated crossvis
 //        if (!positiveColumnList.isEmpty()) {
 //            Object sortedRecords[] = positiveColumnList.toArray();
 //            Arrays.sort(sortedRecords);
@@ -589,7 +609,7 @@ public class DataTable {
 //            }
 //        }
 //
-//        // add nan axes at bottom of the list
+//        // add nan crossvis at bottom of the list
 //        if (!nanColumnList.isEmpty()) {
 //            for (ColumnSortRecord sortRecord : nanColumnList) {
 //                newColumnList.add(sortRecord.column);
@@ -840,13 +860,13 @@ public class DataTable {
 
 	public void fireQueryCleared() {
 		for (DataTableListener listener : listeners) {
-			listener.dataModelQueryCleared(this);
+			listener.dataTableAllColumnSelectionsRemoved(this);
 		}
 	}
 
 	public void fireQueryColumnCleared(Column column) {
         for (DataTableListener listener : listeners) {
-            listener.dataModelQueryColumnCleared(this, column);
+            listener.dataTableAllColumnSelectionsForColumnRemoved(this, column);
         }
     }
 }

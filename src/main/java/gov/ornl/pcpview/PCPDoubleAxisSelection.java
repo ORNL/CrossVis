@@ -29,8 +29,8 @@ public class PCPDoubleAxisSelection extends PCPAxisSelection {
     private DoubleProperty draggingMinValue;
     private DoubleProperty draggingMaxValue;
 
-    public PCPDoubleAxisSelection(PCPAxis pcpAxis, DoubleColumnSelectionRange selectionRange, double minValueY, double maxValueY, Pane pane, DataTable dataModel) {
-        super(pcpAxis, selectionRange, minValueY, maxValueY, pane, dataModel);
+    public PCPDoubleAxisSelection(PCPAxis pcpAxis, DoubleColumnSelectionRange selectionRange, double minValueY, double maxValueY, DataTable dataTable) {
+        super(pcpAxis, selectionRange, minValueY, maxValueY, dataTable);
 
         minText = new Text(String.valueOf(selectionRange.getMinValue()));
 //        minText = new Text());
@@ -153,9 +153,9 @@ public class PCPDoubleAxisSelection extends PCPAxisSelection {
             maxText.textProperty().unbindBidirectional(draggingMaxValue);
 
         } else {
-            getPane().getChildren().remove(getGraphicsGroup());
-            getPCPAxis().getAxisSelectionList().remove(this);
-            getDataModel().clearColumnSelectionRange(doubleColumnSelectionRange());
+//            getPane().getChildren().remove(getGraphicsGroup());
+//            getPCPAxis().getAxisSelectionList().remove(this);
+            getDataModel().removeColumnSelectionFromActiveQuery(doubleColumnSelectionRange());
         }
     }
 
@@ -167,6 +167,38 @@ public class PCPDoubleAxisSelection extends PCPAxisSelection {
 
     @Override
     protected void handleBottomCrossbarMouseExited() {
+        maxText.setVisible(false);
+        minText.setVisible(false);
+    }
+
+
+
+    @Override
+    protected void handleBottomCrossbarMousePressed() {
+
+    }
+
+    @Override
+    protected void handleBottomCrossbarMouseReleased() {
+        if (dragging) {
+            dragging = false;
+
+            // update column selection range min properties
+            doubleColumnSelectionRange().setMinValue(draggingMinValue.get());
+
+            // unbind selection range min labels from dragging min range value
+            minText.textProperty().unbindBidirectional(draggingMinValue);
+        }
+    }
+
+    @Override
+    protected void handleTopCrossbarMouseEntered() {
+        minText.setVisible(false);
+        maxText.setVisible(true);
+    }
+
+    @Override
+    protected void handleTopCrossbarMouseExited() {
         maxText.setVisible(false);
         minText.setVisible(false);
     }
@@ -201,36 +233,6 @@ public class PCPDoubleAxisSelection extends PCPAxisSelection {
                 ((DoubleColumn)getPCPAxis().getColumn()).getStatistics().getMaxValue(),
                 ((DoubleColumn)getPCPAxis().getColumn()).getStatistics().getMinValue()));
         layoutGraphics(bottomY, getTopY());
-    }
-
-    @Override
-    protected void handleBottomCrossbarMousePressed() {
-
-    }
-
-    @Override
-    protected void handleBottomCrossbarMouseReleased() {
-        if (dragging) {
-            dragging = false;
-
-            // update column selection range min properties
-            doubleColumnSelectionRange().setMinValue(draggingMinValue.get());
-
-            // unbind selection range min labels from dragging min range value
-            minText.textProperty().unbindBidirectional(draggingMinValue);
-        }
-    }
-
-    @Override
-    protected void handleTopCrossbarMouseEntered() {
-        minText.setVisible(false);
-        maxText.setVisible(true);
-    }
-
-    @Override
-    protected void handleTopCrossbarMouseExited() {
-        maxText.setVisible(false);
-        minText.setVisible(false);
     }
 
     @Override

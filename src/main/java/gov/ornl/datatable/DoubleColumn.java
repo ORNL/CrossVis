@@ -1,5 +1,7 @@
 package gov.ornl.datatable;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 public class DoubleColumn extends Column {
@@ -26,6 +28,17 @@ public class DoubleColumn extends Column {
         }
         
         return values;
+    }
+
+    public List<Double> getValuesAsList() {
+        int columnIndex = getDataModel().getColumnIndex(this);
+
+        ArrayList<Double> valuesList = new ArrayList<>();
+        for (int i = 0; i < getDataModel().getTupleCount(); i++) {
+            valuesList.add((double)getDataModel().getTuple(i).getElement(columnIndex));
+        }
+
+        return valuesList;
     }
 
     public double[] getQueriedValues() {

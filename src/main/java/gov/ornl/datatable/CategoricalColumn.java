@@ -54,6 +54,15 @@ public class CategoricalColumn extends Column {
         return values;
     }
 
+    public List<String> getValuesAsList() {
+        int columnIndex = getDataModel().getColumnIndex(this);
+        ArrayList<String> valuesList = new ArrayList<>();
+        for (int i = 0; i < getDataModel().getTupleCount(); i++) {
+            valuesList.add((String)getDataModel().getTuple(i).getElement(columnIndex));
+        }
+        return valuesList;
+    }
+
     public String[] getQueriedValues() {
         int columnIndex = getDataModel().getColumnIndex(this);
 

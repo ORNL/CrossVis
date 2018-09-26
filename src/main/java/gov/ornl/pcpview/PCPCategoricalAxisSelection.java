@@ -7,8 +7,8 @@ import javafx.scene.layout.Pane;
 
 public class PCPCategoricalAxisSelection extends PCPAxisSelection {
 
-    public PCPCategoricalAxisSelection(PCPAxis pcpAxis, CategoricalColumnSelection selection, Pane pane, DataTable dataModel) {
-        super(pcpAxis, selection, pane, dataModel);
+    public PCPCategoricalAxisSelection(PCPAxis pcpAxis, CategoricalColumnSelection selection, DataTable dataModel) {
+        super(pcpAxis, selection, dataModel);
         registerListeners();
     }
 

@@ -28,8 +28,8 @@ public class PCPTemporalAxisSelection extends PCPAxisSelection {
     private ObjectProperty<Instant> draggingMinValue;
     private ObjectProperty<Instant> draggingMaxValue;
 
-    public PCPTemporalAxisSelection(PCPAxis pcpAxis, TemporalColumnSelectionRange selectionRange, double minValueY, double maxValueY, Pane pane, DataTable dataModel) {
-        super(pcpAxis, selectionRange, minValueY, maxValueY, pane, dataModel);
+    public PCPTemporalAxisSelection(PCPAxis pcpAxis, TemporalColumnSelectionRange selectionRange, double minValueY, double maxValueY, DataTable dataTable) {
+        super(pcpAxis, selectionRange, minValueY, maxValueY, dataTable);
 
         minText = new Text(String.valueOf(selectionRange.getStartInstant()));
         minText.setFont(new Font(DEFAULT_TEXT_SIZE));
@@ -147,9 +147,9 @@ public class PCPTemporalAxisSelection extends PCPAxisSelection {
             temporalColumnSelectionRange().setRangeInstants((Instant)draggingMinValue.get(), (Instant)draggingMaxValue.get());
 
         } else {
-            getPane().getChildren().remove(getGraphicsGroup());
-            getPCPAxis().getAxisSelectionList().remove(this);
-            getDataModel().clearColumnSelectionRange(temporalColumnSelectionRange());
+//            getPane().getChildren().remove(getGraphicsGroup());
+//            getPCPAxis().getAxisSelectionList().remove(this);
+            getDataModel().removeColumnSelectionFromActiveQuery(temporalColumnSelectionRange());
 //                    dataModel.setQueriedTuples();
         }
     }

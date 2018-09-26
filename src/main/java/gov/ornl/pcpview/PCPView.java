@@ -1,15 +1,18 @@
 package gov.ornl.pcpview;
 
 import gov.ornl.datatable.*;
+import gov.ornl.scatterplot.Scatterplot;
 import javafx.beans.property.*;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Insets;
 import javafx.scene.Group;
+import javafx.scene.SnapshotParameters;
 import javafx.scene.canvas.Canvas;
+import javafx.scene.image.WritableImage;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.StrokeLineCap;
+import javafx.scene.transform.Scale;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -27,28 +30,38 @@ public class PCPView extends Region implements DataTableListener {
             Color.STEELBLUE.getGreen(), Color.STEELBLUE.getBlue(), DEFAULT_LINE_OPACITY);
     private final static Color DEFAULT_UNSELECTED_ITEMS_COLOR = new Color(Color.LIGHTGRAY.getRed(),
             Color.LIGHTGRAY.getGreen(), Color.LIGHTGRAY.getBlue(), DEFAULT_LINE_OPACITY);
-    private final static DISPLAY_MODE DEFAULT_DISPLAY_MODE = DISPLAY_MODE.SUMMARY;
+
+    private final static POLYLINE_DISPLAY_MODE DEFAULT_POLYLINE_DISPLAY_MODE = POLYLINE_DISPLAY_MODE.POLYLINES;
 
     private final Logger log = Logger.getLogger(PCPView.class.getName());
 
     private TupleDrawingAnimationTimer selectedTuplesTimer;
     private TupleDrawingAnimationTimer unselectedTuplesTimer;
+
     private DoubleProperty drawingProgressProperty;
+
+    private Pane pane;
+
     private Canvas selectedCanvas;
     private Canvas unselectedCanvas;
+
+    private DoubleProperty dataItemsOpacity;
+
     private ObjectProperty<Color> selectedItemsColor;
     private ObjectProperty<Color> unselectedItemsColor;
-    private DoubleProperty dataItemsOpacity;
     private ObjectProperty<Color> overallSummaryFillColor;
     private ObjectProperty<Color> querySummaryFillColor;
     private ObjectProperty<Color> overallSummaryStrokeColor;
     private ObjectProperty<Color> querySummaryStrokeColor;
     private ObjectProperty<Color> backgroundColor;
     private ObjectProperty<Color> labelsColor;
+
     private BooleanProperty showSelectedItems;
     private BooleanProperty showUnselectedItems;
-    private Pane pane;
+
     private double axisSpacing = 40d;
+//    private Group histogramGroup = new Group();
+
     private DataTable dataTable;
     private ArrayList<PCPAxis> axisList = new ArrayList<>();
     private ArrayList<Scatterplot> scatterplotList = new ArrayList<>();
@@ -56,7 +69,15 @@ public class PCPView extends Region implements DataTableListener {
     private ArrayList<PCPTuple> tupleList;
     private HashSet<PCPTuple> unselectedTupleSet = new HashSet<>();
     private HashSet<PCPTuple> selectedTupleSet = new HashSet<>();
-    private ObjectProperty<DISPLAY_MODE> displayMode;
+
+    private ObjectProperty<POLYLINE_DISPLAY_MODE> polylineDisplayMode;
+    private ObjectProperty<STATISTICS_DISPLAY_MODE> summaryStatisticsDisplayMode = new SimpleObjectProperty<>(STATISTICS_DISPLAY_MODE.MEAN_BOXPLOT);
+
+    private BooleanProperty showSummaryStatistics = new SimpleBooleanProperty(true);
+    private BooleanProperty showHistograms = new SimpleBooleanProperty(false);
+    private BooleanProperty showScatterplots = new SimpleBooleanProperty(true);
+    private BooleanProperty showPolylines = new SimpleBooleanProperty(true);
+
     private BooleanProperty fitToWidth = new SimpleBooleanProperty(true);
     private DoubleProperty nameTextRotation;
     private ArrayList<PCPBinSet> PCPBinSetList;
@@ -66,36 +87,81 @@ public class PCPView extends Region implements DataTableListener {
     private BoundingBox scatterplotRegionBounds;
     private double plotRegionPadding = 4.;
 
-    private Rectangle plotRegionRectangle;
-    private Rectangle pcpRegionRectangle;
-//    private Rectangle pcpTitleRegionRectangle;
-    private Rectangle scatterplotRegionRectangle;
+//    private Rectangle plotRegionRectangle;
+//    private Rectangle pcpRegionRectangle;
+//    private Rectangle scatterplotRegionRectangle;
 
-//    private ObjectProperty<Orientation> orientation = new SimpleObjectProperty<>(Orientation.HORIZONTAL);
-    private BooleanProperty showScatterplots = new SimpleBooleanProperty(true);
 
-    private Group summaryShapeGroup;
+//    private Group summaryShapeGroup;
 
     public PCPView() {
         initialize();
         registerListeners();
     }
 
-    public boolean getShowScatterplots() { return showScatterplots.get(); }
+    public WritableImage getSnapshot() {
+        SnapshotParameters snapshotParameters = new SnapshotParameters();
+        snapshotParameters.setTransform(new Scale(2, 2));
+        return pane.snapshot(snapshotParameters, null);
+    }
+
+    public boolean isShowingScatterplots() { return showScatterplots.get(); }
 
     public void setShowScatterplots(boolean show) {
-        if (getShowScatterplots() != show) {
+        if (isShowingScatterplots() != show) {
             showScatterplots.set(show);
         }
     }
 
     public BooleanProperty showScatterplotsProperty() { return showScatterplots; }
 
-//    public void setOrientation(Orientation orientation) {
-//        if (getOrientation() != orientation) {
-//            this.orientation.set(orientation);
-//        }
-//    }
+    public boolean isShowingHistograms() { return showHistograms.get(); }
+
+    public void setShowHistograms(boolean showHistograms) {
+        if (isShowingHistograms() != showHistograms) {
+            this.showHistograms.set(showHistograms);
+        }
+    }
+
+    public BooleanProperty showHistogramsProperty() { return showHistograms; }
+
+    public STATISTICS_DISPLAY_MODE getSummaryStatisticsDisplayMode() { return summaryStatisticsDisplayMode.get(); }
+
+    public void setSummaryStatisticsDisplayMode(STATISTICS_DISPLAY_MODE newMode) {
+        if (newMode != getSummaryStatisticsDisplayMode()) {
+            summaryStatisticsDisplayMode.set(newMode);
+        }
+    }
+
+    public ObjectProperty<STATISTICS_DISPLAY_MODE> summaryStatisticsDisplayModeProperty() {
+        return summaryStatisticsDisplayMode;
+    }
+
+    public boolean isShowingSummaryStatistics() {
+        return showSummaryStatistics.get();
+    }
+
+    public void setShowSummaryStatistics(boolean show) {
+        if (isShowingSummaryStatistics() != show) {
+            showSummaryStatistics.set(show);
+        }
+    }
+
+    public BooleanProperty showSummaryStatisticsProperty() {
+        return showSummaryStatistics;
+    }
+
+    public boolean isShowingPolylines() {
+        return showPolylines.get();
+    }
+
+    public void setShowPolylines(boolean show) {
+        if (isShowingPolylines() != show) {
+            showPolylines.set(show);
+        }
+    }
+
+    public BooleanProperty showPolylinesProperty() { return showPolylines; }
 
     public boolean getFitToWidth() { return fitToWidth.get(); }
 
@@ -107,28 +173,10 @@ public class PCPView extends Region implements DataTableListener {
 
     public BooleanProperty fitToWidthProperty() { return fitToWidth; }
 
-//    public boolean getFitToHeight() { return fitToHeight.get(); }
-//
-//    public void setSitToHeight(boolean enabled) {
-//        if (getFitToHeight() == enabled) {
-//            fitToHeight.set(enabled);
-//        }
-//    }
-//
-//    public BooleanProperty fitToHeightProperty() { return fitToHeight; }
-
-//    public Orientation getOrientation() { return orientation.get(); }
-//
-//    public ObjectProperty<Orientation> orientationProperty() { return orientation; }
-
     private void registerListeners() {
         widthProperty().addListener(o -> resizeView());
 
         heightProperty().addListener(o -> resizeView());
-
-//        orientation.addListener(observable -> resizeView());
-
-//        fitToHeight.addListener(observable -> resizeView());
 
         fitToWidth.addListener(observable -> resizeView());
 
@@ -158,7 +206,6 @@ public class PCPView extends Region implements DataTableListener {
         });
 
         selectedItemsColor.addListener((observable, oldValue, newValue) -> {
-//            log.info("selectedItemsColor changed to " + newValue.toString());
             if (!scatterplotList.isEmpty()) {
                 for (Scatterplot scatterplot : scatterplotList) {
                     scatterplot.setSelectedPointStrokeColor(getSelectedItemsColor());
@@ -193,23 +240,80 @@ public class PCPView extends Region implements DataTableListener {
             }
             redrawView();
         }));
+//
+//        summaryStatisticsDisplayMode.addListener((observable, oldValue, newValue) -> {
+//            for (PCPAxis pcpAxis : axisList) {
+//                pcpAxis.setStatisticsDisplayMode(newValue);
+//            }
+//        });
 
-        displayMode.addListener(((observable, oldValue, newValue) -> {
-            if ((oldValue == DISPLAY_MODE.PCP_LINES) || (oldValue == DISPLAY_MODE.PCP_BINS) || (oldValue == DISPLAY_MODE.SUMMARY)) {
-                selectedCanvas.getGraphicsContext2D().clearRect(0, 0, getWidth(), getHeight());
-                unselectedCanvas.getGraphicsContext2D().clearRect(0, 0, getWidth(), getHeight());
+//        showHistograms.addListener(observable -> {
+////            if (!isShowingHistograms()) {
+////                histogramGroup.getChildren().clear();
+////            }
+//
+//            resizeView();
+//        });
 
-                if (oldValue == DISPLAY_MODE.PCP_LINES) {
-                    if (selectedTuplesTimer != null && selectedTuplesTimer.isRunning()) {
-                        selectedTuplesTimer.stop();
+        showScatterplots.addListener(observable -> {
+            if (isShowingScatterplots()) {
+                reinitializeScatterplots();
+            } else {
+                if (!scatterplotList.isEmpty()) {
+                    for (Scatterplot scatterplot : scatterplotList) {
+                        pane.getChildren().remove(scatterplot.getGraphicsGroup());
                     }
-                    if (unselectedTuplesTimer != null && unselectedTuplesTimer.isRunning()) {
-                        unselectedTuplesTimer.stop();
-                    }
+                    scatterplotList.clear();
                 }
             }
 
-            if (newValue == DISPLAY_MODE.PCP_LINES) {
+            resizeView();
+        });
+
+        showPolylines.addListener(observable -> {
+            if (selectedTuplesTimer != null && selectedTuplesTimer.isRunning()) {
+                selectedTuplesTimer.stop();
+            }
+            if (unselectedTuplesTimer != null && unselectedTuplesTimer.isRunning()) {
+                unselectedTuplesTimer.stop();
+            }
+
+            if (isShowingPolylines()) {
+                fillTupleSets();
+            } else {
+                selectedCanvas.getGraphicsContext2D().clearRect(0, 0, selectedCanvas.getWidth(),
+                        selectedCanvas.getHeight());
+                unselectedCanvas.getGraphicsContext2D().clearRect(0, 0, unselectedCanvas.getWidth(),
+                        unselectedCanvas.getHeight());
+            }
+
+            redrawView();
+        });
+
+        showSummaryStatistics.addListener(observable -> {
+            resizeView();
+        });
+
+//        showSummaryStatistics.addListener((observable, oldValue, newValue) -> {
+//            resizeView();
+//        });
+
+        polylineDisplayMode.addListener(((observable, oldValue, newValue) -> {
+//            if (newValue == POLYLINE_DISPLAY_MODE.NO_POLYLINES) {
+//                selectedCanvas.getGraphicsContext2D().clearRect(0, 0, selectedCanvas.getWidth(),
+//                        selectedCanvas.getHeight());
+//                unselectedCanvas.getGraphicsContext2D().clearRect(0, 0, unselectedCanvas.getWidth(),
+//                        unselectedCanvas.getHeight());
+//            }
+
+            if (selectedTuplesTimer != null && selectedTuplesTimer.isRunning()) {
+                selectedTuplesTimer.stop();
+            }
+            if (unselectedTuplesTimer != null && unselectedTuplesTimer.isRunning()) {
+                unselectedTuplesTimer.stop();
+            }
+
+            if (newValue == POLYLINE_DISPLAY_MODE.POLYLINES) {
                 fillTupleSets();
             }
 
@@ -248,7 +352,7 @@ public class PCPView extends Region implements DataTableListener {
 
         showSelectedItems = new SimpleBooleanProperty(true);
         showUnselectedItems = new SimpleBooleanProperty(true);
-        displayMode = new SimpleObjectProperty<>(DEFAULT_DISPLAY_MODE);
+        polylineDisplayMode = new SimpleObjectProperty<>(DEFAULT_POLYLINE_DISPLAY_MODE);
 
         drawingProgressProperty = new SimpleDoubleProperty(0d);
 
@@ -258,29 +362,29 @@ public class PCPView extends Region implements DataTableListener {
         labelsColor = new SimpleObjectProperty<>(DEFAULT_LABEL_COLOR);
         backgroundColor = new SimpleObjectProperty<>(DEFAULT_BACKGROUND_COLOR);
 
-        summaryShapeGroup = new Group();
+//        summaryShapeGroup = new Group();
 
-        plotRegionRectangle = new Rectangle();
-        plotRegionRectangle.setStroke(Color.DARKBLUE);
-        plotRegionRectangle.setFill(Color.TRANSPARENT);
-        plotRegionRectangle.setMouseTransparent(true);
-        plotRegionRectangle.setStrokeWidth(1.5);
-
-        pcpRegionRectangle = new Rectangle();
-        pcpRegionRectangle.setStroke(Color.ORANGE);
-        pcpRegionRectangle.setStrokeWidth(1.5);
-        pcpRegionRectangle.setFill(Color.TRANSPARENT);
-        pcpRegionRectangle.setMouseTransparent(true);
-
-        scatterplotRegionRectangle = new Rectangle();
-        scatterplotRegionRectangle.setStroke(Color.RED);
-        scatterplotRegionRectangle.setStrokeWidth(1.5);
-        scatterplotRegionRectangle.setFill(Color.TRANSPARENT);
-        scatterplotRegionRectangle.setMouseTransparent(true);
+//        plotRegionRectangle = new Rectangle();
+//        plotRegionRectangle.setStroke(Color.DARKBLUE);
+//        plotRegionRectangle.setFill(Color.TRANSPARENT);
+//        plotRegionRectangle.setMouseTransparent(true);
+//        plotRegionRectangle.setStrokeWidth(1.5);
+//
+//        pcpRegionRectangle = new Rectangle();
+//        pcpRegionRectangle.setStroke(Color.ORANGE);
+//        pcpRegionRectangle.setStrokeWidth(1.5);
+//        pcpRegionRectangle.setFill(Color.TRANSPARENT);
+//        pcpRegionRectangle.setMouseTransparent(true);
+//
+//        scatterplotRegionRectangle = new Rectangle();
+//        scatterplotRegionRectangle.setStroke(Color.RED);
+//        scatterplotRegionRectangle.setStrokeWidth(1.5);
+//        scatterplotRegionRectangle.setFill(Color.TRANSPARENT);
+//        scatterplotRegionRectangle.setMouseTransparent(true);
 
         pane = new Pane();
         pane.setBackground(new Background(new BackgroundFill(backgroundColor.get(), new CornerRadii(0), Insets.EMPTY)));
-        pane.getChildren().addAll(unselectedCanvas, selectedCanvas, summaryShapeGroup, plotRegionRectangle, pcpRegionRectangle, scatterplotRegionRectangle);
+        pane.getChildren().addAll(unselectedCanvas, selectedCanvas /*histogramGroup, summaryShapeGroup*/);
 
         getChildren().add(pane);
     }
@@ -335,98 +439,24 @@ public class PCPView extends Region implements DataTableListener {
     }
 
     private void redrawView() {
-        if (getDisplayMode() == DISPLAY_MODE.PCP_LINES) {
-            if (selectedTuplesTimer != null && selectedTuplesTimer.isRunning()) {
-                selectedTuplesTimer.stop();
-            }
-
-            if (unselectedTuplesTimer != null && unselectedTuplesTimer.isRunning()) {
-                unselectedTuplesTimer.stop();
-            }
-
-            drawTuplePolylines();
-        } else if (getDisplayMode() == DISPLAY_MODE.PCP_BINS) {
-            drawPCPBins();
-        } else if (getDisplayMode() == DISPLAY_MODE.SUMMARY) {
-            unselectedCanvas.getGraphicsContext2D().clearRect(0, 0, unselectedCanvas.getWidth(), unselectedCanvas.getHeight());
-            selectedCanvas.getGraphicsContext2D().clearRect(0, 0, selectedCanvas.getWidth(), selectedCanvas.getHeight());
-//            drawSummaryShapes();
+        if (selectedTuplesTimer != null && selectedTuplesTimer.isRunning()) {
+            selectedTuplesTimer.stop();
         }
-    }
 
-    private void drawSummaryShapes() {
-        SummaryShapeRenderer.render(selectedCanvas, unselectedCanvas, axisList, getOverallSummaryFillColor(),
-                getOverallSummaryStrokeColor(), getSelectedItemsColor(), getQuerySummaryStrokeColor(),
-                getUnselectedItemsColor(), getQuerySummaryStrokeColor());
-//        lineCanvas.setCache(false);
-//        lineGC.setLineCap(StrokeLineCap.BUTT);
-//        lineGC.clearRect(0, 0, getWidth(), getHeight());
-//        lineGC.setLineWidth(2);
-//        lineGC.setLineWidth(2d);
-        /*selectedCanvas.getGraphicsContext2D().setLineCap(StrokeLineCap.BUTT);
-        selectedCanvas.getGraphicsContext2D().clearRect(0, 0, getWidth(), getHeight());
-        selectedCanvas.getGraphicsContext2D().setLineWidth(2d);
-        selectedCanvas.getGraphicsContext2D().setLineDashes(2d, 2d);
+        if (unselectedTuplesTimer != null && unselectedTuplesTimer.isRunning()) {
+            unselectedTuplesTimer.stop();
+        }
 
-        unselectedCanvas.getGraphicsContext2D().setLineCap(StrokeLineCap.BUTT);
-        unselectedCanvas.getGraphicsContext2D().clearRect(0, 0, getWidth(), getHeight());
-        unselectedCanvas.getGraphicsContext2D().setLineWidth(2d);
-        unselectedCanvas.getGraphicsContext2D().setLineDashes(2d, 2d);
-
-        for (int iaxis = 1; iaxis < axisList.size(); iaxis++) {
-            PCPAxis axis1 = axisList.get(iaxis);
-            PCPAxis axis0 = axisList.get(iaxis-1);
-
-            if (axis0 instanceof PCPDoubleAxis && axis1 instanceof PCPDoubleAxis) {
-                PCPDoubleAxis dAxis0 = (PCPDoubleAxis)axis0;
-                PCPDoubleAxis dAxis1 = (PCPDoubleAxis)axis1;
-
-                if (!(Double.isNaN(dAxis0.getOverallTypicalLine().getEndY())) &&
-                        !(Double.isNaN(dAxis1.getOverallTypicalLine().getStartY()))) {
-                    double xValues[] = new double[]{dAxis0.getOverallDispersionRectangle().getLayoutBounds().getMaxX(),
-                            dAxis1.getOverallDispersionRectangle().getLayoutBounds().getMinX(),
-                            dAxis1.getOverallDispersionRectangle().getLayoutBounds().getMinX(),
-                            dAxis0.getOverallDispersionRectangle().getLayoutBounds().getMaxX()};
-                    double yValues[] = new double[]{dAxis0.getOverallDispersionRectangle().getLayoutBounds().getMaxY(),
-                            dAxis1.getOverallDispersionRectangle().getLayoutBounds().getMaxY(),
-                            dAxis1.getOverallDispersionRectangle().getLayoutBounds().getMinY(),
-                            dAxis0.getOverallDispersionRectangle().getLayoutBounds().getMinY()};
-
-                    unselectedCanvas.getGraphicsContext2D().setFill(getOverallSummaryFillColor());
-
-                    unselectedCanvas.getGraphicsContext2D().fillPolygon(xValues, yValues, xValues.length);
-
-                    unselectedCanvas.getGraphicsContext2D().setStroke(getOverallSummaryStrokeColor());
-                    unselectedCanvas.getGraphicsContext2D().strokeLine(dAxis0.getBarRightX(), dAxis0.getOverallTypicalLine().getEndY(),
-                            dAxis1.getBarLeftX(), dAxis1.getOverallTypicalLine().getStartY());
-                }
-
-                if (dataTable.getActiveQuery().hasColumnSelections()) {
-                    if (!(Double.isNaN(dAxis0.getQueryTypicalLine().getEndY())) &&
-                            !(Double.isNaN(dAxis1.getQueryTypicalLine().getStartY()))) {
-
-                        double xValues[] = new double[]{dAxis0.getOverallDispersionRectangle().getLayoutBounds().getMaxX(),
-                                dAxis1.getOverallDispersionRectangle().getLayoutBounds().getMinX(),
-                                dAxis1.getOverallDispersionRectangle().getLayoutBounds().getMinX(),
-                                dAxis0.getOverallDispersionRectangle().getLayoutBounds().getMaxX()};
-                        double yValues[] = new double[]{dAxis0.getQueryDispersionRectangle().getLayoutBounds().getMaxY(),
-                                dAxis1.getQueryDispersionRectangle().getLayoutBounds().getMaxY(),
-                                dAxis1.getQueryDispersionRectangle().getLayoutBounds().getMinY(),
-                                dAxis0.getQueryDispersionRectangle().getLayoutBounds().getMinY()};
-
-                        selectedCanvas.getGraphicsContext2D().setFill(getQuerySummaryFillColor());
-                        selectedCanvas.getGraphicsContext2D().fillPolygon(xValues, yValues, xValues.length);
-                        //                selectedCanvas.getGraphicsContext2D().setStroke(getQuerySummaryStrokeColor());
-                        //                selectedCanvas.getGraphicsContext2D().strokePolyline(xValues, yValues, xValues.length);
-
-                        selectedCanvas.getGraphicsContext2D().setStroke(getQuerySummaryStrokeColor());
-                        selectedCanvas.getGraphicsContext2D().strokeLine(dAxis0.getBarRightX(), dAxis0.getQueryTypicalLine().getEndY(),
-                                dAxis1.getBarLeftX(), dAxis1.getQueryTypicalLine().getStartY());
-                    }
-                }
+        if (isShowingPolylines()) {
+            if (getPolylineDisplayMode() == POLYLINE_DISPLAY_MODE.POLYLINES) {
+                drawTuplePolylines();
+            } else if (getPolylineDisplayMode() == POLYLINE_DISPLAY_MODE.BINNED_POLYLINES) {
+                drawPCPBins();
+    //        } else if (getPolylineDisplayMode() == POLYLINE_DISPLAY_MODE.NO_POLYLINES) {
+    //            unselectedCanvas.getGraphicsContext2D().clearRect(0, 0, unselectedCanvas.getWidth(), unselectedCanvas.getHeight());
+    //            selectedCanvas.getGraphicsContext2D().clearRect(0, 0, selectedCanvas.getWidth(), selectedCanvas.getHeight());
             }
         }
-        */
     }
 
     private void resizeView() {
@@ -434,10 +464,10 @@ public class PCPView extends Region implements DataTableListener {
             plotRegionBounds = new BoundingBox(getInsets().getLeft(), getInsets().getTop(),
                     getWidth() - (getInsets().getLeft() + getInsets().getRight()),
                     getHeight() - (getInsets().getTop() + getInsets().getBottom()));
-            plotRegionRectangle.setX(plotRegionBounds.getMinX());
-            plotRegionRectangle.setY(plotRegionBounds.getMinY());
-            plotRegionRectangle.setWidth(plotRegionBounds.getWidth());
-            plotRegionRectangle.setHeight(plotRegionBounds.getHeight());
+//            plotRegionRectangle.setX(plotRegionBounds.getMinX());
+//            plotRegionRectangle.setY(plotRegionBounds.getMinY());
+//            plotRegionRectangle.setWidth(plotRegionBounds.getWidth());
+//            plotRegionRectangle.setHeight(plotRegionBounds.getHeight());
 
             double plotWidth;
             double width;
@@ -454,11 +484,15 @@ public class PCPView extends Region implements DataTableListener {
             double plotHeight = getHeight() - (getInsets().getTop() + getInsets().getBottom());
 
             double pcpHeight = plotHeight * .7;
-            double scatterplotSize = plotHeight - pcpHeight;
+            double scatterplotSize = 0.;
 
-            if (scatterplotSize > (axisSpacing * .8)) {
-                scatterplotSize = axisSpacing * .8;
-                pcpHeight = plotHeight - scatterplotSize;
+            if (isShowingScatterplots()) {
+                scatterplotSize = plotHeight - pcpHeight;
+
+                if (scatterplotSize > (axisSpacing * .8)) {
+                    scatterplotSize = axisSpacing * .8;
+//                pcpHeight = plotHeight - scatterplotSize;
+                }
             }
 
             if (plotWidth > 0 && plotHeight > 0) {
@@ -470,64 +504,91 @@ public class PCPView extends Region implements DataTableListener {
                 unselectedCanvas.setWidth(width);
                 unselectedCanvas.setHeight(getHeight());
 
-//                    double left = getInsets().getLeft() + (axisSpacing / 2.);
-//                    double top = getInsets().getTop();
-
                 if (axisList != null) {
                     pcpRegionBounds = new BoundingBox(plotRegionBounds.getMinX(), plotRegionBounds.getMinY(),
                             plotRegionBounds.getWidth(), plotHeight - (scatterplotSize + plotRegionPadding));
-                    pcpRegionRectangle.setX(pcpRegionBounds.getMinX());
-                    pcpRegionRectangle.setY(pcpRegionBounds.getMinY());
-                    pcpRegionRectangle.setWidth(pcpRegionBounds.getWidth());
-                    pcpRegionRectangle.setHeight(pcpRegionBounds.getHeight());
+//                    pcpRegionRectangle.setX(pcpRegionBounds.getMinX());
+//                    pcpRegionRectangle.setY(pcpRegionBounds.getMinY());
+//                    pcpRegionRectangle.setWidth(pcpRegionBounds.getWidth());
+//                    pcpRegionRectangle.setHeight(pcpRegionBounds.getHeight());
 
                     scatterplotRegionBounds = new BoundingBox(plotRegionBounds.getMinX(), pcpRegionBounds.getMaxY() + plotRegionPadding,
                             plotRegionBounds.getWidth(), scatterplotSize);
-                    scatterplotRegionRectangle.setX(scatterplotRegionBounds.getMinX());
-                    scatterplotRegionRectangle.setY(scatterplotRegionBounds.getMinY());
-                    scatterplotRegionRectangle.setWidth(scatterplotRegionBounds.getWidth());
-                    scatterplotRegionRectangle.setHeight(scatterplotRegionBounds.getHeight());
+//                    scatterplotRegionRectangle.setX(scatterplotRegionBounds.getMinX());
+//                    scatterplotRegionRectangle.setY(scatterplotRegionBounds.getMinY());
+//                    scatterplotRegionRectangle.setWidth(scatterplotRegionBounds.getWidth());
+//                    scatterplotRegionRectangle.setHeight(scatterplotRegionBounds.getHeight());
+
+//                    if (getShowHistograms()) {
+//                        histogramGroup.getChildren().clear();
+//                    }
 
                     for (int iaxis = 0; iaxis < axisList.size(); iaxis++) {
                         PCPAxis pcpAxis = axisList.get(iaxis);
                         double axisLeft = plotRegionBounds.getMinX() + (iaxis * axisSpacing);
                         pcpAxis.resize(axisLeft, pcpRegionBounds.getMinY(), axisSpacing, pcpRegionBounds.getHeight());
 
-                        if (getDisplayMode() == DISPLAY_MODE.HISTOGRAM) {
-                            if (!(pcpAxis instanceof PCPCategoricalAxis)) {
-                                pane.getChildren().add(0, pcpAxis.getHistogramBinRectangleGroup());
-                                pane.getChildren().add(1, pcpAxis.getQueryHistogramBinRectangleGroup());
+//                        if (getShowHistograms()) {
+//                            if (!(pcpAxis instanceof PCPCategoricalAxis)) {
+//                                histogramGroup.getChildren().add(0, pcpAxis.getHistogramBinRectangleGroup());
+//                                histogramGroup.getChildren().add(1, pcpAxis.getQueryHistogramBinRectangleGroup());
+//                            }
+//                        }
+//                        if (getPolylineDisplayMode() == POLYLINE_DISPLAY_MODE.HISTOGRAM) {
+//                            if (!(pcpAxis instanceof PCPCategoricalAxis)) {
+//                                pane.getChildren().add(0, pcpAxis.getHistogramBinRectangleGroup());
+//                                pane.getChildren().add(1, pcpAxis.getQueryHistogramBinRectangleGroup());
+//                            }
+//                        }
+                    }
+
+                    if (isShowingScatterplots()) {
+                        for (int i = 0; i < scatterplotList.size(); i++) {
+                            Scatterplot scatterplot = scatterplotList.get(i);
+                            PCPAxis yAxis = null;
+                            PCPAxis xAxis = null;
+                            for (PCPAxis axis : axisList) {
+                                if (axis.getColumn() == scatterplot.getYColumn()) {
+                                    yAxis = axis;
+                                } else if (axis.getColumn() == scatterplot.getXColumn()) {
+                                    xAxis = axis;
+                                }
+
+                                if (yAxis != null && xAxis != null) {
+                                    break;
+                                }
+                            }
+
+                            if (dataTable.getHighlightedColumn() == null) {
+//                            log.info("Higlighted Column NULL");
+                                double centerX = (yAxis.getCenterX() + xAxis.getCenterX()) / 2.;
+                                double left = centerX - (scatterplotSize / 2.) - scatterplot.getAxisSize();
+                                scatterplot.resize(left, scatterplotRegionBounds.getMinY(), scatterplotSize, scatterplotSize);
+                            } else {
+                                log.info("Highlighted Column exists");
+                                double centerX = yAxis.getCenterX();
+                                double left = centerX - (scatterplotSize / 2.) - scatterplot.getAxisSize();
+                                scatterplot.resize(left, scatterplotRegionBounds.getMinY(), scatterplotSize, scatterplotSize);
                             }
                         }
                     }
 
-                    for (int i = 0; i < scatterplotList.size(); i++) {
-                        Scatterplot scatterplot = scatterplotList.get(i);
-                        double centerX = (scatterplot.getYAxis().getCenterX() + scatterplot.getXAxis().getCenterX()) / 2.;
-                        double left = centerX - (scatterplotSize / 2.) - scatterplot.getAxisSize();
-                        scatterplot.resize(left, scatterplotRegionBounds.getMinY(), scatterplotSize, scatterplotSize);
-                    }
-
-                    if (!summaryShapeGroup.getChildren().isEmpty()) {
-                        summaryShapeGroup.getChildren().clear();
-                    }
+//                    if (!summaryShapeGroup.getChildren().isEmpty()) {
+//                        summaryShapeGroup.getChildren().clear();
+//                    }
 
                     // add tuples polylines from data model
-                    if (getDisplayMode() == DISPLAY_MODE.PCP_LINES) {
+                    if (getPolylineDisplayMode() == POLYLINE_DISPLAY_MODE.POLYLINES) {
                         if (tupleList != null) {
                             for (PCPTuple pcpTuple : tupleList) {
                                 pcpTuple.layout(axisList);
                             }
                         }
-                    } else if (getDisplayMode() == DISPLAY_MODE.PCP_BINS) {
+                    } else if (getPolylineDisplayMode() == POLYLINE_DISPLAY_MODE.BINNED_POLYLINES) {
                         // resize PCPBins
                         for (PCPBinSet PCPBinSet : PCPBinSetList) {
                             PCPBinSet.layoutBins();
                         }
-                    } else if (getDisplayMode() == DISPLAY_MODE.SUMMARY) {
-                        // build summary shapes and add to pane
-//                        SummaryShapeBuilder.buildShapes(axisList, this, summaryShapeGroup);
-//                        pane.getChildren().add(summaryShapeGroup);
                     }
                 }
             }
@@ -548,7 +609,7 @@ public class PCPView extends Region implements DataTableListener {
     }
 
     public void clearQuery() {
-        dataTable.clearActiveQuery();
+        dataTable.removeColumnSelectionsFromActiveQuery();
         removeAllAxisSelectionGraphics();
         handleQueryChange();
     }
@@ -577,14 +638,12 @@ public class PCPView extends Region implements DataTableListener {
                             if (bin.queryCount == 0) {
                                 Color binColor = new Color(getUnselectedItemsColor().getRed(), getUnselectedItemsColor().getGreen(),
                                         getUnselectedItemsColor().getBlue(), bin.fillColor.getOpacity());
-                                //                            lineGC.setFill(binColor);
                                 unselectedCanvas.getGraphicsContext2D().setFill(binColor);
 
                                 double xValues[] = new double[]{bin.left, bin.right, bin.right, bin.left};
                                 double yValues[] = new double[]{bin.leftTop, bin.rightTop, bin.rightBottom, bin.leftBottom};
 
                                 unselectedCanvas.getGraphicsContext2D().fillPolygon(xValues, yValues, xValues.length);
-                                //                            lineGC.fillPolygon(xValues, yValues, xValues.length);
                             }
                         }
                     }
@@ -594,17 +653,13 @@ public class PCPView extends Region implements DataTableListener {
                     for (PCPBinSet binSet : PCPBinSetList) {
                         for (PCPBin bin : binSet.getBins()) {
                             if (bin.queryCount > 0) {
-                                //                        lineGC.setFill(bin.queryFillColor);
                                 Color binColor = new Color(getSelectedItemsColor().getRed(), getSelectedItemsColor().getGreen(),
                                         getSelectedItemsColor().getBlue(), bin.queryFillColor.getOpacity());
-//                                lineGC.setFill(binColor);
 
                                 selectedCanvas.getGraphicsContext2D().setFill(binColor);
 
                                 double xValues[] = new double[]{bin.left, bin.right, bin.right, bin.left};
                                 double yValues[] = new double[]{bin.leftTop, bin.rightTop, bin.rightBottom, bin.leftBottom};
-//                                double yValues[] = new double[]{bin.leftQueryTop, bin.rightQueryTop, bin.rightQueryBottom, bin.leftQueryBottom};
-//                                lineGC.fillPolygon(xValues, yValues, xValues.length);
 
                                 selectedCanvas.getGraphicsContext2D().fillPolygon(xValues, yValues, xValues.length);
                             }
@@ -617,13 +672,11 @@ public class PCPView extends Region implements DataTableListener {
                         for (PCPBin bin : binSet.getBins()) {
                             Color binColor = new Color(getSelectedItemsColor().getRed(), getSelectedItemsColor().getGreen(),
                                     getSelectedItemsColor().getBlue(), bin.fillColor.getOpacity());
-//                            lineGC.setFill(binColor);
 
                             selectedCanvas.getGraphicsContext2D().setFill(binColor);
 
                             double xValues[] = new double[]{bin.left, bin.right, bin.right, bin.left};
                             double yValues[] = new double[]{bin.leftTop, bin.rightTop, bin.rightBottom, bin.leftBottom};
-//                            lineGC.fillPolygon(xValues, yValues, xValues.length);
 
                             selectedCanvas.getGraphicsContext2D().fillPolygon(xValues, yValues, xValues.length);
                         }
@@ -631,9 +684,6 @@ public class PCPView extends Region implements DataTableListener {
                 }
             }
         }
-
-//        lineCanvas.setCache(true);
-//        lineCanvas.setCacheHint(CacheHint.QUALITY);
     }
 
     public void setDataTable(DataTable dataTable) {
@@ -641,7 +691,6 @@ public class PCPView extends Region implements DataTableListener {
         dataTable.addDataModelListener(this);
         clearView();
         reinitializeLayout();
-//        resizeView();
     }
 
     public double getNameTextRotation() {
@@ -681,11 +730,11 @@ public class PCPView extends Region implements DataTableListener {
         return labelsColor;
     }
 
-    public ObjectProperty<DISPLAY_MODE> displayModeProperty() { return displayMode; }
+    public ObjectProperty<POLYLINE_DISPLAY_MODE> polylineDisplayModeProperty() { return polylineDisplayMode; }
 
-    public final DISPLAY_MODE getDisplayMode() { return displayMode.get(); }
+    public final POLYLINE_DISPLAY_MODE getPolylineDisplayMode() { return polylineDisplayMode.get(); }
 
-    public final void setDisplayMode(DISPLAY_MODE newDisplayMode) { displayMode.set(newDisplayMode); }
+    public final void setPolylineDisplayMode(POLYLINE_DISPLAY_MODE displayMode) { polylineDisplayMode.set(displayMode); }
 
     public final boolean isShowingSelectedItems() { return showSelectedItems.get(); }
 
@@ -782,20 +831,7 @@ public class PCPView extends Region implements DataTableListener {
             axisList = newAxisList;
         }
 
-        if (getShowScatterplots()) {
-            for (Scatterplot scatterplot : scatterplotList) {
-                pane.getChildren().remove(scatterplot.getGraphicsGroup());
-            }
-            scatterplotList.clear();
-
-            for (int iaxis = 1; iaxis < axisList.size(); iaxis++) {
-                PCPAxis xAxis = axisList.get(iaxis);
-                PCPAxis yAxis = axisList.get(iaxis - 1);
-                Scatterplot scatterplot = new Scatterplot(xAxis, yAxis);
-                scatterplotList.add(scatterplot);
-                pane.getChildren().add(scatterplot.getGraphicsGroup());
-            }
-        }
+        reinitializeScatterplots();
 
         // add tuples polylines from data model
         tupleList = new ArrayList<>();
@@ -817,6 +853,57 @@ public class PCPView extends Region implements DataTableListener {
         resizeView();
     }
 
+    private void reinitializeScatterplots() {
+        if (isShowingScatterplots()) {
+            for (Scatterplot scatterplot : scatterplotList) {
+                pane.getChildren().remove(scatterplot.getGraphicsGroup());
+            }
+            scatterplotList.clear();
+
+            PCPAxis highlightedAxis = getHighlightedAxis();
+            if (highlightedAxis != null) {
+                for (int iaxis = 0; iaxis < axisList.size(); iaxis++) {
+                    PCPAxis currentAxis = axisList.get(iaxis);
+                    if (highlightedAxis != currentAxis) {
+                        Scatterplot scatterplot = new Scatterplot(highlightedAxis.getColumn(), currentAxis.getColumn());
+                        scatterplotList.add(scatterplot);
+                        pane.getChildren().add(scatterplot.getGraphicsGroup());
+                    }
+                }
+            } else {
+                for (int iaxis = 1; iaxis < axisList.size(); iaxis++) {
+                    PCPAxis xAxis = axisList.get(iaxis);
+                    PCPAxis yAxis = axisList.get(iaxis - 1);
+                    Scatterplot scatterplot = new Scatterplot(xAxis.getColumn(), yAxis.getColumn());
+                    //                scatterplot.setOnSelectionDragged(event -> {
+                    //                    log.info("Got a scatterplot selection event from " + xAxis.getColumn().getName() + " x " + yAxis.getColumn().getName());
+                    //                });
+                    scatterplotList.add(scatterplot);
+                    pane.getChildren().add(scatterplot.getGraphicsGroup());
+                }
+            }
+        } else {
+            if (!scatterplotList.isEmpty()) {
+                for (Scatterplot scatterplot : scatterplotList) {
+                    pane.getChildren().remove(scatterplot.getGraphicsGroup());
+                }
+                scatterplotList.clear();
+            }
+        }
+    }
+
+    private PCPAxis getHighlightedAxis() {
+        if (dataTable.getHighlightedColumn() != null) {
+            for (PCPAxis axis : axisList) {
+                if (axis.getColumn() == dataTable.getHighlightedColumn()) {
+                    return axis;
+                }
+            }
+        }
+
+        return null;
+    }
+
     private void addAxis(Column column) {
         PCPAxis pcpAxis = null;
         if (column instanceof DoubleColumn) {
@@ -833,39 +920,46 @@ public class PCPView extends Region implements DataTableListener {
     }
 
     private void handleQueryChange() {
+//        if (getShowHistograms()) {
+//            histogramGroup.getChildren().clear();
+//        }
+
         for (int iaxis = 0; iaxis < axisList.size(); iaxis++) {
             PCPAxis pcpAxis = axisList.get(iaxis);
 
             double axisLeft = plotRegionBounds.getMinX() + (iaxis * axisSpacing);
             pcpAxis.resize(axisLeft, pcpRegionBounds.getMinY(), axisSpacing, pcpRegionBounds.getHeight());
 
-            if (getDisplayMode() == DISPLAY_MODE.HISTOGRAM) {
-                if (!(pcpAxis instanceof PCPCategoricalAxis)) {
-                    pane.getChildren().add(0, pcpAxis.getHistogramBinRectangleGroup());
-                    pane.getChildren().add(1, pcpAxis.getQueryHistogramBinRectangleGroup());
-                }
-            }
+//            if (getShowHistograms()) {
+//                if (!(pcpAxis instanceof PCPCategoricalAxis)) {
+//                    histogramGroup.getChildren().add(0, pcpAxis.getHistogramBinRectangleGroup());
+//                    histogramGroup.getChildren().add(1, pcpAxis.getQueryHistogramBinRectangleGroup());
+//                }
+//            }
         }
 
-        if (getShowScatterplots()) {
+        if (isShowingScatterplots()) {
             for (Scatterplot scatterplot : scatterplotList) {
                 scatterplot.fillSelectionPointSets();
                 scatterplot.drawPoints();
             }
         }
 
-        if (getDisplayMode() == DISPLAY_MODE.PCP_LINES) {
-            fillTupleSets();
-            redrawView();
-        } else if (getDisplayMode() == DISPLAY_MODE.PCP_BINS) {
-            for (PCPBinSet PCPBinSet : PCPBinSetList) {
-                PCPBinSet.layoutBins();
+        if (isShowingPolylines()) {
+            if (getPolylineDisplayMode() == POLYLINE_DISPLAY_MODE.POLYLINES) {
+                fillTupleSets();
+                redrawView();
+            } else if (getPolylineDisplayMode() == POLYLINE_DISPLAY_MODE.BINNED_POLYLINES) {
+                for (PCPBinSet PCPBinSet : PCPBinSetList) {
+                    PCPBinSet.layoutBins();
+                }
+                redrawView();
+                // TODO: Is the final else needed here (test and remove)
+//        } else if (getPolylineDisplayMode() == POLYLINE_DISPLAY_MODE.NO_POLYLINES) {
+////            summaryShapeGroup.getChildren().clear();
+////            SummaryShapeBuilder.buildShapes(axisList, this, summaryShapeGroup);
+//            redrawView();
             }
-            redrawView();
-        } else if (getDisplayMode() == DISPLAY_MODE.SUMMARY) {
-//            summaryShapeGroup.getChildren().clear();
-//            SummaryShapeBuilder.buildShapes(axisList, this, summaryShapeGroup);
-            redrawView();
         }
     }
 
@@ -873,14 +967,28 @@ public class PCPView extends Region implements DataTableListener {
         removeAllAxisSelectionGraphics();
         selectedCanvas.getGraphicsContext2D().clearRect(0, 0, getWidth(), getHeight());
         unselectedCanvas.getGraphicsContext2D().clearRect(0, 0, getWidth(), getHeight());
+//        histogramGroup.getChildren().clear();
 
         if (axisList != null && !axisList.isEmpty()) {
             for (PCPAxis pcpAxis : axisList) {
-                pane.getChildren().removeAll(pcpAxis.getGraphicsGroup(), pcpAxis.getHistogramBinRectangleGroup(),
-                        pcpAxis.getQueryHistogramBinRectangleGroup());
+                pane.getChildren().removeAll(pcpAxis.getGraphicsGroup());
             }
             axisList.clear();
         }
+
+        for (Scatterplot scatterplot : scatterplotList) {
+            pane.getChildren().remove(scatterplot.getGraphicsGroup());
+        }
+        scatterplotList.clear();
+    }
+
+    public void setGeographicAxes(Column latColumn, Column lonColumn) {
+        PCPAxis latAxis = getAxisForColumn(latColumn);
+        PCPAxis lonAxis = getAxisForColumn(lonColumn);
+    }
+
+    public void clearGeographicAxes() {
+
     }
 
     @Override
@@ -896,7 +1004,17 @@ public class PCPView extends Region implements DataTableListener {
 //            }
 //            axisList.clear();
 //        }
+        log.info("Data Model Reset called");
         clearView();
+
+        // Logic to prevent PCPView from drawing full details when data is large
+        if (dataModel.getTupleCount() > 500000) {
+            setShowPolylines(false);
+            setShowSummaryStatistics(true);
+//            setPolylineDisplayMode(POLYLINE_DISPLAY_MODE.NO_POLYLINES);
+//            setStatisticsDisplayMode(STATISTICS_DISPLAY_MODE.MEAN_BOXPLOT);
+//            setShowHistograms(true);
+        }
         reinitializeLayout();
     }
 
@@ -907,21 +1025,27 @@ public class PCPView extends Region implements DataTableListener {
 
     @Override
     public void dataModelNumHistogramBinsChanged(DataTable dataModel) {
-        if (getDisplayMode() == DISPLAY_MODE.HISTOGRAM) {
-            double left = getInsets().getLeft() + (axisSpacing / 2.);
-            double top = getInsets().getTop();
-            double pcpHeight = getHeight() - (getInsets().getTop() + getInsets().getBottom());
+        if (isShowingHistograms()) {
+//            histogramGroup.getChildren().clear();
+
+//            double left = getInsets().getLeft() + (axisSpacing / 2.);
+//            double top = getInsets().getTop();
+//            double pcpHeight = getHeight() - (getInsets().getTop() + getInsets().getBottom());
 
             for (int iaxis = 0; iaxis < axisList.size(); iaxis++) {
                 PCPAxis pcpAxis = axisList.get(iaxis);
-                pcpAxis.resize(left + (iaxis * axisSpacing), top, axisSpacing, pcpHeight);
+                double axisLeft = plotRegionBounds.getMinX() + (iaxis * axisSpacing);
+                pcpAxis.resize(axisLeft, pcpRegionBounds.getMinY(), axisSpacing, pcpRegionBounds.getHeight());
+//                pcpAxis.resize(left + (iaxis * axisSpacing), top, axisSpacing, pcpHeight);
 
-                if (getDisplayMode() == DISPLAY_MODE.HISTOGRAM) {
-                    pane.getChildren().add(0, pcpAxis.getHistogramBinRectangleGroup());
-                    pane.getChildren().add(1, pcpAxis.getQueryHistogramBinRectangleGroup());
-                }
+//                if (!(pcpAxis instanceof PCPCategoricalAxis)) {
+//                    histogramGroup.getChildren().add(0, pcpAxis.getHistogramBinRectangleGroup());
+//                    histogramGroup.getChildren().add(1, pcpAxis.getQueryHistogramBinRectangleGroup());
+//                }
             }
-        } else if (getDisplayMode() == DISPLAY_MODE.PCP_BINS) {
+        }
+
+        if (getPolylineDisplayMode() == POLYLINE_DISPLAY_MODE.BINNED_POLYLINES) {
             for (PCPBinSet PCPBinSet : PCPBinSetList) {
                 PCPBinSet.layoutBins();
             }
@@ -929,23 +1053,70 @@ public class PCPView extends Region implements DataTableListener {
         }
     }
 
+    private PCPAxisSelection getAxisSelectionforColumnSelection(ColumnSelection columnSelection) {
+        if (axisList != null) {
+            for (PCPAxis axis : axisList) {
+                if (axis.getColumn() == columnSelection.getColumn()) {
+                    for (PCPAxisSelection axisSelection : axis.getAxisSelectionList()) {
+                        if (axisSelection.getColumnSelectionRange() == columnSelection) {
+                            return axisSelection;
+                        }
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private PCPAxis getAxisForColumn(Column column) {
+        for (PCPAxis axis : axisList) {
+            if (axis.getColumn() == column) {
+                return axis;
+            }
+        }
+
+        return null;
+    }
+
     @Override
-    public void dataModelQueryCleared(DataTable dataModel) {
+    public void dataModelColumnSelectionAdded(DataTable dataTable, ColumnSelection columnSelection) {
+        PCPAxis axis = getAxisForColumn(columnSelection.getColumn());
+        if (axis != null) {
+            // add it to the appropriate column axis (it is exists the axis will ignore the add request)
+            axis.addAxisSelection(columnSelection);
+        }
+
         handleQueryChange();
     }
 
     @Override
-    public void dataModelQueryColumnCleared(DataTable dataModel, Column column) {
+    public void dataModelColumnSelectionRemoved(DataTable dataTable, ColumnSelection columnSelection) {
+        // find selection column axis and remove selection (if it doesn't exist, the axis will ignore the remove request)
+        PCPAxis axis = getAxisForColumn(columnSelection.getColumn());
+        if (axis != null) {
+            axis.removeAxisSelection(columnSelection);
+        }
+
         handleQueryChange();
     }
 
     @Override
-    public void dataModelColumnSelectionAdded(DataTable dataModel, ColumnSelection columnSelectionRange) {
+    public void dataTableAllColumnSelectionsRemoved(DataTable dataModel) {
+        for (PCPAxis axis : axisList) {
+            axis.removeAllAxisSelections();
+        }
+
         handleQueryChange();
     }
 
     @Override
-    public void dataModelColumnSelectionRemoved(DataTable dataModel, ColumnSelection columnSelectionRange) {
+    public void dataTableAllColumnSelectionsForColumnRemoved(DataTable dataModel, Column column) {
+        PCPAxis axis = getAxisForColumn(column);
+        if (axis != null) {
+            axis.removeAllAxisSelections();
+        }
+
         handleQueryChange();
     }
 
@@ -969,21 +1140,25 @@ public class PCPView extends Region implements DataTableListener {
                 }
             }
         }
+
+        reinitializeLayout();
     }
 
     @Override
     public void dataModelTuplesAdded(DataTable dataModel, ArrayList<Tuple> newTuples) {
+        // clear axis selections
+        for (PCPAxis pcpAxis : axisList) {
+            pcpAxis.removeAllAxisSelections();
+        }
+
         reinitializeLayout();
     }
 
     @Override
     public void dataModelTuplesRemoved(DataTable dataModel, int numTuplesRemoved) {
-        // clear
+        // clear axis selections
         for (PCPAxis pcpAxis : axisList) {
-            for (PCPAxisSelection pcpAxisSelection : pcpAxis.getAxisSelectionList()) {
-                pane.getChildren().remove(pcpAxisSelection.getGraphicsGroup());
-            }
-            pcpAxis.getAxisSelectionList().clear();
+            pcpAxis.removeAllAxisSelections();
         }
 
         reinitializeLayout();
@@ -998,6 +1173,8 @@ public class PCPView extends Region implements DataTableListener {
 
                 // remove axis graphics from pane
                 pcpAxis.removeAllGraphics(pane);
+
+                reinitializeScatterplots();
 
                 // create PCPBinSets for axis configuration
                 PCPBinSetList = new ArrayList<>();
@@ -1032,6 +1209,8 @@ public class PCPView extends Region implements DataTableListener {
     // add axis lines to the pane
         addAxis(enabledColumn);
 
+        reinitializeScatterplots();
+        
         // add tuples polylines from data model
         tupleList = new ArrayList<>();
         for (int iTuple = 0; iTuple < dataModel.getTupleCount(); iTuple++) {
@@ -1062,5 +1241,7 @@ public class PCPView extends Region implements DataTableListener {
 
     }
 
-    public enum DISPLAY_MODE {SUMMARY, HISTOGRAM, PCP_LINES, PCP_BINS}
+    public enum POLYLINE_DISPLAY_MODE {POLYLINES, BINNED_POLYLINES}
+
+    public enum STATISTICS_DISPLAY_MODE {MEDIAN_BOXPLOT, MEAN_BOXPLOT}
 }

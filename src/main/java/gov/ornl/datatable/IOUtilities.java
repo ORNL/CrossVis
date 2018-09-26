@@ -5,10 +5,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Set;
-import java.util.StringTokenizer;
+import java.util.*;
 import java.util.logging.Logger;
 
 public class IOUtilities {
@@ -104,6 +101,36 @@ public class IOUtilities {
 //		dataModel.setData(tuples, columns);
 //	}
 
+	public static int exportDataToCSVFile(File csvFile, List<Column> columns, List<Tuple> tuples) throws IOException {
+		BufferedWriter writer = new BufferedWriter(new FileWriter(csvFile));
+
+		// write header line with column names
+		StringBuffer headerLine = new StringBuffer();
+		for (int i = 0; i < columns.size(); i++) {
+			headerLine.append(columns.get(i).getName());
+			if ((i + 1) < columns.size()) {
+				headerLine.append(",");
+			}
+		}
+		writer.write(headerLine.toString().trim() + "\n");
+
+		int tuplesWrittenCounter = 0;
+		for (Tuple tuple : tuples) {
+			StringBuffer lineBuffer = new StringBuffer();
+			for (int i = 0; i < tuple.getElementCount(); i++) {
+				lineBuffer.append(String.valueOf(tuple.getElement(i)));
+				if ((i + 1) < tuple.getElementCount()) {
+					lineBuffer.append(",");
+				}
+			}
+			writer.write(lineBuffer.toString().trim() + "\n");
+			tuplesWrittenCounter++;
+		}
+
+		writer.close();
+		return tuplesWrittenCounter;
+	}
+
 	public static int exportUnselectedFromDataTableToCSV(File csvFile, DataTable dataTable) throws IOException{
 		BufferedWriter writer = new BufferedWriter(new FileWriter(csvFile));
 
@@ -192,6 +219,28 @@ public class IOUtilities {
 		writer.close();
 
 		return tupleCounter;
+	}
+
+	public static List<String> readCSVLines(File f, int startLine, int endLine) throws IOException {
+		BufferedReader reader = new BufferedReader(new FileReader(f));
+
+		ArrayList<String> lines = new ArrayList<>();
+
+		int lineCounter = 0;
+		String line = null;
+		while ((line = reader.readLine()) != null) {
+			if (lineCounter >= startLine && lineCounter <= endLine) {
+				lines.add(line);
+
+				if (lineCounter + 1 > endLine) {
+					break;
+				}
+			}
+			lineCounter++;
+		}
+
+		reader.close();
+		return lines;
 	}
 
 	public static String[] readCSVHeader(File f) throws  IOException {
@@ -338,7 +387,9 @@ public class IOUtilities {
 				    // is this a temporal column
 				    for (int i = 0; i < temporalColumnIndices.length; i++) {
 				        if (tokenCounter == temporalColumnIndices[i]) {
+//							LocalDateTime test = LocalDateTime.parse(token, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
                             LocalDateTime localDateTime = LocalDateTime.parse(token, temporalColumnFormatters.get(i));
+
                             instant = localDateTime.toInstant(ZoneOffset.UTC);
 //                            tuple.addElement(instant);
 //                            tokenCounter++;

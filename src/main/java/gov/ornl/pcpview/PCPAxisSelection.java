@@ -9,8 +9,10 @@ import javafx.scene.Group;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Line;
 import javafx.scene.shape.Polyline;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.shape.StrokeType;
 
 import java.util.logging.Logger;
 
@@ -19,17 +21,19 @@ public abstract class PCPAxisSelection {
 
     public final static Color DEFAULT_TEXT_FILL = Color.BLACK;
     public final static double DEFAULT_TEXT_SIZE = 8d;
-    public final static Color DEFAULT_SELECTION_RECTANGLE_FILL_COLOR = new Color(Color.YELLOW.getRed(),
-            Color.YELLOW.getGreen(), Color.YELLOW.getBlue(), 0.3);
+    public final static Color DEFAULT_SELECTION_RECTANGLE_FILL_COLOR = Color.ORANGE.deriveColor(1,1,1,0.2);
 
     private DataTable dataModel;
     private PCPAxis pcpAxis;
-    private Pane pane;
+//    private Pane pane;
     private ColumnSelection selectionRange;
 
     private Rectangle rectangle;
+//    private Line leftLine;
+//    private Line rightLine;
     private Polyline topCrossbar;
     private Polyline bottomCrossbar;
+
     private Group graphicsGroup;
 
     // dragging variables
@@ -37,31 +41,28 @@ public abstract class PCPAxisSelection {
     protected Point2D dragEndPoint;
     protected boolean dragging;
 
-    public PCPAxisSelection(PCPAxis pcpAxis, ColumnSelection selectionRange, Pane pane, DataTable dataModel) {
+    public PCPAxisSelection(PCPAxis pcpAxis, ColumnSelection selectionRange, DataTable dataModel) {
         this.pcpAxis = pcpAxis;
         this.selectionRange = selectionRange;
-        this.pane = pane;
         this.dataModel = dataModel;
-
         rectangle = null;
     }
 
-    public PCPAxisSelection(PCPAxis pcpAxis, ColumnSelection selectionRange, double minValueY, double maxValueY,
-                            Pane pane, DataTable dataModel) {
-        this(pcpAxis, selectionRange, pane, dataModel);
-//        this.pcpAxis = pcpAxis;
-//        this.selectionRange = selectionRange;
-//        this.pane = pane;
-//        this.dataModel = dataModel;
-
+    public PCPAxisSelection(PCPAxis pcpAxis, ColumnSelection selectionRange, double minValueY, double maxValueY, DataTable dataModel) {
+        this(pcpAxis, selectionRange, dataModel);
         double top = Math.min(minValueY, maxValueY);
         double bottom = Math.max(minValueY, maxValueY);
-        rectangle = new Rectangle(pcpAxis.getAxisBar().getX(), top, pcpAxis.getAxisBar().getWidth(), bottom - top);
+        double left = pcpAxis.getAxisBar().getX();
+        double right = pcpAxis.getAxisBar().getX() + pcpAxis.getAxisBar().getWidth();
+//        double left = rectangle.getX() - 4;
+//        double right = rectangle.getX() + rectangle.getWidth() + 4;
+
+        rectangle = new Rectangle(left, top, right-left, bottom-top);
+//        rectangle = new Rectangle(pcpAxis.getAxisBar().getX(), top, pcpAxis.getAxisBar().getWidth(), bottom - top);
         rectangle.setFill(DEFAULT_SELECTION_RECTANGLE_FILL_COLOR);
 
         // make top and bottom crossbars
-        double left = rectangle.getX();
-        double right = rectangle.getX() + rectangle.getWidth();
+
         topCrossbar = new Polyline(left, (top + 2d), left, top, right, top, right, (top + 2d));
         topCrossbar.setStroke(Color.BLACK);
         topCrossbar.setStrokeWidth(2d);
@@ -69,9 +70,17 @@ public abstract class PCPAxisSelection {
         bottomCrossbar.setStroke(topCrossbar.getStroke());
         bottomCrossbar.setStrokeWidth(topCrossbar.getStrokeWidth());
 
-        graphicsGroup = new Group(topCrossbar, bottomCrossbar, rectangle);
-        pane.getChildren().add(graphicsGroup);
-//        graphicsGroup.toBack();
+//        leftLine = new Line(left+1, top, left+1, bottom);
+//        leftLine.setStroke(DEFAULT_SELECTION_RECTANGLE_FILL_COLOR);
+//        leftLine.setStrokeWidth(3);
+////        leftLine.setStrokeType(StrokeType.CENTERED);
+//        rightLine = new Line(right-1, top, right-1, bottom);
+//        rightLine.setStroke(DEFAULT_SELECTION_RECTANGLE_FILL_COLOR);
+//        rightLine.setStrokeWidth(3);
+//        rightLine.setStrokeType(StrokeType.);
+
+        graphicsGroup = new Group(rectangle, topCrossbar, bottomCrossbar);
+//        graphicsGroup = new Group(leftLine, rightLine, topCrossbar, bottomCrossbar);
 
         registerListeners();
     }
@@ -98,7 +107,6 @@ public abstract class PCPAxisSelection {
         rectangle.setOnMouseEntered(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                pane.getScene().setCursor(Cursor.V_RESIZE);
                 handleRectangleMouseEntered();
             }
         });
@@ -106,7 +114,6 @@ public abstract class PCPAxisSelection {
         rectangle.setOnMouseExited(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                pane.getScene().setCursor(Cursor.DEFAULT);
                 handleRectangleMouseExited();
             }
         });
@@ -114,7 +121,6 @@ public abstract class PCPAxisSelection {
         bottomCrossbar.setOnMouseEntered(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                pane.getScene().setCursor(Cursor.V_RESIZE);
                 handleBottomCrossbarMouseEntered();
             }
         });
@@ -122,7 +128,6 @@ public abstract class PCPAxisSelection {
         bottomCrossbar.setOnMouseExited(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                pane.getScene().setCursor(Cursor.DEFAULT);
                 handleBottomCrossbarMouseExited();
             }
         });
@@ -130,7 +135,6 @@ public abstract class PCPAxisSelection {
         topCrossbar.setOnMouseEntered(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                pane.getScene().setCursor(Cursor.V_RESIZE);
                 handleTopCrossbarMouseEntered();
             }
         });
@@ -138,7 +142,6 @@ public abstract class PCPAxisSelection {
         topCrossbar.setOnMouseExited(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                pane.getScene().setCursor(Cursor.DEFAULT);
                 handleTopCrossbarMouseExited();
             }
         });
@@ -155,7 +158,7 @@ public abstract class PCPAxisSelection {
         topCrossbar.setOnMouseDragged(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                handleBottomCrossbarMouseDragged(event);
+                handleTopCrossbarMouseDragged(event);
             }
         });
 
@@ -221,14 +224,18 @@ public abstract class PCPAxisSelection {
         if (rectangle != null) {
             double top = Math.min(bottomY, topY);
             double bottom = Math.max(bottomY, topY);
+            double left = pcpAxis.getAxisBar().getX();
+            double right = pcpAxis.getAxisBar().getX() + pcpAxis.getAxisBar().getWidth();
+//            double left = rectangle.getX() - 4;
+//            double right = rectangle.getX() + rectangle.getWidth() + 4;
 
             rectangle.setY(top);
             rectangle.setHeight(bottom - top);
-            rectangle.setX(pcpAxis.getAxisBar().getX());
-            rectangle.setWidth(pcpAxis.getAxisBar().getWidth());
+//            rectangle.setX(pcpAxis.getAxisBar().getX());
+            rectangle.setX(left);
+            rectangle.setWidth(right - left);
+//            rectangle.setWidth(pcpAxis.getAxisBar().getWidth());
 
-            double left = rectangle.getX();
-            double right = rectangle.getX() + rectangle.getWidth();
             topCrossbar.getPoints().set(0, left);
             topCrossbar.getPoints().set(1, top + 2d);
             topCrossbar.getPoints().set(2, left);
@@ -246,6 +253,16 @@ public abstract class PCPAxisSelection {
             bottomCrossbar.getPoints().set(5, bottom);
             bottomCrossbar.getPoints().set(6, right);
             bottomCrossbar.getPoints().set(7, bottom - 2d);
+//
+//            rightLine.setStartX(right-1);
+//            rightLine.setStartY(top);
+//            rightLine.setEndX(right-1);
+//            rightLine.setEndY(bottom);
+//
+//            leftLine.setStartX(left+1);
+//            leftLine.setStartY(top);
+//            leftLine.setEndX(left+1);
+//            leftLine.setEndY(bottom);
         }
     }
 
@@ -272,8 +289,6 @@ public abstract class PCPAxisSelection {
     }
 
     public PCPAxis getPCPAxis () { return pcpAxis; }
-
-    public Pane getPane() { return pane; }
 
     public DataTable getDataModel() {
         return dataModel;

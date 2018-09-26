@@ -137,9 +137,7 @@ public class DoubleColumnSummaryStats extends ColumnSummaryStats {
             if (otherColumn == this.column) {
                 // no need to computer correlation with itself
                 coefficient = 1d;
-            } else if (!(otherColumn instanceof DoubleColumn)) {
-                // doesn't make sense to computer correlation with non number column
-            } else {
+            } else if ((otherColumn instanceof DoubleColumn) && (values.length > 1)) {
                 if (query == null) {
                     coefficient = pCorr.correlation(values, ((DoubleColumn) otherColumn).getValues());
                 } else {
