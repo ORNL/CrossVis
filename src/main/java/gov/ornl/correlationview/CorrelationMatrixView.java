@@ -5,6 +5,7 @@ import gov.ornl.util.GraphicsUtil;
 import javafx.beans.property.*;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Insets;
+import javafx.geometry.Orientation;
 import javafx.geometry.VPos;
 import javafx.scene.Group;
 import javafx.scene.layout.*;
@@ -18,7 +19,6 @@ import javafx.scene.text.Text;
 import javafx.scene.transform.Rotate;
 
 import java.util.ArrayList;
-import java.util.DoubleSummaryStatistics;
 import java.util.logging.Logger;
 
 public class CorrelationMatrixView extends Region implements DataTableListener {
@@ -29,7 +29,8 @@ public class CorrelationMatrixView extends Region implements DataTableListener {
     public final static Color DEFAULT_NEGATIVE_COLOR = Color.DARKRED;
     public final static Color DEFAULT_DIAGONAL_COLOR = Color.LIGHTGRAY;
     public final static double DEFAULT_TEXT_SIZE = 10.;
-    public final static double DEFAULT_MAX_AXIS_SIZE = 50.;
+    public final static double DEFAULT_MAX_AXIS_SIZE = 80.;
+    public final static double DEFAULT_COLOR_SCALE_SIZE = 30;
 
     private final static Logger log = Logger.getLogger(CorrelationMatrixView.class.getName());
 
@@ -52,8 +53,7 @@ public class CorrelationMatrixView extends Region implements DataTableListener {
     private Text colorScaleNegativeText;
     private Text colorScalePositiveText;
     private Text colorScaleZeroText;
-
-    private int colorScaleSize = 30;
+    private Group colorScaleGraphicsGroup = new Group();
 
     private ObjectProperty<Color> backgroundColor = new SimpleObjectProperty<>(DEFAULT_BACKGROUND_COLOR);
     private ObjectProperty<Color> textColor = new SimpleObjectProperty<>(DEFAULT_TEXT_COLOR);
@@ -72,20 +72,46 @@ public class CorrelationMatrixView extends Region implements DataTableListener {
     Group cellGraphics = new Group();
     Group titleGraphics = new Group();
 
+    private ObjectProperty<Orientation> colorScaleOrientation = new SimpleObjectProperty<>(Orientation.VERTICAL);
+    private BooleanProperty showColorScale = new SimpleBooleanProperty(true);
+
+    private Stop colorScaleGradientStops[];
+
     public CorrelationMatrixView () {
+        setMinSize(200, 200);
         initialize();
         registerListeners();
     }
 
+    public Orientation getColorScaleOrientation() { return colorScaleOrientation.get(); }
+
+    public void setColorScaleOrientation(Orientation newOrientation) {
+        if (newOrientation != getColorScaleOrientation()) {
+            colorScaleOrientation.set(newOrientation);
+        }
+    }
+
+    public ObjectProperty<Orientation> colorScaleOrientationProperty () { return colorScaleOrientation; }
+
+    public boolean isShowingColorScale() { return showColorScale.get(); }
+
+    public void setShowColorScale(boolean show) {
+        if (isShowingColorScale() != show) {
+            showColorScale.set(show);
+        }
+    }
+
+    public BooleanProperty showColorScaleProperty() { return showColorScale; }
+
     public BooleanProperty showQueryCorrelationsProperty() { return showQueryCorrelations; }
 
     public void setShowQueryCorrelations(boolean enabled) {
-        if (getShowQueryCorrelations() != enabled) {
+        if (isShowingQueryCorrelations() != enabled) {
             showQueryCorrelations.set(enabled);
         }
     }
 
-    public boolean getShowQueryCorrelations() { return showQueryCorrelations.get(); }
+    public boolean isShowingQueryCorrelations() { return showQueryCorrelations.get(); }
 
     public void setDataTable(DataTable dataTable) {
         clearView();
@@ -127,8 +153,18 @@ public class CorrelationMatrixView extends Region implements DataTableListener {
         colorScaleRegionRectangle.setStrokeWidth(1);
 
         colorScaleRectangle = new Rectangle();
-        colorScaleRectangle.setStroke(Color.BLACK);
+        colorScaleRectangle.setStroke(Color.gray(0.3));
         colorScaleRectangle.setMouseTransparent(true);
+        colorScaleGradientStops = new Stop[]{new Stop(0, negativeColor.get()),
+                new Stop(0.5, zeroColor.get()),
+                new Stop(1, positiveColor.get())};
+        if (getColorScaleOrientation() == Orientation.HORIZONTAL) {
+            colorScaleRectangle.setFill(new LinearGradient(0, 0, 1, 0, true,
+                    CycleMethod.NO_CYCLE, colorScaleGradientStops));
+        } else {
+            colorScaleRectangle.setFill(new LinearGradient(0, 1, 0, 0, true,
+                    CycleMethod.NO_CYCLE, colorScaleGradientStops));
+        }
 
         colorScaleNegativeText = new Text("-1");
         colorScaleNegativeText.setFont(Font.font(DEFAULT_TEXT_SIZE));
@@ -142,10 +178,15 @@ public class CorrelationMatrixView extends Region implements DataTableListener {
         colorScaleZeroText.setFont(Font.font(DEFAULT_TEXT_SIZE));
         colorScaleZeroText.setFill(textColor.get());
 
+        colorScaleGraphicsGroup.getChildren().addAll(colorScaleRectangle, colorScaleNegativeText, colorScalePositiveText,
+                colorScaleZeroText);
+
         pane = new Pane();
         this.setBackground(new Background(new BackgroundFill(backgroundColor.get(), new CornerRadii(0), Insets.EMPTY)));
-        pane.getChildren().addAll(cellGraphics, titleGraphics, colorScaleRectangle,
-                colorScaleZeroText, colorScalePositiveText, colorScaleNegativeText);
+        pane.getChildren().addAll(cellGraphics, titleGraphics);
+
+        if (isShowingColorScale()) { pane.getChildren().add(colorScaleGraphicsGroup); }
+
 //        pane.getChildren().addAll(cellGraphics, titleGraphics, viewRegionRectangle, plotRegionRectangle, xAxisRegionRectangle, yAxisRegionRectangle);
 //        pane.getChildren().add(viewRegionRectangle);
 
@@ -155,6 +196,29 @@ public class CorrelationMatrixView extends Region implements DataTableListener {
     private void registerListeners() {
         widthProperty().addListener(o -> resizeView());
         heightProperty().addListener(o -> resizeView());
+
+        showColorScale.addListener(observable -> {
+            if (isShowingColorScale()) {
+                pane.getChildren().add(colorScaleGraphicsGroup);
+            } else {
+                pane.getChildren().remove(colorScaleGraphicsGroup);
+            }
+            resizeView();
+        });
+
+        colorScaleOrientation.addListener(observable -> {
+            if (getColorScaleOrientation() == Orientation.HORIZONTAL) {
+                colorScaleRectangle.setFill(new LinearGradient(0, 0, 1, 0, true,
+                        CycleMethod.NO_CYCLE, colorScaleGradientStops));
+            } else {
+                colorScaleRectangle.setFill(new LinearGradient(0, 1, 0, 0, true,
+                        CycleMethod.NO_CYCLE, colorScaleGradientStops));
+            }
+
+            if (isShowingColorScale()) {
+                resizeView();
+            }
+        });
 
         backgroundColor.addListener((observable, oldValue, newValue) -> {
             this.setBackground(new Background(new BackgroundFill(backgroundColor.get(), new CornerRadii(0), Insets.EMPTY)));
@@ -216,6 +280,7 @@ public class CorrelationMatrixView extends Region implements DataTableListener {
                 DoubleColumn yColumn = doubleColumns.get(yColumnIndex);
 
                 Text yColumnTitleText = new Text(yColumn.getName());
+                yColumnTitleText.setFont(Font.font(DEFAULT_TEXT_SIZE));
                 yColumnTitleText.setTextOrigin(VPos.CENTER);
                 yColumnTitles.add(yColumnTitleText);
                 titleGraphics.getChildren().add(yColumnTitleText);
@@ -227,16 +292,15 @@ public class CorrelationMatrixView extends Region implements DataTableListener {
 
                     if (yColumnIndex == 0) {
                         Text xColumnTitleText = new Text(xColumn.getName());
-//                        xColumnTitleText.setTextOrigin(VPos.BOTTOM);
+                        xColumnTitleText.setFont(Font.font(DEFAULT_TEXT_SIZE));
                         xColumnTitleText.setTextOrigin(VPos.TOP);
-//                        xColumnTitleText.setRotate(-90.);
                         xColumnTitleText.getTransforms().add(new Rotate(-90.));
                         xColumnTitles.add(xColumnTitleText);
                         titleGraphics.getChildren().add(xColumnTitleText);
                     }
 
                     double correlation = 0;
-                    if (getShowQueryCorrelations() && dataTable.getActiveQuery().hasColumnSelections()) {
+                    if (isShowingQueryCorrelations() && dataTable.getActiveQuery().hasColumnSelections()) {
                         correlation = ((DoubleColumnSummaryStats)dataTable.getActiveQuery().getColumnQuerySummaryStats(yColumn)).getCorrelationCoefficientList().get(dataTable.getColumnIndex(xColumn));
                     } else {
                         correlation = yColumn.getStatistics().getCorrelationCoefficientList().get(dataTable.getColumnIndex(xColumn));
@@ -300,21 +364,23 @@ public class CorrelationMatrixView extends Region implements DataTableListener {
 
         double longestColumnTitle = findLongestColumnTitle();
 
-        double xAxisHeight = longestColumnTitle ;
-        double yAxisWidth = longestColumnTitle;
-        double plotRegionWidth = viewRegionBounds.getWidth() - yAxisWidth;
-        double plotRegionHeight = viewRegionBounds.getHeight() - (xAxisHeight + (colorScaleSize + 4));
-        double plotRegionSize = plotRegionWidth < plotRegionHeight ? plotRegionWidth : plotRegionHeight;
-        double xAxisTopOffset = (viewRegionBounds.getHeight() - (plotRegionSize + xAxisHeight + (colorScaleSize + 4))) / 2.;
-        double yAxisLeftOffset = ((viewRegionBounds.getWidth() - plotRegionSize) - yAxisWidth) / 2.;
+        double colorScaleWidth = 0;
+        double colorScaleHeight = 0;
+        if (isShowingColorScale()) {
+            if (getColorScaleOrientation() == Orientation.HORIZONTAL) {
+                colorScaleHeight = DEFAULT_COLOR_SCALE_SIZE;
+            } else {
+                colorScaleWidth = DEFAULT_COLOR_SCALE_SIZE;
+            }
+        }
 
-        colorScaleRegionBounds = new BoundingBox(viewRegionBounds.getMinX() + yAxisLeftOffset + yAxisWidth,
-                viewRegionBounds.getMinY() + (viewRegionBounds.getHeight() - colorScaleSize), plotRegionSize,
-                colorScaleSize);
-        colorScaleRegionRectangle.setX(colorScaleRegionBounds.getMinX());
-        colorScaleRegionRectangle.setY(colorScaleRegionBounds.getMinY());
-        colorScaleRegionRectangle.setWidth(colorScaleRegionBounds.getWidth());
-        colorScaleRegionRectangle.setHeight(colorScaleRegionBounds.getHeight());
+        double xAxisHeight = longestColumnTitle;
+        double yAxisWidth = longestColumnTitle;
+        double plotRegionWidth = viewRegionBounds.getWidth() - (yAxisWidth + colorScaleWidth);
+        double plotRegionHeight = viewRegionBounds.getHeight() - (xAxisHeight + colorScaleHeight);
+        double plotRegionSize = plotRegionWidth < plotRegionHeight ? plotRegionWidth : plotRegionHeight;
+        double xAxisTopOffset = (viewRegionBounds.getHeight() - (plotRegionSize + xAxisHeight + colorScaleHeight)) / 2.;
+        double yAxisLeftOffset = (viewRegionBounds.getWidth() - (plotRegionSize + yAxisWidth + colorScaleWidth)) / 2.;
 
         plotRegionBounds = new BoundingBox(viewRegionBounds.getMinX() + yAxisLeftOffset + yAxisWidth,
                 viewRegionBounds.getMinY() + xAxisTopOffset + xAxisHeight, plotRegionSize, plotRegionSize);
@@ -341,25 +407,67 @@ public class CorrelationMatrixView extends Region implements DataTableListener {
         xAxisRegionRectangle.setWidth(xAxisRegionBounds.getWidth());
         xAxisRegionRectangle.setHeight(xAxisRegionBounds.getHeight());
 
-        colorScaleRectangle.setX(colorScaleRegionBounds.getMinX());
-        colorScaleRectangle.setY(colorScaleRegionBounds.getMinY());
-        colorScaleRectangle.setWidth(colorScaleRegionBounds.getWidth());
-        colorScaleRectangle.setHeight(colorScaleRegionBounds.getHeight() - 12);
+        if (isShowingColorScale()) {
+            if (getColorScaleOrientation() == Orientation.HORIZONTAL) {
+                colorScaleRegionBounds = new BoundingBox(plotRegionBounds.getMinX(), plotRegionBounds.getMaxY() + 4,
+                        plotRegionSize, colorScaleHeight - 4);
+//                colorScaleRegionBounds = new BoundingBox(viewRegionBounds.getMinX() + yAxisLeftOffset + yAxisWidth,
+//                        viewRegionBounds.getMinY() + (viewRegionBounds.getHeight() - colorScaleHeight),
+//                        plotRegionSize, colorScaleHeight);
 
-        Stop[] stops = new Stop[] { new Stop(0, negativeColor.get()), new Stop(0.5, zeroColor.get()),
-                new Stop(1, positiveColor.get())};
-        LinearGradient linearGradient = new LinearGradient(0, 0, 1, 0, true, CycleMethod.NO_CYCLE, stops);
-        colorScaleRectangle.setFill(linearGradient);
+                colorScaleRectangle.setX(colorScaleRegionBounds.getMinX());
+                colorScaleRectangle.setY(colorScaleRegionBounds.getMinY());
+                colorScaleRectangle.setWidth(colorScaleRegionBounds.getWidth());
+                colorScaleRectangle.setHeight(colorScaleRegionBounds.getHeight() - 12);
 
-        colorScaleZeroText.setX((colorScaleRegionBounds.getMinX() + (colorScaleRegionBounds.getWidth() / 2.)) - (colorScaleZeroText.getLayoutBounds().getWidth() / 2.));
-        colorScaleZeroText.setY(colorScaleRegionBounds.getMaxY() - 2);
+                colorScaleZeroText.setX((colorScaleRegionBounds.getMinX() + (colorScaleRegionBounds.getWidth() / 2.)) - (colorScaleZeroText.getLayoutBounds().getWidth() / 2.));
+                colorScaleZeroText.setY(colorScaleRegionBounds.getMaxY() - 2);
 
-        colorScalePositiveText.setX(colorScaleRegionBounds.getMaxX() - (colorScalePositiveText.getLayoutBounds().getWidth() + 2));
-        colorScalePositiveText.setY(colorScaleZeroText.getY());
+                colorScalePositiveText.setX(colorScaleRegionBounds.getMaxX() - (colorScalePositiveText.getLayoutBounds().getWidth() + 2));
+                colorScalePositiveText.setY(colorScaleZeroText.getY());
 
-        colorScaleNegativeText.setX(colorScaleRegionBounds.getMinX() + 2);
-        colorScaleNegativeText.setY(colorScaleZeroText.getY());
+                colorScaleNegativeText.setX(colorScaleRegionBounds.getMinX() + 2);
+                colorScaleNegativeText.setY(colorScaleZeroText.getY());
+            } else {
+                colorScaleRegionBounds = new BoundingBox(plotRegionBounds.getMaxX() + 4, plotRegionBounds.getMinY(),
+                        colorScaleWidth - 4, plotRegionSize);
+//                colorScaleRegionBounds = new BoundingBox(viewRegionBounds.getMaxX() - colorScaleWidth,
+//                        viewRegionBounds.getMinY() + xAxisTopOffset + xAxisHeight, colorScaleWidth, plotRegionSize);
 
+                colorScaleRectangle.setX(colorScaleRegionBounds.getMinX());
+                colorScaleRectangle.setY(colorScaleRegionBounds.getMinY());
+                colorScaleRectangle.setWidth(colorScaleRegionBounds.getWidth() - 12);
+                colorScaleRectangle.setHeight(colorScaleRegionBounds.getHeight());
+
+                colorScalePositiveText.setX(colorScaleRegionBounds.getMaxX() - 8);
+//                colorScalePositiveText.setX(colorScaleRegionBounds.getMaxX() - (colorScalePositiveText.getLayoutBounds().getWidth() + 2));
+                colorScalePositiveText.setY(colorScaleRegionBounds.getMinY() + colorScalePositiveText.getLayoutBounds().getHeight());
+
+                colorScaleZeroText.setX(colorScaleRegionBounds.getMaxX() - 8);
+                colorScaleZeroText.setY(colorScaleRegionBounds.getMinY() + (colorScaleRegionBounds.getHeight() / 2.) + (colorScaleZeroText.getLayoutBounds().getHeight() / 2.));
+
+                colorScaleNegativeText.setX(colorScaleRegionBounds.getMaxX() - 8);
+                colorScaleNegativeText.setY(colorScaleRegionBounds.getMaxY() - 4);
+            }
+
+//            colorScaleRegionRectangle.setX(colorScaleRegionBounds.getMinX());
+//            colorScaleRegionRectangle.setY(colorScaleRegionBounds.getMinY());
+//            colorScaleRegionRectangle.setWidth(colorScaleRegionBounds.getWidth());
+//            colorScaleRegionRectangle.setHeight(colorScaleRegionBounds.getHeight());
+
+            log.info("color scale width is " + colorScaleWidth);
+        }
+
+
+//
+//        colorScaleZeroText.setX((colorScaleRegionBounds.getMinX() + (colorScaleRegionBounds.getWidth() / 2.)) - (colorScaleZeroText.getLayoutBounds().getWidth() / 2.));
+//        colorScaleZeroText.setY(colorScaleRegionBounds.getMaxY() - 2);
+//
+//        colorScalePositiveText.setX(colorScaleRegionBounds.getMaxX() - (colorScalePositiveText.getLayoutBounds().getWidth() + 2));
+//        colorScalePositiveText.setY(colorScaleZeroText.getY());
+//
+//        colorScaleNegativeText.setX(colorScaleRegionBounds.getMinX() + 2);
+//        colorScaleNegativeText.setY(colorScaleZeroText.getY());
 
         double cellSize = plotRegionBounds.getWidth() / doubleColumns.size();
 

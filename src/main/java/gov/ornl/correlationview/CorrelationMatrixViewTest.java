@@ -3,11 +3,12 @@ package gov.ornl.correlationview;
 import gov.ornl.datatable.DataTable;
 import gov.ornl.datatable.IOUtilities;
 import javafx.application.Application;
+import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
+import javafx.geometry.Orientation;
 import javafx.scene.Scene;
 import javafx.scene.SceneAntialiasing;
-import javafx.scene.control.Button;
-import javafx.scene.control.ToggleButton;
+import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
@@ -42,9 +43,23 @@ public class CorrelationMatrixViewTest extends Application {
             }
         });
 
+        CheckBox showColorScaleCB = new CheckBox("Show Color Scale: ");
+        showColorScaleCB.selectedProperty().bindBidirectional(correlationMatrixView.showColorScaleProperty());
+
+        ArrayList<Orientation> orientations = new ArrayList<>();
+        orientations.add(Orientation.HORIZONTAL);
+        orientations.add(Orientation.VERTICAL);
+
+        ChoiceBox<Orientation> orientationChoiceBox = new ChoiceBox<>(FXCollections.observableArrayList(orientations));
+        orientationChoiceBox.getSelectionModel().select(correlationMatrixView.getColorScaleOrientation());
+        orientationChoiceBox.getSelectionModel().selectedItemProperty().addListener(observable -> {
+            correlationMatrixView.setColorScaleOrientation(orientationChoiceBox.getSelectionModel().getSelectedItem());
+        });
+
         HBox buttonBox = new HBox();
         buttonBox.setSpacing(2.);
-        buttonBox.getChildren().addAll(loadDataButton);
+        buttonBox.setPadding(new Insets(10));
+        buttonBox.getChildren().addAll(loadDataButton, showColorScaleCB, orientationChoiceBox);
 
         BorderPane rootNode = new BorderPane();
         rootNode.setCenter(correlationMatrixView);

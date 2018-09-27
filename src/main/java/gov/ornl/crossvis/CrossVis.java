@@ -19,7 +19,6 @@ import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
 import javafx.scene.SceneAntialiasing;
-import javafx.scene.SnapshotParameters;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -48,7 +47,7 @@ import java.util.prefs.Preferences;
 public class CrossVis extends Application implements DataTableListener {
     private static final Logger log = Logger.getLogger(CrossVis.class.getName());
 
-    private static final String VERSION_STRING = "v2.1.1";
+    private static final String VERSION_STRING = "v2.1.2";
 
     private PCPView pcpView;
     private CorrelationMatrixView correlationMatrixView;
@@ -81,7 +80,7 @@ public class CrossVis extends Application implements DataTableListener {
     private CheckMenuItem enableDataTableUpdatesCheckMenuItem;
     private MenuItem removeAllQueriesMI;
 
-    private Stage rangerStage;
+    private Stage crossVisStage;
 
     private NetCDFFilterWindow ncFilterWindow = null;
     private Stage ncFilterWindowStage = null;
@@ -417,9 +416,9 @@ public class CrossVis extends Application implements DataTableListener {
     @Override
     public void start(Stage mainStage) throws Exception {
 //        try {
-            rangerStage = mainStage;
+            crossVisStage = mainStage;
 
-            rangerStage.setOnCloseRequest(event -> {
+            crossVisStage.setOnCloseRequest(event -> {
                 if (ncFilterWindowStage != null && ncFilterWindowStage.isShowing()) {
                     ncFilterWindowStage.close();
                 }
@@ -437,7 +436,10 @@ public class CrossVis extends Application implements DataTableListener {
 
             correlationMatrixView = new CorrelationMatrixView();
             correlationMatrixView.setDataTable(dataTable);
-            correlationMatrixView.setPadding(new Insets(10));
+            correlationMatrixView.setPadding(new Insets(6));
+            correlationMatrixView.setShowQueryCorrelations(true);
+            correlationMatrixView.setColorScaleOrientation(Orientation.VERTICAL);
+
 
             ToolBar toolBar = createToolBar(mainStage);
 
@@ -446,6 +448,7 @@ public class CrossVis extends Application implements DataTableListener {
 
             MenuBar menuBar = createMenuBar(mainStage);
             menuBar.setUseSystemMenuBar(true);
+
             createColumnTableViews();
 
             dataTableView = new TableView<>();
@@ -504,10 +507,17 @@ public class CrossVis extends Application implements DataTableListener {
 
             tabPane.getTabs().addAll(temporalColumnTableTab, quantitativeColumnTableTab, categoricalColumnTableTab, dataTableTab, queryTableTab);
 
+            CheckBox showCorrelationsForQueriedDataCB = new CheckBox("Show Queried Data Correlations");
+            showCorrelationsForQueriedDataCB.selectedProperty().bindBidirectional(correlationMatrixView.showQueryCorrelationsProperty());
+            correlationMatrixView.setBackground(showCorrelationsForQueriedDataCB.getBackground());
+            VBox correlationMatrixVBox = new VBox();
+            correlationMatrixVBox.setSpacing(2.);
+            correlationMatrixVBox.getChildren().addAll(correlationMatrixView, showCorrelationsForQueriedDataCB);
+
             SplitPane bottomSplit = new SplitPane();
             bottomSplit.setOrientation(Orientation.HORIZONTAL);
-            bottomSplit.getItems().addAll(tabPane, correlationMatrixView);
-            bottomSplit.setResizableWithParent(correlationMatrixView, false);
+            bottomSplit.getItems().addAll(tabPane, correlationMatrixVBox);
+            bottomSplit.setResizableWithParent(correlationMatrixVBox, false);
             bottomSplit.setDividerPositions(0.85);
 
             SplitPane mainSplit = new SplitPane();
@@ -835,11 +845,11 @@ public class CrossVis extends Application implements DataTableListener {
             changeNumHistogramBins();
         });
 
-        CheckMenuItem showSelectedCorrelationsMI = new CheckMenuItem("Show Correlations with Selected Data");
-        showSelectedCorrelationsMI.setSelected(correlationMatrixView.getShowQueryCorrelations());
-        showSelectedCorrelationsMI.selectedProperty().addListener(observable -> {
-            correlationMatrixView.setShowQueryCorrelations(showSelectedCorrelationsMI.isSelected());
-        });
+//        CheckMenuItem showSelectedCorrelationsMI = new CheckMenuItem("Show Correlations with Selected Data");
+//        showSelectedCorrelationsMI.setSelected(correlationMatrixView.isShowingQueryCorrelations());
+//        showSelectedCorrelationsMI.selectedProperty().addListener(observable -> {
+//            correlationMatrixView.setShowQueryCorrelations(showSelectedCorrelationsMI.isSelected());
+//        });
 
         // create menu item to enabled/disable data datamodel updates
         enableDataTableUpdatesCheckMenuItem = new CheckMenuItem("Enable Data Table View Updates");
@@ -855,7 +865,7 @@ public class CrossVis extends Application implements DataTableListener {
 
         viewMenu.getItems().addAll(showScatterplotsMI, showHistogramsMI, showPolylinesMI, showSummaryStatsMI,
                 summaryStatsDisplayModeMenu, polylineDisplayModeMenu, axisLayoutMenu, changeHistogramBinCountMenuItem,
-                showSelectedCorrelationsMI, enableDataTableUpdatesCheckMenuItem);
+                enableDataTableUpdatesCheckMenuItem);
 
 
         // Data Menu
@@ -1093,7 +1103,7 @@ public class CrossVis extends Application implements DataTableListener {
                 new FileChooser.ExtensionFilter("CSV", "*.csv")
         );
 
-        File csvFile = fileChooser.showOpenDialog(rangerStage);
+        File csvFile = fileChooser.showOpenDialog(crossVisStage);
         if (csvFile != null) {
             try {
                 FileUtils.openCSVFile(csvFile, dataTable);
