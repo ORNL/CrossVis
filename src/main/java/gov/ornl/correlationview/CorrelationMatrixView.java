@@ -9,7 +9,11 @@ import javafx.geometry.VPos;
 import javafx.scene.Group;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.CycleMethod;
+import javafx.scene.paint.LinearGradient;
+import javafx.scene.paint.Stop;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.transform.Rotate;
 
@@ -36,11 +40,20 @@ public class CorrelationMatrixView extends Region implements DataTableListener {
     private BoundingBox plotRegionBounds;
     private BoundingBox xAxisRegionBounds;
     private BoundingBox yAxisRegionBounds;
+    private BoundingBox colorScaleRegionBounds;
 
     private Rectangle viewRegionRectangle;
     private Rectangle plotRegionRectangle;
     private Rectangle xAxisRegionRectangle;
     private Rectangle yAxisRegionRectangle;
+    private Rectangle colorScaleRegionRectangle;
+
+    private Rectangle colorScaleRectangle;
+    private Text colorScaleNegativeText;
+    private Text colorScalePositiveText;
+    private Text colorScaleZeroText;
+
+    private int colorScaleSize = 30;
 
     private ObjectProperty<Color> backgroundColor = new SimpleObjectProperty<>(DEFAULT_BACKGROUND_COLOR);
     private ObjectProperty<Color> textColor = new SimpleObjectProperty<>(DEFAULT_TEXT_COLOR);
@@ -107,9 +120,32 @@ public class CorrelationMatrixView extends Region implements DataTableListener {
         yAxisRegionRectangle.setMouseTransparent(true);
         yAxisRegionRectangle.setStrokeWidth(1);
 
+        colorScaleRegionRectangle = new Rectangle();
+        colorScaleRegionRectangle.setStroke(Color.CORNFLOWERBLUE);
+        colorScaleRegionRectangle.setFill(Color.TRANSPARENT);
+        colorScaleRegionRectangle.setMouseTransparent(true);
+        colorScaleRegionRectangle.setStrokeWidth(1);
+
+        colorScaleRectangle = new Rectangle();
+        colorScaleRectangle.setStroke(Color.BLACK);
+        colorScaleRectangle.setMouseTransparent(true);
+
+        colorScaleNegativeText = new Text("-1");
+        colorScaleNegativeText.setFont(Font.font(DEFAULT_TEXT_SIZE));
+        colorScaleNegativeText.setFill(textColor.get());
+
+        colorScalePositiveText = new Text("1");
+        colorScalePositiveText.setFont(Font.font(DEFAULT_TEXT_SIZE));
+        colorScalePositiveText.setFill(textColor.get());
+
+        colorScaleZeroText = new Text("0");
+        colorScaleZeroText.setFont(Font.font(DEFAULT_TEXT_SIZE));
+        colorScaleZeroText.setFill(textColor.get());
+
         pane = new Pane();
         this.setBackground(new Background(new BackgroundFill(backgroundColor.get(), new CornerRadii(0), Insets.EMPTY)));
-        pane.getChildren().addAll(cellGraphics, titleGraphics, plotRegionRectangle);
+        pane.getChildren().addAll(cellGraphics, titleGraphics, colorScaleRectangle,
+                colorScaleZeroText, colorScalePositiveText, colorScaleNegativeText);
 //        pane.getChildren().addAll(cellGraphics, titleGraphics, viewRegionRectangle, plotRegionRectangle, xAxisRegionRectangle, yAxisRegionRectangle);
 //        pane.getChildren().add(viewRegionRectangle);
 
@@ -264,15 +300,21 @@ public class CorrelationMatrixView extends Region implements DataTableListener {
 
         double longestColumnTitle = findLongestColumnTitle();
 
-        double xAxisHeight = longestColumnTitle;
+        double xAxisHeight = longestColumnTitle ;
         double yAxisWidth = longestColumnTitle;
         double plotRegionWidth = viewRegionBounds.getWidth() - yAxisWidth;
-        double plotRegionHeight = viewRegionBounds.getHeight() - xAxisHeight;
+        double plotRegionHeight = viewRegionBounds.getHeight() - (xAxisHeight + (colorScaleSize + 4));
         double plotRegionSize = plotRegionWidth < plotRegionHeight ? plotRegionWidth : plotRegionHeight;
-        double xAxisTopOffset = ((viewRegionBounds.getHeight() - plotRegionSize) - xAxisHeight) / 2.;
+        double xAxisTopOffset = (viewRegionBounds.getHeight() - (plotRegionSize + xAxisHeight + (colorScaleSize + 4))) / 2.;
         double yAxisLeftOffset = ((viewRegionBounds.getWidth() - plotRegionSize) - yAxisWidth) / 2.;
-//        xAxisHeight = viewRegionBounds.getHeight() - plotRegionSize;
-//        yAxisWidth = viewRegionBounds.getWidth() - plotRegionSize;
+
+        colorScaleRegionBounds = new BoundingBox(viewRegionBounds.getMinX() + yAxisLeftOffset + yAxisWidth,
+                viewRegionBounds.getMinY() + (viewRegionBounds.getHeight() - colorScaleSize), plotRegionSize,
+                colorScaleSize);
+        colorScaleRegionRectangle.setX(colorScaleRegionBounds.getMinX());
+        colorScaleRegionRectangle.setY(colorScaleRegionBounds.getMinY());
+        colorScaleRegionRectangle.setWidth(colorScaleRegionBounds.getWidth());
+        colorScaleRegionRectangle.setHeight(colorScaleRegionBounds.getHeight());
 
         plotRegionBounds = new BoundingBox(viewRegionBounds.getMinX() + yAxisLeftOffset + yAxisWidth,
                 viewRegionBounds.getMinY() + xAxisTopOffset + xAxisHeight, plotRegionSize, plotRegionSize);
@@ -298,6 +340,26 @@ public class CorrelationMatrixView extends Region implements DataTableListener {
         xAxisRegionRectangle.setY(xAxisRegionBounds.getMinY());
         xAxisRegionRectangle.setWidth(xAxisRegionBounds.getWidth());
         xAxisRegionRectangle.setHeight(xAxisRegionBounds.getHeight());
+
+        colorScaleRectangle.setX(colorScaleRegionBounds.getMinX());
+        colorScaleRectangle.setY(colorScaleRegionBounds.getMinY());
+        colorScaleRectangle.setWidth(colorScaleRegionBounds.getWidth());
+        colorScaleRectangle.setHeight(colorScaleRegionBounds.getHeight() - 12);
+
+        Stop[] stops = new Stop[] { new Stop(0, negativeColor.get()), new Stop(0.5, zeroColor.get()),
+                new Stop(1, positiveColor.get())};
+        LinearGradient linearGradient = new LinearGradient(0, 0, 1, 0, true, CycleMethod.NO_CYCLE, stops);
+        colorScaleRectangle.setFill(linearGradient);
+
+        colorScaleZeroText.setX((colorScaleRegionBounds.getMinX() + (colorScaleRegionBounds.getWidth() / 2.)) - (colorScaleZeroText.getLayoutBounds().getWidth() / 2.));
+        colorScaleZeroText.setY(colorScaleRegionBounds.getMaxY() - 2);
+
+        colorScalePositiveText.setX(colorScaleRegionBounds.getMaxX() - (colorScalePositiveText.getLayoutBounds().getWidth() + 2));
+        colorScalePositiveText.setY(colorScaleZeroText.getY());
+
+        colorScaleNegativeText.setX(colorScaleRegionBounds.getMinX() + 2);
+        colorScaleNegativeText.setY(colorScaleZeroText.getY());
+
 
         double cellSize = plotRegionBounds.getWidth() / doubleColumns.size();
 

@@ -99,9 +99,9 @@ public class PCPView extends Region implements DataTableListener {
         registerListeners();
     }
 
-    public WritableImage getSnapshot() {
+    public WritableImage getSnapshot(int scaleFactor) {
         SnapshotParameters snapshotParameters = new SnapshotParameters();
-        snapshotParameters.setTransform(new Scale(2, 2));
+        snapshotParameters.setTransform(new Scale(scaleFactor, scaleFactor));
         return pane.snapshot(snapshotParameters, null);
     }
 

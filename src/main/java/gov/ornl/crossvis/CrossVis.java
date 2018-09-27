@@ -19,6 +19,7 @@ import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
 import javafx.scene.SceneAntialiasing;
+import javafx.scene.SnapshotParameters;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -874,7 +875,6 @@ public class CrossVis extends Application implements DataTableListener {
 
         dataMenu.getItems().addAll(removeDataMenu);
 
-
         // Query Menu
         CheckMenuItem showQueryStatisticsCheckMI = new CheckMenuItem("Show Selected Data Statistics");
         showQueryStatisticsCheckMI.setSelected(dataTable.getCalculateQueryStatistics());
@@ -915,13 +915,44 @@ public class CrossVis extends Application implements DataTableListener {
 
         File imageFile = fileChooser.showSaveDialog(null);
         if (imageFile != null) {
-            WritableImage pcpSnapshotImage = pcpView.getSnapshot();
+            ArrayList<Integer> scaleChoices = new ArrayList<>();
+            scaleChoices.add(1);
+            scaleChoices.add(2);
+            scaleChoices.add(4);
+            scaleChoices.add(8);
+            int scaleFactor = 1;
+
+            ChoiceDialog<Integer> dialog = new ChoiceDialog<>(scaleFactor, scaleChoices);
+            dialog.setTitle("Snapshot Image Scale Factor");
+            dialog.setHeaderText("Higher Scale Factors Result in Larger, Higher Resolution Images");
+            dialog.setContentText("Snapshot Image Scale Factor: ");
+
+            Optional<Integer> result = dialog.showAndWait();
+            if (result.isPresent()) {
+                scaleFactor = result.get();
+            } else {
+                return;
+            }
+
+            WritableImage pcpSnapshotImage = pcpView.getSnapshot(scaleFactor);
 
             try {
                 ImageIO.write(SwingFXUtils.fromFXImage(pcpSnapshotImage, null), "png", imageFile);
                 preferences.put(CrossVisPreferenceKeys.LAST_SNAPSHOT_DIRECTORY, imageFile.getParentFile().getAbsolutePath());
+
+                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                alert.setTitle("Snapshot Saved");
+                alert.setHeaderText("Snapshot Image Saved Successfully");
+                alert.setContentText(imageFile.getAbsolutePath());
+                alert.showAndWait();
             } catch (IOException e) {
                 e.printStackTrace();
+
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Snapshot Error");
+                alert.setContentText("Error occurred while saving snapshot: \n" +
+                        e.getMessage());
+                alert.showAndWait();
             }
         }
     }
