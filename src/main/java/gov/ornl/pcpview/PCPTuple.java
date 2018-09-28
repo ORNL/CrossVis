@@ -12,9 +12,6 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.logging.Logger;
 
-/**
- * Created by csg on 8/24/16.
- */
 public class PCPTuple {
     public static Logger log = Logger.getLogger(PCPTuple.class.getName());
 

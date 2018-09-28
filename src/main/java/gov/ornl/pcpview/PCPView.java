@@ -77,6 +77,7 @@ public class PCPView extends Region implements DataTableListener {
     private BooleanProperty showHistograms = new SimpleBooleanProperty(false);
     private BooleanProperty showScatterplots = new SimpleBooleanProperty(true);
     private BooleanProperty showPolylines = new SimpleBooleanProperty(true);
+    private BooleanProperty showCorrelations = new SimpleBooleanProperty(true);
 
     private BooleanProperty fitToWidth = new SimpleBooleanProperty(true);
     private DoubleProperty nameTextRotation;
@@ -98,6 +99,16 @@ public class PCPView extends Region implements DataTableListener {
         initialize();
         registerListeners();
     }
+
+    public boolean isShowingCorrelations() { return showCorrelations.get(); }
+
+    public void setShowCorrelations(boolean show) {
+        if (isShowingCorrelations() != show) {
+            showCorrelations.set(show);
+        }
+    }
+
+    public BooleanProperty getShowCorrelationsProperty() { return showCorrelations; }
 
     public WritableImage getSnapshot(int scaleFactor) {
         SnapshotParameters snapshotParameters = new SnapshotParameters();
@@ -240,20 +251,6 @@ public class PCPView extends Region implements DataTableListener {
             }
             redrawView();
         }));
-//
-//        summaryStatisticsDisplayMode.addListener((observable, oldValue, newValue) -> {
-//            for (PCPAxis pcpAxis : axisList) {
-//                pcpAxis.setStatisticsDisplayMode(newValue);
-//            }
-//        });
-
-//        showHistograms.addListener(observable -> {
-////            if (!isShowingHistograms()) {
-////                histogramGroup.getChildren().clear();
-////            }
-//
-//            resizeView();
-//        });
 
         showScatterplots.addListener(observable -> {
             if (isShowingScatterplots()) {
@@ -294,18 +291,12 @@ public class PCPView extends Region implements DataTableListener {
             resizeView();
         });
 
-//        showSummaryStatistics.addListener((observable, oldValue, newValue) -> {
-//            resizeView();
-//        });
+        showCorrelations.addListener(observable -> {
+            resizeView();
+        });
+
 
         polylineDisplayMode.addListener(((observable, oldValue, newValue) -> {
-//            if (newValue == POLYLINE_DISPLAY_MODE.NO_POLYLINES) {
-//                selectedCanvas.getGraphicsContext2D().clearRect(0, 0, selectedCanvas.getWidth(),
-//                        selectedCanvas.getHeight());
-//                unselectedCanvas.getGraphicsContext2D().clearRect(0, 0, unselectedCanvas.getWidth(),
-//                        unselectedCanvas.getHeight());
-//            }
-
             if (selectedTuplesTimer != null && selectedTuplesTimer.isRunning()) {
                 selectedTuplesTimer.stop();
             }
@@ -452,9 +443,6 @@ public class PCPView extends Region implements DataTableListener {
                 drawTuplePolylines();
             } else if (getPolylineDisplayMode() == POLYLINE_DISPLAY_MODE.BINNED_POLYLINES) {
                 drawPCPBins();
-    //        } else if (getPolylineDisplayMode() == POLYLINE_DISPLAY_MODE.NO_POLYLINES) {
-    //            unselectedCanvas.getGraphicsContext2D().clearRect(0, 0, unselectedCanvas.getWidth(), unselectedCanvas.getHeight());
-    //            selectedCanvas.getGraphicsContext2D().clearRect(0, 0, selectedCanvas.getWidth(), selectedCanvas.getHeight());
             }
         }
     }
@@ -519,27 +507,10 @@ public class PCPView extends Region implements DataTableListener {
 //                    scatterplotRegionRectangle.setWidth(scatterplotRegionBounds.getWidth());
 //                    scatterplotRegionRectangle.setHeight(scatterplotRegionBounds.getHeight());
 
-//                    if (getShowHistograms()) {
-//                        histogramGroup.getChildren().clear();
-//                    }
-
                     for (int iaxis = 0; iaxis < axisList.size(); iaxis++) {
                         PCPAxis pcpAxis = axisList.get(iaxis);
                         double axisLeft = plotRegionBounds.getMinX() + (iaxis * axisSpacing);
                         pcpAxis.resize(axisLeft, pcpRegionBounds.getMinY(), axisSpacing, pcpRegionBounds.getHeight());
-
-//                        if (getShowHistograms()) {
-//                            if (!(pcpAxis instanceof PCPCategoricalAxis)) {
-//                                histogramGroup.getChildren().add(0, pcpAxis.getHistogramBinRectangleGroup());
-//                                histogramGroup.getChildren().add(1, pcpAxis.getQueryHistogramBinRectangleGroup());
-//                            }
-//                        }
-//                        if (getPolylineDisplayMode() == POLYLINE_DISPLAY_MODE.HISTOGRAM) {
-//                            if (!(pcpAxis instanceof PCPCategoricalAxis)) {
-//                                pane.getChildren().add(0, pcpAxis.getHistogramBinRectangleGroup());
-//                                pane.getChildren().add(1, pcpAxis.getQueryHistogramBinRectangleGroup());
-//                            }
-//                        }
                     }
 
                     if (isShowingScatterplots()) {
@@ -560,22 +531,16 @@ public class PCPView extends Region implements DataTableListener {
                             }
 
                             if (dataTable.getHighlightedColumn() == null) {
-//                            log.info("Higlighted Column NULL");
                                 double centerX = (yAxis.getCenterX() + xAxis.getCenterX()) / 2.;
                                 double left = centerX - (scatterplotSize / 2.) - scatterplot.getAxisSize();
                                 scatterplot.resize(left, scatterplotRegionBounds.getMinY(), scatterplotSize, scatterplotSize);
                             } else {
-                                log.info("Highlighted Column exists");
                                 double centerX = yAxis.getCenterX();
                                 double left = centerX - (scatterplotSize / 2.) - scatterplot.getAxisSize();
                                 scatterplot.resize(left, scatterplotRegionBounds.getMinY(), scatterplotSize, scatterplotSize);
                             }
                         }
                     }
-
-//                    if (!summaryShapeGroup.getChildren().isEmpty()) {
-//                        summaryShapeGroup.getChildren().clear();
-//                    }
 
                     // add tuples polylines from data model
                     if (getPolylineDisplayMode() == POLYLINE_DISPLAY_MODE.POLYLINES) {
@@ -920,22 +885,11 @@ public class PCPView extends Region implements DataTableListener {
     }
 
     private void handleQueryChange() {
-//        if (getShowHistograms()) {
-//            histogramGroup.getChildren().clear();
-//        }
-
         for (int iaxis = 0; iaxis < axisList.size(); iaxis++) {
             PCPAxis pcpAxis = axisList.get(iaxis);
 
             double axisLeft = plotRegionBounds.getMinX() + (iaxis * axisSpacing);
             pcpAxis.resize(axisLeft, pcpRegionBounds.getMinY(), axisSpacing, pcpRegionBounds.getHeight());
-
-//            if (getShowHistograms()) {
-//                if (!(pcpAxis instanceof PCPCategoricalAxis)) {
-//                    histogramGroup.getChildren().add(0, pcpAxis.getHistogramBinRectangleGroup());
-//                    histogramGroup.getChildren().add(1, pcpAxis.getQueryHistogramBinRectangleGroup());
-//                }
-//            }
         }
 
         if (isShowingScatterplots()) {
@@ -954,11 +908,6 @@ public class PCPView extends Region implements DataTableListener {
                     PCPBinSet.layoutBins();
                 }
                 redrawView();
-                // TODO: Is the final else needed here (test and remove)
-//        } else if (getPolylineDisplayMode() == POLYLINE_DISPLAY_MODE.NO_POLYLINES) {
-////            summaryShapeGroup.getChildren().clear();
-////            SummaryShapeBuilder.buildShapes(axisList, this, summaryShapeGroup);
-//            redrawView();
             }
         }
     }
@@ -967,7 +916,6 @@ public class PCPView extends Region implements DataTableListener {
         removeAllAxisSelectionGraphics();
         selectedCanvas.getGraphicsContext2D().clearRect(0, 0, getWidth(), getHeight());
         unselectedCanvas.getGraphicsContext2D().clearRect(0, 0, getWidth(), getHeight());
-//        histogramGroup.getChildren().clear();
 
         if (axisList != null && !axisList.isEmpty()) {
             for (PCPAxis pcpAxis : axisList) {
@@ -993,27 +941,12 @@ public class PCPView extends Region implements DataTableListener {
 
     @Override
     public void dataModelReset(DataTable dataModel) {
-//        removeAllAxisSelectionGraphics();
-//        selectedCanvas.getGraphicsContext2D().clearRect(0, 0, getWidth(), getHeight());
-//        unselectedCanvas.getGraphicsContext2D().clearRect(0, 0, getWidth(), getHeight());
-//
-//        if (axisList != null && !axisList.isEmpty()) {
-//            for (PCPAxis pcpAxis : axisList) {
-//                pane.getChildren().removeAll(pcpAxis.getGraphicsGroup(), pcpAxis.getHistogramBinRectangleGroup(),
-//                        pcpAxis.getQueryHistogramBinRectangleGroup());
-//            }
-//            axisList.clear();
-//        }
-        log.info("Data Model Reset called");
         clearView();
 
         // Logic to prevent PCPView from drawing full details when data is large
         if (dataModel.getTupleCount() > 500000) {
             setShowPolylines(false);
             setShowSummaryStatistics(true);
-//            setPolylineDisplayMode(POLYLINE_DISPLAY_MODE.NO_POLYLINES);
-//            setStatisticsDisplayMode(STATISTICS_DISPLAY_MODE.MEAN_BOXPLOT);
-//            setShowHistograms(true);
         }
         reinitializeLayout();
     }
@@ -1026,22 +959,10 @@ public class PCPView extends Region implements DataTableListener {
     @Override
     public void dataModelNumHistogramBinsChanged(DataTable dataModel) {
         if (isShowingHistograms()) {
-//            histogramGroup.getChildren().clear();
-
-//            double left = getInsets().getLeft() + (axisSpacing / 2.);
-//            double top = getInsets().getTop();
-//            double pcpHeight = getHeight() - (getInsets().getTop() + getInsets().getBottom());
-
             for (int iaxis = 0; iaxis < axisList.size(); iaxis++) {
                 PCPAxis pcpAxis = axisList.get(iaxis);
                 double axisLeft = plotRegionBounds.getMinX() + (iaxis * axisSpacing);
                 pcpAxis.resize(axisLeft, pcpRegionBounds.getMinY(), axisSpacing, pcpRegionBounds.getHeight());
-//                pcpAxis.resize(left + (iaxis * axisSpacing), top, axisSpacing, pcpHeight);
-
-//                if (!(pcpAxis instanceof PCPCategoricalAxis)) {
-//                    histogramGroup.getChildren().add(0, pcpAxis.getHistogramBinRectangleGroup());
-//                    histogramGroup.getChildren().add(1, pcpAxis.getQueryHistogramBinRectangleGroup());
-//                }
             }
         }
 
@@ -1237,9 +1158,7 @@ public class PCPView extends Region implements DataTableListener {
     }
 
     @Override
-    public void dataModelColumnNameChanged(DataTable dataModel, Column column) {
-
-    }
+    public void dataModelColumnNameChanged(DataTable dataModel, Column column) { }
 
     public enum POLYLINE_DISPLAY_MODE {POLYLINES, BINNED_POLYLINES}
 
