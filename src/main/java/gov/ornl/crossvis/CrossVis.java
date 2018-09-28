@@ -947,6 +947,9 @@ public class CrossVis extends Application implements DataTableListener {
             WritableImage pcpSnapshotImage = pcpView.getSnapshot(scaleFactor);
 
             try {
+                if (!imageFile.getName().endsWith(".png")) {
+                    imageFile = new File(imageFile.getParent(), imageFile.getName() + ".png");
+                }
                 ImageIO.write(SwingFXUtils.fromFXImage(pcpSnapshotImage, null), "png", imageFile);
                 preferences.put(CrossVisPreferenceKeys.LAST_SNAPSHOT_DIRECTORY, imageFile.getParentFile().getAbsolutePath());
 
