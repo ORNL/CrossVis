@@ -8,20 +8,17 @@ import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
-import javafx.geometry.Orientation;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
 import javafx.scene.SceneAntialiasing;
 import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 
 import java.io.File;
 import java.io.IOException;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.logging.Logger;
 
@@ -58,28 +55,29 @@ public class PCPViewTest extends Application {
             public void handle(ActionEvent event) {
                 try {
                     long start = System.currentTimeMillis();
-                    ArrayList<String> ignoreColumnNames = new ArrayList<>();
-                    ignoreColumnNames.add("CMEDV");
-                    ignoreColumnNames.add("INDUS");
-                    ignoreColumnNames.add("CHAS");
-                    ignoreColumnNames.add("NOX");
-                    ignoreColumnNames.add("RM");
-                    ignoreColumnNames.add("DIS");
-                    ignoreColumnNames.add("RAD");
-                    ignoreColumnNames.add("PTRATIO");
-                    ignoreColumnNames.add("B");
-                    ignoreColumnNames.add("LSTAT");
-                    IOUtilities.readCSV(new File("data/csv/boston_corrected_cleaned.csv"), ignoreColumnNames,
-                            null, null, null, dataTable);
+//                    ArrayList<String> ignoreColumnNames = new ArrayList<>();
+//                    ignoreColumnNames.add("CMEDV");
+//                    ignoreColumnNames.add("INDUS");
+//                    ignoreColumnNames.add("CHAS");
+//                    ignoreColumnNames.add("NOX");
+//                    ignoreColumnNames.add("RM");
+//                    ignoreColumnNames.add("DIS");
+//                    ignoreColumnNames.add("RAD");
+//                    ignoreColumnNames.add("PTRATIO");
+//                    ignoreColumnNames.add("B");
+//                    ignoreColumnNames.add("LSTAT");
+//                    IOUtilities.readCSV(new File("data/csv/boston_corrected_cleaned.csv"), ignoreColumnNames,
+//                            null, null, null, dataTable);
+
 //                    IOUtilities.readCSV(new File("data/csv/cars.csv"), null, null,
 //                            null, null, dataTable);
 //                    IOUtilities.readCSV(new File("/Users/csg/Dropbox (ORNL)/projects/SciDAC/data/2018-01-RiccuitoEnsemble/QMCdaily_US_combined.csv"),
 //                            null, null, null, null, dataTable);
 
-//                    ArrayList<String> categoricalColumnNames = new ArrayList<>();
-//                    categoricalColumnNames.add("Origin");
-//                    IOUtilities.readCSV(new File("data/csv/cars-cat.csv"), null, categoricalColumnNames,
-//                            null, null, dataTable);
+                    ArrayList<String> categoricalColumnNames = new ArrayList<>();
+                    categoricalColumnNames.add("Origin");
+                    IOUtilities.readCSV(new File("data/csv/cars-cat.csv"), null, categoricalColumnNames,
+                            null, null, dataTable);
 
 //                    ArrayList<String> temporalColumnNames = new ArrayList<>();
 //                    temporalColumnNames.add("Date");
@@ -156,6 +154,9 @@ public class PCPViewTest extends Application {
         CheckBox showUnselectedPolylinesCB = new CheckBox("Show Unselected Polylines");
         showUnselectedPolylinesCB.selectedProperty().bindBidirectional(pcpView.showUnselectedItemsProperty());
 
+        CheckBox showCorrelationIndicatorsCB = new CheckBox("Show Correlations");
+        showCorrelationIndicatorsCB.selectedProperty().bindBidirectional(pcpView.showCorrelationsProperty());
+
         HBox settingsPane = new HBox();
         settingsPane.setSpacing(2.);
         settingsPane.setPadding(new Insets(4));
@@ -169,6 +170,7 @@ public class PCPViewTest extends Application {
         settingsPane.getChildren().add(showScatterplotsCB);
         settingsPane.getChildren().add(statisticsDisplayModeChoiceBox);
         settingsPane.getChildren().add(polylineDisplayModeChoiceBox);
+        settingsPane.getChildren().add(showCorrelationIndicatorsCB);
         settingsPane.getChildren().add(opacitySlider);
 
 //        SplitPane mainSplit = new SplitPane(settingsPane, scrollPane);

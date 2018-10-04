@@ -739,6 +739,10 @@ public class CrossVis extends Application implements DataTableListener {
         showSummaryStatsMI.setAccelerator(new KeyCodeCombination(KeyCode.S, KeyCombination.META_DOWN, KeyCombination.SHIFT_DOWN));
         showSummaryStatsMI.selectedProperty().bindBidirectional(pcpView.showSummaryStatisticsProperty());
 
+        CheckMenuItem showCorrelationsMI = new CheckMenuItem("Show Parallel Coordinate Axis Correlations");
+        showCorrelationsMI.setAccelerator(new KeyCodeCombination(KeyCode.C, KeyCombination.META_DOWN));
+        showCorrelationsMI.selectedProperty().bindBidirectional(pcpView.showCorrelationsProperty());
+
         Menu summaryStatsDisplayModeMenu = new Menu("Axis Statistics Display Mode");
         ToggleGroup summaryStatsDisplayModeMenuGroup = new ToggleGroup();
 
@@ -863,7 +867,7 @@ public class CrossVis extends Application implements DataTableListener {
             }
         });
 
-        viewMenu.getItems().addAll(showScatterplotsMI, showHistogramsMI, showPolylinesMI, showSummaryStatsMI,
+        viewMenu.getItems().addAll(showScatterplotsMI, showHistogramsMI, showPolylinesMI, showSummaryStatsMI, showCorrelationsMI,
                 summaryStatsDisplayModeMenu, polylineDisplayModeMenu, axisLayoutMenu, changeHistogramBinCountMenuItem,
                 enableDataTableUpdatesCheckMenuItem);
 

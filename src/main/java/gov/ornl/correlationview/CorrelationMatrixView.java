@@ -245,7 +245,6 @@ public class CorrelationMatrixView extends Region implements DataTableListener {
                     cell.getCellRectangle().setFill(getDiagonal());
                 } else {
                     double correlation = cell.getCorrelation();
-                    Color fillColor;
                     if (correlation > 0) {
                         cell.getCellRectangle().setFill(GraphicsUtil.lerpColorFX(getZeroColor(), getPositiveColor(), correlation));
                     } else {

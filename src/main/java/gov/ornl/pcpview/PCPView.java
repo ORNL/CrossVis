@@ -4,6 +4,7 @@ import gov.ornl.datatable.*;
 import gov.ornl.scatterplot.Scatterplot;
 import javafx.beans.property.*;
 import javafx.geometry.BoundingBox;
+import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.scene.Group;
 import javafx.scene.SnapshotParameters;
@@ -30,6 +31,8 @@ public class PCPView extends Region implements DataTableListener {
             Color.STEELBLUE.getGreen(), Color.STEELBLUE.getBlue(), DEFAULT_LINE_OPACITY);
     private final static Color DEFAULT_UNSELECTED_ITEMS_COLOR = new Color(Color.LIGHTGRAY.getRed(),
             Color.LIGHTGRAY.getGreen(), Color.LIGHTGRAY.getBlue(), DEFAULT_LINE_OPACITY);
+    private final static int DEFAULT_CORRELATION_RECTANGLE_HEIGHT = 14;
+    private final static int DEFAULT_CORRELATION_RECTANGLE_WIDTH = 24;
 
     private final static POLYLINE_DISPLAY_MODE DEFAULT_POLYLINE_DISPLAY_MODE = POLYLINE_DISPLAY_MODE.POLYLINES;
 
@@ -65,6 +68,11 @@ public class PCPView extends Region implements DataTableListener {
     private DataTable dataTable;
     private ArrayList<PCPAxis> axisList = new ArrayList<>();
     private ArrayList<Scatterplot> scatterplotList = new ArrayList<>();
+    private ArrayList<CorrelationIndicatorRectangle> correlationRectangleList = new ArrayList<>();
+    private Group correlationRectangleGroup = new Group();
+
+    private Bounds correlationRegionBounds;
+//    private Rectangle correlationRegionBoundsRectangle;
 
     private ArrayList<PCPTuple> tupleList;
     private HashSet<PCPTuple> unselectedTupleSet = new HashSet<>();
@@ -108,7 +116,7 @@ public class PCPView extends Region implements DataTableListener {
         }
     }
 
-    public BooleanProperty getShowCorrelationsProperty() { return showCorrelations; }
+    public BooleanProperty showCorrelationsProperty() { return showCorrelations; }
 
     public WritableImage getSnapshot(int scaleFactor) {
         SnapshotParameters snapshotParameters = new SnapshotParameters();
@@ -292,6 +300,14 @@ public class PCPView extends Region implements DataTableListener {
         });
 
         showCorrelations.addListener(observable -> {
+            if (isShowingCorrelations()) {
+                pane.getChildren().add(correlationRectangleGroup);
+                reinitializeCorrelationRectangles();
+                setCorrelationRectangleValues();
+            } else {
+                pane.getChildren().remove(correlationRectangleGroup);
+            }
+
             resizeView();
         });
 
@@ -373,9 +389,15 @@ public class PCPView extends Region implements DataTableListener {
 //        scatterplotRegionRectangle.setFill(Color.TRANSPARENT);
 //        scatterplotRegionRectangle.setMouseTransparent(true);
 
+//        correlationRegionBoundsRectangle = new Rectangle();
+//        correlationRegionBoundsRectangle.setStroke(Color.RED);
+//        correlationRegionBoundsRectangle.setStrokeWidth(1.5);
+//        correlationRegionBoundsRectangle.setFill(Color.TRANSPARENT);
+//        correlationRegionBoundsRectangle.setMouseTransparent(true);
+
         pane = new Pane();
         pane.setBackground(new Background(new BackgroundFill(backgroundColor.get(), new CornerRadii(0), Insets.EMPTY)));
-        pane.getChildren().addAll(unselectedCanvas, selectedCanvas /*histogramGroup, summaryShapeGroup*/);
+        pane.getChildren().addAll(unselectedCanvas, selectedCanvas, correlationRectangleGroup);
 
         getChildren().add(pane);
     }
@@ -473,14 +495,18 @@ public class PCPView extends Region implements DataTableListener {
 
             double pcpHeight = plotHeight * .7;
             double scatterplotSize = 0.;
+            double correlationIndicatorHeight = 0.;
 
             if (isShowingScatterplots()) {
                 scatterplotSize = plotHeight - pcpHeight;
 
                 if (scatterplotSize > (axisSpacing * .8)) {
                     scatterplotSize = axisSpacing * .8;
-//                pcpHeight = plotHeight - scatterplotSize;
                 }
+            }
+
+            if (isShowingCorrelations()) {
+                correlationIndicatorHeight = DEFAULT_CORRELATION_RECTANGLE_HEIGHT;
             }
 
             if (plotWidth > 0 && plotHeight > 0) {
@@ -494,13 +520,20 @@ public class PCPView extends Region implements DataTableListener {
 
                 if (axisList != null) {
                     pcpRegionBounds = new BoundingBox(plotRegionBounds.getMinX(), plotRegionBounds.getMinY(),
-                            plotRegionBounds.getWidth(), plotHeight - (scatterplotSize + plotRegionPadding));
+                            plotRegionBounds.getWidth(), plotHeight - (correlationIndicatorHeight + scatterplotSize + plotRegionPadding));
 //                    pcpRegionRectangle.setX(pcpRegionBounds.getMinX());
 //                    pcpRegionRectangle.setY(pcpRegionBounds.getMinY());
 //                    pcpRegionRectangle.setWidth(pcpRegionBounds.getWidth());
 //                    pcpRegionRectangle.setHeight(pcpRegionBounds.getHeight());
 
-                    scatterplotRegionBounds = new BoundingBox(plotRegionBounds.getMinX(), pcpRegionBounds.getMaxY() + plotRegionPadding,
+                    correlationRegionBounds = new BoundingBox(plotRegionBounds.getMinX(), pcpRegionBounds.getMaxY() + plotRegionPadding,
+                            plotRegionBounds.getWidth(), correlationIndicatorHeight);
+//                    correlationRegionBoundsRectangle.setX(correlationRegionBounds.getMinX());
+//                    correlationRegionBoundsRectangle.setY(correlationRegionBounds.getMinY());
+//                    correlationRegionBoundsRectangle.setWidth(correlationRegionBounds.getWidth());
+//                    correlationRegionBoundsRectangle.setHeight(correlationRegionBounds.getHeight());
+
+                    scatterplotRegionBounds = new BoundingBox(plotRegionBounds.getMinX(), correlationRegionBounds.getMaxY() + plotRegionPadding,
                             plotRegionBounds.getWidth(), scatterplotSize);
 //                    scatterplotRegionRectangle.setX(scatterplotRegionBounds.getMinX());
 //                    scatterplotRegionRectangle.setY(scatterplotRegionBounds.getMinY());
@@ -511,6 +544,18 @@ public class PCPView extends Region implements DataTableListener {
                         PCPAxis pcpAxis = axisList.get(iaxis);
                         double axisLeft = plotRegionBounds.getMinX() + (iaxis * axisSpacing);
                         pcpAxis.resize(axisLeft, pcpRegionBounds.getMinY(), axisSpacing, pcpRegionBounds.getHeight());
+                    }
+
+                    if (isShowingCorrelations()) {
+                        for (int i = 0; i < correlationRectangleList.size(); i++) {
+                            CorrelationIndicatorRectangle correlationIndicatorRectangle = correlationRectangleList.get(i);
+                            correlationIndicatorRectangle.setY(correlationRegionBounds.getMinY());
+                            if (dataTable.getHighlightedColumn() != null) {
+                                correlationIndicatorRectangle.setX(correlationIndicatorRectangle.getAxis1().getCenterX() - (correlationIndicatorRectangle.getWidth() / 2.));
+                            } else {
+                                correlationIndicatorRectangle.setX(((correlationIndicatorRectangle.getAxis1().getCenterX() + correlationIndicatorRectangle.getAxis2().getCenterX()) / 2.) - (correlationIndicatorRectangle.getWidth() / 2.));
+                            }
+                        }
                     }
 
                     if (isShowingScatterplots()) {
@@ -532,11 +577,11 @@ public class PCPView extends Region implements DataTableListener {
 
                             if (dataTable.getHighlightedColumn() == null) {
                                 double centerX = (yAxis.getCenterX() + xAxis.getCenterX()) / 2.;
-                                double left = centerX - (scatterplotSize / 2.) - scatterplot.getAxisSize();
+                                double left = centerX - (scatterplotSize / 2.) - (scatterplot.getAxisSize() / 2.);
                                 scatterplot.resize(left, scatterplotRegionBounds.getMinY(), scatterplotSize, scatterplotSize);
                             } else {
                                 double centerX = yAxis.getCenterX();
-                                double left = centerX - (scatterplotSize / 2.) - scatterplot.getAxisSize();
+                                double left = centerX - (scatterplotSize / 2.) - (scatterplot.getAxisSize() / 2.);
                                 scatterplot.resize(left, scatterplotRegionBounds.getMinY(), scatterplotSize, scatterplotSize);
                             }
                         }
@@ -798,6 +843,8 @@ public class PCPView extends Region implements DataTableListener {
 
         reinitializeScatterplots();
 
+        reinitializeCorrelationRectangles();
+
         // add tuples polylines from data model
         tupleList = new ArrayList<>();
         for (int iTuple = 0; iTuple < dataTable.getTupleCount(); iTuple++) {
@@ -819,11 +866,18 @@ public class PCPView extends Region implements DataTableListener {
     }
 
     private void reinitializeScatterplots() {
-        if (isShowingScatterplots()) {
+        if (!scatterplotList.isEmpty()) {
             for (Scatterplot scatterplot : scatterplotList) {
                 pane.getChildren().remove(scatterplot.getGraphicsGroup());
             }
             scatterplotList.clear();
+        }
+
+        if (isShowingScatterplots()) {
+//            for (Scatterplot scatterplot : scatterplotList) {
+//                pane.getChildren().remove(scatterplot.getGraphicsGroup());
+//            }
+//            scatterplotList.clear();
 
             PCPAxis highlightedAxis = getHighlightedAxis();
             if (highlightedAxis != null) {
@@ -847,12 +901,61 @@ public class PCPView extends Region implements DataTableListener {
                     pane.getChildren().add(scatterplot.getGraphicsGroup());
                 }
             }
-        } else {
-            if (!scatterplotList.isEmpty()) {
-                for (Scatterplot scatterplot : scatterplotList) {
-                    pane.getChildren().remove(scatterplot.getGraphicsGroup());
+        }
+    }
+
+    private void reinitializeCorrelationRectangles() {
+        correlationRectangleGroup.getChildren().clear();
+        correlationRectangleList.clear();
+
+        if (isShowingCorrelations()) {
+            PCPAxis highlightedAxis = getHighlightedAxis();
+            if (highlightedAxis != null) {
+                if (highlightedAxis instanceof PCPDoubleAxis) {
+                    for (int i = 0; i < axisList.size(); i++) {
+                        PCPAxis axis = axisList.get(i);
+
+                        if (axis instanceof PCPDoubleAxis && axis != highlightedAxis) {
+                            CorrelationIndicatorRectangle correlationRectangle = new CorrelationIndicatorRectangle(axis, highlightedAxis);
+                            correlationRectangle.setStroke(Color.DARKGRAY);
+                            correlationRectangle.setWidth(DEFAULT_CORRELATION_RECTANGLE_WIDTH);
+                            correlationRectangle.setHeight(DEFAULT_CORRELATION_RECTANGLE_HEIGHT);
+                            correlationRectangleList.add(correlationRectangle);
+                            correlationRectangleGroup.getChildren().add(correlationRectangle);
+                        }
+                    }
                 }
-                scatterplotList.clear();
+            } else {
+                for (int i = 1; i < axisList.size(); i++) {
+                    if (axisList.get(i) instanceof PCPDoubleAxis && axisList.get(i-1) instanceof PCPDoubleAxis) {
+                        CorrelationIndicatorRectangle correlationRectangle = new CorrelationIndicatorRectangle(axisList.get(i - 1),
+                                axisList.get(i));
+                        correlationRectangle.setStroke(Color.DARKGRAY);
+                        correlationRectangle.setWidth(DEFAULT_CORRELATION_RECTANGLE_WIDTH);
+                        correlationRectangle.setHeight(DEFAULT_CORRELATION_RECTANGLE_HEIGHT);
+                        correlationRectangleList.add(correlationRectangle);
+                        correlationRectangleGroup.getChildren().add(correlationRectangle);
+                    }
+                }
+            }
+
+            setCorrelationRectangleValues();
+        }
+    }
+
+    private void setCorrelationRectangleValues() {
+        if (isShowingCorrelations()) {
+            for (CorrelationIndicatorRectangle corrRect : correlationRectangleList) {
+                int axis2Index = getAxisIndex(corrRect.getAxis2());
+
+                double corr;
+                if (dataTable.getActiveQuery().hasColumnSelections() && dataTable.getCalculateQueryStatistics()) {
+                    corr = ((DoubleColumnSummaryStats)dataTable.getActiveQuery().getColumnQuerySummaryStats(corrRect.getAxis1().getColumn())).getCorrelationCoefficientList().get(axis2Index);
+                } else {
+                    corr = ((DoubleColumnSummaryStats)corrRect.getAxis1().getColumn().getStatistics()).getCorrelationCoefficientList().get(axis2Index);
+                }
+
+                corrRect.setCorrelation(corr);
             }
         }
     }
@@ -867,6 +970,26 @@ public class PCPView extends Region implements DataTableListener {
         }
 
         return null;
+    }
+
+    private int getAxisIndex(PCPAxis axis) {
+        for (int i = 0; i < axisList.size(); i++) {
+            if (axis == axisList.get(i)) {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    private int getAxisIndex(Column column) {
+        for (int i = 0; i < axisList.size(); i++) {
+            if (axisList.get(i).getColumn() == column) {
+                return i;
+            }
+        }
+
+        return -1;
     }
 
     private void addAxis(Column column) {
@@ -897,6 +1020,10 @@ public class PCPView extends Region implements DataTableListener {
                 scatterplot.fillSelectionPointSets();
                 scatterplot.drawPoints();
             }
+        }
+
+        if (isShowingCorrelations()) {
+            setCorrelationRectangleValues();
         }
 
         if (isShowingPolylines()) {
@@ -948,6 +1075,7 @@ public class PCPView extends Region implements DataTableListener {
             setShowPolylines(false);
             setShowSummaryStatistics(true);
         }
+
         reinitializeLayout();
     }
 
