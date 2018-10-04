@@ -30,6 +30,8 @@ public class PCPTemporalAxis extends PCPAxis {
     public PCPTemporalAxis(PCPView pcpView, Column column, DataTable dataModel, Pane pane) {
         super(pcpView, column, dataModel, pane);
 
+        getAxisBar().setWidth(6);
+        
         minValueText.setText(((TemporalColumn)column).getStatistics().getStartInstant().toString());
         maxValueText.setText(((TemporalColumn)column).getStatistics().getEndInstant().toString());
 

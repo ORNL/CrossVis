@@ -1,7 +1,11 @@
 package gov.ornl.datatable;
 
+import javafx.util.Pair;
+
 import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalUnit;
 import java.util.Arrays;
 
 public class TemporalHistogram extends Histogram {
@@ -99,6 +103,45 @@ public class TemporalHistogram extends Histogram {
         }
     }
 
+    private Pair<ChronoUnit, Long> findBestTemporalUnit(Duration duration, int numBins) {
+        if (duration.toMillis() < numBins) {
+            return new Pair<ChronoUnit, Long>(ChronoUnit.MILLIS, duration.toMillis());
+        } else if ((duration.toMillis() * 1000) < numBins) {
+            return new Pair<ChronoUnit, Long>(ChronoUnit.SECONDS, duration.toMillis() * 1000);
+        } else if ((duration.toMillis() * 6000) < numBins) {
+            return new Pair<ChronoUnit, Long>(ChronoUnit.MINUTES, duration.toMillis() * 60000);
+        } else if (duration.toHours() < numBins) {
+            return new Pair<ChronoUnit, Long>(ChronoUnit.HOURS, duration.toHours());
+        } else {
+            return new Pair<ChronoUnit, Long>(ChronoUnit.DAYS, duration.toDays());
+        }
+
+//        while (!foundBestTemporalUnit) {
+//            long numUnits = duration.get(bestTemporalUnit);
+//            if (numUnits < numBins) {
+//                foundBestTemporalUnit = true;
+//            }
+//
+//            if (bestTemporalUnit == ChronoUnit.MILLIS) {
+//                bestTemporalUnit = ChronoUnit.SECONDS;
+//            } else if (bestTemporalUnit == ChronoUnit.SECONDS) {
+//                bestTemporalUnit = ChronoUnit.MINUTES;
+//            } else if (bestTemporalUnit == ChronoUnit.MINUTES) {
+//                bestTemporalUnit = ChronoUnit.HOURS;
+//            } else if (bestTemporalUnit == ChronoUnit.HOURS) {
+//                bestTemporalUnit = ChronoUnit.DAYS;
+//            } else if (bestTemporalUnit == ChronoUnit.DAYS) {
+//                bestTemporalUnit = ChronoUnit.WEEKS;
+//            } else if (bestTemporalUnit == ChronoUnit.YEARS) {
+//                bestTemporalUnit = ChronoUnit.DECADES;
+//            } else if (bestTemporalUnit == ChronoUnit.DECADES) {
+//                bestTemporalUnit = ChronoUnit.CENTURIES;
+//                foundBestTemporalUnit = true;
+//            }
+//        }
+
+//        return bestTemporalUnit;
+    }
     
     public void calculate() {
         if (startInstant == null || endInstant == null) {
@@ -106,6 +149,11 @@ public class TemporalHistogram extends Histogram {
         }
 
         histogramDuration = Duration.between(startInstant, endInstant);
+
+        // find best bin size for temporal time units
+//        Pair<ChronoUnit, Long> bestTemporalUnit = findBestTemporalUnit(histogramDuration, numBins);
+//        long bestNumBins = histogramDuration.get(bestTemporalUnit);
+
         binDuration = histogramDuration.dividedBy(numBins);
 
         binCounts = new int[numBins];

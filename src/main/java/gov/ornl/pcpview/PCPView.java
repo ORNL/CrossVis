@@ -874,11 +874,6 @@ public class PCPView extends Region implements DataTableListener {
         }
 
         if (isShowingScatterplots()) {
-//            for (Scatterplot scatterplot : scatterplotList) {
-//                pane.getChildren().remove(scatterplot.getGraphicsGroup());
-//            }
-//            scatterplotList.clear();
-
             PCPAxis highlightedAxis = getHighlightedAxis();
             if (highlightedAxis != null) {
                 for (int iaxis = 0; iaxis < axisList.size(); iaxis++) {
@@ -894,9 +889,6 @@ public class PCPView extends Region implements DataTableListener {
                     PCPAxis xAxis = axisList.get(iaxis);
                     PCPAxis yAxis = axisList.get(iaxis - 1);
                     Scatterplot scatterplot = new Scatterplot(xAxis.getColumn(), yAxis.getColumn());
-                    //                scatterplot.setOnSelectionDragged(event -> {
-                    //                    log.info("Got a scatterplot selection event from " + xAxis.getColumn().getName() + " x " + yAxis.getColumn().getName());
-                    //                });
                     scatterplotList.add(scatterplot);
                     pane.getChildren().add(scatterplot.getGraphicsGroup());
                 }
