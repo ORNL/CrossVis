@@ -41,6 +41,7 @@ public abstract class PCPAxis {
     public final static double DEFAULT_NAME_TEXT_SIZE = 12d;
     public final static double DEFAULT_CONTEXT_HEIGHT = 10d;
     public final static double DEFAULT_BAR_WIDTH = 14d;
+    public final static double DEFAULT_NARROW_BAR_WIDTH = 6d;
     public final static double DEFAULT_TEXT_SIZE = 10d;
     public final static double HOVER_TEXT_SIZE = 8d;
     public final static double DEFAULT_STROKE_WIDTH = 1.5;

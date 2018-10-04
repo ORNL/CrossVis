@@ -337,7 +337,7 @@ public class PCPDoubleAxis extends PCPAxis {
         if (getPCPView().isShowingSummaryStatistics()) {
             getAxisBar().setWidth(DEFAULT_BAR_WIDTH);
         } else {
-            getAxisBar().setWidth(6);
+            getAxisBar().setWidth(DEFAULT_NARROW_BAR_WIDTH);
         }
 
         super.resize(left, top, width, height);
