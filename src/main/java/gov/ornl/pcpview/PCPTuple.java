@@ -35,12 +35,12 @@ public class PCPTuple {
 
     public Tuple getTuple () { return tuple; }
 
-    public void layout(ArrayList<PCPAxis> axisList) {
+    public void layout(ArrayList<PCPUnivariateAxis> axisList) {
         xPoints = new double[tuple.getElementCount()];
         yPoints = new double[tuple.getElementCount()];
 
         for (int i = 0; i < tuple.getElementCount(); i++) {
-            PCPAxis axis = axisList.get(i);
+            PCPUnivariateAxis axis = axisList.get(i);
             if (axis instanceof PCPTemporalAxis) {
                 PCPTemporalAxis temporalAxis = (PCPTemporalAxis)axis;
                 Instant instant = (Instant)tuple.getElement(i);

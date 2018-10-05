@@ -66,7 +66,7 @@ public class PCPView extends Region implements DataTableListener {
 //    private Group histogramGroup = new Group();
 
     private DataTable dataTable;
-    private ArrayList<PCPAxis> axisList = new ArrayList<>();
+    private ArrayList<PCPUnivariateAxis> axisList = new ArrayList<>();
     private ArrayList<Scatterplot> scatterplotList = new ArrayList<>();
     private ArrayList<CorrelationIndicatorRectangle> correlationRectangleList = new ArrayList<>();
     private Group correlationRectangleGroup = new Group();
@@ -205,7 +205,7 @@ public class PCPView extends Region implements DataTableListener {
 
         labelsColor.addListener((observable, oldValue, newValue) -> {
             if (newValue != null) {
-//                for (PCPAxis pcpAxis : axisList) {
+//                for (PCPUnivariateAxis pcpAxis : axisList) {
 //                    pcpAxis.setLabelColor(newValue);
 //                }
             }
@@ -409,7 +409,7 @@ public class PCPView extends Region implements DataTableListener {
         resizeView();
     }
 
-    public final PCPAxis getAxis(int index) {
+    public final PCPUnivariateAxis getAxis(int index) {
         return axisList.get(index);
     }
 
@@ -541,7 +541,7 @@ public class PCPView extends Region implements DataTableListener {
 //                    scatterplotRegionRectangle.setHeight(scatterplotRegionBounds.getHeight());
 
                     for (int iaxis = 0; iaxis < axisList.size(); iaxis++) {
-                        PCPAxis pcpAxis = axisList.get(iaxis);
+                        PCPUnivariateAxis pcpAxis = axisList.get(iaxis);
                         double axisLeft = plotRegionBounds.getMinX() + (iaxis * axisSpacing);
                         pcpAxis.resize(axisLeft, pcpRegionBounds.getMinY(), axisSpacing, pcpRegionBounds.getHeight());
                     }
@@ -561,9 +561,9 @@ public class PCPView extends Region implements DataTableListener {
                     if (isShowingScatterplots()) {
                         for (int i = 0; i < scatterplotList.size(); i++) {
                             Scatterplot scatterplot = scatterplotList.get(i);
-                            PCPAxis yAxis = null;
-                            PCPAxis xAxis = null;
-                            for (PCPAxis axis : axisList) {
+                            PCPUnivariateAxis yAxis = null;
+                            PCPUnivariateAxis xAxis = null;
+                            for (PCPUnivariateAxis axis : axisList) {
                                 if (axis.getColumn() == scatterplot.getYColumn()) {
                                     yAxis = axis;
                                 } else if (axis.getColumn() == scatterplot.getXColumn()) {
@@ -608,7 +608,7 @@ public class PCPView extends Region implements DataTableListener {
     }
 
     private void removeAllAxisSelectionGraphics() {
-        for (PCPAxis pcpAxis : axisList) {
+        for (PCPUnivariateAxis pcpAxis : axisList) {
             if (!pcpAxis.getAxisSelectionList().isEmpty()) {
                 for (PCPAxisSelection pcpAxisSelection : pcpAxis.getAxisSelectionList()) {
                     pane.getChildren().remove(pcpAxisSelection.getGraphicsGroup());
@@ -810,13 +810,13 @@ public class PCPView extends Region implements DataTableListener {
         if (axisList.isEmpty()) {
             for (int iaxis = 0; iaxis < dataTable.getColumnCount(); iaxis++) {
 
-                PCPAxis pcpAxis = null;
+                PCPUnivariateAxis pcpAxis = null;
                 if (dataTable.getColumn(iaxis) instanceof TemporalColumn) {
-                    pcpAxis = new PCPTemporalAxis(this, dataTable.getColumn(iaxis), dataTable, pane);
+                    pcpAxis = new PCPTemporalAxis(this, dataTable.getColumn(iaxis));
                 } else if (dataTable.getColumn(iaxis) instanceof CategoricalColumn) {
-                    pcpAxis = new PCPCategoricalAxis(this, dataTable.getColumn(iaxis), dataTable, pane);
+                    pcpAxis = new PCPCategoricalAxis(this, dataTable.getColumn(iaxis));
                 } else if (dataTable.getColumn(iaxis) instanceof DoubleColumn){
-                    pcpAxis = new PCPDoubleAxis(this, dataTable.getColumn(iaxis), dataTable, pane);
+                    pcpAxis = new PCPDoubleAxis(this, dataTable.getColumn(iaxis));
                 }
 
                 if (pcpAxis != null) {
@@ -826,11 +826,11 @@ public class PCPView extends Region implements DataTableListener {
                 }
             }
         } else {
-            ArrayList<PCPAxis> newAxisList = new ArrayList<>();
+            ArrayList<PCPUnivariateAxis> newAxisList = new ArrayList<>();
             for (int icolumn = 0; icolumn < dataTable.getColumnCount(); icolumn++) {
                 Column column = dataTable.getColumn(icolumn);
                 for (int iaxis = 0; iaxis < axisList.size(); iaxis++) {
-                    PCPAxis pcpAxis = axisList.get(iaxis);
+                    PCPUnivariateAxis pcpAxis = axisList.get(iaxis);
                     if (pcpAxis.getColumn() == column) {
                         newAxisList.add(pcpAxis);
                         break;
@@ -874,10 +874,10 @@ public class PCPView extends Region implements DataTableListener {
         }
 
         if (isShowingScatterplots()) {
-            PCPAxis highlightedAxis = getHighlightedAxis();
+            PCPUnivariateAxis highlightedAxis = getHighlightedAxis();
             if (highlightedAxis != null) {
                 for (int iaxis = 0; iaxis < axisList.size(); iaxis++) {
-                    PCPAxis currentAxis = axisList.get(iaxis);
+                    PCPUnivariateAxis currentAxis = axisList.get(iaxis);
                     if (highlightedAxis != currentAxis) {
                         Scatterplot scatterplot = new Scatterplot(highlightedAxis.getColumn(), currentAxis.getColumn());
                         scatterplotList.add(scatterplot);
@@ -886,8 +886,8 @@ public class PCPView extends Region implements DataTableListener {
                 }
             } else {
                 for (int iaxis = 1; iaxis < axisList.size(); iaxis++) {
-                    PCPAxis xAxis = axisList.get(iaxis);
-                    PCPAxis yAxis = axisList.get(iaxis - 1);
+                    PCPUnivariateAxis xAxis = axisList.get(iaxis);
+                    PCPUnivariateAxis yAxis = axisList.get(iaxis - 1);
                     Scatterplot scatterplot = new Scatterplot(xAxis.getColumn(), yAxis.getColumn());
                     scatterplotList.add(scatterplot);
                     pane.getChildren().add(scatterplot.getGraphicsGroup());
@@ -901,11 +901,11 @@ public class PCPView extends Region implements DataTableListener {
         correlationRectangleList.clear();
 
         if (isShowingCorrelations()) {
-            PCPAxis highlightedAxis = getHighlightedAxis();
+            PCPUnivariateAxis highlightedAxis = getHighlightedAxis();
             if (highlightedAxis != null) {
                 if (highlightedAxis instanceof PCPDoubleAxis) {
                     for (int i = 0; i < axisList.size(); i++) {
-                        PCPAxis axis = axisList.get(i);
+                        PCPUnivariateAxis axis = axisList.get(i);
 
                         if (axis instanceof PCPDoubleAxis && axis != highlightedAxis) {
                             CorrelationIndicatorRectangle correlationRectangle = new CorrelationIndicatorRectangle(axis, highlightedAxis);
@@ -952,9 +952,9 @@ public class PCPView extends Region implements DataTableListener {
         }
     }
 
-    private PCPAxis getHighlightedAxis() {
+    private PCPUnivariateAxis getHighlightedAxis() {
         if (dataTable.getHighlightedColumn() != null) {
-            for (PCPAxis axis : axisList) {
+            for (PCPUnivariateAxis axis : axisList) {
                 if (axis.getColumn() == dataTable.getHighlightedColumn()) {
                     return axis;
                 }
@@ -964,7 +964,11 @@ public class PCPView extends Region implements DataTableListener {
         return null;
     }
 
-    private int getAxisIndex(PCPAxis axis) {
+    protected Pane getPane() { return pane; }
+
+    public DataTable getDataTable() { return dataTable; }
+
+    private int getAxisIndex(PCPUnivariateAxis axis) {
         for (int i = 0; i < axisList.size(); i++) {
             if (axis == axisList.get(i)) {
                 return i;
@@ -985,13 +989,13 @@ public class PCPView extends Region implements DataTableListener {
     }
 
     private void addAxis(Column column) {
-        PCPAxis pcpAxis = null;
+        PCPUnivariateAxis pcpAxis = null;
         if (column instanceof DoubleColumn) {
-            pcpAxis = new PCPDoubleAxis(this, column, dataTable, pane);
+            pcpAxis = new PCPDoubleAxis(this, column);
         } else if (column instanceof TemporalColumn) {
-            pcpAxis = new PCPTemporalAxis(this, column, dataTable, pane);
+            pcpAxis = new PCPTemporalAxis(this, column);
         } else if (column instanceof CategoricalColumn) {
-            pcpAxis = new PCPCategoricalAxis(this, column, dataTable, pane);
+            pcpAxis = new PCPCategoricalAxis(this, column);
         }
 
         pcpAxis.titleTextRotationProperty().bind(nameTextRotationProperty());
@@ -1001,7 +1005,7 @@ public class PCPView extends Region implements DataTableListener {
 
     private void handleQueryChange() {
         for (int iaxis = 0; iaxis < axisList.size(); iaxis++) {
-            PCPAxis pcpAxis = axisList.get(iaxis);
+            PCPUnivariateAxis pcpAxis = axisList.get(iaxis);
 
             double axisLeft = plotRegionBounds.getMinX() + (iaxis * axisSpacing);
             pcpAxis.resize(axisLeft, pcpRegionBounds.getMinY(), axisSpacing, pcpRegionBounds.getHeight());
@@ -1037,7 +1041,7 @@ public class PCPView extends Region implements DataTableListener {
         unselectedCanvas.getGraphicsContext2D().clearRect(0, 0, getWidth(), getHeight());
 
         if (axisList != null && !axisList.isEmpty()) {
-            for (PCPAxis pcpAxis : axisList) {
+            for (PCPUnivariateAxis pcpAxis : axisList) {
                 pane.getChildren().removeAll(pcpAxis.getGraphicsGroup());
             }
             axisList.clear();
@@ -1050,8 +1054,8 @@ public class PCPView extends Region implements DataTableListener {
     }
 
     public void setGeographicAxes(Column latColumn, Column lonColumn) {
-        PCPAxis latAxis = getAxisForColumn(latColumn);
-        PCPAxis lonAxis = getAxisForColumn(lonColumn);
+        PCPUnivariateAxis latAxis = getAxisForColumn(latColumn);
+        PCPUnivariateAxis lonAxis = getAxisForColumn(lonColumn);
     }
 
     public void clearGeographicAxes() {
@@ -1080,7 +1084,7 @@ public class PCPView extends Region implements DataTableListener {
     public void dataModelNumHistogramBinsChanged(DataTable dataModel) {
         if (isShowingHistograms()) {
             for (int iaxis = 0; iaxis < axisList.size(); iaxis++) {
-                PCPAxis pcpAxis = axisList.get(iaxis);
+                PCPUnivariateAxis pcpAxis = axisList.get(iaxis);
                 double axisLeft = plotRegionBounds.getMinX() + (iaxis * axisSpacing);
                 pcpAxis.resize(axisLeft, pcpRegionBounds.getMinY(), axisSpacing, pcpRegionBounds.getHeight());
             }
@@ -1096,7 +1100,7 @@ public class PCPView extends Region implements DataTableListener {
 
     private PCPAxisSelection getAxisSelectionforColumnSelection(ColumnSelection columnSelection) {
         if (axisList != null) {
-            for (PCPAxis axis : axisList) {
+            for (PCPUnivariateAxis axis : axisList) {
                 if (axis.getColumn() == columnSelection.getColumn()) {
                     for (PCPAxisSelection axisSelection : axis.getAxisSelectionList()) {
                         if (axisSelection.getColumnSelectionRange() == columnSelection) {
@@ -1110,8 +1114,8 @@ public class PCPView extends Region implements DataTableListener {
         return null;
     }
 
-    private PCPAxis getAxisForColumn(Column column) {
-        for (PCPAxis axis : axisList) {
+    private PCPUnivariateAxis getAxisForColumn(Column column) {
+        for (PCPUnivariateAxis axis : axisList) {
             if (axis.getColumn() == column) {
                 return axis;
             }
@@ -1122,7 +1126,7 @@ public class PCPView extends Region implements DataTableListener {
 
     @Override
     public void dataModelColumnSelectionAdded(DataTable dataTable, ColumnSelection columnSelection) {
-        PCPAxis axis = getAxisForColumn(columnSelection.getColumn());
+        PCPUnivariateAxis axis = getAxisForColumn(columnSelection.getColumn());
         if (axis != null) {
             // add it to the appropriate column axis (it is exists the axis will ignore the add request)
             axis.addAxisSelection(columnSelection);
@@ -1134,7 +1138,7 @@ public class PCPView extends Region implements DataTableListener {
     @Override
     public void dataModelColumnSelectionRemoved(DataTable dataTable, ColumnSelection columnSelection) {
         // find selection column axis and remove selection (if it doesn't exist, the axis will ignore the remove request)
-        PCPAxis axis = getAxisForColumn(columnSelection.getColumn());
+        PCPUnivariateAxis axis = getAxisForColumn(columnSelection.getColumn());
         if (axis != null) {
             axis.removeAxisSelection(columnSelection);
         }
@@ -1144,7 +1148,7 @@ public class PCPView extends Region implements DataTableListener {
 
     @Override
     public void dataTableAllColumnSelectionsRemoved(DataTable dataModel) {
-        for (PCPAxis axis : axisList) {
+        for (PCPUnivariateAxis axis : axisList) {
             axis.removeAllAxisSelections();
         }
 
@@ -1153,7 +1157,7 @@ public class PCPView extends Region implements DataTableListener {
 
     @Override
     public void dataTableAllColumnSelectionsForColumnRemoved(DataTable dataModel, Column column) {
-        PCPAxis axis = getAxisForColumn(column);
+        PCPUnivariateAxis axis = getAxisForColumn(column);
         if (axis != null) {
             axis.removeAllAxisSelections();
         }
@@ -1169,11 +1173,11 @@ public class PCPView extends Region implements DataTableListener {
     @Override
     public void dataModelHighlightedColumnChanged(DataTable dataModel, Column oldHighlightedColumn, Column newHighlightedColumn) {
         if (dataModel.getHighlightedColumn() == null) {
-            for (PCPAxis pcpAxis : axisList) {
+            for (PCPUnivariateAxis pcpAxis : axisList) {
                 pcpAxis.setHighlighted(false);
             }
         } else {
-            for (PCPAxis pcpAxis : axisList) {
+            for (PCPUnivariateAxis pcpAxis : axisList) {
                 if (pcpAxis.getColumn() == newHighlightedColumn) {
                     pcpAxis.setHighlighted(true);
                 } else if (pcpAxis.getColumn() == oldHighlightedColumn) {
@@ -1188,7 +1192,7 @@ public class PCPView extends Region implements DataTableListener {
     @Override
     public void dataModelTuplesAdded(DataTable dataModel, ArrayList<Tuple> newTuples) {
         // clear axis selections
-        for (PCPAxis pcpAxis : axisList) {
+        for (PCPUnivariateAxis pcpAxis : axisList) {
             pcpAxis.removeAllAxisSelections();
         }
 
@@ -1198,7 +1202,7 @@ public class PCPView extends Region implements DataTableListener {
     @Override
     public void dataModelTuplesRemoved(DataTable dataModel, int numTuplesRemoved) {
         // clear axis selections
-        for (PCPAxis pcpAxis : axisList) {
+        for (PCPUnivariateAxis pcpAxis : axisList) {
             pcpAxis.removeAllAxisSelections();
         }
 
@@ -1208,7 +1212,7 @@ public class PCPView extends Region implements DataTableListener {
     @Override
     public void dataModelColumnDisabled(DataTable dataModel, Column disabledColumn) {
         for (int iaxis = 0; iaxis < axisList.size(); iaxis++) {
-            PCPAxis pcpAxis = axisList.get(iaxis);
+            PCPUnivariateAxis pcpAxis = axisList.get(iaxis);
             if (pcpAxis.getColumn() == disabledColumn) {
                 axisList.remove(pcpAxis);
 

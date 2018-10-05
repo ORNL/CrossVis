@@ -4,15 +4,11 @@ import gov.ornl.datatable.ColumnSelection;
 import gov.ornl.datatable.DataTable;
 import javafx.event.EventHandler;
 import javafx.geometry.Point2D;
-import javafx.scene.Cursor;
 import javafx.scene.Group;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Line;
 import javafx.scene.shape.Polyline;
 import javafx.scene.shape.Rectangle;
-import javafx.scene.shape.StrokeType;
 
 import java.util.logging.Logger;
 
@@ -24,7 +20,7 @@ public abstract class PCPAxisSelection {
     public final static Color DEFAULT_SELECTION_RECTANGLE_FILL_COLOR = Color.ORANGE.deriveColor(1,1,1,0.2);
 
     private DataTable dataModel;
-    private PCPAxis pcpAxis;
+    private PCPUnivariateAxis pcpAxis;
 //    private Pane pane;
     private ColumnSelection selectionRange;
 
@@ -41,14 +37,14 @@ public abstract class PCPAxisSelection {
     protected Point2D dragEndPoint;
     protected boolean dragging;
 
-    public PCPAxisSelection(PCPAxis pcpAxis, ColumnSelection selectionRange, DataTable dataModel) {
+    public PCPAxisSelection(PCPUnivariateAxis pcpAxis, ColumnSelection selectionRange, DataTable dataModel) {
         this.pcpAxis = pcpAxis;
         this.selectionRange = selectionRange;
         this.dataModel = dataModel;
         rectangle = null;
     }
 
-    public PCPAxisSelection(PCPAxis pcpAxis, ColumnSelection selectionRange, double minValueY, double maxValueY, DataTable dataModel) {
+    public PCPAxisSelection(PCPUnivariateAxis pcpAxis, ColumnSelection selectionRange, double minValueY, double maxValueY, DataTable dataModel) {
         this(pcpAxis, selectionRange, dataModel);
         double top = Math.min(minValueY, maxValueY);
         double bottom = Math.max(minValueY, maxValueY);
@@ -288,7 +284,7 @@ public abstract class PCPAxisSelection {
         return selectionRange;
     }
 
-    public PCPAxis getPCPAxis () { return pcpAxis; }
+    public PCPUnivariateAxis getPCPAxis () { return pcpAxis; }
 
     public DataTable getDataModel() {
         return dataModel;

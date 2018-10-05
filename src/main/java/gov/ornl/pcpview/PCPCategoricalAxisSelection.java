@@ -3,11 +3,10 @@ package gov.ornl.pcpview;
 import gov.ornl.datatable.CategoricalColumnSelection;
 import gov.ornl.datatable.DataTable;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.Pane;
 
 public class PCPCategoricalAxisSelection extends PCPAxisSelection {
 
-    public PCPCategoricalAxisSelection(PCPAxis pcpAxis, CategoricalColumnSelection selection, DataTable dataModel) {
+    public PCPCategoricalAxisSelection(PCPUnivariateAxis pcpAxis, CategoricalColumnSelection selection, DataTable dataModel) {
         super(pcpAxis, selection, dataModel);
         registerListeners();
     }

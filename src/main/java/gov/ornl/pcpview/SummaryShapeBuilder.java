@@ -10,10 +10,10 @@ import javafx.scene.shape.Rectangle;
 import java.util.ArrayList;
 
 public class SummaryShapeBuilder {
-    public static void buildShapes(ArrayList<PCPAxis> axisList, PCPView pcpView, Group shapeGroup) {
+    public static void buildShapes(ArrayList<PCPUnivariateAxis> axisList, PCPView pcpView, Group shapeGroup) {
         for (int iaxis = 1; iaxis < axisList.size(); iaxis++) {
-            PCPAxis rightAxis = axisList.get(iaxis);
-            PCPAxis leftAxis = axisList.get(iaxis-1);
+            PCPUnivariateAxis rightAxis = axisList.get(iaxis);
+            PCPUnivariateAxis leftAxis = axisList.get(iaxis-1);
 
             Group segmentGroup = null;
             if (leftAxis instanceof PCPDoubleAxis && rightAxis instanceof PCPDoubleAxis) {
@@ -95,7 +95,7 @@ public class SummaryShapeBuilder {
     private static Group buildSegmentShapes(PCPDoubleAxis leftAxis, PCPDoubleAxis rightAxis, PCPView pcpView) {
         Group segmentGroup = new Group();
 
-        if (leftAxis.dataModel.getActiveQuery().hasColumnSelections()) {
+        if (leftAxis.getDataTable().getActiveQuery().hasColumnSelections()) {
             Polygon queryDispersionPolygon = new Polygon(new double[] {
                     leftAxis.getOverallDispersionRectangle().getLayoutBounds().getMaxX(),
                     leftAxis.getQueryDispersionRectangle().getLayoutBounds().getMaxY(),

@@ -27,15 +27,15 @@ public class PCPBinSet {
     private Color maxQueryCountFillColor;
     private Color minQueryCountFillColor;
 
-    private PCPAxis leftAxis;
-    private PCPAxis rightAxis;
+    private PCPUnivariateAxis leftAxis;
+    private PCPUnivariateAxis rightAxis;
     private DataTable dataModel;
 
     private int binsWithQueries;
 
     private ArrayList<PCPBin> bins;
 
-    public PCPBinSet(PCPAxis leftAxis, PCPAxis rightAxis, DataTable dataModel) {
+    public PCPBinSet(PCPUnivariateAxis leftAxis, PCPUnivariateAxis rightAxis, DataTable dataModel) {
         this.leftAxis = leftAxis;
         this.rightAxis = rightAxis;
         this.dataModel = dataModel;

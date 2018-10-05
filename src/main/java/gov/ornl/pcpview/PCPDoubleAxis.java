@@ -14,7 +14,7 @@ import javafx.util.converter.NumberStringConverter;
 import java.util.ArrayList;
 import java.util.logging.Logger;
 
-public class PCPDoubleAxis extends PCPAxis {
+public class PCPDoubleAxis extends PCPUnivariateAxis {
     public static final Logger log = Logger.getLogger(PCPDoubleAxis.class.getName());
 
     public final static Color DEFAULT_OVERALL_DISPERSION_FILL = DEFAULT_HISTOGRAM_FILL;
@@ -53,8 +53,8 @@ public class PCPDoubleAxis extends PCPAxis {
 //    private double focusTopValue;
 //    private double focusBottomValue;
 
-    public PCPDoubleAxis(PCPView pcpView, Column column, DataTable dataModel, Pane pane) {
-        super(pcpView, column, dataModel, pane);
+    public PCPDoubleAxis(PCPView pcpView, Column column) {
+        super(pcpView, column);
 
         overallDispersionRectangle = new Rectangle();
         overallDispersionRectangle.setFill(overallDispersionFill);
@@ -142,7 +142,7 @@ public class PCPDoubleAxis extends PCPAxis {
         double selectionMaxValuePosition = getAxisPositionForValue(doubleColumnSelection.getMaxValue());
 
         PCPDoubleAxisSelection newAxisSelection = new PCPDoubleAxisSelection(this, doubleColumnSelection,
-                selectionMinValuePosition, selectionMaxValuePosition, dataModel);
+                selectionMinValuePosition, selectionMaxValuePosition, getDataTable());
 
         axisSelectionGraphicsGroup.getChildren().add(newAxisSelection.getGraphicsGroup());
         axisSelectionGraphicsGroup.toFront();
@@ -214,7 +214,7 @@ public class PCPDoubleAxis extends PCPAxis {
 
         if (draggingSelection == null) {
             DoubleColumnSelectionRange selectionRange = new DoubleColumnSelectionRange(doubleColumn(), minSelectionValue, maxSelectionValue);
-            draggingSelection = new PCPDoubleAxisSelection(this, selectionRange, selectionMinY, selectionMaxY, dataModel);
+            draggingSelection = new PCPDoubleAxisSelection(this, selectionRange, selectionMinY, selectionMaxY, getDataTable());
             axisSelectionGraphicsGroup.getChildren().add(draggingSelection.getGraphicsGroup());
             axisSelectionGraphicsGroup.toFront();
         } else {
@@ -227,7 +227,7 @@ public class PCPDoubleAxis extends PCPAxis {
         if (draggingSelection != null) {
 //            getAxisSelectionList().add(draggingSelection);
             axisSelectionGraphicsGroup.getChildren().remove(draggingSelection.getGraphicsGroup());
-            dataModel.addColumnSelectionRangeToActiveQuery(draggingSelection.getColumnSelectionRange());
+            getDataTable().addColumnSelectionRangeToActiveQuery(draggingSelection.getColumnSelectionRange());
             dragging = false;
             draggingSelection = null;
         }
@@ -240,11 +240,11 @@ public class PCPDoubleAxis extends PCPAxis {
         maxValueText.textProperty().bindBidirectional(((DoubleColumn)getColumn()).getStatistics().maxValueProperty(),
                 new NumberStringConverter());
 
-        pcpView.selectedItemsColorProperty().addListener((observable, oldValue, newValue) -> {
+        getPCPView().selectedItemsColorProperty().addListener((observable, oldValue, newValue) -> {
             queryDispersionRectangle.setFill(newValue);
         });
 
-        pcpView.unselectedItemsColorProperty().addListener((observable, oldValue, newValue) -> {
+        getPCPView().unselectedItemsColorProperty().addListener((observable, oldValue, newValue) -> {
             nonqueryDispersionRectangle.setFill(newValue);
         });
 
@@ -342,7 +342,7 @@ public class PCPDoubleAxis extends PCPAxis {
 
         super.resize(left, top, width, height);
 
-        if (!dataModel.isEmpty()) {
+        if (!getDataTable().isEmpty()) {
             if (getPCPView().isShowingHistograms()) {
                 DoubleHistogram histogram = doubleColumn().getStatistics().getHistogram();
                 double binHeight = (getFocusBottomY() - getFocusTopY()) / histogram.getNumBins();
@@ -366,12 +366,12 @@ public class PCPDoubleAxis extends PCPAxis {
                 queryHistogramGroup.getChildren().clear();
                 queryHistogramRectangles.clear();
 
-                if (dataModel.getActiveQuery().hasColumnSelections()) {
-                    DoubleColumnSummaryStats queryColumnSummaryStats = (DoubleColumnSummaryStats) dataModel.getActiveQuery().getColumnQuerySummaryStats(getColumn());
+                if (getDataTable().getActiveQuery().hasColumnSelections()) {
+                    DoubleColumnSummaryStats queryColumnSummaryStats = (DoubleColumnSummaryStats)getDataTable().getActiveQuery().getColumnQuerySummaryStats(getColumn());
 
                     if (queryColumnSummaryStats != null) {
-                        if (dataModel.getCalculateQueryStatistics()) {
-                            DoubleHistogram queryHistogram = ((DoubleColumnSummaryStats) dataModel.getActiveQuery().getColumnQuerySummaryStats(doubleColumn())).getHistogram();
+                        if (getDataTable().getCalculateQueryStatistics()) {
+                            DoubleHistogram queryHistogram = ((DoubleColumnSummaryStats)getDataTable().getActiveQuery().getColumnQuerySummaryStats(doubleColumn())).getHistogram();
 
                             for (int i = 0; i < queryHistogram.getNumBins(); i++) {
                                 double y = getFocusTopY() + ((queryHistogram.getNumBins() - i - 1) * binHeight);
@@ -436,8 +436,8 @@ public class PCPDoubleAxis extends PCPAxis {
 //                    }
                 }
 
-                if (dataModel.getActiveQuery().hasColumnSelections()) {
-                    DoubleColumnSummaryStats queryColumnSummaryStats = (DoubleColumnSummaryStats)dataModel.getActiveQuery().getColumnQuerySummaryStats(getColumn());
+                if (getDataTable().getActiveQuery().hasColumnSelections()) {
+                    DoubleColumnSummaryStats queryColumnSummaryStats = (DoubleColumnSummaryStats)getDataTable().getActiveQuery().getColumnQuerySummaryStats(getColumn());
 
                     if (queryColumnSummaryStats != null) {
                         double queryTypicalValue;
@@ -481,7 +481,7 @@ public class PCPDoubleAxis extends PCPAxis {
                     }
 
                     // draw nonquery statistics shapes
-                    DoubleColumnSummaryStats nonqueryColumnSummaryStats = (DoubleColumnSummaryStats)dataModel.getActiveQuery().getColumnNonquerySummaryStats(getColumn());
+                    DoubleColumnSummaryStats nonqueryColumnSummaryStats = (DoubleColumnSummaryStats)getDataTable().getActiveQuery().getColumnNonquerySummaryStats(getColumn());
 
                     if (nonqueryColumnSummaryStats != null) {
                         double nonqueryTypicalValue;

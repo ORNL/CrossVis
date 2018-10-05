@@ -10,7 +10,7 @@ import javafx.scene.shape.StrokeLineCap;
 import java.util.ArrayList;
 
 public class SummaryShapeRenderer {
-    public static void render(Canvas selectedCanvas, Canvas unselectedCanvas, ArrayList<PCPAxis> axisList,
+    public static void render(Canvas selectedCanvas, Canvas unselectedCanvas, ArrayList<PCPUnivariateAxis> axisList,
                               Color overallFillColor, Color overallStrokeColor,
                               Color queryFillColor, Color queryStrokeColor,
                               Color nonqueryFillColor, Color nonqueryStrokeColor) {
@@ -25,8 +25,8 @@ public class SummaryShapeRenderer {
         unselectedCanvas.getGraphicsContext2D().setLineDashes(2d, 2d);
         
         for (int iaxis = 1; iaxis < axisList.size(); iaxis++) {
-            PCPAxis rightAxis = axisList.get(iaxis);
-            PCPAxis leftAxis = axisList.get(iaxis-1);
+            PCPUnivariateAxis rightAxis = axisList.get(iaxis);
+            PCPUnivariateAxis leftAxis = axisList.get(iaxis-1);
             
             if (leftAxis instanceof PCPDoubleAxis && rightAxis instanceof PCPDoubleAxis) {
                 PCPDoubleAxis dLeftAxis = (PCPDoubleAxis)leftAxis;
@@ -52,7 +52,7 @@ public class SummaryShapeRenderer {
                             dRightAxis.getBarLeftX(), dRightAxis.getOverallTypicalLine().getStartY());
                 }
 
-                if (leftAxis.dataModel.getActiveQuery().hasColumnSelections()) {
+                if (leftAxis.getDataTable().getActiveQuery().hasColumnSelections()) {
                     if (!(Double.isNaN(dLeftAxis.getQueryTypicalLine().getEndY())) &&
                             !(Double.isNaN(dRightAxis.getQueryTypicalLine().getStartY()))) {
 

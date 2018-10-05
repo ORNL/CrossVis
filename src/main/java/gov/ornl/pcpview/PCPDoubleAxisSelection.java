@@ -14,7 +14,6 @@ import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.Pane;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.util.Pair;
@@ -29,7 +28,7 @@ public class PCPDoubleAxisSelection extends PCPAxisSelection {
     private DoubleProperty draggingMinValue;
     private DoubleProperty draggingMaxValue;
 
-    public PCPDoubleAxisSelection(PCPAxis pcpAxis, DoubleColumnSelectionRange selectionRange, double minValueY, double maxValueY, DataTable dataTable) {
+    public PCPDoubleAxisSelection(PCPUnivariateAxis pcpAxis, DoubleColumnSelectionRange selectionRange, double minValueY, double maxValueY, DataTable dataTable) {
         super(pcpAxis, selectionRange, minValueY, maxValueY, dataTable);
 
         minText = new Text(String.valueOf(selectionRange.getMinValue()));

@@ -22,11 +22,11 @@ public class TupleDrawingAnimationTimer extends AnimationTimer {
     private Color tupleColor;
     private ArrayBlockingQueue<PCPTuple> tupleQueue;
     private int maxTuplesPerFrame;
-    private ArrayList<PCPAxis> axisList;
+    private ArrayList<PCPUnivariateAxis> axisList;
     private BooleanProperty running;
     public long id;
 
-    public TupleDrawingAnimationTimer (Canvas canvas, Collection<PCPTuple> tuples, ArrayList<PCPAxis> axisList, Color tupleColor, int maxTuplesPerFrame) {
+    public TupleDrawingAnimationTimer (Canvas canvas, Collection<PCPTuple> tuples, ArrayList<PCPUnivariateAxis> axisList, Color tupleColor, int maxTuplesPerFrame) {
         id = System.currentTimeMillis();
         this.canvas = canvas;
         this.axisList = axisList;

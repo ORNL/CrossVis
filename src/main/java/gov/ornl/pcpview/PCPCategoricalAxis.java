@@ -16,7 +16,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.logging.Logger;
 
-public class PCPCategoricalAxis extends PCPAxis {
+public class PCPCategoricalAxis extends PCPUnivariateAxis {
     private final static Logger log = Logger.getLogger(DataTable.class.getName());
 
     private static final DecimalFormat percentageFormat = new DecimalFormat("0.0#%");
@@ -42,8 +42,8 @@ public class PCPCategoricalAxis extends PCPAxis {
     // dragging selection
 //    Rectangle draggingSelectionRectangle;
 
-    public PCPCategoricalAxis(PCPView pcpView, Column column, DataTable dataModel, Pane pane) {
-        super(pcpView, column, dataModel, pane);
+    public PCPCategoricalAxis(PCPView pcpView, Column column) {
+        super(pcpView, column);
 
         categoriesRectangleGroup = new Group();
         queryCategoriesRectangleGroup = new Group();
@@ -79,7 +79,7 @@ public class PCPCategoricalAxis extends PCPAxis {
 
         CategoricalColumnSelection categoricalColumnSelection = (CategoricalColumnSelection)columnSelection;
 
-        PCPCategoricalAxisSelection newAxisSelection = new PCPCategoricalAxisSelection(this, categoricalColumnSelection, dataModel);
+        PCPCategoricalAxisSelection newAxisSelection = new PCPCategoricalAxisSelection(this, categoricalColumnSelection, getDataTable());
         getAxisSelectionList().add(newAxisSelection);
 
         return newAxisSelection;
@@ -123,7 +123,7 @@ public class PCPCategoricalAxis extends PCPAxis {
     public void resize(double center, double top, double width, double height) {
         super.resize(center, top, width, height);
 
-        if (!dataModel.isEmpty()) {
+        if (!getDataTable().isEmpty()) {
             CategoricalHistogram histogram = categoricalColumn().getStatistics().getHistogram();
 
             HashSet<String> selectedCategories = new HashSet<>();
@@ -185,8 +185,8 @@ public class PCPCategoricalAxis extends PCPAxis {
             nonQueryCategoriesRectangleGroup.getChildren().clear();
             nonQueryCategoriesRectangleMap.clear();
 
-            if (dataModel.getActiveQuery().hasColumnSelections()) {
-                CategoricalColumnSummaryStats queryColumnSummaryStats = (CategoricalColumnSummaryStats)dataModel.getActiveQuery().getColumnQuerySummaryStats(getColumn());
+            if (getDataTable().getActiveQuery().hasColumnSelections()) {
+                CategoricalColumnSummaryStats queryColumnSummaryStats = (CategoricalColumnSummaryStats)getDataTable().getActiveQuery().getColumnQuerySummaryStats(getColumn());
                 CategoricalHistogram queryHistogram = queryColumnSummaryStats.getHistogram();
 
                 for (String category : queryHistogram.getCategories()) {
@@ -214,7 +214,7 @@ public class PCPCategoricalAxis extends PCPAxis {
                         queryRectangle.setArcHeight(6);
                         queryRectangle.setArcWidth(6);
                         queryRectangle.setStroke(DEFAULT_QUERY_STROKE_COLOR);
-                        queryRectangle.setFill(pcpView.getSelectedItemsColor());
+                        queryRectangle.setFill(getPCPView().getSelectedItemsColor());
                         queryRectangle.setMouseTransparent(true);
 
                         queryCategoriesRectangleMap.put(category, queryRectangle);
@@ -235,7 +235,7 @@ public class PCPCategoricalAxis extends PCPAxis {
                         nonQueryRectangle.setArcHeight(6);
                         nonQueryRectangle.setArcWidth(6);
                         nonQueryRectangle.setStroke(DEFAULT_QUERY_STROKE_COLOR);
-                        nonQueryRectangle.setFill(pcpView.getUnselectedItemsColor());
+                        nonQueryRectangle.setFill(getPCPView().getUnselectedItemsColor());
                         nonQueryRectangle.setMouseTransparent(true);
 
                         nonQueryCategoriesRectangleMap.put(category, nonQueryRectangle);
@@ -264,9 +264,9 @@ public class PCPCategoricalAxis extends PCPAxis {
             HashSet<String> categories = new HashSet<>();
             categories.add(category);
             CategoricalColumnSelection columnSelection = new CategoricalColumnSelection(categoricalColumn(), categories);
-            PCPCategoricalAxisSelection axisSelection = new PCPCategoricalAxisSelection(this, columnSelection, dataModel);
+            PCPCategoricalAxisSelection axisSelection = new PCPCategoricalAxisSelection(this, columnSelection, getDataTable());
             getAxisSelectionList().add(axisSelection);
-            dataModel.addColumnSelectionRangeToActiveQuery(columnSelection);
+            getDataTable().addColumnSelectionRangeToActiveQuery(columnSelection);
         } else {
             ArrayList<PCPAxisSelection> selectionsToRemove = new ArrayList<>();
             for (PCPAxisSelection selection : getAxisSelectionList()) {

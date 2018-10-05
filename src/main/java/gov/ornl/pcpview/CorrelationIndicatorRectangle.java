@@ -10,28 +10,28 @@ public class CorrelationIndicatorRectangle extends Rectangle {
     public final static Color DEFAULT_CORRELATION_POSITIVE_COLOR = Color.DODGERBLUE;
     public final static Color DEFAULT_CORRELATION_NEGATIVE_COLOR = Color.DARKRED;
 
-    private PCPAxis axis1;
-    private PCPAxis axis2;
+    private PCPUnivariateAxis axis1;
+    private PCPUnivariateAxis axis2;
     private double correlation;
 
-    public CorrelationIndicatorRectangle(PCPAxis axis1, PCPAxis axis2) {
+    public CorrelationIndicatorRectangle(PCPUnivariateAxis axis1, PCPUnivariateAxis axis2) {
         this.axis1 = axis1;
         this.axis2 = axis2;
     }
 
-    public PCPAxis getAxis1() {
+    public PCPUnivariateAxis getAxis1() {
         return axis1;
     }
 
-    public void setAxis1(PCPAxis axis1) {
+    public void setAxis1(PCPUnivariateAxis axis1) {
         this.axis1 = axis1;
     }
 
-    public PCPAxis getAxis2() {
+    public PCPUnivariateAxis getAxis2() {
         return axis2;
     }
 
-    public void setAxis2(PCPAxis axis2) {
+    public void setAxis2(PCPUnivariateAxis axis2) {
         this.axis2 = axis2;
     }
 

@@ -14,7 +14,6 @@ import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.Pane;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.util.Pair;
@@ -28,7 +27,7 @@ public class PCPTemporalAxisSelection extends PCPAxisSelection {
     private ObjectProperty<Instant> draggingMinValue;
     private ObjectProperty<Instant> draggingMaxValue;
 
-    public PCPTemporalAxisSelection(PCPAxis pcpAxis, TemporalColumnSelectionRange selectionRange, double minValueY, double maxValueY, DataTable dataTable) {
+    public PCPTemporalAxisSelection(PCPUnivariateAxis pcpAxis, TemporalColumnSelectionRange selectionRange, double minValueY, double maxValueY, DataTable dataTable) {
         super(pcpAxis, selectionRange, minValueY, maxValueY, dataTable);
 
         minText = new Text(String.valueOf(selectionRange.getStartInstant()));

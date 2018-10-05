@@ -13,7 +13,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.logging.Logger;
 
-public class PCPTemporalAxis extends PCPAxis {
+public class PCPTemporalAxis extends PCPUnivariateAxis {
     private static final Logger log = Logger.getLogger(PCPTemporalAxis.class.getName());
 
     private PCPTemporalAxisSelection draggingSelection;
@@ -27,8 +27,8 @@ public class PCPTemporalAxis extends PCPAxis {
     private Color histogramStroke = DEFAULT_HISTOGRAM_STROKE;
     private Color queryHistogramFill = DEFAULT_QUERY_HISTOGRAM_FILL;
     
-    public PCPTemporalAxis(PCPView pcpView, Column column, DataTable dataModel, Pane pane) {
-        super(pcpView, column, dataModel, pane);
+    public PCPTemporalAxis(PCPView pcpView, Column column) {
+        super(pcpView, column);
 
         getAxisBar().setWidth(DEFAULT_NARROW_BAR_WIDTH);
         
@@ -68,7 +68,7 @@ public class PCPTemporalAxis extends PCPAxis {
         double selectionMaxValuePosition = getAxisPositionForValue(temporalColumnSelection.getEndInstant());
 
         PCPTemporalAxisSelection newAxisSelection = new PCPTemporalAxisSelection(this, temporalColumnSelection,
-                selectionMinValuePosition, selectionMaxValuePosition, dataModel);
+                selectionMinValuePosition, selectionMaxValuePosition, getDataTable());
         axisSelectionGraphicsGroup.getChildren().add(newAxisSelection.getGraphicsGroup());
 
         getAxisSelectionList().add(newAxisSelection);
@@ -140,7 +140,7 @@ public class PCPTemporalAxis extends PCPAxis {
         if (draggingSelection == null) {
 //                    DoubleColumnSelectionRange selectionRange = dataModel.addColumnSelectionRangeToActiveQuery(column, minSelectionValue, maxSelectionValue);
             TemporalColumnSelectionRange selectionRange = new TemporalColumnSelectionRange(temporalColumn(), selectionStartInstant, selectionEndInstant);
-            draggingSelection = new PCPTemporalAxisSelection(this, selectionRange, selectionMinY, selectionMaxY, dataModel);
+            draggingSelection = new PCPTemporalAxisSelection(this, selectionRange, selectionMinY, selectionMaxY, getDataTable());
             axisSelectionGraphicsGroup.getChildren().add(draggingSelection.getGraphicsGroup());
         } else {
             draggingSelection.update(selectionStartInstant, selectionEndInstant, selectionMinY, selectionMaxY);
@@ -151,7 +151,7 @@ public class PCPTemporalAxis extends PCPAxis {
     protected void handleAxisBarMouseReleased() {
         if (draggingSelection != null) {
 //            getAxisSelectionList().add(draggingSelection);
-            dataModel.addColumnSelectionRangeToActiveQuery(draggingSelection.getColumnSelectionRange());
+            getDataTable().addColumnSelectionRangeToActiveQuery(draggingSelection.getColumnSelectionRange());
             dragging = false;
             axisSelectionGraphicsGroup.getChildren().remove(draggingSelection.getGraphicsGroup());
             draggingSelection = null;
@@ -187,7 +187,7 @@ public class PCPTemporalAxis extends PCPAxis {
     public void resize(double center, double top, double width, double height) {
         super.resize(center, top, width, height);
 
-        if (!dataModel.isEmpty()) {
+        if (!getDataTable().isEmpty()) {
             if (getPCPView().isShowingHistograms()) {
                 // resize histogram bin information
                 TemporalHistogram histogram = temporalColumn().getStatistics().getHistogram();
@@ -210,14 +210,14 @@ public class PCPTemporalAxis extends PCPAxis {
                 queryHistogramGroup.getChildren().clear();
                 queryHistogramRectangles.clear();
 
-                if (dataModel.getActiveQuery().hasColumnSelections()) {
+                if (getDataTable().getActiveQuery().hasColumnSelections()) {
 //                    TemporalColumnSummaryStats queryColumnSummaryStats = (TemporalColumnSummaryStats) dataModel.getActiveQuery().getColumnQuerySummaryStats(getColumn());
 
                     // resize query histogram bins
-                    TemporalHistogram queryHistogram = ((TemporalColumnSummaryStats) dataModel.getActiveQuery().getColumnQuerySummaryStats(temporalColumn())).getHistogram();
+                    TemporalHistogram queryHistogram = ((TemporalColumnSummaryStats) getDataTable().getActiveQuery().getColumnQuerySummaryStats(temporalColumn())).getHistogram();
 
                     if (queryHistogram != null) {
-                        if (dataModel.getCalculateQueryStatistics()) {
+                        if (getDataTable().getCalculateQueryStatistics()) {
                             if (histogram.getNumBins() != queryHistogram.getNumBins()) {
                                 log.info("query histogram and overall histogram have different bin sizes");
                             }
