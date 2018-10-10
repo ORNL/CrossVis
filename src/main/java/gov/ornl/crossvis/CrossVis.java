@@ -622,7 +622,7 @@ public class CrossVis extends Application implements DataTableListener {
 
     private void changeAxisSpacing() {
         Dialog<Integer> axisSpacingDialog = new Dialog<>();
-        axisSpacingDialog.setTitle("ParallelAxis Spacing");
+        axisSpacingDialog.setTitle("Axis Spacing");
         axisSpacingDialog.setHeaderText("Set the pixel spacing between crossvis");
 
         GridPane grid = new GridPane();
@@ -634,7 +634,7 @@ public class CrossVis extends Application implements DataTableListener {
         spinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 800, pcpView.getAxisSpacing(), 1));
         spinner.setEditable(true);
 
-        grid.add(new Label("ParallelAxis Spacing: "), 0, 0);
+        grid.add(new Label("Axis Spacing: "), 0, 0);
         grid.add(spinner, 1, 0);
 
         axisSpacingDialog.getDialogPane().setContent(grid);

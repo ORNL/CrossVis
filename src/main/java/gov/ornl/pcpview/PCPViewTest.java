@@ -70,8 +70,8 @@ public class PCPViewTest extends Application {
 //                    IOUtilities.readCSV(new File("data/csv/boston_corrected_cleaned.csv"), ignoreColumnNames,
 //                            null, null, null, dataTable);
 
-//                    IOUtilities.readCSV(new File("data/csv/cars.csv"), null, null,
-//                            null, null, dataTable);
+                    IOUtilities.readCSV(new File("data/csv/cars.csv"), null, null,
+                            null, null, dataTable);
 //                    IOUtilities.readCSV(new File("/Users/csg/Dropbox (ORNL)/projects/SciDAC/data/2018-01-RiccuitoEnsemble/QMCdaily_US_combined.csv"),
 //                            null, null, null, null, dataTable);
 
@@ -80,18 +80,18 @@ public class PCPViewTest extends Application {
 //                    IOUtilities.readCSV(new File("data/csv/cars-cat.csv"), null, categoricalColumnNames,
 //                            null, null, dataTable);
 
-                    ArrayList<String> temporalColumnNames = new ArrayList<>();
-                    temporalColumnNames.add("Date");
-                    ArrayList<DateTimeFormatter> temporalColumnFormatters = new ArrayList<>();
-                    temporalColumnFormatters.add(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss"));
-//////                    ArrayList<String> ignoreColumnNames = new ArrayList<>();
-////////                    ignoreColumnNames.add("StageoutPilots");
-//////
-                    IOUtilities.readCSV(new File("data/csv/titan-performance.csv"), null, null,
-                            temporalColumnNames, temporalColumnFormatters, dataTable);
-                    Column latColumn = dataTable.getColumn("LAT");
-                    Column lonColumn = dataTable.getColumn("LON");
-                    pcpView.setGeographicAxes(latColumn, lonColumn);
+//                    ArrayList<String> temporalColumnNames = new ArrayList<>();
+//                    temporalColumnNames.add("Date");
+//                    ArrayList<DateTimeFormatter> temporalColumnFormatters = new ArrayList<>();
+//                    temporalColumnFormatters.add(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss"));
+////////                    ArrayList<String> ignoreColumnNames = new ArrayList<>();
+//////////                    ignoreColumnNames.add("StageoutPilots");
+////////
+//                    IOUtilities.readCSV(new File("data/csv/titan-performance.csv"), null, null,
+//                            temporalColumnNames, temporalColumnFormatters, dataTable);
+//                    Column latColumn = dataTable.getColumn("LAT");
+//                    Column lonColumn = dataTable.getColumn("LON");
+//                    pcpView.setGeographicAxes(latColumn, lonColumn);
 
                     long elapsed = System.currentTimeMillis() - start;
                     log.info("Reading data and populating data model took " + elapsed + " ms");
@@ -100,6 +100,11 @@ public class PCPViewTest extends Application {
                     e.printStackTrace();
                 }
             }
+        });
+
+        Button addBivariateButton = new Button("Add Bivariate Axis");
+        addBivariateButton.setOnAction(event -> {
+            pcpView.addBivariateAxis(dataTable.getColumn(2), dataTable.getColumn(3), 3);
         });
 
         ChoiceBox<PCPView.POLYLINE_DISPLAY_MODE> polylineDisplayModeChoiceBox =

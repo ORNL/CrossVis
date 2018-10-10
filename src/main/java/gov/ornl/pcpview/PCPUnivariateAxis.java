@@ -324,7 +324,7 @@ public abstract class PCPUnivariateAxis extends PCPAxis {
             public void handle(MouseEvent event) {
                 if (event.isSecondaryButtonDown()) {
                     final ContextMenu contextMenu = new ContextMenu();
-                    MenuItem hideMenuItem = new MenuItem("Hide ParallelAxis");
+                    MenuItem hideMenuItem = new MenuItem("Hide Axis");
                     MenuItem closeMenuItem = new MenuItem("Close Popup");
                     contextMenu.getItems().addAll(hideMenuItem, closeMenuItem);
                     hideMenuItem.setOnAction(new EventHandler<ActionEvent>() {
@@ -449,25 +449,7 @@ public abstract class PCPUnivariateAxis extends PCPAxis {
     }
 
     public void resize(double left, double top, double width, double height) {
-        bounds = new BoundingBox(left, top, width, height);
-        centerX = left + (width / 2.);
-        centerY = top + (height / 2.);
-
-        titleText.setText(column.getName());
-        if (titleText.getLayoutBounds().getWidth() > bounds.getWidth()) {
-            // truncate the column name to fit axis bounds
-            while (titleText.getLayoutBounds().getWidth() > bounds.getWidth()) {
-                titleText.setText(titleText.getText().substring(0, titleText.getText().length() - 1));
-            }
-        }
-        titleText.setX(bounds.getMinX() + ((width - titleText.getLayoutBounds().getWidth()) / 2.));
-        titleText.setY(bounds.getMinY() + titleText.getLayoutBounds().getHeight());
-        titleText.setRotate(getTitleTextRotation());
-
-        titleTextRectangle.setX(titleText.getX() - 4.);
-        titleTextRectangle.setY(titleText.getY() - titleText.getLayoutBounds().getHeight());
-        titleTextRectangle.setWidth(titleText.getLayoutBounds().getWidth() + 8.);
-        titleTextRectangle.setHeight(titleText.getLayoutBounds().getHeight() + 4.);
+        super.resize(left, top, width, height);
 
 //        overallCorrelationCoefficientIndicatorRectangle.setY(titleText.getLayoutBounds().getMaxY() + 4);
 //        overallCorrelationCoefficientIndicatorRectangle.setX(bounds.getMinX());
@@ -536,20 +518,9 @@ public abstract class PCPUnivariateAxis extends PCPAxis {
 
     public Column getColumn() { return column; }
 
-    public Group getGraphicsGroup() { return graphicsGroup; }
-
-    public Text getTitleText() { return titleText; }
-
-    public final double getTitleTextRotation() { return titleTextRotation.get(); }
-
-    public final void setTitleTextRotation(double value) { titleTextRotation.set(value); }
-
-    public DoubleProperty titleTextRotationProperty() { return titleTextRotation; }
-
     public double getBarLeftX() { return axisBar.getX(); }
     public double getBarRightX() { return axisBar.getX() + axisBar.getWidth(); }
 
-    public Bounds getBounds() { return bounds; }
 
     public Rectangle getAxisBar() { return axisBar; }
 
