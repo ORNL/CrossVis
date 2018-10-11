@@ -98,6 +98,8 @@ public class DataTableView extends Region implements DataTableListener {
 //    private Rectangle scatterplotRegionRectangle;
 
 
+    private ObjectProperty<Axis> highlightedAxis = new SimpleObjectProperty<>(null);
+
 //    private Group summaryShapeGroup;
 
     public DataTableView() {
@@ -308,6 +310,17 @@ public class DataTableView extends Region implements DataTableListener {
             resizeView();
         });
 
+        highlightedAxis.addListener((observable, oldValue, newValue) -> {
+            if (oldValue != newValue) {
+                if (oldValue != null) {
+                    oldValue.setHighlighted(false);
+                }
+                if (newValue != null) {
+                    newValue.setHighlighted(true);
+                }
+                resizeView();
+            }
+        });
 
 //        polylineDisplayMode.addListener(((observable, oldValue, newValue) -> {
 //            if (selectedTuplesTimer != null && selectedTuplesTimer.isRunning()) {
@@ -811,21 +824,12 @@ public class DataTableView extends Region implements DataTableListener {
 
     public ObjectProperty<Color> overallSummaryStrokeColor () { return overallSummaryStrokeColor; }
 
-    public void addBivariateAxis(Column xColumn, Column yColumn, int position) {
-        AxisBivariate bivariateAxis = new AxisBivariate(this, xColumn, yColumn);
+    public void setHighlightedAxis(Axis axis) { highlightedAxis.set(axis); }
 
-        if (position >= axisList.size()) {
-            axisList.add(axisList.size(), bivariateAxis);
-        } else if (position < 0) {
-            axisList.add(0, bivariateAxis);
-        } else {
-            axisList.add(position, bivariateAxis);
-        }
+    public Axis getHighlightedAxis() { return highlightedAxis.get(); }
 
-        pane.getChildren().add(bivariateAxis.getGraphicsGroup());
+    public ObjectProperty<Axis> highlightedAxisProperty() { return highlightedAxis; }
 
-        resizeView();
-    }
 
     private void initView() {
         if (axisList.isEmpty()) {
@@ -836,7 +840,7 @@ public class DataTableView extends Region implements DataTableListener {
                 } else if (dataTable.getColumn(i) instanceof CategoricalColumn) {
 //                    pcpAxis = new PCPCategoricalAxis(this, dataTable.getColumn(iaxis));
                 } else if (dataTable.getColumn(i) instanceof DoubleColumn){
-                    axis = new AxisUnivariateDouble(this, (DoubleColumn)dataTable.getColumn(i));
+                    axis = new DoubleAxis(this, (DoubleColumn)dataTable.getColumn(i));
                 }
 
                 if (axis != null) {
@@ -1008,19 +1012,57 @@ public class DataTableView extends Region implements DataTableListener {
         return -1;
     }
 
-    private void addAxis(Column column) {
+    public void setAxisPosition(Axis axis, int position) {
+        if (axisList.contains(axis)) {
+            int newPosition = position < 0 ? 0 : position >= axisList.size() ? axisList.size()-1 : position;
+
+            int currentPosition = axisList.indexOf(axis);
+
+            if (currentPosition != newPosition) {
+                axisList.remove(axis);
+                axisList.add(newPosition, axis);
+                resizeView();
+            }
+        }
+    }
+
+    private void addUnivariateAxis(Column column, int position) {
         Axis pcpAxis = null;
         if (column instanceof DoubleColumn) {
-            pcpAxis = new AxisUnivariateDouble(this, (DoubleColumn)column);
+            pcpAxis = new DoubleAxis(this, (DoubleColumn)column);
         } else if (column instanceof TemporalColumn) {
 //            pcpAxis = new PCPTemporalAxis(this, column);
         } else if (column instanceof CategoricalColumn) {
 //            pcpAxis = new PCPCategoricalAxis(this, column);
         }
 
+        if (position >= axisList.size()) {
+            axisList.add(axisList.size(), pcpAxis);
+        } else if (position <= 0) {
+            axisList.add(0, pcpAxis);
+        } else {
+            axisList.add(position, pcpAxis);
+        }
+
+        axisList.add(pcpAxis);
 //        pcpAxis.titleTextRotationProperty().bind(nameTextRotationProperty());
         pane.getChildren().add(pcpAxis.getGraphicsGroup());
-        axisList.add(pcpAxis);
+    }
+
+    public void addBivariateAxis(Column xColumn, Column yColumn, int position) {
+        BivariateAxis bivariateAxis = new BivariateAxis(this, xColumn, yColumn);
+
+        if (position >= axisList.size()) {
+            axisList.add(axisList.size(), bivariateAxis);
+        } else if (position < 0) {
+            axisList.add(0, bivariateAxis);
+        } else {
+            axisList.add(position, bivariateAxis);
+        }
+
+        pane.getChildren().add(bivariateAxis.getGraphicsGroup());
+
+        resizeView();
     }
 
     private void handleQueryChange() {
@@ -1127,7 +1169,7 @@ public class DataTableView extends Region implements DataTableListener {
 
     private Axis getAxisForColumn(Column column) {
         for (Axis axis : axisList) {
-            if (axis instanceof AxisUnivariate && ((AxisUnivariate)axis).getColumn() == column) {
+            if (axis instanceof UnivariateAxis && ((UnivariateAxis)axis).getColumn() == column) {
                 return axis;
             }
         }
@@ -1218,6 +1260,19 @@ public class DataTableView extends Region implements DataTableListener {
 //        }
 //
 //        initView();
+    }
+
+    public void removeAxis(Axis axis) {
+        if (axisList.contains(axis)) {
+            axisList.remove(axis);
+            pane.getChildren().remove(axis.getGraphicsGroup());
+            reinitializeScatterplots();
+            reinitializeCorrelationRectangles();
+
+            //TODO: reinit bins and polylines, fill tuple line sets
+
+            resizeView();
+        }
     }
 
     @Override

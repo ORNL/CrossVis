@@ -134,6 +134,8 @@ public class Scatterplot {
 //        }
 //    }
 
+    public Rectangle getPlotRectangle() { return plotRectangle; }
+
     private void registerListeners() {
 //        pointStrokeOpacity.addListener((observable, oldValue, newValue) -> {
 //            if (newValue != oldValue) {

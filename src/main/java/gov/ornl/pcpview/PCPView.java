@@ -609,21 +609,21 @@ public class PCPView extends Region implements DataTableListener {
         }
     }
 
-    public void addBivariateAxis(Column xColumn, Column yColumn, int position) {
-        PCPBivariateAxis bivariateAxis = new PCPBivariateAxis(this, xColumn, yColumn);
-
-        if (position >= axisList.size()) {
-            axisList.add(axisList.size(), bivariateAxis);
-        } else if (position < 0) {
-            axisList.add(0, bivariateAxis);
-        } else {
-            axisList.add(position, bivariateAxis);
-        }
-
-        pane.getChildren().add(bivariateAxis.getGraphicsGroup());
-
-        resizeView();
-    }
+//    public void addBivariateAxis(Column xColumn, Column yColumn, int position) {
+//        PCPBivariateAxis bivariateAxis = new PCPBivariateAxis(this, xColumn, yColumn);
+//
+//        if (position >= axisList.size()) {
+//            axisList.add(axisList.size(), bivariateAxis);
+//        } else if (position < 0) {
+//            axisList.add(0, bivariateAxis);
+//        } else {
+//            axisList.add(position, bivariateAxis);
+//        }
+//
+//        pane.getChildren().add(bivariateAxis.getGraphicsGroup());
+//
+//        resizeView();
+//    }
 
     private void removeAllAxisSelectionGraphics() {
         for (PCPUnivariateAxis pcpAxis : axisList) {

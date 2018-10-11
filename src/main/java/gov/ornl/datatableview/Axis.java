@@ -1,13 +1,14 @@
 package gov.ornl.datatableview;
 
 import gov.ornl.datatable.DataTable;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.beans.property.*;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
+import javafx.geometry.Point2D;
 import javafx.scene.Group;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.MenuItem;
+import javafx.scene.effect.DropShadow;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
@@ -30,8 +31,15 @@ public abstract class Axis {
     private double centerY = 0d;
 
     private ObjectProperty<Color> textColor = new SimpleObjectProperty<>(DEFAULT_TEXT_COLOR);
+    private BooleanProperty highlighted = new SimpleBooleanProperty(false);
 
     private Group graphicsGroup = new Group();
+
+    // dragging variables
+    protected Group axisDraggingGraphicsGroup;
+    protected Point2D dragStartPoint;
+    protected Point2D dragEndPoint;
+    protected boolean dragging = false;
 
     public Axis(DataTableView dataTableView, String title) {
         this.dataTableView = dataTableView;
@@ -55,6 +63,16 @@ public abstract class Axis {
         registerListeners();
     }
 
+    public boolean isHighlighted() { return highlighted.get(); }
+
+    public void setHighlighted(boolean highlighted) {
+        if (isHighlighted() != highlighted) {
+            this.highlighted.set(highlighted);
+        }
+    }
+
+    public BooleanProperty highlightedProperty() { return highlighted; }
+
     public Color getTextColor() { return textColor.get(); }
 
     public void setTextColor(Color c) { textColor.set(c); }
@@ -72,6 +90,106 @@ public abstract class Axis {
             titleText.setX(bounds.getMinX() + ((bounds.getWidth() - titleText.getLayoutBounds().getWidth()) / 2.));
             titleText.setY(bounds.getMinY() + titleText.getLayoutBounds().getHeight());
         });
+
+        titleTextRectangle.setOnMouseClicked(event -> {
+            if (event.getClickCount() == 2) {
+                if (!isHighlighted()) {
+                    dataTableView.setHighlightedAxis(this);
+                } else {
+                    dataTableView.setHighlightedAxis(null);
+                }
+            }
+        });
+
+        titleTextRectangle.setOnMousePressed(event -> {
+            if (event.isSecondaryButtonDown()) {
+                final ContextMenu contextMenu = new ContextMenu();
+                MenuItem hideMenuItem = new MenuItem("Remove Axis");
+                MenuItem closeMenuItem = new MenuItem("Close Menu");
+                contextMenu.getItems().addAll(hideMenuItem, closeMenuItem);
+                hideMenuItem.setOnAction(removeEvent -> {
+                    // remove this axis from the data table view
+                    dataTableView.removeAxis(this);
+//                    getDataTable().disableColumn(column);
+                });
+                closeMenuItem.setOnAction(closeEvent -> contextMenu.hide());
+                contextMenu.show(dataTableView, event.getScreenX(), event.getScreenY());
+            }
+        });
+
+        titleTextRectangle.setOnMouseDragged(event -> {
+            if (!dragging) {
+                dragging = true;
+                makeAxisDraggingGraphics();
+                axisDraggingGraphicsGroup.setEffect(new DropShadow());
+                dataTableView.getPane().getChildren().add(axisDraggingGraphicsGroup);
+                dragStartPoint = new Point2D(event.getX(), event.getY());
+            }
+
+            dragEndPoint = new Point2D(event.getX(), event.getY());
+            axisDraggingGraphicsGroup.setTranslateX(event.getX() - dragStartPoint.getX());
+        });
+
+        titleTextRectangle.setOnMouseReleased(event -> {
+            if (dragging) {
+                dataTableView.getPane().getChildren().remove(axisDraggingGraphicsGroup);
+                dragging = false;
+                int newAxisPosition = (int)dragEndPoint.getX() / dataTableView.getAxisSpacing();
+                dataTableView.setAxisPosition(this, newAxisPosition);
+            }
+        });
+
+        highlighted.addListener((observable, oldValue, newValue) -> {
+            if (newValue) {
+                titleTextRectangle.setFill(Color.web("#ffc14d"));
+            } else {
+                titleTextRectangle.setFill(Color.TRANSPARENT);
+            }
+        });
+    }
+
+    protected void makeAxisDraggingGraphics() {
+        Text draggingNameText = new Text(titleText.getText());
+        draggingNameText.setX(titleText.getX());
+        draggingNameText.setY(titleText.getY());
+        draggingNameText.setFont(titleText.getFont());
+
+        axisDraggingGraphicsGroup = new Group(draggingNameText);
+        axisDraggingGraphicsGroup.setTranslateY(5);
+
+        if (this instanceof UnivariateAxis) {
+            UnivariateAxis univariateAxis = (UnivariateAxis)this;
+            Rectangle dragAxisBar = new Rectangle(univariateAxis.getAxisBar().getX(),
+                    univariateAxis.getAxisBar().getY(), univariateAxis.getAxisBar().getWidth(),
+                    univariateAxis.getAxisBar().getHeight());
+            dragAxisBar.setStroke(univariateAxis.getAxisBar().getStroke());
+            dragAxisBar.setFill(univariateAxis.getAxisBar().getFill());
+
+            Rectangle dragUpperContextBar = new Rectangle(univariateAxis.getUpperContextBar().getX(),
+                    univariateAxis.getUpperContextBar().getY(),
+                    univariateAxis.getUpperContextBar().getWidth(),
+                    univariateAxis.getUpperContextBar().getHeight());
+            dragUpperContextBar.setStroke(univariateAxis.getUpperContextBar().getStroke());
+            dragUpperContextBar.setFill(univariateAxis.getUpperContextBar().getFill());
+
+            Rectangle dragLowerContextBar = new Rectangle(univariateAxis.getLowerContextBar().getX(),
+                    univariateAxis.getLowerContextBar().getY(),
+                    univariateAxis.getLowerContextBar().getWidth(), univariateAxis.getLowerContextBar().getHeight());
+            dragLowerContextBar.setStroke(univariateAxis.getLowerContextBar().getStroke());
+            dragLowerContextBar.setFill(univariateAxis.getLowerContextBar().getFill());
+
+            axisDraggingGraphicsGroup.getChildren().addAll(dragUpperContextBar, dragLowerContextBar, dragAxisBar);
+        } else if (this instanceof BivariateAxis) {
+            BivariateAxis biAxis = (BivariateAxis)this;
+
+            Rectangle scatterplotRectangle = new Rectangle(biAxis.getScatterplotRectangle().getX(),
+                    biAxis.getScatterplotRectangle().getY(), biAxis.getScatterplotRectangle().getWidth(),
+                    biAxis.getScatterplotRectangle().getHeight());
+            scatterplotRectangle.setFill(dataTableView.getBackgroundColor());
+            scatterplotRectangle.setStroke(biAxis.getScatterplotRectangle().getStroke());
+
+            axisDraggingGraphicsGroup.getChildren().add(scatterplotRectangle);
+        }
     }
 
     public Group getGraphicsGroup() { return graphicsGroup; }
@@ -101,7 +219,5 @@ public abstract class Axis {
         titleTextRectangle.setY(titleText.getY() - titleText.getLayoutBounds().getHeight());
         titleTextRectangle.setWidth(titleText.getLayoutBounds().getWidth() + 8.);
         titleTextRectangle.setHeight(titleText.getLayoutBounds().getHeight() + 4.);
-
-
     }
 }

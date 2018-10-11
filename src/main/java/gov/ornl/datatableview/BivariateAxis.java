@@ -5,15 +5,15 @@ import gov.ornl.scatterplot.Scatterplot;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 
-public class AxisBivariate extends Axis {
+public class BivariateAxis extends Axis {
 
     private Column xColumn;
     private Column yColumn;
 
     private Scatterplot scatterplot;
-    private Rectangle scatterplotRectangle;
+//    private Rectangle scatterplotRectangle;
 
-    public AxisBivariate(DataTableView dataTableView, Column xColumn, Column yColumn) {
+    public BivariateAxis(DataTableView dataTableView, Column xColumn, Column yColumn) {
         super(dataTableView, yColumn.getName() + " vs. " + xColumn.getName());
 
         this.xColumn = xColumn;
@@ -21,12 +21,12 @@ public class AxisBivariate extends Axis {
 
         scatterplot = new Scatterplot(xColumn, yColumn);
 
-        scatterplotRectangle = new Rectangle();
-        scatterplotRectangle.setStroke(Color.BLUE);
-        scatterplotRectangle.setMouseTransparent(true);
-        scatterplotRectangle.setFill(Color.TRANSPARENT);
+//        scatterplotRectangle = new Rectangle();
+//        scatterplotRectangle.setStroke(Color.BLUE);
+//        scatterplotRectangle.setMouseTransparent(true);
+//        scatterplotRectangle.setFill(Color.TRANSPARENT);
 
-        getGraphicsGroup().getChildren().addAll(scatterplot.getGraphicsGroup(), scatterplotRectangle);
+        getGraphicsGroup().getChildren().addAll(scatterplot.getGraphicsGroup());
     }
 
     @Override
@@ -39,11 +39,15 @@ public class AxisBivariate extends Axis {
         double scatterplotLeft = left + ((width - scatterplotSize) / 2.);
         double scatterplotTop = axisTop + ((height - scatterplotSize) / 2.);
 
-        scatterplotRectangle.setX(scatterplotLeft);
-        scatterplotRectangle.setY(scatterplotTop);
-        scatterplotRectangle.setWidth(scatterplotSize);
-        scatterplotRectangle.setHeight(scatterplotSize);
+//        scatterplotRectangle.setX(scatterplotLeft);
+//        scatterplotRectangle.setY(scatterplotTop);
+//        scatterplotRectangle.setWidth(scatterplotSize);
+//        scatterplotRectangle.setHeight(scatterplotSize);
 
         scatterplot.resize(scatterplotLeft, scatterplotTop, scatterplotSize, scatterplotSize);
+    }
+
+    public Rectangle getScatterplotRectangle() {
+        return scatterplot.getPlotRectangle();
     }
 }

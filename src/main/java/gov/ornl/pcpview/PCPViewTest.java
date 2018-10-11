@@ -102,10 +102,10 @@ public class PCPViewTest extends Application {
             }
         });
 
-        Button addBivariateButton = new Button("Add Bivariate Axis");
-        addBivariateButton.setOnAction(event -> {
-            pcpView.addBivariateAxis(dataTable.getColumn(2), dataTable.getColumn(3), 3);
-        });
+//        Button addBivariateButton = new Button("Add Bivariate Axis");
+//        addBivariateButton.setOnAction(event -> {
+//            pcpView.addBivariateAxis(dataTable.getColumn(2), dataTable.getColumn(3), 3);
+//        });
 
         ChoiceBox<PCPView.POLYLINE_DISPLAY_MODE> polylineDisplayModeChoiceBox =
                 new ChoiceBox<>(FXCollections.observableArrayList(PCPView.POLYLINE_DISPLAY_MODE.POLYLINES,

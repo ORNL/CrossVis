@@ -7,7 +7,7 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 
-public abstract class AxisUnivariate extends Axis {
+public abstract class UnivariateAxis extends Axis {
     public final static double DEFAULT_BAR_WIDTH = 20d;
     public final static double DEFAULT_NARROW_BAR_WIDTH = 6d;
     public final static double HOVER_TEXT_SIZE = 8d;
@@ -24,8 +24,7 @@ public abstract class AxisUnivariate extends Axis {
 
     private Column column;
 
-
-    public AxisUnivariate(DataTableView dataTableView, Column column) {
+    public UnivariateAxis(DataTableView dataTableView, Column column) {
         super(dataTableView, column.getName());
 
         this.column = column;
@@ -70,6 +69,12 @@ public abstract class AxisUnivariate extends Axis {
     }
 
     public Column getColumn() { return column; }
+
+    public Rectangle getAxisBar() { return axisBar; }
+
+    public Rectangle getUpperContextBar() { return upperContextBar; }
+
+    public Rectangle getLowerContextBar() { return lowerContextBar; }
 
     @Override
     public void resize (double left, double top, double width, double height) {
