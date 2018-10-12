@@ -1347,6 +1347,11 @@ public class CrossVis extends Application implements DataTableListener {
     }
 
     @Override
+    public void dataTableBivariateColumnAdded(DataTable dataTable, BivariateColumn bivariateColumn) {
+
+    }
+
+    @Override
     public void dataModelColumnOrderChanged(DataTable dataModel) {
 
     }

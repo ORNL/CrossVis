@@ -71,6 +71,7 @@ public class DataTableView extends Region implements DataTableListener {
     private Bounds correlationRegionBounds;
 //    private Rectangle correlationRegionBoundsRectangle;
 
+    private ArrayList<Polyline> polylineList;
 //    private ArrayList<PCPTuple> tupleList;
 //    private HashSet<PCPTuple> unselectedTupleSet = new HashSet<>();
 //    private HashSet<PCPTuple> selectedTupleSet = new HashSet<>();
@@ -830,7 +831,6 @@ public class DataTableView extends Region implements DataTableListener {
 
     public ObjectProperty<Axis> highlightedAxisProperty() { return highlightedAxis; }
 
-
     private void initView() {
         if (axisList.isEmpty()) {
             for (int i = 0; i < dataTable.getColumnCount(); i++) {
@@ -841,6 +841,8 @@ public class DataTableView extends Region implements DataTableListener {
 //                    pcpAxis = new PCPCategoricalAxis(this, dataTable.getColumn(iaxis));
                 } else if (dataTable.getColumn(i) instanceof DoubleColumn){
                     axis = new DoubleAxis(this, (DoubleColumn)dataTable.getColumn(i));
+                } else if (dataTable.getColumn(i) instanceof BivariateColumn) {
+                    axis = new BivariateAxis(this, (BivariateColumn)dataTable.getColumn(i));
                 }
 
                 if (axis != null) {
@@ -850,19 +852,19 @@ public class DataTableView extends Region implements DataTableListener {
                 }
             }
         } else {
-//            ArrayList<Axis> newAxisList = new ArrayList<>();
-//            for (int icolumn = 0; icolumn < dataTable.getColumnCount(); icolumn++) {
-//                Column column = dataTable.getColumn(icolumn);
-//                for (int iaxis = 0; iaxis < axisList.size(); iaxis++) {
-//                    Axis pcpAxis = axisList.get(iaxis);
-//                    if (pcpAxis.getColumn() == column) {
-//                        newAxisList.add(pcpAxis);
-//                        break;
-//                    }
-//                }
-//            }
-//
-//            axisList = newAxisList;
+            ArrayList<Axis> newAxisList = new ArrayList<>();
+            for (int icolumn = 0; icolumn < dataTable.getColumnCount(); icolumn++) {
+                Column column = dataTable.getColumn(icolumn);
+                for (int iaxis = 0; iaxis < axisList.size(); iaxis++) {
+                    Axis pcpAxis = axisList.get(iaxis);
+                    if (pcpAxis.getColumn() == column) {
+                        newAxisList.add(pcpAxis);
+                        break;
+                    }
+                }
+            }
+
+            axisList = newAxisList;
         }
 
 //        reinitializeScatterplots();
@@ -870,7 +872,7 @@ public class DataTableView extends Region implements DataTableListener {
 //        reinitializeCorrelationRectangles();
 
         // add tuples polylines from data model
-//        tupleList = new ArrayList<>();
+//        polylineList = new ArrayList<>();
 //        for (int iTuple = 0; iTuple < dataTable.getTupleCount(); iTuple++) {
 //            Tuple tuple = dataTable.getTuple(iTuple);
 //            PCPTuple pcpTuple = new PCPTuple(tuple);
@@ -1049,8 +1051,8 @@ public class DataTableView extends Region implements DataTableListener {
         pane.getChildren().add(pcpAxis.getGraphicsGroup());
     }
 
-    public void addBivariateAxis(Column xColumn, Column yColumn, int position) {
-        BivariateAxis bivariateAxis = new BivariateAxis(this, xColumn, yColumn);
+    private void addBivariateAxis(BivariateColumn bivariateColumn, int position) {
+        BivariateAxis bivariateAxis = new BivariateAxis(this, bivariateColumn);
 
         if (position >= axisList.size()) {
             axisList.add(axisList.size(), bivariateAxis);
@@ -1340,6 +1342,11 @@ public class DataTableView extends Region implements DataTableListener {
 //        }
 //
 //        resizeView();
+    }
+
+    @Override
+    public void dataTableBivariateColumnAdded(DataTable dataTable, BivariateColumn bivariateColumn) {
+        addBivariateAxis(bivariateColumn, axisList.size());
     }
 
     @Override

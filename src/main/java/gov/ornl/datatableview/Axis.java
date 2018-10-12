@@ -1,5 +1,6 @@
 package gov.ornl.datatableview;
 
+import gov.ornl.datatable.Column;
 import gov.ornl.datatable.DataTable;
 import javafx.beans.property.*;
 import javafx.geometry.BoundingBox;
@@ -8,6 +9,7 @@ import javafx.geometry.Point2D;
 import javafx.scene.Group;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.Tooltip;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
@@ -20,7 +22,6 @@ public abstract class Axis {
     public final static double DEFAULT_STROKE_WIDTH = 1.5;
     public final static Color DEFAULT_TEXT_COLOR = Color.BLACK;
 
-    private StringProperty title;
     private DataTableView dataTableView;
 
     private Text titleText;
@@ -41,11 +42,17 @@ public abstract class Axis {
     protected Point2D dragEndPoint;
     protected boolean dragging = false;
 
-    public Axis(DataTableView dataTableView, String title) {
-        this.dataTableView = dataTableView;
-        this.title = new SimpleStringProperty(title);
+    private Column column;
 
-        titleText = new Text(title);
+    public Axis(DataTableView dataTableView, Column column) {
+        this.column = column;
+
+        this.dataTableView = dataTableView;
+
+        titleText = new Text(column.getName());
+        Tooltip tooltip = new Tooltip();
+        tooltip.textProperty().bindBidirectional(column.nameProperty());
+        Tooltip.install(titleText, tooltip);
         titleText.setFont(new Font(DEFAULT_TITLE_TEXT_SIZE));
         titleText.setSmooth(true);
         titleText.setFill(DEFAULT_TEXT_COLOR);
@@ -62,6 +69,8 @@ public abstract class Axis {
 
         registerListeners();
     }
+
+    public Column getColumn() { return column; }
 
     public boolean isHighlighted() { return highlighted.get(); }
 
@@ -109,8 +118,8 @@ public abstract class Axis {
                 contextMenu.getItems().addAll(hideMenuItem, closeMenuItem);
                 hideMenuItem.setOnAction(removeEvent -> {
                     // remove this axis from the data table view
-                    dataTableView.removeAxis(this);
-//                    getDataTable().disableColumn(column);
+//                    dataTableView.removeAxis(this);
+                    getDataTable().disableColumn(column);
                 });
                 closeMenuItem.setOnAction(closeEvent -> contextMenu.hide());
                 contextMenu.show(dataTableView, event.getScreenX(), event.getScreenY());
@@ -135,7 +144,10 @@ public abstract class Axis {
                 dataTableView.getPane().getChildren().remove(axisDraggingGraphicsGroup);
                 dragging = false;
                 int newAxisPosition = (int)dragEndPoint.getX() / dataTableView.getAxisSpacing();
-                dataTableView.setAxisPosition(this, newAxisPosition);
+                if (!(newAxisPosition == getDataTable().getColumnIndex(column))) {
+                    getDataTable().changeColumnOrder(getColumn(), newAxisPosition);
+                }
+//                dataTableView.setAxisPosition(this, newAxisPosition);
             }
         });
 
@@ -205,7 +217,7 @@ public abstract class Axis {
         centerX = left + (width / 2.);
         centerY = top + (height / 2.);
 
-        titleText.setText(title.getValue());
+        titleText.setText(column.getName());
         if (titleText.getLayoutBounds().getWidth() > bounds.getWidth()) {
             // truncate the column name to fit axis bounds
             while (titleText.getLayoutBounds().getWidth() > bounds.getWidth()) {

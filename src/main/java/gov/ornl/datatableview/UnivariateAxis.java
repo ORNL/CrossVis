@@ -22,12 +22,8 @@ public abstract class UnivariateAxis extends Axis {
     private Text minValueText;
     private Text maxValueText;
 
-    private Column column;
-
     public UnivariateAxis(DataTableView dataTableView, Column column) {
-        super(dataTableView, column.getName());
-
-        this.column = column;
+        super(dataTableView, column);
 
         minValueText = new Text();
         minValueText.setFont(new Font(DEFAULT_TEXT_SIZE));
@@ -68,13 +64,15 @@ public abstract class UnivariateAxis extends Axis {
         getGraphicsGroup().getChildren().addAll(upperContextBar, lowerContextBar, axisBar, minValueText, maxValueText);
     }
 
-    public Column getColumn() { return column; }
-
     public Rectangle getAxisBar() { return axisBar; }
 
     public Rectangle getUpperContextBar() { return upperContextBar; }
 
     public Rectangle getLowerContextBar() { return lowerContextBar; }
+
+    public double getFocusMinPosition() { return axisBar.getY() + axisBar.getHeight(); }
+
+    public double getFocusMaxPosition() { return axisBar.getY(); }
 
     @Override
     public void resize (double left, double top, double width, double height) {

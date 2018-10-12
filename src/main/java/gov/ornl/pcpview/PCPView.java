@@ -1295,6 +1295,11 @@ public class PCPView extends Region implements DataTableListener {
     }
 
     @Override
+    public void dataTableBivariateColumnAdded(DataTable dataTable, BivariateColumn bivariateColumn) {
+
+    }
+
+    @Override
     public void dataModelColumnOrderChanged(DataTable dataModel) {
         reinitializeLayout();
     }

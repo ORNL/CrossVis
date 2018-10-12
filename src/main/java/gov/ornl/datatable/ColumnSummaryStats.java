@@ -61,10 +61,6 @@ public abstract class ColumnSummaryStats {
             yDimension = new Histogram2DDimension.Categorical(yColumnSummaryStats.getValues(), yColumnSummaryStats.getColumnCategories());
         }
 
-//        if (xDimension instanceof Histogram2DDimension.Categorical || yDimension instanceof Histogram2DDimension.Categorical) {
-//            System.out.println("categorical dimensions");
-//        }
-
         Histogram2D histogram2D = new Histogram2D(xDimension, yDimension);
         columnHistogram2DMap.put(columnSummaryStats.getColumn(), histogram2D);
     }

@@ -1,5 +1,6 @@
 package gov.ornl.datatableview;
 
+import gov.ornl.datatable.BivariateColumn;
 import gov.ornl.datatable.Column;
 import gov.ornl.scatterplot.Scatterplot;
 import javafx.scene.paint.Color;
@@ -7,19 +8,17 @@ import javafx.scene.shape.Rectangle;
 
 public class BivariateAxis extends Axis {
 
-    private Column xColumn;
-    private Column yColumn;
+    private BivariateColumn bivariateColumn;
 
     private Scatterplot scatterplot;
 //    private Rectangle scatterplotRectangle;
 
-    public BivariateAxis(DataTableView dataTableView, Column xColumn, Column yColumn) {
-        super(dataTableView, yColumn.getName() + " vs. " + xColumn.getName());
+    public BivariateAxis(DataTableView dataTableView, BivariateColumn bivariateColumn) {
+        super(dataTableView, bivariateColumn);
 
-        this.xColumn = xColumn;
-        this.yColumn = yColumn;
+        this.bivariateColumn = bivariateColumn;
 
-        scatterplot = new Scatterplot(xColumn, yColumn);
+        scatterplot = new Scatterplot(bivariateColumn.getColumn1(), bivariateColumn.getColumn2());
 
 //        scatterplotRectangle = new Rectangle();
 //        scatterplotRectangle.setStroke(Color.BLUE);

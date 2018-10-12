@@ -403,6 +403,32 @@ public class DataTable {
 		fireColumnsDisabled(columns);
 	}
 
+	public void addBivariateColumn(Column column1, Column column2) {
+		String title = column2.getName() + " vs. " + column1.getName();
+		BivariateColumn biColumn = new BivariateColumn(title, column1, column2);
+		biColumn.setDataModel(this);
+		columns.add(biColumn);
+
+		int col1Index = columns.indexOf(column1);
+		int col2Index = columns.indexOf(column2);
+
+		// add bivariate pair to tuples
+		for (Tuple tuple : tuples) {
+			Object biValues[] = {tuple.getElement(col1Index), tuple.getElement(col2Index)};
+			tuple.addElement(biValues);
+		}
+
+		calculateStatistics();
+
+		fireBivariateColumnAdded(biColumn);
+	}
+
+	private void fireBivariateColumnAdded(BivariateColumn bivariateColumn) {
+		for (DataTableListener listener : listeners) {
+			listener.dataTableBivariateColumnAdded(this, bivariateColumn);
+		}
+	}
+
 	public void enableColumn(Column column) {
 		if (disabledColumns.contains(column)) {
             // move elements from disable column tuples to active tuples list
@@ -764,7 +790,7 @@ public class DataTable {
         maxHistogram2DBinCount = 0;
         for (Column column : columns) {
             for (Column compareColumn : columns) {
-                if (column != compareColumn) {
+                if (column != compareColumn && !(column instanceof BivariateColumn) && !(compareColumn instanceof BivariateColumn)) {
                     column.getStatistics().calculateHistogram2D(compareColumn.getStatistics());
                     if (column.getStatistics().getMaxHistogram2DBinCount() > maxHistogram2DBinCount) {
                         maxHistogram2DBinCount = column.getStatistics().getMaxHistogram2DBinCount();

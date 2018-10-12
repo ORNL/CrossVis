@@ -7,4 +7,8 @@ public class DoubleAxis extends UnivariateAxis {
     public DoubleAxis(DataTableView dataTableView, DoubleColumn column) {
         super(dataTableView, column);
     }
+
+    public DoubleColumn doubleColumn () {
+        return (DoubleColumn)getColumn();
+    }
 }

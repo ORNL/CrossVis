@@ -50,8 +50,8 @@ public class DataTableViewTest extends Application {
 
         Button addBivariateAxisButton = new Button("Add Bivariate Axis");
         addBivariateAxisButton.setOnAction(event -> {
-            dataTableView.addBivariateAxis(dataTableView.getDataTable().getColumn(2),
-                    dataTableView.getDataTable().getColumn(3), 3);
+            dataTableView.getDataTable().addBivariateColumn(dataTableView.getDataTable().getColumn(2),
+                    dataTableView.getDataTable().getColumn(3));
         });
 
         HBox settingsPane = new HBox();
