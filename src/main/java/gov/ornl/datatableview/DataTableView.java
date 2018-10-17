@@ -836,9 +836,9 @@ public class DataTableView extends Region implements DataTableListener {
             for (int i = 0; i < dataTable.getColumnCount(); i++) {
                 Axis axis = null;
                 if (dataTable.getColumn(i) instanceof TemporalColumn) {
-//                    pcpAxis = new TemporalAxis(this, dataTable.getColumn(iaxis));
+                    axis = new TemporalAxis(this, dataTable.getColumn(i));
                 } else if (dataTable.getColumn(i) instanceof CategoricalColumn) {
-//                    pcpAxis = new PCPCategoricalAxis(this, dataTable.getColumn(iaxis));
+                    axis = new CategoricalAxis(this, dataTable.getColumn(i));
                 } else if (dataTable.getColumn(i) instanceof DoubleColumn){
                     axis = new DoubleAxis(this, (DoubleColumn)dataTable.getColumn(i));
                 } else if (dataTable.getColumn(i) instanceof BivariateColumn) {

@@ -63,6 +63,13 @@ public class TemporalAxis extends UnivariateAxis {
         return position;
     }
 
+    @Override
+    protected Object getValueForAxisPosition(double axisPosition) {
+        Instant value = GraphicsUtil.mapValue(axisPosition, getFocusMinPosition(), getFocusMaxPosition(),
+                temporalColumn().getStatistics().getStartInstant(), temporalColumn().getStatistics().getEndInstant());
+        return value;
+    }
+
     private void registerListeners() {
         ((TemporalColumn)getColumn()).getStatistics().startInstantProperty().addListener((observable, oldValue, newValue) -> {
             minValueText.setText(newValue.toString());

@@ -54,6 +54,8 @@ public abstract class UnivariateAxis extends Axis {
         getGraphicsGroup().getChildren().addAll(upperContextBar, lowerContextBar, axisBar);
     }
 
+    protected abstract Object getValueForAxisPosition(double axisPosition);
+
     public Rectangle getAxisBar() { return axisBar; }
 
     public double getBarLeftX() { return axisBar.getX(); }

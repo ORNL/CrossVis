@@ -132,6 +132,19 @@ public class DoubleAxis extends UnivariateAxis {
         registerListeners();
     }
 
+    @Override
+    protected Object getValueForAxisPosition(double axisPosition) {
+        double value = GraphicsUtil.mapValue(axisPosition, getFocusMinPosition(), getFocusMaxPosition(),
+                doubleColumn().getStatistics().getMinValue(), doubleColumn().getStatistics().getMaxValue());
+        return value;
+    }
+
+    private double getAxisPositionForValue(double value) {
+        double position = GraphicsUtil.mapValue(value, doubleColumn().getStatistics().getMinValue(),
+                doubleColumn().getStatistics().getMaxValue(), getFocusMinPosition(), getFocusMaxPosition());
+        return position;
+    }
+
     public DoubleColumn doubleColumn () {
         return (DoubleColumn)getColumn();
     }

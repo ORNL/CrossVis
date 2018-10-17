@@ -53,7 +53,8 @@ public class DataTableViewTest extends Application {
 
                 // Reads cars data set
 //                IOUtilities.readCSV(new File("data/csv/cars.csv"), null, null, null, null, dataTable);
-//                dataTableView.setDataTable(dataTable);
+
+                dataTableView.setDataTable(dataTable);
             } catch (IOException e) {
                 e.printStackTrace();
                 System.exit(0);
