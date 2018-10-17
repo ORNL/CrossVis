@@ -17,6 +17,8 @@ import javafx.stage.Stage;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 
 public class DataTableViewTest extends Application {
 
@@ -40,8 +42,18 @@ public class DataTableViewTest extends Application {
         loadDataButton.setOnAction(event -> {
             try {
                 DataTable dataTable = new DataTable();
-                IOUtilities.readCSV(new File("data/csv/cars.csv"), null, null, null, null, dataTable);
-                dataTableView.setDataTable(dataTable);
+
+                // reads titan data with date field
+                ArrayList<String> temporalColumnNames = new ArrayList<>();
+                temporalColumnNames.add("Date");
+                ArrayList<DateTimeFormatter> temporalColumnFormatters = new ArrayList<>();
+                temporalColumnFormatters.add(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss"));
+                IOUtilities.readCSV(new File("data/csv/titan-performance.csv"), null, null,
+                        temporalColumnNames, temporalColumnFormatters, dataTable);
+
+                // Reads cars data set
+//                IOUtilities.readCSV(new File("data/csv/cars.csv"), null, null, null, null, dataTable);
+//                dataTableView.setDataTable(dataTable);
             } catch (IOException e) {
                 e.printStackTrace();
                 System.exit(0);

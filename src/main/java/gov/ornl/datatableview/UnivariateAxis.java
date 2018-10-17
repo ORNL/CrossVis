@@ -3,6 +3,7 @@ package gov.ornl.datatableview;
 import gov.ornl.datatable.Column;
 import javafx.geometry.VPos;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
@@ -19,19 +20,8 @@ public abstract class UnivariateAxis extends Axis {
     private Rectangle lowerContextBar;
     private Rectangle axisBar;
 
-    private Text minValueText;
-    private Text maxValueText;
-
     public UnivariateAxis(DataTableView dataTableView, Column column) {
         super(dataTableView, column);
-
-        minValueText = new Text();
-        minValueText.setFont(new Font(DEFAULT_TEXT_SIZE));
-        minValueText.setSmooth(true);
-
-        maxValueText = new Text();
-        maxValueText.setFont(new Font(DEFAULT_TEXT_SIZE));
-        maxValueText.setSmooth(true);
 
         axisBar = new Rectangle();
         axisBar.setStroke(Color.DARKGRAY);
@@ -61,10 +51,14 @@ public abstract class UnivariateAxis extends Axis {
         hoverValueText.setMouseTransparent(true);
 //        getDataTableView().getChildren().add(hoverValueText);
 
-        getGraphicsGroup().getChildren().addAll(upperContextBar, lowerContextBar, axisBar, minValueText, maxValueText);
+        getGraphicsGroup().getChildren().addAll(upperContextBar, lowerContextBar, axisBar);
     }
 
     public Rectangle getAxisBar() { return axisBar; }
+
+    public double getBarLeftX() { return axisBar.getX(); }
+
+    public double getBarRightX() { return axisBar.getX() + axisBar.getWidth(); }
 
     public Rectangle getUpperContextBar() { return upperContextBar; }
 
@@ -78,16 +72,18 @@ public abstract class UnivariateAxis extends Axis {
     public void resize (double left, double top, double width, double height) {
         super.resize(left, top, width, height);
 
-        double barTop = getTitleText().getLayoutBounds().getMaxY() + minValueText.getLayoutBounds().getHeight() + 4;
-        double barBottom = getBounds().getMinY() + getBounds().getHeight() - maxValueText.getLayoutBounds().getHeight();
+//        double barTop = getTitleText().getLayoutBounds().getMaxY() + minValueText.getLayoutBounds().getHeight() + 4;
+        double barTop = getTitleText().getLayoutBounds().getMaxY() + 4;
+        double barBottom = getBounds().getMinY() + getBounds().getHeight();
+//        double barBottom = getBounds().getMinY() + getBounds().getHeight() - maxValueText.getLayoutBounds().getHeight();
         double focusTop = barTop + contextRegionHeight;
         double focusBottom = barBottom - contextRegionHeight;
 
-        minValueText.setX(getBounds().getMinX() + ((width - minValueText.getLayoutBounds().getWidth()) / 2.));
-        minValueText.setY(barBottom + minValueText.getLayoutBounds().getHeight());
-
-        maxValueText.setX(getBounds().getMinX() + ((width - maxValueText.getLayoutBounds().getWidth()) / 2.));
-        maxValueText.setY(barTop - 4d);
+//        minValueText.setX(getBounds().getMinX() + ((width - minValueText.getLayoutBounds().getWidth()) / 2.));
+//        minValueText.setY(barBottom + minValueText.getLayoutBounds().getHeight());
+//
+//        maxValueText.setX(getBounds().getMinX() + ((width - maxValueText.getLayoutBounds().getWidth()) / 2.));
+//        maxValueText.setY(barTop - 4d);
 
         axisBar.setX(getCenterX() - (axisBar.getWidth() / 2.));
         axisBar.setY(focusTop);
@@ -102,5 +98,13 @@ public abstract class UnivariateAxis extends Axis {
         lowerContextBar.setWidth(axisBar.getWidth());
         lowerContextBar.setY(focusBottom);
         lowerContextBar.setHeight(contextRegionHeight);
+    }
+
+    protected Line makeLine() {
+        Line line = new Line();
+        line.setStroke(Color.DARKGRAY);
+        line.setSmooth(true);
+        line.setStrokeWidth(DEFAULT_STROKE_WIDTH);
+        return line;
     }
 }

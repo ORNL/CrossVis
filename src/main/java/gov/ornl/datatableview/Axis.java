@@ -21,8 +21,14 @@ public abstract class Axis {
     public final static double DEFAULT_TEXT_SIZE = 10d;
     public final static double DEFAULT_STROKE_WIDTH = 1.5;
     public final static Color DEFAULT_TEXT_COLOR = Color.BLACK;
+    public final static Color DEFAULT_HISTOGRAM_FILL = Color.SILVER.deriveColor(1, 1, 1, .8);
+    public final static Color DEFAULT_QUERY_HISTOGRAM_FILL = Color.SLATEGRAY.deriveColor(1., 1., 1., 0.8);
+    public final static Color DEFAULT_HISTOGRAM_STROKE = Color.DARKGRAY;
+    public final static int DEFAULT_MAX_HISTOGRAM_BIN_WIDTH = 30;
 
     private DataTableView dataTableView;
+
+    protected double maxHistogramBinWidth = DEFAULT_MAX_HISTOGRAM_BIN_WIDTH;
 
     private Text titleText;
     private Rectangle titleTextRectangle;
@@ -36,11 +42,17 @@ public abstract class Axis {
 
     private Group graphicsGroup = new Group();
 
+    protected Group axisSelectionGraphicsGroup = new Group();
+
     // dragging variables
     protected Group axisDraggingGraphicsGroup;
     protected Point2D dragStartPoint;
     protected Point2D dragEndPoint;
     protected boolean dragging = false;
+
+    protected Color histogramFill = DEFAULT_HISTOGRAM_FILL;
+    protected Color histogramStroke = DEFAULT_HISTOGRAM_STROKE;
+    protected Color queryHistogramFill = DEFAULT_QUERY_HISTOGRAM_FILL;
 
     private Column column;
 
@@ -102,10 +114,12 @@ public abstract class Axis {
 
         titleTextRectangle.setOnMouseClicked(event -> {
             if (event.getClickCount() == 2) {
-                if (!isHighlighted()) {
-                    dataTableView.setHighlightedAxis(this);
+                if (getDataTable().getHighlightedColumn() == getColumn()) {
+                    getDataTable().setHighlightedColumn(null);
+//                    dataTableView.setHighlightedAxis(this);
                 } else {
-                    dataTableView.setHighlightedAxis(null);
+                    getDataTable().setHighlightedColumn(getColumn());
+//                    dataTableView.setHighlightedAxis(null);
                 }
             }
         });

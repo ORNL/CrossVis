@@ -40,7 +40,7 @@ public class PCPViewWindow extends Application implements DataTableListener {
     private CheckMenuItem showSelectedDataStatisticsCheckMI = new CheckMenuItem("Show Summary Statistics for Selected Data");
     private CheckMenuItem showUnselectedDataStatisticsCheckMI = new CheckMenuItem("Show Summary Statistics for Unselected Data");
 
-    private Menu polylineDisplayModeMenu = new Menu("Polyline Display Mode");
+    private Menu polylineDisplayModeMenu = new Menu("TuplePolyline Display Mode");
     private ToggleGroup polylineDisplayModeMenuGroup = new ToggleGroup();
     private RadioMenuItem noPolylineModeMenuItem = new RadioMenuItem("Show Polylines");
     private RadioMenuItem binnedModeMenuItem = new RadioMenuItem("Show Binned Polylines");

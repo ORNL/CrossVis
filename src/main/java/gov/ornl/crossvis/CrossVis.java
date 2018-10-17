@@ -777,16 +777,16 @@ public class CrossVis extends Application implements DataTableListener {
             }
         });
 
-        Menu polylineDisplayModeMenu = new Menu("Polyline Display Mode");
+        Menu polylineDisplayModeMenu = new Menu("TuplePolyline Display Mode");
         ToggleGroup polylineDisplayModeMenuGroup = new ToggleGroup();
 
-        RadioMenuItem lineDisplayModeMI = new RadioMenuItem("Polyline Display Mode");
+        RadioMenuItem lineDisplayModeMI = new RadioMenuItem("TuplePolyline Display Mode");
         lineDisplayModeMI.setToggleGroup(polylineDisplayModeMenuGroup);
         if (pcpView.getPolylineDisplayMode() == PCPView.POLYLINE_DISPLAY_MODE.POLYLINES) {
             lineDisplayModeMI.setSelected(true);
         }
 
-        RadioMenuItem binDisplayModeMI = new RadioMenuItem("Binned Polyline Display Mode");
+        RadioMenuItem binDisplayModeMI = new RadioMenuItem("Binned TuplePolyline Display Mode");
         binDisplayModeMI.setToggleGroup(polylineDisplayModeMenuGroup);
         if (pcpView.getPolylineDisplayMode() == PCPView.POLYLINE_DISPLAY_MODE.BINNED_POLYLINES) {
             lineDisplayModeMI.setSelected(true);
