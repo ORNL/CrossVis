@@ -57,7 +57,7 @@ public class PCPCategoricalAxis extends PCPUnivariateAxis {
 //    @Override
 //    protected boolean removeAxisSelection(ColumnSelection columnSelection) {
 //        // find the axis selection for the given column selection
-//        PCPAxisSelection axisSelection = getAxisSelection(columnSelection);
+//        UnivariateAxisSelection axisSelection = getAxisSelection(columnSelection);
 //        if (axisSelection != null) {
 //            // remove the axis selection's graphics
 //            pane.getChildren().remove(axisSelection.getGraphicsGroup());

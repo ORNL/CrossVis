@@ -1,10 +1,8 @@
 package gov.ornl.datatableview;
 
-import gov.ornl.datatable.DoubleColumn;
-import gov.ornl.datatable.DoubleColumnSummaryStats;
-import gov.ornl.datatable.DoubleHistogram;
-import gov.ornl.pcpview.PCPView;
+import gov.ornl.datatable.*;
 import gov.ornl.util.GraphicsUtil;
+import javafx.geometry.Point2D;
 import javafx.scene.Group;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
@@ -49,6 +47,8 @@ public class DoubleAxis extends UnivariateAxis {
 
     private Text minValueText;
     private Text maxValueText;
+
+    private DoubleAxisSelection draggingSelection;
 
     public DoubleAxis(DataTableView dataTableView, DoubleColumn column) {
         super(dataTableView, column);
@@ -245,6 +245,93 @@ public class DoubleAxis extends UnivariateAxis {
 //            log.info("[ " + focusTopValue + " -- " + focusBottomValue + " ]");
 //        });
 
+        getAxisBar().setOnMousePressed(event -> {
+            dragStartPoint = new Point2D(event.getX(), event.getY());
+        });
+
+        getAxisBar().setOnMouseDragged(event -> {
+            if (!dragging) {
+                dragging = true;
+            }
+
+            dragEndPoint = new Point2D(event.getX(), event.getY());
+
+            double selectionMaxY = Math.min(dragStartPoint.getY(), dragEndPoint.getY());
+            double selectionMinY = Math.max(dragStartPoint.getY(), dragEndPoint.getY());
+
+            selectionMaxY = selectionMaxY < getFocusMaxPosition() ? getFocusMaxPosition() : selectionMaxY;
+            selectionMinY = selectionMinY > getFocusMinPosition() ? getFocusMinPosition() : selectionMinY;
+
+            double maxSelectionValue = GraphicsUtil.mapValue(selectionMaxY, getFocusMaxPosition(), getFocusMinPosition(),
+                    doubleColumn().getStatistics().getMaxValue(), doubleColumn().getStatistics().getMinValue());
+            double minSelectionValue = GraphicsUtil.mapValue(selectionMinY, getFocusMaxPosition(), getFocusMinPosition(),
+                    doubleColumn().getStatistics().getMaxValue(), doubleColumn().getStatistics().getMinValue());
+
+            if (draggingSelection == null) {
+                DoubleColumnSelectionRange selectionRange = new DoubleColumnSelectionRange(doubleColumn(), minSelectionValue, maxSelectionValue);
+                draggingSelection = new DoubleAxisSelection(this, selectionRange, selectionMinY, selectionMaxY);
+                axisSelectionGraphicsGroup.getChildren().add(draggingSelection.getGraphicsGroup());
+                axisSelectionGraphicsGroup.toFront();
+            } else {
+                draggingSelection.update(minSelectionValue, maxSelectionValue, selectionMinY, selectionMaxY);
+            }
+        });
+
+        getAxisBar().setOnMouseReleased(event -> {
+            if (draggingSelection != null) {
+                axisSelectionGraphicsGroup.getChildren().remove(draggingSelection.getGraphicsGroup());
+                getDataTable().addColumnSelectionRangeToActiveQuery(draggingSelection.getColumnSelection());
+                dragging = false;
+                draggingSelection = null;
+            }
+        });
+
+        getAxisBar().setOnMouseEntered(event -> {
+            hoverValueText.setVisible(true);
+            hoverValueText.toFront();
+        });
+
+        getAxisBar().setOnMouseExited(event -> {
+            hoverValueText.setVisible(false);
+        });
+
+        getAxisBar().setOnMouseMoved(event -> {
+            Object value = getValueForAxisPosition(event.getY());
+            if (value != null) {
+                hoverValueText.setText(getValueForAxisPosition(event.getY()).toString());
+                hoverValueText.setY(event.getY());
+                hoverValueText.setX(getCenterX() - hoverValueText.getLayoutBounds().getWidth() / 2.);
+            } else {
+                hoverValueText.setText("");
+            }
+//            hoverValueText.toFront();
+        });
+    }
+
+    @Override
+    protected AxisSelection addAxisSelection(ColumnSelection columnSelection) {
+        // see if an axis selection already exists for the column selection
+        for (AxisSelection axisSelection : getAxisSelectionList()) {
+            if (axisSelection.getColumnSelection() == columnSelection) {
+                // an axis selection already exists for the given column selection so abort
+                return null;
+            }
+        }
+
+        DoubleColumnSelectionRange doubleColumnSelection = (DoubleColumnSelectionRange)columnSelection;
+
+        double selectionMinValuePosition = getAxisPositionForValue(doubleColumnSelection.getMinValue());
+        double selectionMaxValuePosition = getAxisPositionForValue(doubleColumnSelection.getMaxValue());
+
+        DoubleAxisSelection newAxisSelection = new DoubleAxisSelection(this, doubleColumnSelection,
+                selectionMinValuePosition, selectionMaxValuePosition);
+
+        axisSelectionGraphicsGroup.getChildren().add(newAxisSelection.getGraphicsGroup());
+        axisSelectionGraphicsGroup.toFront();
+
+        getAxisSelectionList().add(newAxisSelection);
+
+        return newAxisSelection;
     }
 
     public void resize(double left, double top, double width, double height) {

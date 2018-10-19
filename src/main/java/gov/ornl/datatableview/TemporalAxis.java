@@ -2,6 +2,7 @@ package gov.ornl.datatableview;
 
 import gov.ornl.datatable.*;
 import gov.ornl.util.GraphicsUtil;
+import javafx.geometry.Point2D;
 import javafx.scene.Group;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
@@ -28,6 +29,8 @@ public class TemporalAxis extends UnivariateAxis {
     private Text minValueText;
     private Text maxValueText;
 
+    private TemporalAxisSelection draggingSelection;
+
     public TemporalAxis(DataTableView dataTableView, Column column) {
         super(dataTableView, column);
 
@@ -53,6 +56,30 @@ public class TemporalAxis extends UnivariateAxis {
         }
 
         registerListeners();
+    }
+
+    @Override
+    protected AxisSelection addAxisSelection(ColumnSelection columnSelection) {
+        // see if an axis selection already exists for the column selection
+        for (AxisSelection axisSelection : getAxisSelectionList()) {
+            if (axisSelection.getColumnSelection() == columnSelection) {
+                // an axis selection already exists for the given column selection so abort
+                return null;
+            }
+        }
+
+        TemporalColumnSelectionRange temporalColumnSelection = (TemporalColumnSelectionRange)columnSelection;
+
+        double selectionMinValuePosition = getAxisPositionForValue(temporalColumnSelection.getStartInstant());
+        double selectionMaxValuePosition = getAxisPositionForValue(temporalColumnSelection.getEndInstant());
+
+        TemporalAxisSelection newAxisSelection = new TemporalAxisSelection(this, temporalColumnSelection,
+                selectionMinValuePosition, selectionMaxValuePosition);
+        axisSelectionGraphicsGroup.getChildren().add(newAxisSelection.getGraphicsGroup());
+
+        getAxisSelectionList().add(newAxisSelection);
+
+        return newAxisSelection;
     }
 
     protected TemporalColumn temporalColumn() { return (TemporalColumn)getColumn(); }
@@ -93,6 +120,69 @@ public class TemporalAxis extends UnivariateAxis {
 
                 resize(getBounds().getMinX(), getBounds().getMinY(), getBounds().getWidth(), getBounds().getHeight());
             }
+        });
+
+        getAxisBar().setOnMousePressed(event -> {
+            dragStartPoint = new Point2D(event.getX(), event.getY());
+        });
+
+        getAxisBar().setOnMouseDragged(event -> {
+            if (!dragging) {
+                dragging = true;
+            }
+
+            dragEndPoint = new Point2D(event.getX(), event.getY());
+
+            double selectionMaxY = Math.min(dragStartPoint.getY(), dragEndPoint.getY());
+            double selectionMinY = Math.max(dragStartPoint.getY(), dragEndPoint.getY());
+
+            selectionMaxY = selectionMaxY < getFocusMaxPosition() ? getFocusMaxPosition() : selectionMaxY;
+            selectionMinY = selectionMinY > getFocusMinPosition() ? getFocusMinPosition() : selectionMinY;
+
+            Instant selectionEndInstant = GraphicsUtil.mapValue(selectionMaxY, getFocusMaxPosition(), getFocusMinPosition(),
+                    temporalColumn().getStatistics().getEndInstant(), temporalColumn().getStatistics().getStartInstant());
+            Instant selectionStartInstant = GraphicsUtil.mapValue(selectionMinY, getFocusMaxPosition(), getFocusMinPosition(),
+                    temporalColumn().getStatistics().getEndInstant(), temporalColumn().getStatistics().getStartInstant());
+
+            if (draggingSelection == null) {
+//                    DoubleColumnSelectionRange selectionRange = dataModel.addColumnSelectionRangeToActiveQuery(column, minSelectionValue, maxSelectionValue);
+                TemporalColumnSelectionRange selectionRange = new TemporalColumnSelectionRange(temporalColumn(), selectionStartInstant, selectionEndInstant);
+                draggingSelection = new TemporalAxisSelection(this, selectionRange, selectionMinY, selectionMaxY);
+                axisSelectionGraphicsGroup.getChildren().add(draggingSelection.getGraphicsGroup());
+                axisSelectionGraphicsGroup.toFront();
+            } else {
+                draggingSelection.update(selectionStartInstant, selectionEndInstant, selectionMinY, selectionMaxY);
+            }
+        });
+
+        getAxisBar().setOnMouseReleased(event -> {
+            if (draggingSelection != null) {
+                axisSelectionGraphicsGroup.getChildren().remove(draggingSelection.getGraphicsGroup());
+                getDataTable().addColumnSelectionRangeToActiveQuery(draggingSelection.getColumnSelection());
+                dragging = false;
+                draggingSelection = null;
+            }
+        });
+
+        getAxisBar().setOnMouseEntered(event -> {
+            hoverValueText.setVisible(true);
+            hoverValueText.toFront();
+        });
+
+        getAxisBar().setOnMouseExited(event -> {
+            hoverValueText.setVisible(false);
+        });
+
+        getAxisBar().setOnMouseMoved(event -> {
+            Object value = getValueForAxisPosition(event.getY());
+            if (value != null) {
+                hoverValueText.setText(getValueForAxisPosition(event.getY()).toString());
+                hoverValueText.setY(event.getY());
+                hoverValueText.setX(getCenterX() - hoverValueText.getLayoutBounds().getWidth() / 2.);
+            } else {
+                hoverValueText.setText("");
+            }
+//            hoverValueText.toFront();
         });
     }
 

@@ -627,7 +627,7 @@ public class DataTableView extends Region implements DataTableListener {
     private void removeAllAxisSelectionGraphics() {
 //        for (PCPUnivariateAxis pcpAxis : axisList) {
 //            if (!pcpAxis.getAxisSelectionList().isEmpty()) {
-//                for (PCPAxisSelection pcpAxisSelection : pcpAxis.getAxisSelectionList()) {
+//                for (UnivariateAxisSelection pcpAxisSelection : pcpAxis.getAxisSelectionList()) {
 //                    pane.getChildren().remove(pcpAxisSelection.getGraphicsGroup());
 //                }
 //                pcpAxis.getAxisSelectionList().clear();
@@ -1090,15 +1090,15 @@ public class DataTableView extends Region implements DataTableListener {
         }
 
         if (isShowingPolylines()) {
-//            if (getPolylineDisplayMode() == POLYLINE_DISPLAY_MODE.POLYLINES) {
-//                fillTupleSets();
-//                redrawView();
+            if (getPolylineDisplayMode() == POLYLINE_DISPLAY_MODE.POLYLINES) {
+                fillTupleSets();
+                redrawView();
 //            } else if (getPolylineDisplayMode() == POLYLINE_DISPLAY_MODE.BINNED_POLYLINES) {
 //                for (PCPBinSet PCPBinSet : PCPBinSetList) {
 //                    PCPBinSet.layoutBins();
 //                }
 //                redrawView();
-//            }
+            }
         }
     }
 
@@ -1156,11 +1156,11 @@ public class DataTableView extends Region implements DataTableListener {
 //        }
     }
 
-//    private PCPAxisSelection getAxisSelectionforColumnSelection(ColumnSelection columnSelection) {
+//    private UnivariateAxisSelection getAxisSelectionforColumnSelection(ColumnSelection columnSelection) {
 //        if (axisList != null) {
 //            for (PCPUnivariateAxis axis : axisList) {
 //                if (axis.getColumn() == columnSelection.getColumn()) {
-//                    for (PCPAxisSelection axisSelection : axis.getAxisSelectionList()) {
+//                    for (UnivariateAxisSelection axisSelection : axis.getAxisSelectionList()) {
 //                        if (axisSelection.getColumnSelectionRange() == columnSelection) {
 //                            return axisSelection;
 //                        }
@@ -1184,24 +1184,24 @@ public class DataTableView extends Region implements DataTableListener {
 
     @Override
     public void dataModelColumnSelectionAdded(DataTable dataTable, ColumnSelection columnSelection) {
-//        PCPUnivariateAxis axis = getAxisForColumn(columnSelection.getColumn());
-//        if (axis != null) {
-//            // add it to the appropriate column axis (it is exists the axis will ignore the add request)
-//            axis.addAxisSelection(columnSelection);
-//        }
-//
-//        handleQueryChange();
+        Axis axis = getAxisForColumn(columnSelection.getColumn());
+        if (axis != null) {
+            // add it to the appropriate column axis (it is exists the axis will ignore the add request)
+            axis.addAxisSelection(columnSelection);
+        }
+
+        handleQueryChange();
     }
 
     @Override
     public void dataModelColumnSelectionRemoved(DataTable dataTable, ColumnSelection columnSelection) {
-//        // find selection column axis and remove selection (if it doesn't exist, the axis will ignore the remove request)
-//        PCPUnivariateAxis axis = getAxisForColumn(columnSelection.getColumn());
-//        if (axis != null) {
-//            axis.removeAxisSelection(columnSelection);
-//        }
-//
-//        handleQueryChange();
+        // find selection column axis and remove selection (if it doesn't exist, the axis will ignore the remove request)
+        Axis axis = getAxisForColumn(columnSelection.getColumn());
+        if (axis != null) {
+            axis.removeAxisSelection(columnSelection);
+        }
+
+        handleQueryChange();
     }
 
     @Override

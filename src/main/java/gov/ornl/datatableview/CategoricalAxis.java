@@ -1,7 +1,6 @@
 package gov.ornl.datatableview;
 
 import gov.ornl.datatable.*;
-import gov.ornl.pcpview.PCPAxisSelection;
 import gov.ornl.util.GraphicsUtil;
 import javafx.scene.Group;
 import javafx.scene.control.Tooltip;
@@ -9,6 +8,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -47,6 +47,24 @@ public class CategoricalAxis extends UnivariateAxis {
     }
 
     @Override
+    protected AxisSelection addAxisSelection(ColumnSelection columnSelection) {
+        // see if an axis selection already exists for the column selection
+        for (AxisSelection axisSelection : getAxisSelectionList()) {
+            if (axisSelection.getColumnSelection() == columnSelection) {
+                // an axis selection already exists for the given column selection so abort
+                return null;
+            }
+        }
+
+        CategoricalColumnSelection categoricalColumnSelection = (CategoricalColumnSelection)columnSelection;
+
+        CategoricalAxisSelection newAxisSelection = new CategoricalAxisSelection(this, categoricalColumnSelection);
+        getAxisSelectionList().add(newAxisSelection);
+
+        return newAxisSelection;
+    }
+
+    @Override
     protected Object getValueForAxisPosition(double axisPosition) {
         for (String category : categoriesRectangleMap.keySet()) {
             Rectangle rectangle = categoriesRectangleMap.get(category);
@@ -81,16 +99,47 @@ public class CategoricalAxis extends UnivariateAxis {
     private void registerListeners() {
     }
 
+    private void handleCategoryRectangleClicked(Rectangle rectangle, String category) {
+        // if there are no current axis selections, make a new selection and add this category
+        if (getAxisSelectionList().isEmpty()) {
+            HashSet<String> categories = new HashSet<>();
+            categories.add(category);
+            CategoricalColumnSelection columnSelection = new CategoricalColumnSelection(categoricalColumn(), categories);
+            CategoricalAxisSelection axisSelection = new CategoricalAxisSelection(this, columnSelection);
+            getAxisSelectionList().add(axisSelection);
+            getDataTable().addColumnSelectionRangeToActiveQuery(columnSelection);
+        } else {
+            ArrayList<AxisSelection> selectionsToRemove = new ArrayList<>();
+            for (AxisSelection selection : getAxisSelectionList()) {
+                CategoricalAxisSelection categoricalSelection = (CategoricalAxisSelection)selection;
+                CategoricalColumnSelection categoricalColumnSelection = (CategoricalColumnSelection)categoricalSelection.getColumnSelection();
+
+                if (categoricalColumnSelection.getSelectedCategories().contains(category)) {
+                    // remove the category from the selection
+                    categoricalColumnSelection.removeCategory(category);
+                    if (categoricalColumnSelection.getSelectedCategories().isEmpty()) {
+                        selectionsToRemove.add(selection);
+                    }
+                } else {
+                    categoricalColumnSelection.addCategory(category);
+                }
+            }
+            if (!selectionsToRemove.isEmpty()) {
+                getAxisSelectionList().removeAll(selectionsToRemove);
+            }
+        }
+    }
+
     public void resize(double center, double top, double width, double height) {
         super.resize(center, top, width, height);
 
         if (!getDataTable().isEmpty()) {
             CategoricalHistogram histogram = categoricalColumn().getStatistics().getHistogram();
 
-//            HashSet<String> selectedCategories = new HashSet<>();
-//            for (PCPAxisSelection axisSelection : getAxisSelectionList()) {
-//                selectedCategories.addAll(((CategoricalColumnSelection)axisSelection.getColumnSelectionRange()).getSelectedCategories());
-//            }
+            HashSet<String> selectedCategories = new HashSet<>();
+            for (AxisSelection axisSelection : getAxisSelectionList()) {
+                selectedCategories.addAll(((CategoricalColumnSelection)axisSelection.getColumnSelection()).getSelectedCategories());
+            }
 
             // remove previously shown category shapes
             categoriesRectangleGroup.getChildren().clear();
@@ -110,9 +159,9 @@ public class CategoricalAxis extends UnivariateAxis {
                 rectangle.setArcHeight(6);
                 rectangle.setArcWidth(6);
 
-//                rectangle.setOnMouseClicked(event -> {
-//                    handleCategoryRectangleClicked(rectangle, category);
-//                });
+                rectangle.setOnMouseClicked(event -> {
+                    handleCategoryRectangleClicked(rectangle, category);
+                });
 
                 Tooltip.install(rectangle, new Tooltip(category + " : " + categoryCount + " of " +
                         histogram.getTotalCount() + " (" +
@@ -121,16 +170,16 @@ public class CategoricalAxis extends UnivariateAxis {
                 categoriesRectangleMap.put(category, rectangle);
                 categoriesRectangleGroup.getChildren().add(rectangle);
 
-//                if (selectedCategories.contains(category)) {
-//                    Rectangle innerRectangle = new Rectangle(rectangle.getX()+1, rectangle.getY()+1,
-//                            rectangle.getWidth()-2, rectangle.getHeight()-2);
-//                    innerRectangle.setStroke(DEFAULT_SELECTED_CATEGORY_STROKE_COLOR);
-//                    innerRectangle.setFill(null);
-//                    innerRectangle.setArcWidth(6);
-//                    innerRectangle.setArcHeight(6);
-//                    innerRectangle.setMouseTransparent(true);
-//                    categoriesRectangleGroup.getChildren().add(innerRectangle);
-//                }
+                if (selectedCategories.contains(category)) {
+                    Rectangle innerRectangle = new Rectangle(rectangle.getX()+1, rectangle.getY()+1,
+                            rectangle.getWidth()-2, rectangle.getHeight()-2);
+                    innerRectangle.setStroke(DEFAULT_SELECTED_CATEGORY_STROKE_COLOR);
+                    innerRectangle.setFill(null);
+                    innerRectangle.setArcWidth(6);
+                    innerRectangle.setArcHeight(6);
+                    innerRectangle.setMouseTransparent(true);
+                    categoriesRectangleGroup.getChildren().add(innerRectangle);
+                }
 
                 lastRectangleBottomY = rectangle.getY() + rectangle.getHeight();
             }

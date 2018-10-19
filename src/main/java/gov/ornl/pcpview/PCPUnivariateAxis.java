@@ -208,7 +208,7 @@ public abstract class PCPUnivariateAxis extends PCPAxis {
 
     protected void removeAllAxisSelections() {
         axisSelectionGraphicsGroup.getChildren().clear();
-//        for (PCPAxisSelection axisSelection : axisSelectionList) {
+//        for (UnivariateAxisSelection axisSelection : axisSelectionList) {
 //            pane.getChildren().remove(axisSelection.getGraphicsGroup());
 //        }
         axisSelectionList.clear();

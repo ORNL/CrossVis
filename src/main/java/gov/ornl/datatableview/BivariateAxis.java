@@ -2,6 +2,7 @@ package gov.ornl.datatableview;
 
 import gov.ornl.datatable.BivariateColumn;
 import gov.ornl.datatable.Column;
+import gov.ornl.datatable.ColumnSelection;
 import gov.ornl.scatterplot.Scatterplot;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
@@ -26,6 +27,11 @@ public class BivariateAxis extends Axis {
 //        scatterplotRectangle.setFill(Color.TRANSPARENT);
 
         getGraphicsGroup().getChildren().addAll(scatterplot.getGraphicsGroup());
+    }
+
+    @Override
+    protected AxisSelection addAxisSelection(ColumnSelection columnSelection) {
+        return null;
     }
 
     @Override

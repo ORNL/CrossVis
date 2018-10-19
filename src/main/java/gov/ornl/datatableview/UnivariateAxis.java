@@ -52,6 +52,12 @@ public abstract class UnivariateAxis extends Axis {
 //        getDataTableView().getChildren().add(hoverValueText);
 
         getGraphicsGroup().getChildren().addAll(upperContextBar, lowerContextBar, axisBar);
+
+        registerListeners();
+    }
+
+    private void registerListeners() {
+
     }
 
     protected abstract Object getValueForAxisPosition(double axisPosition);

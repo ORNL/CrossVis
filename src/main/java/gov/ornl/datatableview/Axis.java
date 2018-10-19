@@ -1,7 +1,9 @@
 package gov.ornl.datatableview;
 
 import gov.ornl.datatable.Column;
+import gov.ornl.datatable.ColumnSelection;
 import gov.ornl.datatable.DataTable;
+import gov.ornl.pcpview.PCPAxisSelection;
 import javafx.beans.property.*;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
@@ -15,6 +17,8 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
+
+import java.util.ArrayList;
 
 public abstract class Axis {
     public final static double DEFAULT_TITLE_TEXT_SIZE = 12d;
@@ -43,6 +47,8 @@ public abstract class Axis {
     private Group graphicsGroup = new Group();
 
     protected Group axisSelectionGraphicsGroup = new Group();
+
+    private ArrayList<AxisSelection> axisSelectionList = new ArrayList<>();
 
     // dragging variables
     protected Group axisDraggingGraphicsGroup;
@@ -77,14 +83,45 @@ public abstract class Axis {
         titleTextRectangle.setArcWidth(6.);
         titleTextRectangle.setArcHeight(6.);
 
-        graphicsGroup.getChildren().addAll(titleTextRectangle, titleText);
+        graphicsGroup.getChildren().addAll(titleTextRectangle, titleText, axisSelectionGraphicsGroup);
 
         registerListeners();
     }
 
+    protected boolean removeAxisSelection(ColumnSelection columnSelection) {
+        // find the axis selection for the given column selection
+        AxisSelection axisSelection = getAxisSelection(columnSelection);
+        if (axisSelection != null) {
+            // remove the axis selection's graphics
+            axisSelectionGraphicsGroup.getChildren().remove(axisSelection.getGraphicsGroup());
+            return getAxisSelectionList().remove(axisSelection);
+        }
+
+        return false;
+    }
+
+    protected  void removeAllAxisSelections() {
+        axisSelectionGraphicsGroup.getChildren().clear();
+        axisSelectionList.clear();
+    }
+
+    protected AxisSelection getAxisSelection(ColumnSelection columnSelection) {
+        for (AxisSelection axisSelection : getAxisSelectionList()) {
+            if (axisSelection.getColumnSelection() == columnSelection) {
+                return axisSelection;
+            }
+        }
+
+        return null;
+    }
+
+    public ArrayList<AxisSelection> getAxisSelectionList() { return axisSelectionList; }
+
     public Column getColumn() { return column; }
 
     public boolean isHighlighted() { return highlighted.get(); }
+
+    protected abstract AxisSelection addAxisSelection(ColumnSelection columnSelection);
 
     public void setHighlighted(boolean highlighted) {
         if (isHighlighted() != highlighted) {
