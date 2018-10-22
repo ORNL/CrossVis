@@ -576,32 +576,32 @@ public class DataTableView extends Region implements DataTableListener {
                     }
 
                     if (isShowingScatterplots()) {
-//                        for (int i = 0; i < scatterplotList.size(); i++) {
-//                            Scatterplot scatterplot = scatterplotList.get(i);
-//                            PCPUnivariateAxis yAxis = null;
-//                            PCPUnivariateAxis xAxis = null;
-//                            for (PCPUnivariateAxis axis : axisList) {
-//                                if (axis.getColumn() == scatterplot.getYColumn()) {
-//                                    yAxis = axis;
-//                                } else if (axis.getColumn() == scatterplot.getXColumn()) {
-//                                    xAxis = axis;
-//                                }
-//
-//                                if (yAxis != null && xAxis != null) {
-//                                    break;
-//                                }
-//                            }
-//
-//                            if (dataTable.getHighlightedColumn() == null) {
-//                                double centerX = (yAxis.getCenterX() + xAxis.getCenterX()) / 2.;
-//                                double left = centerX - (scatterplotSize / 2.) - (scatterplot.getAxisSize() / 2.);
-//                                scatterplot.resize(left, scatterplotRegionBounds.getMinY(), scatterplotSize, scatterplotSize);
-//                            } else {
-//                                double centerX = yAxis.getCenterX();
-//                                double left = centerX - (scatterplotSize / 2.) - (scatterplot.getAxisSize() / 2.);
-//                                scatterplot.resize(left, scatterplotRegionBounds.getMinY(), scatterplotSize, scatterplotSize);
-//                            }
-//                        }
+                        for (int i = 0; i < scatterplotList.size(); i++) {
+                            Scatterplot scatterplot = scatterplotList.get(i);
+                            Axis yAxis = null;
+                            Axis xAxis = null;
+                            for (Axis axis : axisList) {
+                                if (axis.getColumn() == scatterplot.getYColumn()) {
+                                    yAxis = axis;
+                                } else if (axis.getColumn() == scatterplot.getXColumn()) {
+                                    xAxis = axis;
+                                }
+
+                                if (yAxis != null && xAxis != null) {
+                                    break;
+                                }
+                            }
+
+                            if (dataTable.getHighlightedColumn() == null || !(getHighlightedAxis() instanceof UnivariateAxis)) {
+                                double centerX = (yAxis.getCenterX() + xAxis.getCenterX()) / 2.;
+                                double left = centerX - (scatterplotSize / 2.) - (scatterplot.getAxisSize() / 2.);
+                                scatterplot.resize(left, scatterplotRegionBounds.getMinY(), scatterplotSize, scatterplotSize);
+                            } else {
+                                double centerX = yAxis.getCenterX();
+                                double left = centerX - (scatterplotSize / 2.) - (scatterplot.getAxisSize() / 2.);
+                                scatterplot.resize(left, scatterplotRegionBounds.getMinY(), scatterplotSize, scatterplotSize);
+                            }
+                        }
                     }
 
                     // add tuples polylines from data model
@@ -901,27 +901,29 @@ public class DataTableView extends Region implements DataTableListener {
             scatterplotList.clear();
         }
 
-//        if (isShowingScatterplots()) {
-//            PCPUnivariateAxis highlightedAxis = getHighlightedAxis();
-//            if (highlightedAxis != null) {
-//                for (int iaxis = 0; iaxis < axisList.size(); iaxis++) {
-//                    PCPUnivariateAxis currentAxis = axisList.get(iaxis);
-//                    if (highlightedAxis != currentAxis) {
-//                        Scatterplot scatterplot = new Scatterplot(highlightedAxis.getColumn(), currentAxis.getColumn());
-//                        scatterplotList.add(scatterplot);
-//                        pane.getChildren().add(scatterplot.getGraphicsGroup());
-//                    }
-//                }
-//            } else {
-//                for (int iaxis = 1; iaxis < axisList.size(); iaxis++) {
-//                    PCPUnivariateAxis xAxis = axisList.get(iaxis);
-//                    PCPUnivariateAxis yAxis = axisList.get(iaxis - 1);
-//                    Scatterplot scatterplot = new Scatterplot(xAxis.getColumn(), yAxis.getColumn());
-//                    scatterplotList.add(scatterplot);
-//                    pane.getChildren().add(scatterplot.getGraphicsGroup());
-//                }
-//            }
-//        }
+        if (isShowingScatterplots()) {
+            Axis highlightedAxis = getHighlightedAxis();
+            if (highlightedAxis != null && highlightedAxis instanceof UnivariateAxis) {
+                for (int iaxis = 0; iaxis < axisList.size(); iaxis++) {
+                    Axis currentAxis = axisList.get(iaxis);
+                    if (highlightedAxis != currentAxis && currentAxis instanceof UnivariateAxis) {
+                        Scatterplot scatterplot = new Scatterplot(highlightedAxis.getColumn(), currentAxis.getColumn());
+                        scatterplotList.add(scatterplot);
+                        pane.getChildren().add(scatterplot.getGraphicsGroup());
+                    }
+                }
+            } else {
+                for (int iaxis = 1; iaxis < axisList.size(); iaxis++) {
+                    Axis xAxis = axisList.get(iaxis);
+                    Axis yAxis = axisList.get(iaxis - 1);
+                    if (xAxis instanceof UnivariateAxis && yAxis instanceof UnivariateAxis) {
+                        Scatterplot scatterplot = new Scatterplot(xAxis.getColumn(), yAxis.getColumn());
+                        scatterplotList.add(scatterplot);
+                        pane.getChildren().add(scatterplot.getGraphicsGroup());
+                    }
+                }
+            }
+        }
     }
 
     private void reinitializeCorrelationRectangles() {
