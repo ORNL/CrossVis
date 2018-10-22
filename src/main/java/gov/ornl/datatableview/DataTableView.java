@@ -67,7 +67,7 @@ public class DataTableView extends Region implements DataTableListener {
     private DataTable dataTable;
     private ArrayList<Axis> axisList = new ArrayList<>();
     private ArrayList<Scatterplot> scatterplotList = new ArrayList<>();
-//    private ArrayList<CorrelationIndicatorRectangle> correlationRectangleList = new ArrayList<>();
+    private ArrayList<CorrelationIndicatorRectangle> correlationRectangleList = new ArrayList<>();
     private Group correlationRectangleGroup = new Group();
 
     private Bounds correlationRegionBounds;
@@ -279,25 +279,25 @@ public class DataTableView extends Region implements DataTableListener {
             resizeView();
         });
 
-//        showPolylines.addListener(observable -> {
-//            if (selectedTuplesTimer != null && selectedTuplesTimer.isRunning()) {
-//                selectedTuplesTimer.stop();
-//            }
-//            if (unselectedTuplesTimer != null && unselectedTuplesTimer.isRunning()) {
-//                unselectedTuplesTimer.stop();
-//            }
-//
-//            if (isShowingPolylines()) {
-//                fillTupleSets();
-//            } else {
-//                selectedCanvas.getGraphicsContext2D().clearRect(0, 0, selectedCanvas.getWidth(),
-//                        selectedCanvas.getHeight());
-//                unselectedCanvas.getGraphicsContext2D().clearRect(0, 0, unselectedCanvas.getWidth(),
-//                        unselectedCanvas.getHeight());
-//            }
-//
-//            redrawView();
-//        });
+        showPolylines.addListener(observable -> {
+            if (selectedTuplesTimer != null && selectedTuplesTimer.isRunning()) {
+                selectedTuplesTimer.stop();
+            }
+            if (unselectedTuplesTimer != null && unselectedTuplesTimer.isRunning()) {
+                unselectedTuplesTimer.stop();
+            }
+
+            if (isShowingPolylines()) {
+                fillTupleSets();
+            } else {
+                selectedCanvas.getGraphicsContext2D().clearRect(0, 0, selectedCanvas.getWidth(),
+                        selectedCanvas.getHeight());
+                unselectedCanvas.getGraphicsContext2D().clearRect(0, 0, unselectedCanvas.getWidth(),
+                        unselectedCanvas.getHeight());
+            }
+
+            redrawView();
+        });
 
         showSummaryStatistics.addListener(observable -> {
             resizeView();
@@ -327,20 +327,20 @@ public class DataTableView extends Region implements DataTableListener {
             }
         });
 
-//        polylineDisplayMode.addListener(((observable, oldValue, newValue) -> {
-//            if (selectedTuplesTimer != null && selectedTuplesTimer.isRunning()) {
-//                selectedTuplesTimer.stop();
-//            }
-//            if (unselectedTuplesTimer != null && unselectedTuplesTimer.isRunning()) {
-//                unselectedTuplesTimer.stop();
-//            }
-//
-//            if (newValue == POLYLINE_DISPLAY_MODE.POLYLINES) {
-//                fillTupleSets();
-//            }
-//
-//            resizeView();
-//        }));
+        polylineDisplayMode.addListener(((observable, oldValue, newValue) -> {
+            if (selectedTuplesTimer != null && selectedTuplesTimer.isRunning()) {
+                selectedTuplesTimer.stop();
+            }
+            if (unselectedTuplesTimer != null && unselectedTuplesTimer.isRunning()) {
+                unselectedTuplesTimer.stop();
+            }
+
+            if (newValue == POLYLINE_DISPLAY_MODE.POLYLINES) {
+                fillTupleSets();
+            }
+
+            resizeView();
+        }));
     }
 
     private void fillTupleSets() {
@@ -564,15 +564,15 @@ public class DataTableView extends Region implements DataTableListener {
                     }
 
                     if (isShowingCorrelations()) {
-//                        for (int i = 0; i < correlationRectangleList.size(); i++) {
-//                            CorrelationIndicatorRectangle correlationIndicatorRectangle = correlationRectangleList.get(i);
-//                            correlationIndicatorRectangle.setY(correlationRegionBounds.getMinY());
-//                            if (dataTable.getHighlightedColumn() != null) {
-//                                correlationIndicatorRectangle.setX(correlationIndicatorRectangle.getAxis1().getCenterX() - (correlationIndicatorRectangle.getWidth() / 2.));
-//                            } else {
-//                                correlationIndicatorRectangle.setX(((correlationIndicatorRectangle.getAxis1().getCenterX() + correlationIndicatorRectangle.getAxis2().getCenterX()) / 2.) - (correlationIndicatorRectangle.getWidth() / 2.));
-//                            }
-//                        }
+                        for (int i = 0; i < correlationRectangleList.size(); i++) {
+                            CorrelationIndicatorRectangle correlationIndicatorRectangle = correlationRectangleList.get(i);
+                            correlationIndicatorRectangle.setY(correlationRegionBounds.getMinY());
+                            if (dataTable.getHighlightedColumn() != null) {
+                                correlationIndicatorRectangle.setX(correlationIndicatorRectangle.getAxis1().getCenterX() - (correlationIndicatorRectangle.getWidth() / 2.));
+                            } else {
+                                correlationIndicatorRectangle.setX(((correlationIndicatorRectangle.getAxis1().getCenterX() + correlationIndicatorRectangle.getAxis2().getCenterX()) / 2.) - (correlationIndicatorRectangle.getWidth() / 2.));
+                            }
+                        }
                     }
 
                     if (isShowingScatterplots()) {
@@ -625,14 +625,14 @@ public class DataTableView extends Region implements DataTableListener {
     }
 
     private void removeAllAxisSelectionGraphics() {
-//        for (PCPUnivariateAxis pcpAxis : axisList) {
-//            if (!pcpAxis.getAxisSelectionList().isEmpty()) {
-//                for (UnivariateAxisSelection pcpAxisSelection : pcpAxis.getAxisSelectionList()) {
-//                    pane.getChildren().remove(pcpAxisSelection.getGraphicsGroup());
-//                }
-//                pcpAxis.getAxisSelectionList().clear();
-//            }
-//        }
+        for (Axis axis : axisList) {
+            if (!axis.getAxisSelectionList().isEmpty()) {
+                for (AxisSelection pcpAxisSelection : axis.getAxisSelectionList()) {
+                    pane.getChildren().remove(pcpAxisSelection.getGraphicsGroup());
+                }
+                axis.getAxisSelectionList().clear();
+            }
+        }
     }
 
     public void clearQuery() {
@@ -867,9 +867,9 @@ public class DataTableView extends Region implements DataTableListener {
             axisList = newAxisList;
         }
 
-//        reinitializeScatterplots();
-//
-//        reinitializeCorrelationRectangles();
+        reinitializeScatterplots();
+
+        reinitializeCorrelationRectangles();
 
         // add tuples polylines from data model
         tuplePolylines = new ArrayList<>();
@@ -925,59 +925,59 @@ public class DataTableView extends Region implements DataTableListener {
     }
 
     private void reinitializeCorrelationRectangles() {
-//        correlationRectangleGroup.getChildren().clear();
-//        correlationRectangleList.clear();
-//
-//        if (isShowingCorrelations()) {
-//            PCPUnivariateAxis highlightedAxis = getHighlightedAxis();
-//            if (highlightedAxis != null) {
-//                if (highlightedAxis instanceof PCPDoubleAxis) {
-//                    for (int i = 0; i < axisList.size(); i++) {
-//                        PCPUnivariateAxis axis = axisList.get(i);
-//
-//                        if (axis instanceof PCPDoubleAxis && axis != highlightedAxis) {
-//                            CorrelationIndicatorRectangle correlationRectangle = new CorrelationIndicatorRectangle(axis, highlightedAxis);
-//                            correlationRectangle.setStroke(Color.DARKGRAY);
-//                            correlationRectangle.setWidth(DEFAULT_CORRELATION_RECTANGLE_WIDTH);
-//                            correlationRectangle.setHeight(DEFAULT_CORRELATION_RECTANGLE_HEIGHT);
-//                            correlationRectangleList.add(correlationRectangle);
-//                            correlationRectangleGroup.getChildren().add(correlationRectangle);
-//                        }
-//                    }
-//                }
-//            } else {
-//                for (int i = 1; i < axisList.size(); i++) {
-//                    if (axisList.get(i) instanceof PCPDoubleAxis && axisList.get(i-1) instanceof PCPDoubleAxis) {
-//                        CorrelationIndicatorRectangle correlationRectangle = new CorrelationIndicatorRectangle(axisList.get(i - 1),
-//                                axisList.get(i));
-//                        correlationRectangle.setStroke(Color.DARKGRAY);
-//                        correlationRectangle.setWidth(DEFAULT_CORRELATION_RECTANGLE_WIDTH);
-//                        correlationRectangle.setHeight(DEFAULT_CORRELATION_RECTANGLE_HEIGHT);
-//                        correlationRectangleList.add(correlationRectangle);
-//                        correlationRectangleGroup.getChildren().add(correlationRectangle);
-//                    }
-//                }
-//            }
-//
-//            setCorrelationRectangleValues();
-//        }
+        correlationRectangleGroup.getChildren().clear();
+        correlationRectangleList.clear();
+
+        if (isShowingCorrelations()) {
+            Axis highlightedAxis = getHighlightedAxis();
+            if (highlightedAxis != null) {
+                if (highlightedAxis instanceof DoubleAxis) {
+                    for (int i = 0; i < axisList.size(); i++) {
+                        Axis axis = axisList.get(i);
+
+                        if (axis instanceof DoubleAxis && axis != highlightedAxis) {
+                            CorrelationIndicatorRectangle correlationRectangle = new CorrelationIndicatorRectangle((DoubleAxis)axis, (DoubleAxis)highlightedAxis);
+                            correlationRectangle.setStroke(Color.DARKGRAY);
+                            correlationRectangle.setWidth(DEFAULT_CORRELATION_RECTANGLE_WIDTH);
+                            correlationRectangle.setHeight(DEFAULT_CORRELATION_RECTANGLE_HEIGHT);
+                            correlationRectangleList.add(correlationRectangle);
+                            correlationRectangleGroup.getChildren().add(correlationRectangle);
+                        }
+                    }
+                }
+            } else {
+                for (int i = 1; i < axisList.size(); i++) {
+                    if (axisList.get(i) instanceof DoubleAxis && axisList.get(i-1) instanceof DoubleAxis) {
+                        CorrelationIndicatorRectangle correlationRectangle = 
+                        		new CorrelationIndicatorRectangle((DoubleAxis)axisList.get(i - 1), (DoubleAxis)axisList.get(i));
+                        correlationRectangle.setStroke(Color.DARKGRAY);
+                        correlationRectangle.setWidth(DEFAULT_CORRELATION_RECTANGLE_WIDTH);
+                        correlationRectangle.setHeight(DEFAULT_CORRELATION_RECTANGLE_HEIGHT);
+                        correlationRectangleList.add(correlationRectangle);
+                        correlationRectangleGroup.getChildren().add(correlationRectangle);
+                    }
+                }
+            }
+
+            setCorrelationRectangleValues();
+        }
     }
 
     private void setCorrelationRectangleValues() {
-//        if (isShowingCorrelations()) {
-//            for (CorrelationIndicatorRectangle corrRect : correlationRectangleList) {
-//                int axis2Index = getAxisIndex(corrRect.getAxis2());
-//
-//                double corr;
-//                if (dataTable.getActiveQuery().hasColumnSelections() && dataTable.getCalculateQueryStatistics()) {
-//                    corr = ((DoubleColumnSummaryStats)dataTable.getActiveQuery().getColumnQuerySummaryStats(corrRect.getAxis1().getColumn())).getCorrelationCoefficientList().get(axis2Index);
-//                } else {
-//                    corr = ((DoubleColumnSummaryStats)corrRect.getAxis1().getColumn().getStatistics()).getCorrelationCoefficientList().get(axis2Index);
-//                }
-//
-//                corrRect.setCorrelation(corr);
-//            }
-//        }
+        if (isShowingCorrelations()) {
+            for (CorrelationIndicatorRectangle corrRect : correlationRectangleList) {
+                int axis2Index = getAxisIndex(corrRect.getAxis2());
+
+                double corr;
+                if (dataTable.getActiveQuery().hasColumnSelections() && dataTable.getCalculateQueryStatistics()) {
+                    corr = ((DoubleColumnSummaryStats)dataTable.getActiveQuery().getColumnQuerySummaryStats(corrRect.getAxis1().getColumn())).getCorrelationCoefficientList().get(axis2Index);
+                } else {
+                    corr = ((DoubleColumnSummaryStats)corrRect.getAxis1().getColumn().getStatistics()).getCorrelationCoefficientList().get(axis2Index);
+                }
+
+                corrRect.setCorrelation(corr);
+            }
+        }
     }
 
     private Axis getHighlightedAxis() {

@@ -22,71 +22,72 @@ import java.util.ArrayList;
 
 public class DataTableViewTest extends Application {
 
-    @Override
-    public void start(Stage primaryStage) throws Exception {
-        DataTableView dataTableView = new DataTableView();
-        dataTableView.setPrefHeight(500);
-        dataTableView.setPadding(new Insets(10, 10, 40, 10));
-//        PCPView pcpView = new PCPView();
-//        pcpView.setPrefHeight(500);
-//        pcpView.setAxisSpacing(100);
-//        pcpView.setPadding(new Insets(10));
+	@Override
+	public void start(Stage primaryStage) throws Exception {
+		DataTableView dataTableView = new DataTableView();
+		dataTableView.setPrefHeight(500);
+		dataTableView.setPadding(new Insets(10, 10, 40, 10));
 
-//        pcpView.setPolylineDisplayMode(PCPView.POLYLINE_DISPLAY_MODE.POLYLINES);
+		ScrollPane scrollPane = new ScrollPane(dataTableView);
+		scrollPane.setFitToWidth(dataTableView.getFitToWidth());
+		scrollPane.setFitToHeight(true);
 
-        ScrollPane scrollPane = new ScrollPane(dataTableView);
-        scrollPane.setFitToWidth(dataTableView.getFitToWidth());
-        scrollPane.setFitToHeight(true);
+		Button loadDataButton = new Button("Load Data");
+		loadDataButton.setOnAction(event -> {
+			try {
+				DataTable dataTable = new DataTable();
 
-        Button loadDataButton = new Button("Load Data");
-        loadDataButton.setOnAction(event -> {
-            try {
-                DataTable dataTable = new DataTable();
+				// reads titan data with date field
+//                ArrayList<String> temporalColumnNames = new ArrayList<>();
+//                temporalColumnNames.add("Date");
+//                ArrayList<DateTimeFormatter> temporalColumnFormatters = new ArrayList<>();
+//                temporalColumnFormatters.add(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss"));
+//                IOUtilities.readCSV(new File("data/csv/titan-performance.csv"), null, null,
+//                        temporalColumnNames, temporalColumnFormatters, dataTable);
 
-                // reads titan data with date field
-                ArrayList<String> temporalColumnNames = new ArrayList<>();
-                temporalColumnNames.add("Date");
-                ArrayList<DateTimeFormatter> temporalColumnFormatters = new ArrayList<>();
-                temporalColumnFormatters.add(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss"));
-                IOUtilities.readCSV(new File("data/csv/titan-performance.csv"), null, null,
-                        temporalColumnNames, temporalColumnFormatters, dataTable);
-
-                // Reads cars data set
+				// Reads cars data set
 //                IOUtilities.readCSV(new File("data/csv/cars.csv"), null, null, null, null, dataTable);
 
-                dataTableView.setDataTable(dataTable);
-            } catch (IOException e) {
-                e.printStackTrace();
-                System.exit(0);
-            }
-        });
+				ArrayList<String> categoricalColumnNames = new ArrayList<>();
+				categoricalColumnNames.add("Origin");
+				IOUtilities.readCSV(new File("data/csv/cars-cat.csv"), null, categoricalColumnNames, null, null,
+						dataTable);
 
-        Button addBivariateAxisButton = new Button("Add Bivariate Axis");
-        addBivariateAxisButton.setOnAction(event -> {
-            dataTableView.getDataTable().addBivariateColumn(dataTableView.getDataTable().getColumn(2),
-                    dataTableView.getDataTable().getColumn(3));
-        });
+				dataTableView.setDataTable(dataTable);
+			} catch (IOException e) {
+				e.printStackTrace();
+				System.exit(0);
+			}
+		});
 
-        HBox settingsPane = new HBox();
-        settingsPane.setSpacing(2);
-        settingsPane.setPadding(new Insets(4));
+		Button addBivariateAxisButton = new Button("Add Bivariate Axis");
+		addBivariateAxisButton.setOnAction(event -> {
+			dataTableView.getDataTable().addBivariateColumn(dataTableView.getDataTable().getColumn(2),
+					dataTableView.getDataTable().getColumn(3));
+		});
 
-        settingsPane.getChildren().addAll(loadDataButton, addBivariateAxisButton);
+		HBox settingsPane = new HBox();
+		settingsPane.setSpacing(2);
+		settingsPane.setPadding(new Insets(4));
 
-        BorderPane rootNode = new BorderPane();
-        rootNode.setCenter(scrollPane);
-        rootNode.setBottom(settingsPane);
+		settingsPane.getChildren().addAll(loadDataButton, addBivariateAxisButton);
 
-        Rectangle2D screenVisualBounds = Screen.getPrimary().getVisualBounds();
-        double sceneWidth = screenVisualBounds.getWidth() - 40;
-        sceneWidth = sceneWidth > 2000 ? 2000 : sceneWidth;
+		BorderPane rootNode = new BorderPane();
+		rootNode.setCenter(scrollPane);
+		rootNode.setBottom(settingsPane);
 
-        Scene scene = new Scene(rootNode, sceneWidth, 600, true, SceneAntialiasing.BALANCED);
+		Rectangle2D screenVisualBounds = Screen.getPrimary().getVisualBounds();
+		double sceneWidth = screenVisualBounds.getWidth() - 40;
+		sceneWidth = sceneWidth > 2000 ? 2000 : sceneWidth;
 
-        primaryStage.setTitle("PCPView Test");
-        primaryStage.setScene(scene);
-        primaryStage.show();
-    }
+		Scene scene = new Scene(rootNode, sceneWidth, 600, true, SceneAntialiasing.BALANCED);
 
-    public void stop() { System.exit(0); }
+		primaryStage.setTitle("PCPView Test");
+		primaryStage.setScene(scene);
+		primaryStage.show();
+	}
+
+	public void stop() {
+		System.exit(0);
+	}
 }
