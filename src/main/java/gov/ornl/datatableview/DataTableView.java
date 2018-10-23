@@ -882,8 +882,11 @@ public class DataTableView extends Region implements DataTableListener {
         // create PCPBinSets for axis configuration
         PCPBinSetList = new ArrayList<>();
         for (int iaxis = 0; iaxis < axisList.size()-1; iaxis++) {
-            TuplePolylineBinSet binSet = new TuplePolylineBinSet(axisList.get(iaxis), axisList.get(iaxis+1), dataTable);
-            PCPBinSetList.add(binSet);
+            if (axisList.get(iaxis) instanceof UnivariateAxis && axisList.get(iaxis + 1) instanceof UnivariateAxis) {
+                TuplePolylineBinSet binSet = new TuplePolylineBinSet((UnivariateAxis) axisList.get(iaxis),
+                        (UnivariateAxis) axisList.get(iaxis + 1), dataTable);
+                PCPBinSetList.add(binSet);
+            }
         }
 
         resizeView();
@@ -1311,9 +1314,15 @@ public class DataTableView extends Region implements DataTableListener {
                 // create PCPBinSets for axis configuration
                 PCPBinSetList = new ArrayList<>();
                 for (int i = 0; i < axisList.size()-1; i++) {
-                    TuplePolylineBinSet binSet = new TuplePolylineBinSet(axisList.get(i), axisList.get(i+1), dataModel);
-                    binSet.layoutBins();
-                    PCPBinSetList.add(binSet);
+                    if (axisList.get(i) instanceof UnivariateAxis && axisList.get(i + 1) instanceof UnivariateAxis) {
+                        TuplePolylineBinSet binSet = new TuplePolylineBinSet((UnivariateAxis)axisList.get(i),
+                                (UnivariateAxis)axisList.get(i + 1), dataTable);
+                        binSet.layoutBins();
+                        PCPBinSetList.add(binSet);
+                    }
+//                    TuplePolylineBinSet binSet = new TuplePolylineBinSet(axisList.get(i), axisList.get(i+1), dataModel);
+//                    binSet.layoutBins();
+//                    PCPBinSetList.add(binSet);
                 }
 
                 // add tuples polylines from data model
@@ -1356,8 +1365,11 @@ public class DataTableView extends Region implements DataTableListener {
         // create PCPBinSets for axis configuration
         PCPBinSetList = new ArrayList<>();
         for (int iaxis = 0; iaxis < axisList.size()-1; iaxis++) {
-            TuplePolylineBinSet binSet = new TuplePolylineBinSet(axisList.get(iaxis), axisList.get(iaxis+1), dataModel);
-            PCPBinSetList.add(binSet);
+            if (axisList.get(iaxis) instanceof UnivariateAxis && axisList.get(iaxis + 1) instanceof UnivariateAxis) {
+                TuplePolylineBinSet binSet = new TuplePolylineBinSet((UnivariateAxis)axisList.get(iaxis),
+                        (UnivariateAxis)axisList.get(iaxis + 1), dataModel);
+                PCPBinSetList.add(binSet);
+            }
         }
 
         resizeView();

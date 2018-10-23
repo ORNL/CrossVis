@@ -10,7 +10,7 @@ import javafx.scene.shape.Rectangle;
 
 public class BivariateAxis extends Axis {
 
-    private BivariateColumn bivariateColumn;
+//    private BivariateColumn bivariateColumn;
 
     private Scatterplot scatterplot;
 //    private Rectangle scatterplotRectangle;
@@ -19,7 +19,7 @@ public class BivariateAxis extends Axis {
     public BivariateAxis(DataTableView dataTableView, BivariateColumn bivariateColumn) {
         super(dataTableView, bivariateColumn);
 
-        this.bivariateColumn = bivariateColumn;
+//        this.bivariateColumn = bivariateColumn;
 
         scatterplot = new Scatterplot(bivariateColumn.getColumn1(), bivariateColumn.getColumn2());
 
@@ -30,6 +30,8 @@ public class BivariateAxis extends Axis {
 
         getGraphicsGroup().getChildren().addAll(scatterplot.getGraphicsGroup());
     }
+
+    public BivariateColumn bivariateColumn() { return (BivariateColumn)getColumn(); }
 
     @Override
     protected AxisSelection addAxisSelection(ColumnSelection columnSelection) {
