@@ -1,4 +1,4 @@
-package gov.ornl.pcpview;
+package gov.ornl.crossvis;
 
 import gov.ornl.datatable.CategoricalColumnSelection;
 import gov.ornl.datatable.ColumnSelection;

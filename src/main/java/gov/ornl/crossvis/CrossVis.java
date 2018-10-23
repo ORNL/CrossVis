@@ -2,8 +2,7 @@ package gov.ornl.crossvis;
 
 import gov.ornl.correlationview.CorrelationMatrixView;
 import gov.ornl.datatable.*;
-import gov.ornl.pcpview.PCPView;
-import gov.ornl.pcpview.QueryTableFactory;
+import gov.ornl.datatableview.DataTableView;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyObjectWrapper;
@@ -49,13 +48,14 @@ public class CrossVis extends Application implements DataTableListener {
 
     private static final String VERSION_STRING = "v2.1.2";
 
-    private PCPView pcpView;
+//    private PCPView pcpView;
     private CorrelationMatrixView correlationMatrixView;
     private DataTable dataTable;
+    private DataTableView dataTableView;
 
     private Preferences preferences;
 
-    private ScrollPane pcpScrollPane;
+    private ScrollPane dataTableViewScrollPane;
     private TabPane tabPane;
 
     private TableView<DoubleColumn> doubleColumnTableView;
@@ -67,7 +67,7 @@ public class CrossVis extends Application implements DataTableListener {
     private TableView<ColumnSelection> temporalQueryTableView;
     private TableView<ColumnSelection> categoricalQueryTableView;
 
-    private TableView<Tuple> dataTableView;
+    private TableView<Tuple> tupleTableView;
 
     private ProgressBar percentSelectedProgress;
     private DecimalFormat decimalFormat;
@@ -354,9 +354,9 @@ public class CrossVis extends Application implements DataTableListener {
         // make toggle buttons for showing/hiding selected/unselected items
         ToggleButton showUnselectedButton = new ToggleButton("Unselected");
         showUnselectedButton.setTooltip(new Tooltip("Show Unselected Items"));
-        showUnselectedButton.selectedProperty().bindBidirectional(pcpView.showUnselectedItemsProperty());
+        showUnselectedButton.selectedProperty().bindBidirectional(dataTableView.showUnselectedItemsProperty());
         ToggleButton showSelectedButton = new ToggleButton("Selected");
-        showSelectedButton.selectedProperty().bindBidirectional(pcpView.showSelectedItemsProperty());
+        showSelectedButton.selectedProperty().bindBidirectional(dataTableView.showSelectedItemsProperty());
         showSelectedButton.setTooltip(new Tooltip("Show Selected Items"));
 
         // create selected items color modification UI components
@@ -364,7 +364,7 @@ public class CrossVis extends Application implements DataTableListener {
         selectedItemsColorBox.setAlignment(Pos.CENTER);
 
         ColorPicker selectedItemsColorPicker = new ColorPicker();
-        selectedItemsColorPicker.valueProperty().bindBidirectional(pcpView.selectedItemsColorProperty());
+        selectedItemsColorPicker.valueProperty().bindBidirectional(dataTableView.selectedItemsColorProperty());
         selectedItemsColorPicker.getStyleClass().add("button");
 
         selectedItemsColorBox.getChildren().addAll(new Label(" Selected Items: "), selectedItemsColorPicker);
@@ -375,21 +375,21 @@ public class CrossVis extends Application implements DataTableListener {
 
         ColorPicker unselectedItemsColorPicker = new ColorPicker();
         unselectedItemsColorPicker.getStyleClass().add("button");
-        unselectedItemsColorPicker.valueProperty().bindBidirectional(pcpView.unselectedItemsColorProperty());
+        unselectedItemsColorPicker.valueProperty().bindBidirectional(dataTableView.unselectedItemsColorProperty());
         unselectedItemsColorBox.getChildren().addAll(new Label(" Unselected Items: "), unselectedItemsColorPicker);
 
         // create opacity slider
         HBox opacityBox = new HBox();
         opacityBox.setAlignment(Pos.CENTER);
 
-        Slider opacitySlider = new Slider(0.01, 1., pcpView.getDataItemsOpacity());
+        Slider opacitySlider = new Slider(0.01, 1., dataTableView.getDataItemsOpacity());
         opacitySlider.setShowTickLabels(false);
         opacitySlider.setShowTickMarks(false);
 
         opacitySlider.valueChangingProperty().addListener((observable, oldValue, newValue) -> {
             log.info("opacity slide value changing is " + newValue);
             if (!newValue) {
-                pcpView.setDataItemsOpacity(opacitySlider.getValue());
+                dataTableView.setDataItemsOpacity(opacitySlider.getValue());
             }
         });
 
@@ -424,22 +424,26 @@ public class CrossVis extends Application implements DataTableListener {
                 }
             });
 
-            pcpView = new PCPView();
-            pcpView.setDataTable(dataTable);
-            pcpView.setPrefHeight(400);
-            pcpView.setAxisSpacing(100);
-            pcpView.setPadding(new Insets(10));
+            dataTableView = new DataTableView();
+            dataTableView.setDataTable(dataTable);
+            dataTableView.setPrefHeight(400);
+            dataTableView.setAxisSpacing(100);
+            dataTableView.setPadding(new Insets(10));
+//            pcpView = new PCPView();
+//            pcpView.setDataTable(dataTable);
+//            pcpView.setPrefHeight(400);
+//            pcpView.setAxisSpacing(100);
+//            pcpView.setPadding(new Insets(10));
 
-            pcpScrollPane = new ScrollPane(pcpView);
-            pcpScrollPane.setFitToHeight(true);
-            pcpScrollPane.setFitToWidth(pcpView.getFitToWidth());
+            dataTableViewScrollPane = new ScrollPane(dataTableView);
+            dataTableViewScrollPane.setFitToHeight(true);
+            dataTableViewScrollPane.setFitToWidth(dataTableView.getFitToWidth());
 
             correlationMatrixView = new CorrelationMatrixView();
             correlationMatrixView.setDataTable(dataTable);
             correlationMatrixView.setPadding(new Insets(6));
             correlationMatrixView.setShowQueryCorrelations(true);
             correlationMatrixView.setColorScaleOrientation(Orientation.VERTICAL);
-
 
             ToolBar toolBar = createToolBar(mainStage);
 
@@ -451,7 +455,7 @@ public class CrossVis extends Application implements DataTableListener {
 
             createColumnTableViews();
 
-            dataTableView = new TableView<>();
+            tupleTableView = new TableView<>();
 
             doubleQueryTableView = QueryTableFactory.buildDoubleSelectionTable();
             doubleQueryTableView.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
@@ -497,7 +501,7 @@ public class CrossVis extends Application implements DataTableListener {
 
             Tab dataTableTab = new Tab(" Data Table ");
             dataTableTab.setClosable(false);
-            dataTableTab.setContent(dataTableView);
+            dataTableTab.setContent(tupleTableView);
 
             Tab queryTableTab = new Tab(" Queries ");
             queryTableTab.setClosable(false);
@@ -522,8 +526,8 @@ public class CrossVis extends Application implements DataTableListener {
 
             SplitPane mainSplit = new SplitPane();
             mainSplit.setOrientation(Orientation.VERTICAL);
-            mainSplit.getItems().addAll(pcpScrollPane, bottomSplit);
-            mainSplit.setResizableWithParent(pcpScrollPane, false);
+            mainSplit.getItems().addAll(dataTableViewScrollPane, bottomSplit);
+            mainSplit.setResizableWithParent(dataTableViewScrollPane, false);
             mainSplit.setDividerPositions(0.7);
 
             VBox topContainer = new VBox();
@@ -573,7 +577,7 @@ public class CrossVis extends Application implements DataTableListener {
         grid.setPadding(new Insets(20, 150, 10, 10));
 
         Spinner<Integer> spinner = new Spinner<>();
-        spinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(2, (int)pcpView.getPCPVerticalBarHeight(), dataTable.getNumHistogramBins()));
+        spinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(2, (int)dataTableView.getPCPVerticalBarHeight(), dataTable.getNumHistogramBins()));
         spinner.setEditable(true);
 
         grid.add(new Label("Number of DoubleHistogram Bins: "), 0, 0);
@@ -631,7 +635,7 @@ public class CrossVis extends Application implements DataTableListener {
         grid.setPadding(new Insets(20, 150, 10, 10));
 
         Spinner<Integer> spinner = new Spinner<>();
-        spinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 800, pcpView.getAxisSpacing(), 1));
+        spinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 800, dataTableView.getAxisSpacing(), 1));
         spinner.setEditable(true);
 
         grid.add(new Label("Axis Spacing: "), 0, 0);
@@ -647,7 +651,7 @@ public class CrossVis extends Application implements DataTableListener {
         buttonApply.setDisable(true);
         buttonApply.addEventFilter(ActionEvent.ACTION, event -> {
             int axisSpacing = spinner.getValue();
-            pcpView.setAxisSpacing(axisSpacing);
+            dataTableView.setAxisSpacing(axisSpacing);
             event.consume();
         });
 
@@ -655,7 +659,7 @@ public class CrossVis extends Application implements DataTableListener {
         buttonOK.setDisable(true);
 
         spinner.valueProperty().addListener((observable, oldValue, newValue) -> {
-            if (spinner.getValue() != pcpView.getAxisSpacing()) {
+            if (spinner.getValue() != dataTableView.getAxisSpacing()) {
                 buttonApply.setDisable(false);
                 buttonOK.setDisable(false);
             }
@@ -672,7 +676,7 @@ public class CrossVis extends Application implements DataTableListener {
 
         result.ifPresent(axisSpacing -> {
             System.out.println("new axis spacing is " + axisSpacing);
-            pcpView.setAxisSpacing(axisSpacing);
+            dataTableView.setAxisSpacing(axisSpacing);
         });
     }
 
@@ -725,34 +729,34 @@ public class CrossVis extends Application implements DataTableListener {
         // View Menu
         CheckMenuItem showScatterplotsMI = new CheckMenuItem("Show Scatterplots");
         showScatterplotsMI.setAccelerator(new KeyCodeCombination(KeyCode.S, KeyCombination.META_DOWN));
-        showScatterplotsMI.selectedProperty().bindBidirectional(pcpView.showScatterplotsProperty());
+        showScatterplotsMI.selectedProperty().bindBidirectional(dataTableView.showScatterplotsProperty());
 
         CheckMenuItem showHistogramsMI = new CheckMenuItem("Show Histograms");
         showHistogramsMI.setAccelerator(new KeyCodeCombination(KeyCode.H, KeyCombination.META_DOWN));
-        showHistogramsMI.selectedProperty().bindBidirectional(pcpView.showHistogramsProperty());
+        showHistogramsMI.selectedProperty().bindBidirectional(dataTableView.showHistogramsProperty());
 
         CheckMenuItem showPolylinesMI = new CheckMenuItem("Show Parallel Coordinate Lines");
         showPolylinesMI.setAccelerator(new KeyCodeCombination(KeyCode.L, KeyCombination.META_DOWN));
-        showPolylinesMI.selectedProperty().bindBidirectional(pcpView.showPolylinesProperty());
+        showPolylinesMI.selectedProperty().bindBidirectional(dataTableView.showPolylinesProperty());
 
         CheckMenuItem showSummaryStatsMI = new CheckMenuItem("Show Summary Statitics");
         showSummaryStatsMI.setAccelerator(new KeyCodeCombination(KeyCode.S, KeyCombination.META_DOWN, KeyCombination.SHIFT_DOWN));
-        showSummaryStatsMI.selectedProperty().bindBidirectional(pcpView.showSummaryStatisticsProperty());
+        showSummaryStatsMI.selectedProperty().bindBidirectional(dataTableView.showSummaryStatisticsProperty());
 
         CheckMenuItem showCorrelationsMI = new CheckMenuItem("Show Parallel Coordinate Axis Correlations");
         showCorrelationsMI.setAccelerator(new KeyCodeCombination(KeyCode.C, KeyCombination.META_DOWN));
-        showCorrelationsMI.selectedProperty().bindBidirectional(pcpView.showCorrelationsProperty());
+        showCorrelationsMI.selectedProperty().bindBidirectional(dataTableView.showCorrelationsProperty());
 
         Menu summaryStatsDisplayModeMenu = new Menu("Axis Statistics Display Mode");
         ToggleGroup summaryStatsDisplayModeMenuGroup = new ToggleGroup();
 
         RadioMenuItem meanStatsModeMI = new RadioMenuItem("Mean / Standard Deviation Mode");
         meanStatsModeMI.setToggleGroup(summaryStatsDisplayModeMenuGroup);
-        meanStatsModeMI.setSelected(pcpView.getSummaryStatisticsDisplayMode() == PCPView.STATISTICS_DISPLAY_MODE.MEAN_BOXPLOT);
+        meanStatsModeMI.setSelected(dataTableView.getSummaryStatisticsDisplayMode() == DataTableView.STATISTICS_DISPLAY_MODE.MEAN_BOXPLOT);
 
         RadioMenuItem medianStatsModeMI = new RadioMenuItem("Median / Interquartile Range Mode");
         medianStatsModeMI.setToggleGroup(summaryStatsDisplayModeMenuGroup);
-        medianStatsModeMI.setSelected(pcpView.getSummaryStatisticsDisplayMode() == PCPView.STATISTICS_DISPLAY_MODE.MEDIAN_BOXPLOT);
+        medianStatsModeMI.setSelected(dataTableView.getSummaryStatisticsDisplayMode() == DataTableView.STATISTICS_DISPLAY_MODE.MEDIAN_BOXPLOT);
 
         summaryStatsDisplayModeMenu.getItems().addAll(meanStatsModeMI, medianStatsModeMI);
 
@@ -760,18 +764,18 @@ public class CrossVis extends Application implements DataTableListener {
             if (newValue != null && newValue != oldValue) {
                 RadioMenuItem radioMenuItem = (RadioMenuItem)newValue;
                 if (radioMenuItem.getText().equals(meanStatsModeMI.getText())) {
-                    pcpView.setSummaryStatisticsDisplayMode(PCPView.STATISTICS_DISPLAY_MODE.MEAN_BOXPLOT);
+                    dataTableView.setSummaryStatisticsDisplayMode(DataTableView.STATISTICS_DISPLAY_MODE.MEAN_BOXPLOT);
                 } else if (radioMenuItem.getText().equals(medianStatsModeMI.getText())) {
-                    pcpView.setSummaryStatisticsDisplayMode(PCPView.STATISTICS_DISPLAY_MODE.MEDIAN_BOXPLOT);
+                    dataTableView.setSummaryStatisticsDisplayMode(DataTableView.STATISTICS_DISPLAY_MODE.MEDIAN_BOXPLOT);
                 }
             }
         });
 
-        pcpView.summaryStatisticsDisplayModeProperty().addListener((observable, oldValue, newValue) -> {
+        dataTableView.summaryStatisticsDisplayModeProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue != null && newValue != oldValue) {
-                if (newValue == PCPView.STATISTICS_DISPLAY_MODE.MEAN_BOXPLOT) {
+                if (newValue == DataTableView.STATISTICS_DISPLAY_MODE.MEAN_BOXPLOT) {
                     meanStatsModeMI.setSelected(true);
-                } else if (newValue == PCPView.STATISTICS_DISPLAY_MODE.MEDIAN_BOXPLOT) {
+                } else if (newValue == DataTableView.STATISTICS_DISPLAY_MODE.MEDIAN_BOXPLOT) {
                     medianStatsModeMI.setSelected(true);
                 }
             }
@@ -782,13 +786,13 @@ public class CrossVis extends Application implements DataTableListener {
 
         RadioMenuItem lineDisplayModeMI = new RadioMenuItem("TuplePolyline Display Mode");
         lineDisplayModeMI.setToggleGroup(polylineDisplayModeMenuGroup);
-        if (pcpView.getPolylineDisplayMode() == PCPView.POLYLINE_DISPLAY_MODE.POLYLINES) {
+        if (dataTableView.getPolylineDisplayMode() == DataTableView.POLYLINE_DISPLAY_MODE.POLYLINES) {
             lineDisplayModeMI.setSelected(true);
         }
 
         RadioMenuItem binDisplayModeMI = new RadioMenuItem("Binned TuplePolyline Display Mode");
         binDisplayModeMI.setToggleGroup(polylineDisplayModeMenuGroup);
-        if (pcpView.getPolylineDisplayMode() == PCPView.POLYLINE_DISPLAY_MODE.BINNED_POLYLINES) {
+        if (dataTableView.getPolylineDisplayMode() == DataTableView.POLYLINE_DISPLAY_MODE.BINNED_POLYLINES) {
             lineDisplayModeMI.setSelected(true);
         }
 
@@ -798,16 +802,16 @@ public class CrossVis extends Application implements DataTableListener {
             if (newValue != null && newValue != oldValue) {
                 RadioMenuItem toggleItem = (RadioMenuItem)newValue;
                 if (toggleItem.getText().equals(lineDisplayModeMI.getText())) {
-                    pcpView.setPolylineDisplayMode(PCPView.POLYLINE_DISPLAY_MODE.POLYLINES);
+                    dataTableView.setPolylineDisplayMode(DataTableView.POLYLINE_DISPLAY_MODE.POLYLINES);
                 } else if (toggleItem.getText().equals(binDisplayModeMI.getText())) {
-                    pcpView.setPolylineDisplayMode(PCPView.POLYLINE_DISPLAY_MODE.BINNED_POLYLINES);
+                    dataTableView.setPolylineDisplayMode(DataTableView.POLYLINE_DISPLAY_MODE.BINNED_POLYLINES);
                 }
             }
         });
 
-        pcpView.polylineDisplayModeProperty().addListener((observable, oldValue, newValue) -> {
+        dataTableView.polylineDisplayModeProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue != null && newValue != oldValue) {
-                if (newValue == PCPView.POLYLINE_DISPLAY_MODE.POLYLINES) {
+                if (newValue == DataTableView.POLYLINE_DISPLAY_MODE.POLYLINES) {
                     lineDisplayModeMI.setSelected(true);
                 } else {
                     binDisplayModeMI.setSelected(true);
@@ -823,20 +827,20 @@ public class CrossVis extends Application implements DataTableListener {
         });
 
         CheckMenuItem fitPCPAxesToWidthCheckMI = new CheckMenuItem("Fit Axis Spacing to Window Width");
-        fitPCPAxesToWidthCheckMI.setSelected(pcpView.getFitToWidth());
+        fitPCPAxesToWidthCheckMI.setSelected(dataTableView.getFitToWidth());
 //        fitPCPAxesToWidthCheckMI.setDisable(true);
         fitPCPAxesToWidthCheckMI.selectedProperty().addListener((observable, oldValue, newValue) -> {
-            pcpView.setFitToWidth(fitPCPAxesToWidthCheckMI.isSelected());
-            if (pcpView.getFitToWidth()) {
+            dataTableView.setFitToWidth(fitPCPAxesToWidthCheckMI.isSelected());
+            if (dataTableView.getFitToWidth()) {
                 changeAxisSpacingMI.setDisable(true);
-                pcpScrollPane.setFitToWidth(true);
+                dataTableViewScrollPane.setFitToWidth(true);
             } else {
                 changeAxisSpacingMI.setDisable(false);
-                pcpScrollPane.setFitToWidth(false);
+                dataTableViewScrollPane.setFitToWidth(false);
             }
         });
 
-        if (pcpView.getFitToWidth()) {
+        if (dataTableView.getFitToWidth()) {
             changeAxisSpacingMI.setDisable(true);
         } else {
             changeAxisSpacingMI.setDisable(true);
@@ -863,7 +867,7 @@ public class CrossVis extends Application implements DataTableListener {
                 // refresh data datamodel based on current state of the data model
                 setDataTableItems();
             } else {
-                dataTableView.getItems().clear();
+                tupleTableView.getItems().clear();
             }
         });
 
@@ -907,7 +911,7 @@ public class CrossVis extends Application implements DataTableListener {
         removeAllQueriesMI = new MenuItem("Remove All Axis Queries");
         removeAllQueriesMI.setDisable(true);
         removeAllQueriesMI.setOnAction(event -> {
-            pcpView.clearQuery();
+            dataTableView.clearQuery();
         });
 
         queryMenu.getItems().addAll(showQueryStatisticsCheckMI, showNonQueryStatisticsCheckMI, removeAllQueriesMI);
@@ -948,7 +952,7 @@ public class CrossVis extends Application implements DataTableListener {
                 return;
             }
 
-            WritableImage pcpSnapshotImage = pcpView.getSnapshot(scaleFactor);
+            WritableImage pcpSnapshotImage = dataTableView.getSnapshot(scaleFactor);
 
             try {
                 if (!imageFile.getName().endsWith(".png")) {
@@ -1154,7 +1158,7 @@ public class CrossVis extends Application implements DataTableListener {
     private void setDataTableItems() {
         if (enableDataTableUpdatesCheckMenuItem.isSelected()) {
             ObservableList<Tuple> tableTuples;
-            dataTableView.getItems().clear();
+            tupleTableView.getItems().clear();
 
             if (dataTable.getActiveQuery().hasColumnSelections()) {
                 tableTuples = FXCollections.observableArrayList(dataTable.getActiveQuery().getQueriedTuples());
@@ -1162,12 +1166,12 @@ public class CrossVis extends Application implements DataTableListener {
                 tableTuples = FXCollections.observableArrayList(dataTable.getTuples());
             }
 
-            dataTableView.setItems(tableTuples);
+            tupleTableView.setItems(tableTuples);
         }
     }
 
     private void setDataTableColumns() {
-        dataTableView.getColumns().clear();
+        tupleTableView.getColumns().clear();
 
         // make a column for each enabled data datamodel column
         if (!dataTable.isEmpty()) {
@@ -1186,7 +1190,7 @@ public class CrossVis extends Application implements DataTableListener {
 
                         }
                     });
-                    dataTableView.getColumns().add(tableColumn);
+                    tupleTableView.getColumns().add(tableColumn);
                 } else if (column instanceof DoubleColumn) {
                     TableColumn<Tuple, Double> tableColumn = new TableColumn<>(column.getName());
                     tableColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<Tuple, Double>, ObservableValue<Double>>() {
@@ -1199,7 +1203,7 @@ public class CrossVis extends Application implements DataTableListener {
 
                         }
                     });
-                    dataTableView.getColumns().add(tableColumn);
+                    tupleTableView.getColumns().add(tableColumn);
                 } else if (column instanceof CategoricalColumn) {
                     TableColumn<Tuple, String> tableColumn = new TableColumn<>(column.getName());
                     tableColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<Tuple, String>, ObservableValue<String>>() {
@@ -1212,7 +1216,7 @@ public class CrossVis extends Application implements DataTableListener {
                             return new ReadOnlyObjectWrapper<>((String)param.getValue().getElement(columnIndex));
                         }
                     });
-                    dataTableView.getColumns().add(tableColumn);
+                    tupleTableView.getColumns().add(tableColumn);
                 }
             }
         }
@@ -1326,8 +1330,8 @@ public class CrossVis extends Application implements DataTableListener {
     @Override
     public void dataModelColumnDisabled(DataTable dataModel, Column disabledColumn) {
         // reset the data datamodel columns
-        dataTableView.getItems().clear();
-        dataTableView.getColumns().clear();
+        tupleTableView.getItems().clear();
+        tupleTableView.getColumns().clear();
         setDataTableColumns();
         setDataTableItems();
 

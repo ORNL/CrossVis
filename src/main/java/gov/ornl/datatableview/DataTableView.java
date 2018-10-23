@@ -638,12 +638,17 @@ public class DataTableView extends Region implements DataTableListener {
         handleQueryChange();
     }
 
-//    public double getPCPVerticalBarHeight() {
-//        if (axisList != null && !axisList.isEmpty()) {
-//            return axisList.get(0).getAxisBar().getHeight();
-//        }
-//        return Double.NaN;
-//    }
+    public double getPCPVerticalBarHeight() {
+        if (axisList != null && !axisList.isEmpty()) {
+            for (Axis axis : axisList) {
+                if (axis instanceof UnivariateAxis) {
+                    return ((UnivariateAxis) axis).getAxisBar().getHeight();
+                }
+            }
+        }
+
+        return pcpRegionBounds.getHeight();
+    }
 
     private void drawPCPBins() {
         selectedCanvas.getGraphicsContext2D().setLineCap(StrokeLineCap.BUTT);
