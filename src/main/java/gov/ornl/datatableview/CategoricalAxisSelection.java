@@ -13,7 +13,7 @@ public class CategoricalAxisSelection extends UnivariateAxisSelection {
     private void registerListeners() {
         categoricalColumnSelection().selectedCategoriesProperty().addListener(((observable, oldValue, newValue) -> {
             if (newValue != null) {
-                relayout();
+                resize();
             }
         }));
     }
@@ -102,7 +102,7 @@ public class CategoricalAxisSelection extends UnivariateAxisSelection {
     }
 
     @Override
-    public void relayout() {
+    public void resize() {
 
     }
 }

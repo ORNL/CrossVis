@@ -212,8 +212,6 @@ public abstract class UnivariateAxisSelection extends AxisSelection {
         });
     }
 
-    public abstract void relayout();
-
     protected void layoutGraphics(double bottomY, double topY) {
         if (rectangle != null) {
             double top = Math.min(bottomY, topY);

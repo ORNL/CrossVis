@@ -280,13 +280,13 @@ public class TemporalAxisSelection extends UnivariateAxisSelection {
             if (newValue != null) {
                 minText.setText(newValue.get(0).toString());
                 maxText.setText(newValue.get(1).toString());
-                relayout();
+                resize();
             }
         });
     }
 
     @Override
-    public void relayout() {
+    public void resize() {
         double topY = GraphicsUtil.mapValue(temporalColumnSelection().getEndInstant(),
                 ((TemporalColumn)univariateAxis().getColumn()).getStatistics().getStartInstant(),
                 ((TemporalColumn)univariateAxis().getColumn()).getStatistics().getEndInstant(),

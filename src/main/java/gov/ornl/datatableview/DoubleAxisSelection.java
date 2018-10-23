@@ -294,7 +294,7 @@ public class DoubleAxisSelection extends UnivariateAxisSelection {
             if (newValue != null) {
                 minText.setText(newValue.get(0).toString());
                 maxText.setText(newValue.get(1).toString());
-                relayout();
+                resize();
             }
         });
     }
@@ -318,7 +318,7 @@ public class DoubleAxisSelection extends UnivariateAxisSelection {
     }
 
     @Override
-    public void relayout() {
+    public void resize() {
         double topY = GraphicsUtil.mapValue(doubleColumnSelection().getMaxValue(),
                 ((DoubleColumn)univariateAxis().getColumn()).getStatistics().getMinValue(),
                 ((DoubleColumn)univariateAxis().getColumn()).getStatistics().getMaxValue(),

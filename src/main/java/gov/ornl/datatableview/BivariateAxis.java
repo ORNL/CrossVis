@@ -4,6 +4,7 @@ import gov.ornl.datatable.BivariateColumn;
 import gov.ornl.datatable.Column;
 import gov.ornl.datatable.ColumnSelection;
 import gov.ornl.scatterplot.Scatterplot;
+import javafx.geometry.Bounds;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 
@@ -13,6 +14,7 @@ public class BivariateAxis extends Axis {
 
     private Scatterplot scatterplot;
 //    private Rectangle scatterplotRectangle;
+//    private Bounds scatterplotBounds;
 
     public BivariateAxis(DataTableView dataTableView, BivariateColumn bivariateColumn) {
         super(dataTableView, bivariateColumn);
@@ -55,4 +57,6 @@ public class BivariateAxis extends Axis {
     public Rectangle getScatterplotRectangle() {
         return scatterplot.getPlotRectangle();
     }
+
+    public Scatterplot getScatterplot() { return scatterplot; }
 }

@@ -53,10 +53,26 @@ public class TuplePolylineRenderer extends AnimationTimer {
                 break;
             } else {
                 for (int i = 1; i < pcpTuple.getXPoints().length; i++) {
+                    double x0, x1;
+
+                    if (axisList.get(i-1) instanceof BivariateAxis) {
+                        x0 = ((BivariateAxis)axisList.get(i-1)).getScatterplot().plotBounds.getMaxX();
+                    } else {
+                        x0 = ((UnivariateAxis)axisList.get(i-1)).getBarRightX();
+                    }
+
+                    if (axisList.get(i) instanceof BivariateAxis) {
+                        x1 = ((BivariateAxis)axisList.get(i)).getScatterplot().plotBounds.getMinX();
+                    } else {
+                        x1 = ((UnivariateAxis)axisList.get(i)).getBarLeftX();
+                    }
+
+                    canvas.getGraphicsContext2D().strokeLine(x0, pcpTuple.getYPoints()[i - 1],
+                            x1, pcpTuple.getYPoints()[i]);
 //                    canvas.getGraphicsContext2D().strokeLine(axisList.get(i - 1).getBarRightX(), pcpTuple.getYPoints()[i - 1],
 //                            axisList.get(i).getBarLeftX(), pcpTuple.getYPoints()[i]);
-                    canvas.getGraphicsContext2D().strokeLine(pcpTuple.getXPoints()[i-1], pcpTuple.getYPoints()[i - 1],
-                            pcpTuple.getXPoints()[i], pcpTuple.getYPoints()[i]);
+//                    canvas.getGraphicsContext2D().strokeLine(pcpTuple.getXPoints()[i-1], pcpTuple.getYPoints()[i - 1],
+//                            pcpTuple.getXPoints()[i], pcpTuple.getYPoints()[i]);
                 }
             }
         }

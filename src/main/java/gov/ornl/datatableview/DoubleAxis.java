@@ -343,6 +343,14 @@ public class DoubleAxis extends UnivariateAxis {
 
         super.resize(left, top, width, height);
 
+//        minValueText.setX(getBounds().getMinX() + ((width - minValueText.getLayoutBounds().getWidth()) / 2.));
+        minValueText.setX(getBarRightX() + 2.);
+        minValueText.setY(getFocusMinPosition() + (minValueText.getLayoutBounds().getHeight() / 4.));
+
+        maxValueText.setX(getBarRightX() + 2.);
+//        maxValueText.setX(getBounds().getMinX() + ((width - maxValueText.getLayoutBounds().getWidth()) / 2.));
+        maxValueText.setY(getFocusMaxPosition() + (maxValueText.getLayoutBounds().getHeight() / 4.));
+
         if (!getDataTable().isEmpty()) {
             if (getDataTableView().isShowingHistograms()) {
                 DoubleHistogram histogram = doubleColumn().getStatistics().getHistogram();

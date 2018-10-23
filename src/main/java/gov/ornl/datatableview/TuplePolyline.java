@@ -1,7 +1,7 @@
 package gov.ornl.datatableview;
 
-import gov.ornl.datatable.TemporalColumn;
-import gov.ornl.datatable.Tuple;
+import gov.ornl.datatable.*;
+import gov.ornl.scatterplot.Scatterplot;
 import gov.ornl.util.GraphicsUtil;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
@@ -72,6 +72,43 @@ public class TuplePolyline {
                 Rectangle rectangle = categoricalAxis.getCategoryRectangle(category);
                 xPoints[i] = axis.getCenterX();
                 yPoints[i] = rectangle.getY() + (rectangle.getHeight() / 2.);
+            } else if (axis instanceof BivariateAxis) {
+                BivariateAxis biAxis = (BivariateAxis)axis;
+                Object values[] = (Object[])tuple.getElement(i);
+
+                xPoints[i] = biAxis.getScatterplot().getPlotBounds().getMinX();
+//                Column xColumn = ((BivariateColumn)biAxis.getColumn()).getColumn1();
+
+//                if (xColumn instanceof DoubleColumn) {
+//                    DoubleColumn xDoubleColumn = (DoubleColumn)xColumn;
+//                    double xValue = (double)values[0];
+//                    xPoints[i] = GraphicsUtil.mapValue(xValue,
+//                            (double)biAxis.getScatterplot().getXAxisMinValue(),
+//                            (double)biAxis.getScatterplot().getXAxisMaxValue(),
+//                            biAxis.getScatterplot().getPlotBounds().getMinX(),
+//                            biAxis.getScatterplot().getPlotBounds().getMaxX());
+//                } else {
+//                    xPoints[i] = biAxis.getCenterX();
+//                }
+
+                Column yColumn = ((BivariateColumn)biAxis.getColumn()).getColumn2();
+
+                if (yColumn instanceof DoubleColumn) {
+                    DoubleColumn doubleColumn = (DoubleColumn)yColumn;
+                    double yValue = (double)values[1];
+                    yPoints[i] = GraphicsUtil.mapValue(yValue,
+                            (double)biAxis.getScatterplot().getYAxisMinValue(),
+                            (double)biAxis.getScatterplot().getYAxisMaxValue(),
+                            biAxis.getScatterplot().getPlotBounds().getMaxY(),
+                            biAxis.getScatterplot().getPlotBounds().getMinY());
+                } else {
+                    yPoints[i] = biAxis.getCenterY();
+                }
+            } else {
+                double x = axis.getCenterX();
+                double y = axis.getCenterY();
+                xPoints[i] = x;
+                yPoints[i] = y;
             }
         }
     }

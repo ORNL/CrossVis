@@ -136,6 +136,58 @@ public class Scatterplot {
 
     public Rectangle getPlotRectangle() { return plotRectangle; }
 
+    public Bounds getPlotBounds() { return plotBounds; }
+
+    public Bounds getXAxisBounds() { return xAxisBounds; }
+
+    public Bounds getYAxisBounds() { return yAxisBounds; }
+
+    public Object getXAxisMaxValue() {
+        if (xColumn instanceof DoubleColumn) {
+            return xAxisMaxDoubleValue;
+        } else if (xColumn instanceof TemporalColumn) {
+            return xAxisEndInstant;
+        }
+
+        return null;
+    }
+
+
+    public Object getXAxisMinValue() {
+        if (xColumn instanceof DoubleColumn) {
+            return xAxisMinDoubleValue;
+        } else if (xColumn instanceof TemporalColumn) {
+            return xAxisStartInstant;
+        }
+
+        return null;
+    }
+
+    public Object getYAxisMaxValue() {
+        if (yColumn instanceof DoubleColumn) {
+            return yAxisMaxDoubleValue;
+        } else if (yColumn instanceof TemporalColumn) {
+            return yAxisEndInstant;
+        }
+
+        return null;
+    }
+
+
+    public Object getYAxisMinValue() {
+        if (yColumn instanceof DoubleColumn) {
+            return yAxisMinDoubleValue;
+        } else if (yColumn instanceof TemporalColumn) {
+            return yAxisStartInstant;
+        }
+
+        return null;
+    }
+
+    public double getxAxisMaxDoubleValue() {
+        return xAxisMaxDoubleValue;
+    }
+
     private void registerListeners() {
 //        pointStrokeOpacity.addListener((observable, oldValue, newValue) -> {
 //            if (newValue != oldValue) {

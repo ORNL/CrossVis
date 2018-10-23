@@ -2,14 +2,13 @@ package gov.ornl.datatableview;
 
 import gov.ornl.datatable.DataTable;
 import gov.ornl.datatable.IOUtilities;
-import gov.ornl.pcpview.PCPView;
 import javafx.application.Application;
+import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
 import javafx.scene.SceneAntialiasing;
-import javafx.scene.control.Button;
-import javafx.scene.control.ScrollPane;
+import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.stage.Screen;
@@ -66,11 +65,68 @@ public class DataTableViewTest extends Application {
 					dataTableView.getDataTable().getColumn(3));
 		});
 
+		Slider opacitySlider = new Slider(0.01, 1., dataTableView.getDataItemsOpacity());
+//        opacitySlider.valueProperty().bindBidirectional(pcpView.dataItemsOpacityProperty());
+		opacitySlider.setShowTickLabels(false);
+		opacitySlider.setShowTickMarks(false);
+		opacitySlider.valueChangingProperty().addListener((observable, oldValue, newValue) -> {
+			if (!newValue) {
+				dataTableView.setDataItemsOpacity(opacitySlider.getValue());
+			}
+		});
+
+		CheckBox showScatterplotsCB = new CheckBox("Show Scatterplots");
+		showScatterplotsCB.selectedProperty().bindBidirectional(dataTableView.showScatterplotsProperty());
+
+		CheckBox showPolylinesCB = new CheckBox("Show Polylines");
+		showPolylinesCB.selectedProperty().bindBidirectional(dataTableView.showPolylinesProperty());
+
+		CheckBox showSummaryStatsCB = new CheckBox("Show Summary Statistics");
+		showSummaryStatsCB.selectedProperty().bindBidirectional(dataTableView.showSummaryStatisticsProperty());
+
+		CheckBox showHistogramCB = new CheckBox("Show Histograms");
+		showHistogramCB.selectedProperty().bindBidirectional(dataTableView.showHistogramsProperty());
+
+		CheckBox showSelectedPolylinesCB = new CheckBox("Show Selected Polylines");
+		showSelectedPolylinesCB.selectedProperty().bindBidirectional(dataTableView.showSelectedItemsProperty());
+
+		CheckBox showUnselectedPolylinesCB = new CheckBox("Show Unselected Polylines");
+		showUnselectedPolylinesCB.selectedProperty().bindBidirectional(dataTableView.showUnselectedItemsProperty());
+
+		CheckBox showCorrelationIndicatorsCB = new CheckBox("Show Correlations");
+		showCorrelationIndicatorsCB.selectedProperty().bindBidirectional(dataTableView.showCorrelationsProperty());
+
+		ChoiceBox<DataTableView.POLYLINE_DISPLAY_MODE> polylineDisplayModeChoiceBox =
+				new ChoiceBox<>(FXCollections.observableArrayList(DataTableView.POLYLINE_DISPLAY_MODE.POLYLINES,
+						DataTableView.POLYLINE_DISPLAY_MODE.BINNED_POLYLINES));
+		if (dataTableView.getPolylineDisplayMode() == DataTableView.POLYLINE_DISPLAY_MODE.POLYLINES) {
+			polylineDisplayModeChoiceBox.getSelectionModel().select(0);
+		} else {
+			polylineDisplayModeChoiceBox.getSelectionModel().select(1);
+		}
+		polylineDisplayModeChoiceBox.setOnAction(event -> {
+			dataTableView.setPolylineDisplayMode(polylineDisplayModeChoiceBox.getValue());
+		});
+
+		ChoiceBox<DataTableView.STATISTICS_DISPLAY_MODE> statisticsDisplayModeChoiceBox =
+				new ChoiceBox<>(FXCollections.observableArrayList(DataTableView.STATISTICS_DISPLAY_MODE.MEAN_BOXPLOT,
+						DataTableView.STATISTICS_DISPLAY_MODE.MEDIAN_BOXPLOT));
+		if (dataTableView.getSummaryStatisticsDisplayMode() == DataTableView.STATISTICS_DISPLAY_MODE.MEAN_BOXPLOT) {
+			statisticsDisplayModeChoiceBox.getSelectionModel().select(0);
+		} else {
+			statisticsDisplayModeChoiceBox.getSelectionModel().select(1);
+		}
+		statisticsDisplayModeChoiceBox.setOnAction(event -> {
+			dataTableView.setSummaryStatisticsDisplayMode(statisticsDisplayModeChoiceBox.getValue());
+		});
+
 		HBox settingsPane = new HBox();
 		settingsPane.setSpacing(2);
 		settingsPane.setPadding(new Insets(4));
 
-		settingsPane.getChildren().addAll(loadDataButton, addBivariateAxisButton);
+		settingsPane.getChildren().addAll(loadDataButton, addBivariateAxisButton, showPolylinesCB,
+				showSelectedPolylinesCB, showUnselectedPolylinesCB, showHistogramCB, showSummaryStatsCB, showCorrelationIndicatorsCB,
+				showScatterplotsCB, statisticsDisplayModeChoiceBox, polylineDisplayModeChoiceBox, opacitySlider);
 
 		BorderPane rootNode = new BorderPane();
 		rootNode.setCenter(scrollPane);
@@ -82,7 +138,7 @@ public class DataTableViewTest extends Application {
 
 		Scene scene = new Scene(rootNode, sceneWidth, 600, true, SceneAntialiasing.BALANCED);
 
-		primaryStage.setTitle("PCPView Test");
+		primaryStage.setTitle("DataTableView Test");
 		primaryStage.setScene(scene);
 		primaryStage.show();
 	}

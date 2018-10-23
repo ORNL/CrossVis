@@ -106,6 +106,12 @@ public abstract class UnivariateAxis extends Axis {
         lowerContextBar.setWidth(axisBar.getWidth());
         lowerContextBar.setY(focusBottom);
         lowerContextBar.setHeight(contextRegionHeight);
+
+        if (!getAxisSelectionList().isEmpty()) {
+            for (AxisSelection axisSelection : getAxisSelectionList()) {
+                axisSelection.resize();
+            }
+        }
     }
 
     protected Line makeLine() {

@@ -19,4 +19,5 @@ public abstract class AxisSelection {
 
     public Group getGraphicsGroup() { return graphicsGroup; }
 
+    public abstract void resize();
 }
