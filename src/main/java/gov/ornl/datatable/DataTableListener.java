@@ -50,7 +50,7 @@ public interface DataTableListener {
 	public void dataModelColumnEnabled(DataTable dataModel, Column enabledColumn);
 
 	// Called when a new bivariate column is added (combination of two enabled columns)
-	public void dataTableBivariateColumnAdded(DataTable dataTable, BivariateColumn bivariateColumn);
+	public void dataTableBivariateColumnAdded(DataTable dataTable, BivariateColumn bivariateColumn, int index);
 
 	// Called when the column order is changed
 	public void dataModelColumnOrderChanged(DataTable dataModel);

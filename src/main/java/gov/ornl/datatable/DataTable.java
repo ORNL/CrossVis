@@ -403,11 +403,19 @@ public class DataTable {
 		fireColumnsDisabled(columns);
 	}
 
-	public void addBivariateColumn(Column column1, Column column2) {
+    private void fireBivariateColumnAdded(BivariateColumn bivariateColumn) {
+        int idx = columns.indexOf(bivariateColumn);
+        for (DataTableListener listener : listeners) {
+            listener.dataTableBivariateColumnAdded(this, bivariateColumn, idx);
+        }
+    }
+
+	public void addBivariateColumn(Column column1, Column column2, int columnIndex) {
 		String title = column2.getName() + " vs. " + column1.getName();
 		BivariateColumn biColumn = new BivariateColumn(title, column1, column2);
 		biColumn.setDataModel(this);
-		columns.add(biColumn);
+
+		int idx = columnIndex < 0 ? 0 : columnIndex > columns.size() ? columns.size() : columnIndex;
 
 		int col1Index = columns.indexOf(column1);
 		int col2Index = columns.indexOf(column2);
@@ -415,18 +423,14 @@ public class DataTable {
 		// add bivariate pair to tuples
 		for (Tuple tuple : tuples) {
 			Object biValues[] = {tuple.getElement(col1Index), tuple.getElement(col2Index)};
-			tuple.addElement(biValues);
+			tuple.addElement(idx, biValues);
 		}
+
+        columns.add(idx, biColumn);
 
 		calculateStatistics();
 
 		fireBivariateColumnAdded(biColumn);
-	}
-
-	private void fireBivariateColumnAdded(BivariateColumn bivariateColumn) {
-		for (DataTableListener listener : listeners) {
-			listener.dataTableBivariateColumnAdded(this, bivariateColumn);
-		}
 	}
 
 	public void enableColumn(Column column) {
@@ -647,8 +651,29 @@ public class DataTable {
 
     public void changeColumnOrder(Column column, int newColumnIndex) {
 		ArrayList<Column> newColumnOrder = new ArrayList<>(columns);
-		newColumnOrder.remove(newColumnOrder.indexOf(column));
-		newColumnOrder.add(newColumnIndex, column);
+		int currentColumnIndex = newColumnOrder.indexOf(column);
+
+		if (currentColumnIndex == newColumnIndex) {
+		    return;
+        }
+
+		newColumnOrder.remove(currentColumnIndex);
+
+        if (currentColumnIndex < newColumnIndex) {
+            newColumnIndex--;
+        }
+
+        newColumnOrder.add(newColumnIndex, column);
+
+//		if (newColumnIndex <= 0) {
+//			newColumnOrder.add(0, column);
+//		} else if (newColumnIndex > newColumnOrder.size()) {
+//			newColumnOrder.add(newColumnOrder.size(), column);
+//		} else if (currentColumnIndex > newColumnIndex) {
+//			newColumnOrder.add(newColumnIndex + 1, column);
+//		} else {
+//			newColumnOrder.add(newColumnIndex, column);
+//		}
 
 		changeColumnOrder(newColumnOrder);
 	}

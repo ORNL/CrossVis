@@ -1178,7 +1178,7 @@ public class DataTableView extends Region implements DataTableListener {
 //        return null;
 //    }
 
-    private void addAxis(Column column) {
+    private void addAxis(Column column, int index) {
         Axis pcpAxis = null;
         if (column instanceof DoubleColumn) {
             pcpAxis = new DoubleAxis(this, (DoubleColumn)column);
@@ -1192,7 +1192,7 @@ public class DataTableView extends Region implements DataTableListener {
 
 //        pcpAxis.titleTextRotationProperty().bind(nameTextRotationProperty());
         pane.getChildren().add(pcpAxis.getGraphicsGroup());
-        axisList.add(pcpAxis);
+        axisList.add(index, pcpAxis);
     }
 
     private Axis getAxisForColumn(Column column) {
@@ -1353,7 +1353,7 @@ public class DataTableView extends Region implements DataTableListener {
     @Override
     public void dataModelColumnEnabled(DataTable dataModel, Column enabledColumn) {
         // add axis lines to the pane
-        addAxis(enabledColumn);
+        addAxis(enabledColumn, dataModel.getColumnIndex(enabledColumn));
 
         reinitializeScatterplots();
 
@@ -1381,12 +1381,36 @@ public class DataTableView extends Region implements DataTableListener {
     }
 
     @Override
-    public void dataTableBivariateColumnAdded(DataTable dataTable, BivariateColumn bivariateColumn) {
-        addBivariateAxis(bivariateColumn, axisList.size());
+    public void dataTableBivariateColumnAdded(DataTable dataTable, BivariateColumn bivariateColumn, int columnIndex) {
+        addAxis(bivariateColumn, columnIndex);
+
+        reinitializeScatterplots();
+
+        // add tuples polylines from data model
+        tuplePolylines = new ArrayList<>();
+        for (int iTuple = 0; iTuple < dataTable.getTupleCount(); iTuple++) {
+            Tuple tuple = dataTable.getTuple(iTuple);
+            TuplePolyline pcpTuple = new TuplePolyline(tuple);
+            tuplePolylines.add(pcpTuple);
+        }
+
+        fillTupleSets();
+
+        // create PCPBinSets for axis configuration
+        PCPBinSetList = new ArrayList<>();
+        for (int iaxis = 0; iaxis < axisList.size()-1; iaxis++) {
+            if (axisList.get(iaxis) instanceof UnivariateAxis && axisList.get(iaxis + 1) instanceof UnivariateAxis) {
+                TuplePolylineBinSet binSet = new TuplePolylineBinSet((UnivariateAxis)axisList.get(iaxis),
+                        (UnivariateAxis)axisList.get(iaxis + 1), dataTable);
+                PCPBinSetList.add(binSet);
+            }
+        }
+
+        resizeView();
     }
 
     @Override
-    public void dataModelColumnOrderChanged(DataTable dataModel) {
+    public void dataModelColumnOrderChanged(DataTable dataTable) {
         initView();
     }
 

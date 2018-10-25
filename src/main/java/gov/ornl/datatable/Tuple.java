@@ -66,6 +66,10 @@ public class Tuple implements Serializable {
 		elements.add(value);
 	}
 
+	public void addElement(int idx, Object value) {
+		elements.add(idx, value);
+	}
+
 	public boolean equals(Tuple tuple) {
 		if (tuple.getElementCount() == this.getElementCount()) {
 			for (int i = 0; i < this.getElementCount(); i++) {

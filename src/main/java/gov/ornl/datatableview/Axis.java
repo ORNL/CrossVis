@@ -19,8 +19,11 @@ import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 
 import java.util.ArrayList;
+import java.util.logging.Logger;
 
 public abstract class Axis {
+    private final static Logger log = Logger.getLogger(Axis.class.getName());
+
     public final static double DEFAULT_TITLE_TEXT_SIZE = 12d;
     public final static double DEFAULT_TEXT_SIZE = 10d;
     public final static double DEFAULT_STROKE_WIDTH = 1.5;
@@ -194,10 +197,100 @@ public abstract class Axis {
             if (dragging) {
                 dataTableView.getPane().getChildren().remove(axisDraggingGraphicsGroup);
                 dragging = false;
-                int newAxisPosition = (int)dragEndPoint.getX() / dataTableView.getAxisSpacing();
-                if (!(newAxisPosition == getDataTable().getColumnIndex(column))) {
-                    getDataTable().changeColumnOrder(getColumn(), newAxisPosition);
+
+                if (this instanceof UnivariateAxis) {
+                    for (int i = 0; i < dataTableView.getAxisCount(); i++) {
+                        Axis axis = dataTableView.getAxis(i);
+                        if (axis instanceof UnivariateAxis) {
+                            if (dragEndPoint.getX() >= ((UnivariateAxis)axis).getBarLeftX() &&
+                                dragEndPoint.getX() <= ((UnivariateAxis)axis).getBarRightX()) {
+                                getDataTable().addBivariateColumn(axis.getColumn(), this.getColumn(), i);
+                                return;
+                            }
+                        }
+                    }
                 }
+
+                int newColumnIndex = -1;
+
+                for (int i = 0; i < dataTableView.getAxisCount(); i++) {
+                    Axis axis = dataTableView.getAxis(i);
+//
+//                    if (this instanceof UnivariateAxis && axis instanceof UnivariateAxis) {
+//                        log.info("dragEndPoint.getX(): " + dragEndPoint.getX() + " event.getX(): " + event.getX() + " bar: [" + ((UnivariateAxis)axis).getBarLeftX() +
+//                                "," + ((UnivariateAxis)axis).getBarRightX());
+//                        if (dragEndPoint.getX() >= ((UnivariateAxis)axis).getBarLeftX() && dragEndPoint.getX() <= ((UnivariateAxis)axis).getBarRightX()) {
+//                            dataTableView.getDataTable().addBivariateColumn(axis.getColumn(), this.getColumn(), i);
+//                            break;
+//                        }
+//                    }
+
+                    if ( (i == 0) && (dragEndPoint.getX() < axis.getCenterX()) ) {
+                        newColumnIndex = 0;
+                        break;
+                    }
+
+                    if (dragEndPoint.getX() > axis.getCenterX()) {
+                        if ((i + 1) < dataTableView.getAxisCount()) {
+                            Axis nextAxis = dataTableView.getAxis(i + 1);
+                            if (dragEndPoint.getX() >= axis.getCenterX() && dragEndPoint.getX() < nextAxis.getCenterX()) {
+                                newColumnIndex = i + 1;
+                                break;
+                            }
+                        } else {
+                            newColumnIndex = dataTableView.getAxisCount();
+                        }
+                    }
+                }
+
+                if (newColumnIndex != -1) {
+                    getDataTable().changeColumnOrder(getColumn(), newColumnIndex);
+                }
+
+//                getDataTable().changeColumnOrder(getColumn(), getDataTable().getColumnCount());
+//                int currentAxisPosition = getDataTable().getColumnIndex(getColumn());
+//                int newAxisPosition = (int)Math.floor(((dragEndPoint.getX() - (dataTableView.getAxisSpacing() / 2.)) / dataTableView.getAxisSpacing()));
+//
+//                if (newAxisPosition < 0) {
+//                    newAxisPosition = 0;
+//                } else if (currentAxisPosition > newAxisPosition) {
+//                    newAxisPosition++;
+//                }
+//
+//                if (this instanceof UnivariateAxis) {
+//                    Axis currentAxisAtNewLocation = getDataTableView().getAxis(newAxisPosition);
+//                    if (currentAxisAtNewLocation instanceof UnivariateAxis) {
+//                        Rectangle axisBar = ((UnivariateAxis)currentAxisAtNewLocation).getAxisBar();
+//                        if (event.getX() >= axisBar.getX() && (event.getX() <= (axisBar.getX() + axisBar.getWidth()))) {
+//                            dataTableView.getDataTable().addBivariateColumn(currentAxisAtNewLocation.getColumn(),
+//                                    this.getColumn(), newAxisPosition);
+//                            return;
+//                        }
+//                    }
+//                }
+//
+//                if (newAxisPosition != currentAxisPosition) {
+//                    getDataTable().changeColumnOrder(getColumn(), newAxisPosition);
+//                }
+
+//                int newAxisPosition = (int)dragEndPoint.getX() / dataTableView.getAxisSpacing();
+//
+//                if (!(newAxisPosition == getDataTable().getColumnIndex(column))) {
+//                    if (this instanceof UnivariateAxis) {
+//                        Axis nearestAxis = getDataTableView().getAxis(newAxisPosition);
+//                        if (nearestAxis instanceof UnivariateAxis) {
+//                            Rectangle axisBar = ((UnivariateAxis) nearestAxis).getAxisBar();
+//                            if ((event.getX() >= axisBar.getX()) && (event.getX() <= (axisBar.getX() + axisBar.getWidth()))) {
+//                                // dropped dragging univariate axis on another univariate axis
+//                                // create a new bivariate axis and add at the newAxisPosition
+//                                dataTableView.getDataTable().addBivariateColumn(this.getColumn(), nearestAxis.getColumn(), newAxisPosition);
+//                                return;
+//                            }
+//                        }
+//                    }
+//
+//                    getDataTable().changeColumnOrder(getColumn(), newAxisPosition);
+//                }
 //                dataTableView.setAxisPosition(this, newAxisPosition);
             }
         });

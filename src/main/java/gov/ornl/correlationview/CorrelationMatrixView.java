@@ -626,7 +626,7 @@ public class CorrelationMatrixView extends Region implements DataTableListener {
     }
 
     @Override
-    public void dataTableBivariateColumnAdded(DataTable dataTable, BivariateColumn bivariateColumn) {
+    public void dataTableBivariateColumnAdded(DataTable dataTable, BivariateColumn bivariateColumn, int index) {
         clearView();
         initView();
         resizeView();

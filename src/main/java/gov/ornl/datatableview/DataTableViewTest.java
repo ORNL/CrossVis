@@ -1,5 +1,6 @@
 package gov.ornl.datatableview;
 
+import gov.ornl.datatable.Column;
 import gov.ornl.datatable.DataTable;
 import gov.ornl.datatable.IOUtilities;
 import javafx.application.Application;
@@ -18,6 +19,7 @@ import java.io.File;
 import java.io.IOException;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Optional;
 
 public class DataTableViewTest extends Application {
 
@@ -62,7 +64,7 @@ public class DataTableViewTest extends Application {
 		Button addBivariateAxisButton = new Button("Add Bivariate Axis");
 		addBivariateAxisButton.setOnAction(event -> {
 			dataTableView.getDataTable().addBivariateColumn(dataTableView.getDataTable().getColumn(2),
-					dataTableView.getDataTable().getColumn(3));
+					dataTableView.getDataTable().getColumn(3), 0);
 		});
 
 		Slider opacitySlider = new Slider(0.01, 1., dataTableView.getDataItemsOpacity());
@@ -120,13 +122,25 @@ public class DataTableViewTest extends Application {
 			dataTableView.setSummaryStatisticsDisplayMode(statisticsDisplayModeChoiceBox.getValue());
 		});
 
+		Button addColumnButton = new Button("Add Disabled Column");
+		addColumnButton.setOnAction(event -> {
+			ArrayList<Column> disabledColumns = dataTableView.getDataTable().getDisabledColumns();
+			if (disabledColumns != null && !(disabledColumns.isEmpty())) {
+				ChoiceDialog<Column> choiceDialog = new ChoiceDialog<>(disabledColumns.get(0), disabledColumns);
+				Optional<Column> result = choiceDialog.showAndWait();
+				if (result.isPresent()) {
+					dataTableView.getDataTable().enableColumn(result.get());
+				}
+			}
+		});
+
 		HBox settingsPane = new HBox();
 		settingsPane.setSpacing(2);
 		settingsPane.setPadding(new Insets(4));
 
 		settingsPane.getChildren().addAll(loadDataButton, addBivariateAxisButton, showPolylinesCB,
 				showSelectedPolylinesCB, showUnselectedPolylinesCB, showHistogramCB, showSummaryStatsCB, showCorrelationIndicatorsCB,
-				showScatterplotsCB, statisticsDisplayModeChoiceBox, polylineDisplayModeChoiceBox, opacitySlider);
+				showScatterplotsCB, statisticsDisplayModeChoiceBox, polylineDisplayModeChoiceBox, opacitySlider, addColumnButton);
 
 		BorderPane rootNode = new BorderPane();
 		rootNode.setCenter(scrollPane);
