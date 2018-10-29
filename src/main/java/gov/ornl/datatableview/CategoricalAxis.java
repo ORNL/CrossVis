@@ -6,6 +6,8 @@ import javafx.scene.Group;
 import javafx.scene.control.Tooltip;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Font;
+import javafx.scene.text.Text;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -26,6 +28,7 @@ public class CategoricalAxis extends UnivariateAxis {
     // category rectangles
     private Group categoriesRectangleGroup;
     private HashMap<String, Rectangle> categoriesRectangleMap = new HashMap<>();
+    private Group categoriesNameGraphicsGroup;
 
     // query category rectangles
     private Group queryCategoriesRectangleGroup;
@@ -38,10 +41,11 @@ public class CategoricalAxis extends UnivariateAxis {
         super(dataTableView, column);
 
         categoriesRectangleGroup = new Group();
+        categoriesNameGraphicsGroup = new Group();
         queryCategoriesRectangleGroup = new Group();
         nonQueryCategoriesRectangleGroup = new Group();
 
-        getGraphicsGroup().getChildren().addAll(categoriesRectangleGroup);
+        getGraphicsGroup().getChildren().addAll(categoriesRectangleGroup, categoriesNameGraphicsGroup);
 
         registerListeners();
     }
@@ -144,6 +148,7 @@ public class CategoricalAxis extends UnivariateAxis {
             // remove previously shown category shapes
             categoriesRectangleGroup.getChildren().clear();
             categoriesRectangleMap.clear();
+            categoriesNameGraphicsGroup.getChildren().clear();
 
             double lastRectangleBottomY = getFocusMaxPosition();
 
@@ -158,6 +163,19 @@ public class CategoricalAxis extends UnivariateAxis {
                 rectangle.setStrokeWidth(DEFAULT_CATEGORY_STROKE_WIDTH);
                 rectangle.setArcHeight(6);
                 rectangle.setArcWidth(6);
+
+                Text categoryName = new Text(category);
+                categoryName.setFill(DEFAULT_TEXT_COLOR);
+                categoryName.setFont(Font.font(DEFAULT_TEXT_SIZE));
+                categoryName.setMouseTransparent(true);
+                categoryName.setX(getCenterX() - (categoryName.getLayoutBounds().getWidth() / 2.));
+                categoryName.setY(y + categoryName.getLayoutBounds().getHeight() + 6);
+
+                Rectangle categoryNameRectangle = new Rectangle(categoryName.getLayoutBounds().getMinX(), categoryName.getLayoutBounds().getMinY(),
+                    categoryName.getLayoutBounds().getWidth(), categoryName.getLayoutBounds().getHeight());
+                categoryNameRectangle.setFill(Color.GHOSTWHITE.deriveColor(1., 1., 1., 0.7));
+                categoryNameRectangle.setStroke(Color.TRANSPARENT);
+                categoryNameRectangle.setMouseTransparent(true);
 
                 rectangle.setOnMouseClicked(event -> {
                     handleCategoryRectangleClicked(rectangle, category);
@@ -182,6 +200,8 @@ public class CategoricalAxis extends UnivariateAxis {
                 }
 
                 lastRectangleBottomY = rectangle.getY() + rectangle.getHeight();
+
+                categoriesNameGraphicsGroup.getChildren().addAll(categoryNameRectangle, categoryName);
             }
 
             if (getGraphicsGroup().getChildren().contains(queryCategoriesRectangleGroup)) {
@@ -265,6 +285,8 @@ public class CategoricalAxis extends UnivariateAxis {
 
                 getGraphicsGroup().getChildren().addAll(nonQueryCategoriesRectangleGroup, queryCategoriesRectangleGroup);
             }
+
+            categoriesNameGraphicsGroup.toFront();
         }
     }
 

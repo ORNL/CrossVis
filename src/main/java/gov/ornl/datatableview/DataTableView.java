@@ -263,7 +263,7 @@ public class DataTableView extends Region implements DataTableListener {
 
         showScatterplots.addListener(observable -> {
             if (isShowingScatterplots()) {
-                reinitializeScatterplots();
+                initScatterplots();
             } else {
                 if (!scatterplotList.isEmpty()) {
                     for (Scatterplot scatterplot : scatterplotList) {
@@ -303,7 +303,7 @@ public class DataTableView extends Region implements DataTableListener {
         showCorrelations.addListener(observable -> {
             if (isShowingCorrelations()) {
                 pane.getChildren().add(correlationRectangleGroup);
-                reinitializeCorrelationRectangles();
+                initCorrelationRectangles();
                 setCorrelationRectangleValues();
             } else {
                 pane.getChildren().remove(correlationRectangleGroup);
@@ -564,7 +564,7 @@ public class DataTableView extends Region implements DataTableListener {
                         for (int i = 0; i < correlationRectangleList.size(); i++) {
                             CorrelationIndicatorRectangle correlationIndicatorRectangle = correlationRectangleList.get(i);
                             correlationIndicatorRectangle.setY(correlationRegionBounds.getMinY());
-                            if (dataTable.getHighlightedColumn() != null) {
+                            if (dataTable.getHighlightedColumn() != null && (getHighlightedAxis() instanceof DoubleAxis || getHighlightedAxis() instanceof TemporalAxis)) {
                                 correlationIndicatorRectangle.setX(correlationIndicatorRectangle.getAxis1().getCenterX() - (correlationIndicatorRectangle.getWidth() / 2.));
                             } else {
                                 correlationIndicatorRectangle.setX(((correlationIndicatorRectangle.getAxis1().getCenterX() + correlationIndicatorRectangle.getAxis2().getCenterX()) / 2.) - (correlationIndicatorRectangle.getWidth() / 2.));
@@ -589,7 +589,7 @@ public class DataTableView extends Region implements DataTableListener {
                                 }
                             }
 
-                            if (dataTable.getHighlightedColumn() == null || !(getHighlightedAxis() instanceof UnivariateAxis)) {
+                            if (dataTable.getHighlightedColumn() == null || !(getHighlightedAxis() instanceof DoubleAxis || getHighlightedAxis() instanceof TemporalAxis)) {
                                 double centerX = (yAxis.getCenterX() + xAxis.getCenterX()) / 2.;
                                 double left = centerX - (scatterplotSize / 2.) - (scatterplot.getAxisSize() / 2.);
                                 scatterplot.resize(left, scatterplotRegionBounds.getMinY(), scatterplotSize, scatterplotSize);
@@ -868,9 +868,9 @@ public class DataTableView extends Region implements DataTableListener {
             axisList = newAxisList;
         }
 
-        reinitializeScatterplots();
+        initScatterplots();
 
-        reinitializeCorrelationRectangles();
+        initCorrelationRectangles();
 
         // add tuples polylines from data model
         tuplePolylines = new ArrayList<>();
@@ -897,7 +897,7 @@ public class DataTableView extends Region implements DataTableListener {
         resizeView();
     }
 
-    private void reinitializeScatterplots() {
+    private void initScatterplots() {
         if (!scatterplotList.isEmpty()) {
             for (Scatterplot scatterplot : scatterplotList) {
                 pane.getChildren().remove(scatterplot.getGraphicsGroup());
@@ -907,11 +907,12 @@ public class DataTableView extends Region implements DataTableListener {
 
         if (isShowingScatterplots()) {
             Axis highlightedAxis = getHighlightedAxis();
-            if (highlightedAxis != null && highlightedAxis instanceof UnivariateAxis) {
+            if (highlightedAxis != null && (highlightedAxis instanceof TemporalAxis || highlightedAxis instanceof DoubleAxis)) {
                 for (int iaxis = 0; iaxis < axisList.size(); iaxis++) {
                     Axis currentAxis = axisList.get(iaxis);
-                    if (highlightedAxis != currentAxis && currentAxis instanceof UnivariateAxis) {
-                        Scatterplot scatterplot = new Scatterplot(highlightedAxis.getColumn(), currentAxis.getColumn());
+                    if (highlightedAxis != currentAxis && (currentAxis instanceof TemporalAxis || currentAxis instanceof DoubleAxis)) {
+                        Scatterplot scatterplot = new Scatterplot(highlightedAxis.getColumn(), currentAxis.getColumn(), getSelectedItemsColor(),
+                                getUnselectedItemsColor(), getDataItemsOpacity());
                         scatterplotList.add(scatterplot);
                         pane.getChildren().add(scatterplot.getGraphicsGroup());
                     }
@@ -920,8 +921,10 @@ public class DataTableView extends Region implements DataTableListener {
                 for (int iaxis = 1; iaxis < axisList.size(); iaxis++) {
                     Axis xAxis = axisList.get(iaxis);
                     Axis yAxis = axisList.get(iaxis - 1);
-                    if (xAxis instanceof UnivariateAxis && yAxis instanceof UnivariateAxis) {
-                        Scatterplot scatterplot = new Scatterplot(xAxis.getColumn(), yAxis.getColumn());
+                    if ((xAxis instanceof TemporalAxis || xAxis instanceof DoubleAxis) &&
+                            (yAxis instanceof TemporalAxis || yAxis instanceof DoubleAxis)) {
+                        Scatterplot scatterplot = new Scatterplot(xAxis.getColumn(), yAxis.getColumn(), getSelectedItemsColor(),
+                                getUnselectedItemsColor(), getDataItemsOpacity());
                         scatterplotList.add(scatterplot);
                         pane.getChildren().add(scatterplot.getGraphicsGroup());
                     }
@@ -930,13 +933,13 @@ public class DataTableView extends Region implements DataTableListener {
         }
     }
 
-    private void reinitializeCorrelationRectangles() {
+    private void initCorrelationRectangles() {
         correlationRectangleGroup.getChildren().clear();
         correlationRectangleList.clear();
 
         if (isShowingCorrelations()) {
             Axis highlightedAxis = getHighlightedAxis();
-            if (highlightedAxis != null) {
+            if (highlightedAxis != null && (highlightedAxis instanceof DoubleAxis || highlightedAxis instanceof TemporalAxis)) {
                 if (highlightedAxis instanceof DoubleAxis) {
                     for (int i = 0; i < axisList.size(); i++) {
                         Axis axis = axisList.get(i);
@@ -1294,8 +1297,8 @@ public class DataTableView extends Region implements DataTableListener {
 //        if (axisList.contains(axis)) {
 //            axisList.remove(axis);
 //            pane.getChildren().remove(axis.getGraphicsGroup());
-//            reinitializeScatterplots();
-//            reinitializeCorrelationRectangles();
+//            initScatterplots();
+//            initCorrelationRectangles();
 //
 //            //TODO: reinit bins and polylines, fill tuple line sets
 //
@@ -1314,7 +1317,7 @@ public class DataTableView extends Region implements DataTableListener {
                 pane.getChildren().remove(pcpAxis.getGraphicsGroup());
 //                pcpAxis.removeAllGraphics(pane);
 
-                reinitializeScatterplots();
+                initScatterplots();
 
                 // create PCPBinSets for axis configuration
                 PCPBinSetList = new ArrayList<>();
@@ -1355,7 +1358,7 @@ public class DataTableView extends Region implements DataTableListener {
         // add axis lines to the pane
         addAxis(enabledColumn, dataModel.getColumnIndex(enabledColumn));
 
-        reinitializeScatterplots();
+        initScatterplots();
 
         // add tuples polylines from data model
         tuplePolylines = new ArrayList<>();
@@ -1384,7 +1387,7 @@ public class DataTableView extends Region implements DataTableListener {
     public void dataTableBivariateColumnAdded(DataTable dataTable, BivariateColumn bivariateColumn, int columnIndex) {
         addAxis(bivariateColumn, columnIndex);
 
-        reinitializeScatterplots();
+        initScatterplots();
 
         // add tuples polylines from data model
         tuplePolylines = new ArrayList<>();

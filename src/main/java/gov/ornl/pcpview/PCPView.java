@@ -897,7 +897,8 @@ public class PCPView extends Region implements DataTableListener {
                 for (int iaxis = 0; iaxis < axisList.size(); iaxis++) {
                     PCPUnivariateAxis currentAxis = axisList.get(iaxis);
                     if (highlightedAxis != currentAxis) {
-                        Scatterplot scatterplot = new Scatterplot(highlightedAxis.getColumn(), currentAxis.getColumn());
+                        Scatterplot scatterplot = new Scatterplot(highlightedAxis.getColumn(), currentAxis.getColumn(), getSelectedItemsColor(),
+                                getUnselectedItemsColor(), getDataItemsOpacity());
                         scatterplotList.add(scatterplot);
                         pane.getChildren().add(scatterplot.getGraphicsGroup());
                     }
@@ -906,7 +907,8 @@ public class PCPView extends Region implements DataTableListener {
                 for (int iaxis = 1; iaxis < axisList.size(); iaxis++) {
                     PCPUnivariateAxis xAxis = axisList.get(iaxis);
                     PCPUnivariateAxis yAxis = axisList.get(iaxis - 1);
-                    Scatterplot scatterplot = new Scatterplot(xAxis.getColumn(), yAxis.getColumn());
+                    Scatterplot scatterplot = new Scatterplot(xAxis.getColumn(), yAxis.getColumn(), getSelectedItemsColor(),
+                            getUnselectedItemsColor(), getDataItemsOpacity());
                     scatterplotList.add(scatterplot);
                     pane.getChildren().add(scatterplot.getGraphicsGroup());
                 }

@@ -21,7 +21,8 @@ public class BivariateAxis extends Axis {
 
 //        this.bivariateColumn = bivariateColumn;
 
-        scatterplot = new Scatterplot(bivariateColumn.getColumn1(), bivariateColumn.getColumn2());
+        scatterplot = new Scatterplot(bivariateColumn.getColumn1(), bivariateColumn.getColumn2(), dataTableView.getSelectedItemsColor(),
+                dataTableView.getUnselectedItemsColor(), dataTableView.getDataItemsOpacity());
 
 //        scatterplotRectangle = new Rectangle();
 //        scatterplotRectangle.setStroke(Color.BLUE);

@@ -51,7 +51,7 @@ public abstract class UnivariateAxis extends Axis {
         hoverValueText.setMouseTransparent(true);
 //        getDataTableView().getChildren().add(hoverValueText);
 
-        getGraphicsGroup().getChildren().addAll(upperContextBar, lowerContextBar, axisBar);
+        getGraphicsGroup().getChildren().addAll(/*upperContextBar, lowerContextBar,*/ axisBar);
 
         registerListeners();
     }
@@ -97,6 +97,8 @@ public abstract class UnivariateAxis extends Axis {
         axisBar.setY(focusTop);
         axisBar.setHeight(focusBottom - focusTop);
 
+        maxHistogramBinWidth = (getBounds().getWidth() - axisBar.getWidth()) / 2.;
+        
         upperContextBar.setX(axisBar.getX());
         upperContextBar.setWidth(axisBar.getWidth());
         upperContextBar.setY(barTop);

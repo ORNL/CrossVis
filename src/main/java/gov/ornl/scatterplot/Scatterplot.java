@@ -57,13 +57,13 @@ public class Scatterplot {
 
     private Color axisStrokeColor = DEFAULT_AXIS_STROKE_COLOR;
     private Color axisTextColor = DEFAULT_AXIS_TEXT_COLOR;
-    private Color selectedPointStrokeColor = DEFAULT_SELECTED_POINT_COLOR;
-    private Color unselectedPointStrokeColor = DEFAULT_UNSELECTED_POINT_COLOR;
+    private Color selectedPointStrokeColor;
+    private Color unselectedPointStrokeColor;
 
     private double axisSize = 12.;
     private double pointSize = 4.;
     private double pointStrokeWidth = 1.2;
-    private double pointStrokeOpacity = DEFAULT_POINT_STROKE_OPACITY;
+    private double pointStrokeOpacity;
 
     private boolean showSelectedPoints = true;
     private boolean showUnselectedPoints = true;
@@ -90,7 +90,16 @@ public class Scatterplot {
 
 //    private ArrayList<EventHandler> selectionEventHandlers = new ArrayList<>();
 
-    public Scatterplot(Column xColumn, Column yColumn) {
+//    public Scatterplot(Column xColumn, Column yColumn) {
+//        this(xColumn, yColumn, DEFAULT_SELECTED_POINT_COLOR, DEFAULT_UNSELECTED_POINT_COLOR, DEFAULT_POINT_STROKE_OPACITY);
+//    }
+
+    public Scatterplot(Column xColumn, Column yColumn, Color selectedPointStrokeColor, Color unselectedPointStrokeColor,
+                       double pointStrokeOpacity) {
+        this.selectedPointStrokeColor = selectedPointStrokeColor;
+        this.unselectedPointStrokeColor = unselectedPointStrokeColor;
+        this.pointStrokeOpacity = pointStrokeOpacity;
+
         this.xColumn = xColumn;
         this.yColumn = yColumn;
         this.dataTable = xColumn.getDataModel();
@@ -341,11 +350,25 @@ public class Scatterplot {
         plotRectangle.setWidth(plotBounds.getWidth());
         plotRectangle.setHeight(plotBounds.getHeight());
 
+        xAxisText.setText(xColumn.getName());
+        if (xAxisText.getLayoutBounds().getWidth() > xAxisBounds.getWidth()) {
+            while (xAxisText.getLayoutBounds().getWidth() > xAxisBounds.getWidth()) {
+                xAxisText.setText(xAxisText.getText().substring(0, xAxisText.getText().length() - 1));
+            }
+        }
+
         double textX = (xAxisBounds.getMinX() + xAxisBounds.getWidth() / 2.) - xAxisText.getLayoutBounds().getWidth() / 2.;
         double textY = (xAxisBounds.getMinY() + xAxisBounds.getHeight() / 2.);
         xAxisText.setLayoutX(textX);
         xAxisText.setLayoutY(textY);
 
+        yAxisText.setText(yColumn.getName());
+        if (yAxisText.getLayoutBounds().getWidth() > yAxisBounds.getHeight()) {
+            while (yAxisText.getLayoutBounds().getWidth() > yAxisBounds.getHeight()) {
+                yAxisText.setText(yAxisText.getText().substring(0, yAxisText.getText().length() - 1));
+            }
+        }
+        
         textX = (yAxisBounds.getMinX() + yAxisBounds.getWidth() / 2.) - yAxisText.getLayoutBounds().getWidth() / 2.;
         textY = (yAxisBounds.getMinY() + yAxisBounds.getHeight() / 2.);
         yAxisText.setLayoutX(textX);

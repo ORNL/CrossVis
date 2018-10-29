@@ -343,13 +343,15 @@ public class DoubleAxis extends UnivariateAxis {
 
         super.resize(left, top, width, height);
 
-//        minValueText.setX(getBounds().getMinX() + ((width - minValueText.getLayoutBounds().getWidth()) / 2.));
-        minValueText.setX(getBarRightX() + 2.);
-        minValueText.setY(getFocusMinPosition() + (minValueText.getLayoutBounds().getHeight() / 4.));
+        minValueText.setX(getBounds().getMinX() + ((width - minValueText.getLayoutBounds().getWidth()) / 2.));
+        minValueText.setY(getFocusMinPosition() + minValueText.getLayoutBounds().getHeight());
+//        minValueText.setX(getBarRightX() + 2.);
+//        minValueText.setY(getFocusMinPosition() + (minValueText.getLayoutBounds().getHeight() / 4.));
 
-        maxValueText.setX(getBarRightX() + 2.);
-//        maxValueText.setX(getBounds().getMinX() + ((width - maxValueText.getLayoutBounds().getWidth()) / 2.));
-        maxValueText.setY(getFocusMaxPosition() + (maxValueText.getLayoutBounds().getHeight() / 4.));
+//        maxValueText.setX(getBarRightX() + 2.);
+        maxValueText.setX(getBounds().getMinX() + ((width - maxValueText.getLayoutBounds().getWidth()) / 2.));
+        maxValueText.setY(getFocusMaxPosition() - 4);
+//        maxValueText.setY(getFocusMaxPosition() + (maxValueText.getLayoutBounds().getHeight() / 4.));
 
         if (!getDataTable().isEmpty()) {
             if (getDataTableView().isShowingHistograms()) {
@@ -448,6 +450,16 @@ public class DoubleAxis extends UnivariateAxis {
                 if (getDataTable().getActiveQuery().hasColumnSelections()) {
                     DoubleColumnSummaryStats queryColumnSummaryStats = (DoubleColumnSummaryStats)getDataTable().getActiveQuery().getColumnQuerySummaryStats(getColumn());
 
+                    double queryDispersionRectangleWidth = doubleAxis().getAxisBar().getWidth() / 4.;
+                    double queryDispersionRectangleCenterOffset;
+                    double nonqueryDispersionRectangleCenterOffset;
+
+                    if (getDataTable().getCalculateNonQueryStatistics()) {
+                        queryDispersionRectangleCenterOffset = (doubleAxis().getAxisBar().getWidth() - queryDispersionRectangleWidth) / 2.;
+                    } else {
+                        queryDispersionRectangleCenterOffset = queryDispersionRectangleWidth / 2.;
+                    }
+
                     if (queryColumnSummaryStats != null) {
                         double queryTypicalValue;
                         double queryDispersionTopValue;
@@ -466,8 +478,10 @@ public class DoubleAxis extends UnivariateAxis {
                         typicalValueY = GraphicsUtil.mapValue(queryTypicalValue,
                                 doubleColumn().getStatistics().getMinValue(), doubleColumn().getStatistics().getMaxValue(),
                                 getFocusMinPosition(), getFocusMaxPosition());
-                        queryTypicalLine.setStartX(getCenterX() - 4.);
-                        queryTypicalLine.setEndX(getCenterX());
+//                        queryTypicalLine.setStartX(getCenterX() - 4.);
+//                        queryTypicalLine.setEndX(getCenterX());
+                        queryTypicalLine.setStartX(getCenterX() - (queryDispersionRectangleWidth + 1));
+                        queryTypicalLine.setEndX(queryTypicalLine.getStartX() + queryDispersionRectangleWidth);
                         queryTypicalLine.setStartY(typicalValueY);
                         queryTypicalLine.setEndY(typicalValueY);
 
@@ -510,8 +524,10 @@ public class DoubleAxis extends UnivariateAxis {
                         typicalValueY = GraphicsUtil.mapValue(nonqueryTypicalValue,
                                 doubleColumn().getStatistics().getMinValue(), doubleColumn().getStatistics().getMaxValue(),
                                 getFocusMinPosition(), getFocusMaxPosition());
-                        nonqueryTypicalLine.setStartX(getCenterX());
-                        nonqueryTypicalLine.setEndX(getCenterX() + 4.);
+//                        nonqueryTypicalLine.setStartX(getCenterX());
+//                        nonqueryTypicalLine.setEndX(getCenterX() + 4.);
+                        nonqueryTypicalLine.setStartX(getCenterX() + 1);
+                        nonqueryTypicalLine.setEndX(nonqueryTypicalLine.getStartX() + queryDispersionRectangleWidth);
                         nonqueryTypicalLine.setStartY(typicalValueY);
                         nonqueryTypicalLine.setEndY(typicalValueY);
 

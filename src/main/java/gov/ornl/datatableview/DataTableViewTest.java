@@ -37,6 +37,7 @@ public class DataTableViewTest extends Application {
 		loadDataButton.setOnAction(event -> {
 			try {
 				DataTable dataTable = new DataTable();
+				dataTable.setCalculateNonQueryStatistics(true);
 
 				// reads titan data with date field
 //                ArrayList<String> temporalColumnNames = new ArrayList<>();
@@ -49,9 +50,14 @@ public class DataTableViewTest extends Application {
 				// Reads cars data set
 //                IOUtilities.readCSV(new File("data/csv/cars.csv"), null, null, null, null, dataTable);
 
+//				ArrayList<String> categoricalColumnNames = new ArrayList<>();
+//				categoricalColumnNames.add("Origin");
+//				IOUtilities.readCSV(new File("data/csv/cars-cat.csv"), null, categoricalColumnNames, null, null,
+//						dataTable);
+
 				ArrayList<String> categoricalColumnNames = new ArrayList<>();
-				categoricalColumnNames.add("Origin");
-				IOUtilities.readCSV(new File("data/csv/cars-cat.csv"), null, categoricalColumnNames, null, null,
+				categoricalColumnNames.add("TYPE");
+				IOUtilities.readCSV(new File("/Users/csg/Dropbox (ORNL)/papers/diatom-paper/Data vis_Parameters of diatoms.csv"), null, categoricalColumnNames, null, null,
 						dataTable);
 
 				dataTableView.setDataTable(dataTable);
