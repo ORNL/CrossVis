@@ -16,7 +16,7 @@ public class DoubleColumn extends Column {
         if (summaryStats == null) {
             summaryStats = new DoubleColumnSummaryStats(this, getDataModel().getNumHistogramBins(), null);
         }
-        summaryStats.setValues(getValues());
+        summaryStats.setValues(getValues(), getDataModel().getNumHistogramBins());
     }
 
     public double[] getValues() {

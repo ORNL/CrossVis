@@ -1317,6 +1317,7 @@ public class DataTableView extends Region implements DataTableListener {
                 pane.getChildren().remove(pcpAxis.getGraphicsGroup());
 //                pcpAxis.removeAllGraphics(pane);
 
+                initCorrelationRectangles();
                 initScatterplots();
 
                 // create PCPBinSets for axis configuration

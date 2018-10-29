@@ -13,7 +13,7 @@ public class TemporalColumn extends Column {
         if (summaryStats == null) {
             summaryStats = new TemporalColumnSummaryStats(this, getDataModel().getNumHistogramBins(), null);
         }
-        summaryStats.setValues(getValues());
+        summaryStats.setValues(getValues(), getDataModel().getNumHistogramBins());
     }
 
     public Instant[] getValues() {
