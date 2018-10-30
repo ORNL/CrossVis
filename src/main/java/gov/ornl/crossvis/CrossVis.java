@@ -46,9 +46,8 @@ import java.util.prefs.Preferences;
 public class CrossVis extends Application implements DataTableListener {
     private static final Logger log = Logger.getLogger(CrossVis.class.getName());
 
-    private static final String VERSION_STRING = "v2.1.2";
+    private static final String VERSION_STRING = "v2.1.3";
 
-//    private PCPView pcpView;
     private CorrelationMatrixView correlationMatrixView;
     private DataTable dataTable;
     private DataTableView dataTableView;
