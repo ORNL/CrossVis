@@ -27,7 +27,7 @@ public class DataTableViewTest extends Application {
 	public void start(Stage primaryStage) throws Exception {
 		DataTableView dataTableView = new DataTableView();
 		dataTableView.setPrefHeight(500);
-		dataTableView.setPadding(new Insets(10, 10, 40, 10));
+		dataTableView.setPadding(new Insets(10, 10, 10, 10));
 
 		ScrollPane scrollPane = new ScrollPane(dataTableView);
 		scrollPane.setFitToWidth(dataTableView.getFitToWidth());

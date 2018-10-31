@@ -2,6 +2,7 @@ package gov.ornl.datatableview;
 
 import gov.ornl.datatable.*;
 import gov.ornl.scatterplot.Scatterplot;
+import gov.ornl.util.GraphicsUtil;
 import javafx.beans.property.*;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
@@ -9,12 +10,18 @@ import javafx.geometry.Insets;
 import javafx.scene.Group;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.canvas.Canvas;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.WritableImage;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Line;
+import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.StrokeLineCap;
+import javafx.scene.text.Text;
 import javafx.scene.transform.Scale;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.logging.Logger;
@@ -35,6 +42,10 @@ public class DataTableView extends Region implements DataTableListener {
     private final static int DEFAULT_CORRELATION_RECTANGLE_WIDTH = 24;
     private final static POLYLINE_DISPLAY_MODE DEFAULT_POLYLINE_DISPLAY_MODE = POLYLINE_DISPLAY_MODE.POLYLINES;
 
+    private final static int DEFAULT_SELECTION_INDICATOR_LINE_SIZE = 14;
+
+    private static final DecimalFormat percentageFormat = new DecimalFormat("0.0#%");
+
     private final Logger log = Logger.getLogger(DataTableView.class.getName());
 
     private TuplePolylineRenderer selectedTuplesTimer;
@@ -46,6 +57,9 @@ public class DataTableView extends Region implements DataTableListener {
 
     private Canvas selectedCanvas;
     private Canvas unselectedCanvas;
+
+    private Line selectionIndicatorLineAll;
+    private Line selectionIndicatorLineSelected;
 
     private DoubleProperty dataItemsOpacity;
 
@@ -95,7 +109,7 @@ public class DataTableView extends Region implements DataTableListener {
     private BoundingBox scatterplotRegionBounds;
     private double plotRegionPadding = 4.;
 
-//    private Rectangle plotRegionRectangle;
+    private Rectangle plotRegionRectangle;
 //    private Rectangle pcpRegionRectangle;
 //    private Rectangle scatterplotRegionRectangle;
 
@@ -381,13 +395,23 @@ public class DataTableView extends Region implements DataTableListener {
         textColor = new SimpleObjectProperty<>(DEFAULT_LABEL_COLOR);
         backgroundColor = new SimpleObjectProperty<>(DEFAULT_BACKGROUND_COLOR);
 
+        selectionIndicatorLineAll = new Line();
+        selectionIndicatorLineAll.strokeProperty().bind(unselectedItemsColor);
+        selectionIndicatorLineAll.setStrokeWidth(4);
+        selectionIndicatorLineAll.setStrokeLineCap(StrokeLineCap.ROUND);
+
+        selectionIndicatorLineSelected = new Line();
+        selectionIndicatorLineSelected.strokeProperty().bind(selectedItemsColor);
+        selectionIndicatorLineSelected.setStrokeWidth(8);
+        selectionIndicatorLineSelected.setStrokeLineCap(StrokeLineCap.ROUND);
+
 //        summaryShapeGroup = new Group();
 
-//        plotRegionRectangle = new Rectangle();
-//        plotRegionRectangle.setStroke(Color.DARKBLUE);
-//        plotRegionRectangle.setFill(Color.TRANSPARENT);
-//        plotRegionRectangle.setMouseTransparent(true);
-//        plotRegionRectangle.setStrokeWidth(1.5);
+        plotRegionRectangle = new Rectangle();
+        plotRegionRectangle.setStroke(Color.DARKBLUE);
+        plotRegionRectangle.setFill(Color.TRANSPARENT);
+        plotRegionRectangle.setMouseTransparent(true);
+        plotRegionRectangle.setStrokeWidth(1.5);
 //
 //        pcpRegionRectangle = new Rectangle();
 //        pcpRegionRectangle.setStroke(Color.ORANGE);
@@ -409,8 +433,8 @@ public class DataTableView extends Region implements DataTableListener {
 
         pane = new Pane();
         pane.setBackground(new Background(new BackgroundFill(backgroundColor.get(), new CornerRadii(0), Insets.EMPTY)));
-        pane.getChildren().addAll(unselectedCanvas, selectedCanvas, correlationRectangleGroup);
-
+        pane.getChildren().addAll(unselectedCanvas, selectedCanvas, correlationRectangleGroup, selectionIndicatorLineAll, selectionIndicatorLineSelected);
+        pane.getChildren().add(plotRegionRectangle);
         getChildren().add(pane);
     }
 
@@ -481,15 +505,49 @@ public class DataTableView extends Region implements DataTableListener {
         }
     }
 
+    private void resizeSelectionIndicator() {
+        Tooltip tooltip;
+        selectionIndicatorLineAll.setStartX(getInsets().getLeft() + (DEFAULT_SELECTION_INDICATOR_LINE_SIZE / 2.));
+        selectionIndicatorLineAll.setEndX(selectionIndicatorLineAll.getStartX());
+        selectionIndicatorLineAll.setStartY(plotRegionBounds.getMaxY());
+        selectionIndicatorLineAll.setEndY(plotRegionBounds.getMinY());
+
+        if (dataTable.getActiveQuery().hasColumnSelections()) {
+            if (!pane.getChildren().contains(selectionIndicatorLineSelected)) {
+                pane.getChildren().add(selectionIndicatorLineSelected);
+            }
+
+            double percentSelected = (double)dataTable.getActiveQuery().getQueriedTupleCount() / dataTable.getTupleCount();
+
+            selectionIndicatorLineSelected.setStartX(selectionIndicatorLineAll.getStartX());
+            selectionIndicatorLineSelected.setEndX(selectionIndicatorLineAll.getStartX());
+            selectionIndicatorLineSelected.setStartY(plotRegionBounds.getMaxY());
+            double endY = GraphicsUtil.mapValue(percentSelected, 0, 1,
+                    selectionIndicatorLineAll.getStartY(), selectionIndicatorLineAll.getEndY());
+            selectionIndicatorLineSelected.setEndY(endY);
+//                    selectionIndicatorLineSelected.setEndY(plotRegionBounds.getMaxY() - plotRegionBounds.getHeight() / 2.);
+
+            tooltip = new Tooltip(dataTable.getActiveQuery().getQueriedTupleCount() + " of " + dataTable.getTupleCount() +
+                    "(" + percentageFormat.format(percentSelected) + ") data items selected");
+            Tooltip.install(selectionIndicatorLineSelected, tooltip);
+        } else {
+            pane.getChildren().remove(selectionIndicatorLineSelected);
+            tooltip = new Tooltip("0 of " + dataTable.getTupleCount() + " data items selected");
+        }
+
+        Tooltip.install(selectionIndicatorLineAll, tooltip);
+    }
+
     private void resizeView() {
         if (dataTable != null && !dataTable.isEmpty()) {
-            plotRegionBounds = new BoundingBox(getInsets().getLeft(), getInsets().getTop(),
-                    getWidth() - (getInsets().getLeft() + getInsets().getRight()),
+            plotRegionBounds = new BoundingBox(getInsets().getLeft() + DEFAULT_SELECTION_INDICATOR_LINE_SIZE,
+                    getInsets().getTop(),
+                    getWidth() - (getInsets().getLeft() + getInsets().getRight() + DEFAULT_SELECTION_INDICATOR_LINE_SIZE),
                     getHeight() - (getInsets().getTop() + getInsets().getBottom()));
-//            plotRegionRectangle.setX(plotRegionBounds.getMinX());
-//            plotRegionRectangle.setY(plotRegionBounds.getMinY());
-//            plotRegionRectangle.setWidth(plotRegionBounds.getWidth());
-//            plotRegionRectangle.setHeight(plotRegionBounds.getHeight());
+            plotRegionRectangle.setX(plotRegionBounds.getMinX());
+            plotRegionRectangle.setY(plotRegionBounds.getMinY());
+            plotRegionRectangle.setWidth(plotRegionBounds.getWidth());
+            plotRegionRectangle.setHeight(plotRegionBounds.getHeight());
 
             double plotWidth;
             double width;
@@ -531,6 +589,8 @@ public class DataTableView extends Region implements DataTableListener {
                 selectedCanvas.setHeight(getHeight());
                 unselectedCanvas.setWidth(width);
                 unselectedCanvas.setHeight(getHeight());
+
+                resizeSelectionIndicator();
 
                 if (axisList != null) {
                     pcpRegionBounds = new BoundingBox(plotRegionBounds.getMinX(), plotRegionBounds.getMinY(),
@@ -1109,6 +1169,8 @@ public class DataTableView extends Region implements DataTableListener {
                 redrawView();
             }
         }
+
+        resizeSelectionIndicator();
     }
 
     private void clearView() {

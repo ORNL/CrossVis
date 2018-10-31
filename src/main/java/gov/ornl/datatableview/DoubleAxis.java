@@ -12,8 +12,11 @@ import javafx.scene.text.Text;
 import javafx.util.converter.NumberStringConverter;
 
 import java.util.ArrayList;
+import java.util.logging.Logger;
 
 public class DoubleAxis extends UnivariateAxis {
+    private static final Logger log = Logger.getLogger(DoubleAxis.class.getName());
+
     public final static Color DEFAULT_OVERALL_DISPERSION_FILL = DEFAULT_HISTOGRAM_FILL;
     public final static Color DEFAULT_QUERY_DISPERSION_FILL = DEFAULT_QUERY_HISTOGRAM_FILL;
     public final static Color DEFAULT_DISPERSION_STROKE = DEFAULT_HISTOGRAM_STROKE;
@@ -50,8 +53,14 @@ public class DoubleAxis extends UnivariateAxis {
 
     private DoubleAxisSelection draggingSelection;
 
+    private double focusMinValue;
+    private double focusMaxValue;
+
     public DoubleAxis(DataTableView dataTableView, DoubleColumn column) {
         super(dataTableView, column);
+
+        focusMinValue = column.getStatistics().getMinValue();
+        focusMaxValue = column.getStatistics().getMaxValue();
 
         minValueText = new Text();
         minValueText.setFont(new Font(DEFAULT_TEXT_SIZE));
@@ -223,27 +232,29 @@ public class DoubleAxis extends UnivariateAxis {
             }
         });
 
-//        getAxisBar().setOnScroll(event -> {
-//
-//            double expandFactor = event.getDeltaY() / getAxisBar().getHeight();
-//            double expandValue = expandFactor * (doubleColumn().getStatistics().getMaxValue() - doubleColumn().getStatistics().getMinValue());
-//            log.info("Scroll: deltaY = " + event.getDeltaY() + " expandFactor = " + expandFactor + " expandValue = " + expandValue);
-//            double newFocusTopValue = focusTopValue + expandValue;
-//            double newFocusBottomValue = focusBottomValue - expandValue;
-//            if (newFocusBottomValue < doubleColumn().getStatistics().getMinValue()) {
-//                newFocusBottomValue = doubleColumn().getStatistics().getMinValue();
-//            }
-//            if (newFocusTopValue > doubleColumn().getStatistics().getMaxValue()) {
-//                newFocusTopValue = doubleColumn().getStatistics().getMaxValue();
-//            }
+        getAxisBar().setOnScroll(event -> {
+            double expandFactor = event.getDeltaY() / getAxisBar().getHeight();
+            double expandValue = expandFactor * (doubleColumn().getStatistics().getMaxValue() - doubleColumn().getStatistics().getMinValue());
+
+            log.info("Scroll: deltaY = " + event.getDeltaY() + " expandFactor = " + expandFactor + " expandValue = " + expandValue);
+            double newFocusTopValue = getFocusMaxPosition() + expandValue;
+            double newFocusBottomValue = getFocusMinPosition() - expandValue;
+            if (newFocusBottomValue < doubleColumn().getStatistics().getMinValue()) {
+                newFocusBottomValue = doubleColumn().getStatistics().getMinValue();
+            }
+
+            if (newFocusTopValue > doubleColumn().getStatistics().getMaxValue()) {
+                newFocusTopValue = doubleColumn().getStatistics().getMaxValue();
+            }
+
 //            if (newFocusTopValue > newFocusBottomValue) {
 //                focusTopValue = newFocusTopValue;
 //                focusBottomValue = newFocusBottomValue;
 //            }
-//
-//
-//            log.info("[ " + focusTopValue + " -- " + focusBottomValue + " ]");
-//        });
+
+
+            log.info("[ " + newFocusTopValue + " -- " + newFocusBottomValue + " ]");
+        });
 
         getAxisBar().setOnMousePressed(event -> {
             dragStartPoint = new Point2D(event.getX(), event.getY());
