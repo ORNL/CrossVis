@@ -55,6 +55,8 @@ public class TemporalAxis extends UnivariateAxis {
             getGraphicsGroup().getChildren().add(1, queryHistogramGroup);
         }
 
+        getGraphicsGroup().getChildren().addAll(minValueText, maxValueText);
+
         registerListeners();
     }
 
@@ -188,6 +190,12 @@ public class TemporalAxis extends UnivariateAxis {
 
     public void resize(double center, double top, double width, double height) {
         super.resize(center, top, width, height);
+
+        minValueText.setX(getBounds().getMinX() + ((width - minValueText.getLayoutBounds().getWidth()) / 2.));
+        minValueText.setY(getFocusMinPosition() + minValueText.getLayoutBounds().getHeight());
+
+        maxValueText.setX(getBounds().getMinX() + ((width - maxValueText.getLayoutBounds().getWidth()) / 2.));
+        maxValueText.setY(getFocusMaxPosition() - 4);
 
         if (!getDataTable().isEmpty()) {
             if (getDataTableView().isShowingHistograms()) {

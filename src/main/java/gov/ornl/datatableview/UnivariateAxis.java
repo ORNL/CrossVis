@@ -12,12 +12,14 @@ public abstract class UnivariateAxis extends Axis {
     public final static double DEFAULT_BAR_WIDTH = 20d;
     public final static double DEFAULT_NARROW_BAR_WIDTH = 6d;
     public final static double HOVER_TEXT_SIZE = 8d;
+    public final static double MINMAX_VALUE_TEXT_HEIGHT = 12;
 
     protected Text hoverValueText;
     private double contextRegionHeight = 10;
 
     private Rectangle upperContextBar;
     private Rectangle lowerContextBar;
+
     private Rectangle axisBar;
 
     public UnivariateAxis(DataTableView dataTableView, Column column) {
@@ -51,7 +53,7 @@ public abstract class UnivariateAxis extends Axis {
         hoverValueText.setMouseTransparent(true);
 //        getDataTableView().getChildren().add(hoverValueText);
 
-        getGraphicsGroup().getChildren().addAll(/*upperContextBar, lowerContextBar,*/ axisBar);
+        getGraphicsGroup().getChildren().addAll(upperContextBar, lowerContextBar, axisBar);
 
         registerListeners();
     }
@@ -81,9 +83,10 @@ public abstract class UnivariateAxis extends Axis {
         super.resize(left, top, width, height);
 
 //        double barTop = getTitleText().getLayoutBounds().getMaxY() + minValueText.getLayoutBounds().getHeight() + 4;
-        double barTop = getTitleText().getLayoutBounds().getMaxY() + 4;
-        double barBottom = getBounds().getMinY() + getBounds().getHeight();
+        double barTop = getTitleText().getLayoutBounds().getMaxY() + MINMAX_VALUE_TEXT_HEIGHT + 4;
+//        double barBottom = getBounds().getMinY() + getBounds().getHeight();
 //        double barBottom = getBounds().getMinY() + getBounds().getHeight() - maxValueText.getLayoutBounds().getHeight();
+        double barBottom = getBounds().getMaxY() - MINMAX_VALUE_TEXT_HEIGHT;
         double focusTop = barTop + contextRegionHeight;
         double focusBottom = barBottom - contextRegionHeight;
 

@@ -57,6 +57,7 @@ public class DataTableView extends Region implements DataTableListener {
 
     private Canvas selectedCanvas;
     private Canvas unselectedCanvas;
+    private Canvas contextCanvas;
 
     private Line selectionIndicatorLineAll;
     private Line selectionIndicatorLineSelected;
@@ -65,6 +66,8 @@ public class DataTableView extends Region implements DataTableListener {
 
     private ObjectProperty<Color> selectedItemsColor;
     private ObjectProperty<Color> unselectedItemsColor;
+    private ObjectProperty<Color> contextItemsColor;
+
     private ObjectProperty<Color> overallSummaryFillColor;
     private ObjectProperty<Color> querySummaryFillColor;
     private ObjectProperty<Color> overallSummaryStrokeColor;
@@ -90,6 +93,7 @@ public class DataTableView extends Region implements DataTableListener {
     private ArrayList<TuplePolyline> tuplePolylines;
     private HashSet<TuplePolyline> unselectedTuplePolylines = new HashSet<>();
     private HashSet<TuplePolyline> selectedTuplePolylines = new HashSet<>();
+    private HashSet<TuplePolyline> contextTuplePolylines = new HashSet<>();
 
     private ObjectProperty<POLYLINE_DISPLAY_MODE> polylineDisplayMode;
     private ObjectProperty<STATISTICS_DISPLAY_MODE> summaryStatisticsDisplayMode = new SimpleObjectProperty<>(STATISTICS_DISPLAY_MODE.MEAN_BOXPLOT);
@@ -538,7 +542,7 @@ public class DataTableView extends Region implements DataTableListener {
         Tooltip.install(selectionIndicatorLineAll, tooltip);
     }
 
-    private void resizeView() {
+    protected void resizeView() {
         if (dataTable != null && !dataTable.isEmpty()) {
             plotRegionBounds = new BoundingBox(getInsets().getLeft() + DEFAULT_SELECTION_INDICATOR_LINE_SIZE,
                     getInsets().getTop(),

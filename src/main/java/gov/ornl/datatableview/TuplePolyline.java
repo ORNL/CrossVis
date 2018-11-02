@@ -47,10 +47,24 @@ public class TuplePolyline {
             } else if (axis instanceof DoubleAxis) {
                 DoubleAxis doubleAxis = (DoubleAxis)axis;
                 double value = (Double)tuple.getElement(i);
-                double yPosition = GraphicsUtil.mapValue(value,
-                        doubleAxis.doubleColumn().getStatistics().getMinValue(),
-                        doubleAxis.doubleColumn().getStatistics().getMaxValue(),
-                        doubleAxis.getFocusMinPosition(), doubleAxis.getFocusMaxPosition());
+
+                double yPosition;
+                if (value < doubleAxis.getMinFocusValue()) {
+                    // in lower context region
+                    yPosition = doubleAxis.getLowerContextBar().getY() + (doubleAxis.getLowerContextBar().getHeight() / 2.);
+                } else if (value > doubleAxis.getMaxFocusValue()) {
+                    // in upper context region
+                    yPosition = doubleAxis.getUpperContextBar().getY() + (doubleAxis.getUpperContextBar().getHeight() / 2.);
+                } else {
+                    // in focus region
+                    yPosition = GraphicsUtil.mapValue(value, doubleAxis.getMinFocusValue(), doubleAxis.getMaxFocusValue(),
+                            doubleAxis.getFocusMinPosition(), doubleAxis.getFocusMaxPosition());
+                }
+
+//                double yPosition = GraphicsUtil.mapValue(value,
+//                        doubleAxis.doubleColumn().getStatistics().getMinValue(),
+//                        doubleAxis.doubleColumn().getStatistics().getMaxValue(),
+//                        doubleAxis.getFocusMinPosition(), doubleAxis.getFocusMaxPosition());
                 xPoints[i] = axis.getCenterX();
                 yPoints[i] = yPosition;
             } else if (axis instanceof CategoricalAxis) {
