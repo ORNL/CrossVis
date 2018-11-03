@@ -121,12 +121,15 @@ public class TemporalAxisSelection extends UnivariateAxisSelection {
         }
 
         draggingMaxValue.set(GraphicsUtil.mapValue(topY, univariateAxis().getFocusMaxPosition(), univariateAxis().getFocusMinPosition(),
-                ((TemporalColumn)univariateAxis().getColumn()).getStatistics().getEndInstant(),
-                ((TemporalColumn)univariateAxis().getColumn()).getStatistics().getStartInstant()));
-
+                temporalAxis().getFocusEndInstant(), temporalAxis().getFocusStartInstant()));
         draggingMinValue.set(GraphicsUtil.mapValue(bottomY, univariateAxis().getFocusMaxPosition(), univariateAxis().getFocusMinPosition(),
-                ((TemporalColumn)univariateAxis().getColumn()).getStatistics().getEndInstant(),
-                ((TemporalColumn)univariateAxis().getColumn()).getStatistics().getStartInstant()));
+                temporalAxis().getFocusEndInstant(), temporalAxis().getFocusStartInstant()));
+//        draggingMaxValue.set(GraphicsUtil.mapValue(topY, univariateAxis().getFocusMaxPosition(), univariateAxis().getFocusMinPosition(),
+//                ((TemporalColumn)univariateAxis().getColumn()).getStatistics().getEndInstant(),
+//                ((TemporalColumn)univariateAxis().getColumn()).getStatistics().getStartInstant()));
+//        draggingMinValue.set(GraphicsUtil.mapValue(bottomY, univariateAxis().getFocusMaxPosition(), univariateAxis().getFocusMinPosition(),
+//                ((TemporalColumn)univariateAxis().getColumn()).getStatistics().getEndInstant(),
+//                ((TemporalColumn)univariateAxis().getColumn()).getStatistics().getStartInstant()));
 
         layoutGraphics(bottomY, topY);
     }
@@ -190,8 +193,10 @@ public class TemporalAxisSelection extends UnivariateAxisSelection {
         }
 
         draggingMinValue.set(GraphicsUtil.mapValue(bottomY, univariateAxis().getFocusMaxPosition(), univariateAxis().getFocusMinPosition(),
-                ((TemporalColumn)univariateAxis().getColumn()).getStatistics().getEndInstant(),
-                ((TemporalColumn)univariateAxis().getColumn()).getStatistics().getStartInstant()));
+                temporalAxis().getFocusEndInstant(), temporalAxis().getFocusStartInstant()));
+//        draggingMinValue.set(GraphicsUtil.mapValue(bottomY, univariateAxis().getFocusMaxPosition(), univariateAxis().getFocusMinPosition(),
+//                ((TemporalColumn)univariateAxis().getColumn()).getStatistics().getEndInstant(),
+//                ((TemporalColumn)univariateAxis().getColumn()).getStatistics().getStartInstant()));
         layoutGraphics(bottomY, getTopY());
     }
 
@@ -250,9 +255,12 @@ public class TemporalAxisSelection extends UnivariateAxisSelection {
             topY = getBottomY();
         }
 
+
         draggingMaxValue.set(GraphicsUtil.mapValue(topY, univariateAxis().getFocusMaxPosition(), univariateAxis().getFocusMinPosition(),
-                ((TemporalColumn)univariateAxis().getColumn()).getStatistics().getEndInstant(),
-                ((TemporalColumn)univariateAxis().getColumn()).getStatistics().getStartInstant()));
+                temporalAxis().getFocusEndInstant(), temporalAxis().getFocusStartInstant()));
+//        draggingMaxValue.set(GraphicsUtil.mapValue(topY, univariateAxis().getFocusMaxPosition(), univariateAxis().getFocusMinPosition(),
+//                ((TemporalColumn)univariateAxis().getColumn()).getStatistics().getEndInstant(),
+//                ((TemporalColumn)univariateAxis().getColumn()).getStatistics().getStartInstant()));
 
         layoutGraphics(getBottomY(), topY);
     }
@@ -288,13 +296,19 @@ public class TemporalAxisSelection extends UnivariateAxisSelection {
     @Override
     public void resize() {
         double topY = GraphicsUtil.mapValue(temporalColumnSelection().getEndInstant(),
-                ((TemporalColumn)univariateAxis().getColumn()).getStatistics().getStartInstant(),
-                ((TemporalColumn)univariateAxis().getColumn()).getStatistics().getEndInstant(),
+                temporalAxis().getFocusStartInstant(), temporalAxis().getFocusEndInstant(),
                 univariateAxis().getFocusMinPosition(), univariateAxis().getFocusMaxPosition());
         double bottomY = GraphicsUtil.mapValue(temporalColumnSelection().getStartInstant(),
-                ((TemporalColumn)univariateAxis().getColumn()).getStatistics().getStartInstant(),
-                ((TemporalColumn)univariateAxis().getColumn()).getStatistics().getEndInstant(),
+                temporalAxis().getFocusStartInstant(), temporalAxis().getFocusEndInstant(),
                 univariateAxis().getFocusMinPosition(), univariateAxis().getFocusMaxPosition());
+//        double topY = GraphicsUtil.mapValue(temporalColumnSelection().getEndInstant(),
+//                ((TemporalColumn)univariateAxis().getColumn()).getStatistics().getStartInstant(),
+//                ((TemporalColumn)univariateAxis().getColumn()).getStatistics().getEndInstant(),
+//                univariateAxis().getFocusMinPosition(), univariateAxis().getFocusMaxPosition());
+//        double bottomY = GraphicsUtil.mapValue(temporalColumnSelection().getStartInstant(),
+//                ((TemporalColumn)univariateAxis().getColumn()).getStatistics().getStartInstant(),
+//                ((TemporalColumn)univariateAxis().getColumn()).getStatistics().getEndInstant(),
+//                univariateAxis().getFocusMinPosition(), univariateAxis().getFocusMaxPosition());
         layoutGraphics(bottomY, topY);
     }
 

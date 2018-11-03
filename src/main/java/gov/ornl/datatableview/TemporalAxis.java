@@ -2,9 +2,12 @@ package gov.ornl.datatableview;
 
 import gov.ornl.datatable.*;
 import gov.ornl.util.GraphicsUtil;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.Point2D;
 import javafx.scene.Group;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
@@ -26,26 +29,55 @@ public class TemporalAxis extends UnivariateAxis {
     private Color histogramStroke = DEFAULT_HISTOGRAM_STROKE;
     private Color queryHistogramFill = DEFAULT_QUERY_HISTOGRAM_FILL;
 
-    private Text minValueText;
-    private Text maxValueText;
+    private Text startInstantText;
+    private Text endInstantText;
+
+    private Text focusStartInstantText;
+    private Text focusEndInstantText;
+
+    private ObjectProperty<Instant> focusStartInstantValue;
+    private ObjectProperty<Instant> focusEndInstantValue;
 
     private TemporalAxisSelection draggingSelection;
+
+    private Instant draggingStartInstant;
+    private Instant draggingEndInstant;
+    private Text draggingContextInstantText;
+    private Line draggingContextLine;
 
     public TemporalAxis(DataTableView dataTableView, Column column) {
         super(dataTableView, column);
 
-        minValueText = new Text();
-        minValueText.setFont(new Font(DEFAULT_TEXT_SIZE));
-        minValueText.setSmooth(true);
+        draggingContextLine = new Line();
+        draggingContextLine.setStroke(Color.BLACK);
+        draggingContextLine.setStrokeWidth(2.);
 
-        maxValueText = new Text();
-        maxValueText.setFont(new Font(DEFAULT_TEXT_SIZE));
-        maxValueText.setSmooth(true);
+        draggingContextInstantText = new Text();
+        draggingContextInstantText.setFill(Color.BLACK);
+        draggingContextInstantText.setFont(Font.font(DEFAULT_TEXT_SIZE));
+
+        startInstantText = new Text(temporalColumn().getStatistics().getStartInstant().toString());
+        startInstantText.setFont(new Font(DEFAULT_TEXT_SIZE));
+        startInstantText.setSmooth(true);
+
+        endInstantText = new Text(temporalColumn().getStatistics().getEndInstant().toString());
+        endInstantText.setFont(new Font(DEFAULT_TEXT_SIZE));
+        endInstantText.setSmooth(true);
+
+        focusStartInstantValue = new SimpleObjectProperty<>(temporalColumn().getStatistics().getStartInstant());
+        focusStartInstantText = new Text(focusStartInstantValue.get().toString());
+        focusStartInstantText.setFont(new Font(DEFAULT_TEXT_SIZE));
+        focusStartInstantText.setSmooth(true);
+
+        focusEndInstantValue = new SimpleObjectProperty<>(temporalColumn().getStatistics().getEndInstant());
+        focusEndInstantText = new Text(focusEndInstantValue.get().toString());
+        focusEndInstantText.setFont(new Font(DEFAULT_TEXT_SIZE));
+        focusEndInstantText.setSmooth(true);
 
         getAxisBar().setWidth(DEFAULT_NARROW_BAR_WIDTH);
 
-        minValueText.setText(((TemporalColumn)column).getStatistics().getStartInstant().toString());
-        maxValueText.setText(((TemporalColumn)column).getStatistics().getEndInstant().toString());
+//        startInstantText.setText(((TemporalColumn)column).getStatistics().getStartInstant().toString());
+//        endInstantText.setText(((TemporalColumn)column).getStatistics().getEndInstant().toString());
 
         overallHistogramGroup.setMouseTransparent(true);
         queryHistogramGroup.setMouseTransparent(true);
@@ -55,7 +87,7 @@ public class TemporalAxis extends UnivariateAxis {
             getGraphicsGroup().getChildren().add(1, queryHistogramGroup);
         }
 
-        getGraphicsGroup().getChildren().addAll(minValueText, maxValueText);
+        getGraphicsGroup().getChildren().addAll(startInstantText, endInstantText, focusStartInstantText, focusEndInstantText);
 
         registerListeners();
     }
@@ -101,11 +133,19 @@ public class TemporalAxis extends UnivariateAxis {
 
     private void registerListeners() {
         ((TemporalColumn)getColumn()).getStatistics().startInstantProperty().addListener((observable, oldValue, newValue) -> {
-            minValueText.setText(newValue.toString());
+            startInstantText.setText(newValue.toString());
         });
 
         ((TemporalColumn)getColumn()).getStatistics().endInstantProperty().addListener((observable, oldValue, newValue) -> {
-            maxValueText.setText(newValue.toString());
+            endInstantText.setText(newValue.toString());
+        });
+
+        focusStartInstantValue.addListener((observable, oldValue, newValue) -> {
+            focusStartInstantText.setText(newValue.toString());
+        });
+
+        focusEndInstantValue.addListener((observable, oldValue, newValue) -> {
+            focusEndInstantText.setText(newValue.toString());
         });
 
         getDataTableView().showHistogramsProperty().addListener((observable, oldValue, newValue) -> {
@@ -141,10 +181,14 @@ public class TemporalAxis extends UnivariateAxis {
             selectionMaxY = selectionMaxY < getFocusMaxPosition() ? getFocusMaxPosition() : selectionMaxY;
             selectionMinY = selectionMinY > getFocusMinPosition() ? getFocusMinPosition() : selectionMinY;
 
+//            Instant selectionEndInstant = GraphicsUtil.mapValue(selectionMaxY, getFocusMaxPosition(), getFocusMinPosition(),
+//                    temporalColumn().getStatistics().getEndInstant(), temporalColumn().getStatistics().getStartInstant());
+//            Instant selectionStartInstant = GraphicsUtil.mapValue(selectionMinY, getFocusMaxPosition(), getFocusMinPosition(),
+//                    temporalColumn().getStatistics().getEndInstant(), temporalColumn().getStatistics().getStartInstant());
             Instant selectionEndInstant = GraphicsUtil.mapValue(selectionMaxY, getFocusMaxPosition(), getFocusMinPosition(),
-                    temporalColumn().getStatistics().getEndInstant(), temporalColumn().getStatistics().getStartInstant());
+                    getFocusEndInstant(), getFocusStartInstant());
             Instant selectionStartInstant = GraphicsUtil.mapValue(selectionMinY, getFocusMaxPosition(), getFocusMinPosition(),
-                    temporalColumn().getStatistics().getEndInstant(), temporalColumn().getStatistics().getStartInstant());
+                    getFocusEndInstant(), getFocusStartInstant());
 
             if (draggingSelection == null) {
 //                    DoubleColumnSelectionRange selectionRange = dataModel.addColumnSelectionRangeToActiveQuery(column, minSelectionValue, maxSelectionValue);
@@ -186,16 +230,150 @@ public class TemporalAxis extends UnivariateAxis {
             }
 //            hoverValueText.toFront();
         });
+
+        getLowerContextBar().setOnMouseDragged(event -> {
+            if (!dragging) {
+                dragging = true;
+                dragStartPoint = new Point2D(event.getX(), event.getY());
+                draggingContextLine.setStartX(getBarLeftX());
+                draggingContextLine.setEndX(getBarRightX());
+                draggingContextLine.setStartY(getFocusMinPosition());
+                draggingContextLine.setEndY(getFocusMinPosition());
+                draggingContextLine.setTranslateY(0);
+                draggingContextInstantText.setX(focusStartInstantText.getX());
+                draggingContextInstantText.setY(focusStartInstantText.getY());
+                draggingContextInstantText.setTranslateY(0);
+                getGraphicsGroup().getChildren().addAll(draggingContextLine, draggingContextInstantText);
+            }
+
+            dragEndPoint = new Point2D(event.getX(), event.getY());
+            double dy = dragEndPoint.getY() - dragStartPoint.getY();
+
+            double y = draggingContextLine.getStartY() + dy;
+
+            Instant newFocusStartInstant;
+            if (y > getFocusMinPosition()) {
+                // above the focus start instant in lower context region (use context range)
+                newFocusStartInstant = GraphicsUtil.mapValue(y, getFocusMinPosition(), getLowerContextBar().getLayoutBounds().getMaxY(),
+                        getFocusStartInstant(), temporalColumn().getStatistics().getStartInstant());
+                if (newFocusStartInstant.isBefore(temporalColumn().getStatistics().getStartInstant())) {
+                    newFocusStartInstant = Instant.from(temporalColumn().getStatistics().getStartInstant());
+                    dy = getUpperContextBar().getHeight();
+                }
+            } else {
+                // inside focus region (use focus start and end)
+                newFocusStartInstant = GraphicsUtil.mapValue(y, getFocusMaxPosition(), getFocusMinPosition(),
+                        getFocusEndInstant(), getFocusStartInstant());
+                if (newFocusStartInstant.isAfter(getFocusEndInstant())) {
+                    newFocusStartInstant = Instant.from(getFocusEndInstant());
+                    dy = -getAxisBar().getHeight();
+                }
+            }
+
+            draggingStartInstant = Instant.from(newFocusStartInstant);
+            draggingContextInstantText.setText(draggingStartInstant.toString());
+            draggingContextInstantText.setTranslateY(dy);
+
+            draggingContextLine.setTranslateY(dy);
+        });
+
+        getLowerContextBar().setOnMouseReleased(event -> {
+            if (dragging) {
+                dragging = false;
+                getGraphicsGroup().getChildren().removeAll(draggingContextInstantText, draggingContextLine);
+                if (!getFocusStartInstant().equals(draggingStartInstant)) {
+                    setFocusStartInstant(draggingStartInstant);
+                    getDataTableView().resizeView();
+                }
+            }
+        });
+
+        getUpperContextBar().setOnMouseDragged(event -> {
+            if (!dragging) {
+                dragging = true;
+                dragStartPoint = new Point2D(event.getX(), event.getY());
+                draggingContextLine.setStartX(getBarLeftX());
+                draggingContextLine.setEndX(getBarRightX());
+                draggingContextLine.setStartY(getFocusMaxPosition());
+                draggingContextLine.setEndY(getFocusMaxPosition());
+                draggingContextLine.setTranslateY(0);
+                draggingContextInstantText.setX(focusEndInstantText.getX());
+                draggingContextInstantText.setY(focusEndInstantText.getY());
+                draggingContextInstantText.setTranslateY(0);
+                getGraphicsGroup().getChildren().addAll(draggingContextLine, draggingContextInstantText);
+            }
+
+            dragEndPoint = new Point2D(event.getX(), event.getY());
+            double dy = dragEndPoint.getY() - dragStartPoint.getY();
+
+            double y = draggingContextLine.getStartY() + dy;
+
+            Instant newFocusEndInstant;
+            if (y < getFocusMaxPosition()) {
+                // above the focus end instant in upper context region (use context range)
+                newFocusEndInstant = GraphicsUtil.mapValue(y, getFocusMaxPosition(), getUpperContextBar().getY(),
+                        getFocusEndInstant(), temporalColumn().getStatistics().getEndInstant());
+                if (newFocusEndInstant.isAfter(temporalColumn().getStatistics().getEndInstant())) {
+                    newFocusEndInstant = Instant.from(temporalColumn().getStatistics().getEndInstant());
+                    dy = -getUpperContextBar().getHeight();
+                }
+            } else {
+                // inside focus region (use focus start and end)
+                newFocusEndInstant = GraphicsUtil.mapValue(y, getFocusMaxPosition(), getFocusMinPosition(),
+                        getFocusEndInstant(), getFocusStartInstant());
+                if (newFocusEndInstant.isBefore(getFocusStartInstant())) {
+                    newFocusEndInstant = Instant.from(getFocusStartInstant());
+                    dy = getAxisBar().getHeight();
+                }
+            }
+
+            draggingEndInstant = Instant.from(newFocusEndInstant);
+            draggingContextInstantText.setText(draggingEndInstant.toString());
+            draggingContextInstantText.setTranslateY(dy);
+
+            draggingContextLine.setTranslateY(dy);
+        });
+
+        getUpperContextBar().setOnMouseReleased(event -> {
+            if (dragging) {
+                dragging = false;
+                getGraphicsGroup().getChildren().removeAll(draggingContextInstantText, draggingContextLine);
+                if (!getFocusEndInstant().equals(draggingEndInstant)) {
+                    setFocusEndInstant(draggingEndInstant);
+                    getDataTableView().resizeView();
+                }
+            }
+        });
     }
+
+    public Instant getFocusEndInstant() { return focusEndInstantValue.get(); }
+
+    public void setFocusEndInstant(Instant instant) { focusEndInstantValue.set(instant); }
+
+    public ObjectProperty<Instant> focusEndInstantProperty() { return focusEndInstantValue; }
+
+    public Instant getFocusStartInstant() { return focusStartInstantValue.get(); }
+
+    public void setFocusStartInstant(Instant instant) { focusStartInstantValue.set(instant); }
+
+    public ObjectProperty<Instant> focusStartInstantProperty() { return focusStartInstantValue; }
 
     public void resize(double center, double top, double width, double height) {
         super.resize(center, top, width, height);
 
-        minValueText.setX(getBounds().getMinX() + ((width - minValueText.getLayoutBounds().getWidth()) / 2.));
-        minValueText.setY(getFocusMinPosition() + minValueText.getLayoutBounds().getHeight());
+        startInstantText.setX(getBounds().getMinX() + ((width - startInstantText.getLayoutBounds().getWidth()) / 2.));
+        startInstantText.setY(getLowerContextBar().getLayoutBounds().getMaxY() + MINMAX_VALUE_TEXT_HEIGHT);
+//        startInstantText.setY(getFocusMinPosition() + startInstantText.getLayoutBounds().getHeight());
 
-        maxValueText.setX(getBounds().getMinX() + ((width - maxValueText.getLayoutBounds().getWidth()) / 2.));
-        maxValueText.setY(getFocusMaxPosition() - 4);
+        endInstantText.setX(getBounds().getMinX() + ((width - endInstantText.getLayoutBounds().getWidth()) / 2.));
+        endInstantText.setY(getUpperContextBar().getLayoutBounds().getMinY() - 4);
+//        endInstantText.setY(getFocusMaxPosition() - 4);
+
+        focusStartInstantText.setX(getBarRightX() + 4);
+        focusStartInstantText.setY(getFocusMinPosition() + focusStartInstantText.getFont().getSize());
+
+        focusEndInstantText.setX(getBarRightX() + 4);
+        focusEndInstantText.setY(getFocusMaxPosition());
 
         if (!getDataTable().isEmpty()) {
             if (getDataTableView().isShowingHistograms()) {

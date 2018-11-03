@@ -411,11 +411,11 @@ public class DataTableView extends Region implements DataTableListener {
 
 //        summaryShapeGroup = new Group();
 
-        plotRegionRectangle = new Rectangle();
-        plotRegionRectangle.setStroke(Color.DARKBLUE);
-        plotRegionRectangle.setFill(Color.TRANSPARENT);
-        plotRegionRectangle.setMouseTransparent(true);
-        plotRegionRectangle.setStrokeWidth(1.5);
+//        plotRegionRectangle = new Rectangle();
+//        plotRegionRectangle.setStroke(Color.DARKBLUE);
+//        plotRegionRectangle.setFill(Color.TRANSPARENT);
+//        plotRegionRectangle.setMouseTransparent(true);
+//        plotRegionRectangle.setStrokeWidth(1.5);
 //
 //        pcpRegionRectangle = new Rectangle();
 //        pcpRegionRectangle.setStroke(Color.ORANGE);
@@ -438,7 +438,7 @@ public class DataTableView extends Region implements DataTableListener {
         pane = new Pane();
         pane.setBackground(new Background(new BackgroundFill(backgroundColor.get(), new CornerRadii(0), Insets.EMPTY)));
         pane.getChildren().addAll(unselectedCanvas, selectedCanvas, correlationRectangleGroup, selectionIndicatorLineAll, selectionIndicatorLineSelected);
-        pane.getChildren().add(plotRegionRectangle);
+//        pane.getChildren().add(plotRegionRectangle);
         getChildren().add(pane);
     }
 
@@ -548,10 +548,10 @@ public class DataTableView extends Region implements DataTableListener {
                     getInsets().getTop(),
                     getWidth() - (getInsets().getLeft() + getInsets().getRight() + DEFAULT_SELECTION_INDICATOR_LINE_SIZE),
                     getHeight() - (getInsets().getTop() + getInsets().getBottom()));
-            plotRegionRectangle.setX(plotRegionBounds.getMinX());
-            plotRegionRectangle.setY(plotRegionBounds.getMinY());
-            plotRegionRectangle.setWidth(plotRegionBounds.getWidth());
-            plotRegionRectangle.setHeight(plotRegionBounds.getHeight());
+//            plotRegionRectangle.setX(plotRegionBounds.getMinX());
+//            plotRegionRectangle.setY(plotRegionBounds.getMinY());
+//            plotRegionRectangle.setWidth(plotRegionBounds.getWidth());
+//            plotRegionRectangle.setHeight(plotRegionBounds.getHeight());
 
             double plotWidth;
             double width;

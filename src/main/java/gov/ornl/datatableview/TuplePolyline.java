@@ -37,11 +37,25 @@ public class TuplePolyline {
             if (axis instanceof TemporalAxis) {
                 TemporalAxis temporalAxis = (TemporalAxis)axis;
                 Instant instant = (Instant)tuple.getElement(i);
-                double yPosition = GraphicsUtil.mapValue(instant,
-                        ((TemporalColumn)axis.getColumn()).getStatistics().getStartInstant(),
-                        ((TemporalColumn)axis.getColumn()).getStatistics().getEndInstant(),
-                        temporalAxis.getFocusMinPosition(),
-                        temporalAxis.getFocusMaxPosition());
+
+                double yPosition;
+                if (instant.isBefore(temporalAxis.getFocusStartInstant())) {
+                    // in lower context region
+                    yPosition = temporalAxis.getLowerContextBar().getY() + (temporalAxis.getLowerContextBar().getHeight() / 2.);
+                } else if (instant.isAfter(temporalAxis.getFocusEndInstant())) {
+                    // in upper context region
+                    yPosition = temporalAxis.getUpperContextBar().getY() + (temporalAxis.getUpperContextBar().getHeight() / 2.);
+                } else {
+                    // in focus region
+                    yPosition = GraphicsUtil.mapValue(instant, temporalAxis.getFocusStartInstant(),
+                            temporalAxis.getFocusEndInstant(), temporalAxis.getFocusMinPosition(),
+                            temporalAxis.getFocusMaxPosition());
+                }
+//                double yPosition = GraphicsUtil.mapValue(instant,
+//                        ((TemporalColumn)axis.getColumn()).getStatistics().getStartInstant(),
+//                        ((TemporalColumn)axis.getColumn()).getStatistics().getEndInstant(),
+//                        temporalAxis.getFocusMinPosition(),
+//                        temporalAxis.getFocusMaxPosition());
                 xPoints[i] = temporalAxis.getCenterX();
                 yPoints[i] = yPosition;
             } else if (axis instanceof DoubleAxis) {

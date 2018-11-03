@@ -309,7 +309,7 @@ public class DoubleAxis extends UnivariateAxis {
 
             double newMinFocusValue;
             if (y > getFocusMinPosition()) {
-                // above the max position (use context range)
+                // above the min position (use context range)
                 newMinFocusValue = GraphicsUtil.mapValue(y, getFocusMinPosition(), getLowerContextBar().getLayoutBounds().getMaxY(), getMinFocusValue(),
                         doubleColumn().getStatistics().getMinValue());
                 if (newMinFocusValue < doubleColumn().getStatistics().getMinValue()) {
