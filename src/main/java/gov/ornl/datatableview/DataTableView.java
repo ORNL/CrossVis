@@ -59,7 +59,7 @@ public class DataTableView extends Region implements DataTableListener {
     private Canvas unselectedCanvas;
     private Canvas contextCanvas;
 
-    private Line selectionIndicatorLineAll;
+    private Line selectionIndicatorLineUnselected;
     private Line selectionIndicatorLineSelected;
 
     private DoubleProperty dataItemsOpacity;
@@ -399,15 +399,15 @@ public class DataTableView extends Region implements DataTableListener {
         textColor = new SimpleObjectProperty<>(DEFAULT_LABEL_COLOR);
         backgroundColor = new SimpleObjectProperty<>(DEFAULT_BACKGROUND_COLOR);
 
-        selectionIndicatorLineAll = new Line();
-        selectionIndicatorLineAll.strokeProperty().bind(unselectedItemsColor);
-        selectionIndicatorLineAll.setStrokeWidth(4);
-        selectionIndicatorLineAll.setStrokeLineCap(StrokeLineCap.ROUND);
+        selectionIndicatorLineUnselected = new Line();
+        selectionIndicatorLineUnselected.strokeProperty().bind(unselectedItemsColor);
+        selectionIndicatorLineUnselected.setStrokeWidth(8);
+        selectionIndicatorLineUnselected.setStrokeLineCap(StrokeLineCap.BUTT);
 
         selectionIndicatorLineSelected = new Line();
         selectionIndicatorLineSelected.strokeProperty().bind(selectedItemsColor);
         selectionIndicatorLineSelected.setStrokeWidth(8);
-        selectionIndicatorLineSelected.setStrokeLineCap(StrokeLineCap.ROUND);
+        selectionIndicatorLineSelected.setStrokeLineCap(StrokeLineCap.BUTT);
 
 //        summaryShapeGroup = new Group();
 
@@ -437,7 +437,7 @@ public class DataTableView extends Region implements DataTableListener {
 
         pane = new Pane();
         pane.setBackground(new Background(new BackgroundFill(backgroundColor.get(), new CornerRadii(0), Insets.EMPTY)));
-        pane.getChildren().addAll(unselectedCanvas, selectedCanvas, correlationRectangleGroup, selectionIndicatorLineAll, selectionIndicatorLineSelected);
+        pane.getChildren().addAll(unselectedCanvas, selectedCanvas, correlationRectangleGroup, selectionIndicatorLineSelected);
 //        pane.getChildren().add(plotRegionRectangle);
         getChildren().add(pane);
     }
@@ -510,36 +510,73 @@ public class DataTableView extends Region implements DataTableListener {
     }
 
     private void resizeSelectionIndicator() {
-        Tooltip tooltip;
-        selectionIndicatorLineAll.setStartX(getInsets().getLeft() + (DEFAULT_SELECTION_INDICATOR_LINE_SIZE / 2.));
-        selectionIndicatorLineAll.setEndX(selectionIndicatorLineAll.getStartX());
-        selectionIndicatorLineAll.setStartY(plotRegionBounds.getMaxY());
-        selectionIndicatorLineAll.setEndY(plotRegionBounds.getMinY());
-
         if (dataTable.getActiveQuery().hasColumnSelections()) {
-            if (!pane.getChildren().contains(selectionIndicatorLineSelected)) {
-                pane.getChildren().add(selectionIndicatorLineSelected);
+            if (dataTable.getActiveQuery().getQueriedTupleCount() == dataTable.getTupleCount()) {
+                pane.getChildren().remove(selectionIndicatorLineUnselected);
+            } else if (!pane.getChildren().contains(selectionIndicatorLineUnselected)) {
+                pane.getChildren().add(selectionIndicatorLineUnselected);
             }
 
             double percentSelected = (double)dataTable.getActiveQuery().getQueriedTupleCount() / dataTable.getTupleCount();
+            double percentSelectedY = GraphicsUtil.mapValue(percentSelected, 0, 1,
+                    plotRegionBounds.getMaxY(), plotRegionBounds.getMinY());
 
-            selectionIndicatorLineSelected.setStartX(selectionIndicatorLineAll.getStartX());
-            selectionIndicatorLineSelected.setEndX(selectionIndicatorLineAll.getStartX());
+            selectionIndicatorLineSelected.setStartX(getInsets().getLeft() + (DEFAULT_SELECTION_INDICATOR_LINE_SIZE / 2.));
+            selectionIndicatorLineSelected.setEndX(selectionIndicatorLineSelected.getStartX());
             selectionIndicatorLineSelected.setStartY(plotRegionBounds.getMaxY());
-            double endY = GraphicsUtil.mapValue(percentSelected, 0, 1,
-                    selectionIndicatorLineAll.getStartY(), selectionIndicatorLineAll.getEndY());
-            selectionIndicatorLineSelected.setEndY(endY);
-//                    selectionIndicatorLineSelected.setEndY(plotRegionBounds.getMaxY() - plotRegionBounds.getHeight() / 2.);
+            selectionIndicatorLineSelected.setEndY(percentSelectedY);
 
-            tooltip = new Tooltip(dataTable.getActiveQuery().getQueriedTupleCount() + " of " + dataTable.getTupleCount() +
-                    "(" + percentageFormat.format(percentSelected) + ") data items selected");
+            selectionIndicatorLineUnselected.setStartX(selectionIndicatorLineSelected.getStartX());
+            selectionIndicatorLineUnselected.setEndX(selectionIndicatorLineSelected.getEndX());
+            selectionIndicatorLineUnselected.setStartY(plotRegionBounds.getMinY());
+            selectionIndicatorLineUnselected.setEndY(percentSelectedY);
+
+            Tooltip tooltip = new Tooltip(dataTable.getActiveQuery().getQueriedTupleCount() + " of " + dataTable.getTupleCount() +
+                    " (" + percentageFormat.format(percentSelected) + ") data items selected");
             Tooltip.install(selectionIndicatorLineSelected, tooltip);
+            tooltip = new Tooltip((dataTable.getTupleCount() - dataTable.getActiveQuery().getQueriedTupleCount()) + " of " + dataTable.getTupleCount() +
+                    " (" + percentageFormat.format(1.0 - percentSelected) + ") data items NOT selected");
+            Tooltip.install(selectionIndicatorLineUnselected, tooltip);
         } else {
-            pane.getChildren().remove(selectionIndicatorLineSelected);
-            tooltip = new Tooltip("0 of " + dataTable.getTupleCount() + " data items selected");
-        }
+            pane.getChildren().remove(selectionIndicatorLineUnselected);
 
-        Tooltip.install(selectionIndicatorLineAll, tooltip);
+            selectionIndicatorLineSelected.setStartX(getInsets().getLeft() + (DEFAULT_SELECTION_INDICATOR_LINE_SIZE / 2.));
+            selectionIndicatorLineSelected.setEndX(selectionIndicatorLineSelected.getStartX());
+            selectionIndicatorLineSelected.setStartY(plotRegionBounds.getMaxY());
+            selectionIndicatorLineSelected.setEndY(plotRegionBounds.getMinY());
+
+            Tooltip tooltip = new Tooltip("0 of " + dataTable.getTupleCount() + " data items selected");
+            Tooltip.install(selectionIndicatorLineSelected, tooltip);
+        }
+//        selectionIndicatorLineAll.setStartX(getInsets().getLeft() + (DEFAULT_SELECTION_INDICATOR_LINE_SIZE / 2.));
+//        selectionIndicatorLineAll.setEndX(selectionIndicatorLineAll.getStartX());
+//        selectionIndicatorLineAll.setStartY(plotRegionBounds.getMaxY());
+//        selectionIndicatorLineAll.setEndY(plotRegionBounds.getMinY());
+//
+//        if (dataTable.getActiveQuery().hasColumnSelections()) {
+//            if (!pane.getChildren().contains(selectionIndicatorLineSelected)) {
+//                pane.getChildren().add(selectionIndicatorLineSelected);
+//            }
+//
+//            double percentSelected = (double)dataTable.getActiveQuery().getQueriedTupleCount() / dataTable.getTupleCount();
+//
+//            selectionIndicatorLineSelected.setStartX(selectionIndicatorLineAll.getStartX());
+//            selectionIndicatorLineSelected.setEndX(selectionIndicatorLineAll.getStartX());
+//            selectionIndicatorLineSelected.setStartY(plotRegionBounds.getMaxY());
+//            double endY = GraphicsUtil.mapValue(percentSelected, 0, 1,
+//                    selectionIndicatorLineAll.getStartY(), selectionIndicatorLineAll.getEndY());
+//            selectionIndicatorLineSelected.setEndY(endY);
+////                    selectionIndicatorLineSelected.setEndY(plotRegionBounds.getMaxY() - plotRegionBounds.getHeight() / 2.);
+//
+//            tooltip = new Tooltip(dataTable.getActiveQuery().getQueriedTupleCount() + " of " + dataTable.getTupleCount() +
+//                    "(" + percentageFormat.format(percentSelected) + ") data items selected");
+//            Tooltip.install(selectionIndicatorLineSelected, tooltip);
+//        } else {
+//            pane.getChildren().remove(selectionIndicatorLineSelected);
+//            tooltip = new Tooltip("0 of " + dataTable.getTupleCount() + " data items selected");
+//        }
+
+//        Tooltip.install(selectionIndicatorLineSelected, tooltip);
     }
 
     protected void resizeView() {
