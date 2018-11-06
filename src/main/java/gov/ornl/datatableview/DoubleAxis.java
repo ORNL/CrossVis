@@ -339,6 +339,21 @@ public class DoubleAxis extends UnivariateAxis {
                 if (getMinFocusValue() != draggingMinFocusValue) {
                     setMinFocusValue(draggingMinFocusValue);
                     getDataTableView().resizeView();
+
+                    ArrayList<DoubleAxisSelection> selectionsToRemove = new ArrayList<>();
+                    for (AxisSelection axisSelection : getAxisSelectionList()) {
+                        DoubleAxisSelection doubleAxisSelection = (DoubleAxisSelection)axisSelection;
+                        if (doubleAxisSelection.getDoubleColumnSelectionRange().getMinValue() < getMinFocusValue() ||
+                            doubleAxisSelection.getDoubleColumnSelectionRange().getMaxValue() > getMaxFocusValue()) {
+                            selectionsToRemove.add(doubleAxisSelection);
+                        }
+                    }
+
+                    if (!selectionsToRemove.isEmpty()) {
+                        for (DoubleAxisSelection doubleAxisSelection : selectionsToRemove) {
+                            getDataTable().removeColumnSelectionFromActiveQuery(doubleAxisSelection.getColumnSelection());
+                        }
+                    }
                 }
             }
         });
@@ -395,6 +410,21 @@ public class DoubleAxis extends UnivariateAxis {
                 if (getMaxFocusValue() != draggingMaxFocusValue) {
                     setMaxFocusValue(draggingMaxFocusValue);
                     getDataTableView().resizeView();
+
+                    ArrayList<DoubleAxisSelection> selectionsToRemove = new ArrayList<>();
+                    for (AxisSelection axisSelection : getAxisSelectionList()) {
+                        DoubleAxisSelection doubleAxisSelection = (DoubleAxisSelection)axisSelection;
+                        if (doubleAxisSelection.getDoubleColumnSelectionRange().getMinValue() < getMinFocusValue() ||
+                                doubleAxisSelection.getDoubleColumnSelectionRange().getMaxValue() > getMaxFocusValue()) {
+                            selectionsToRemove.add(doubleAxisSelection);
+                        }
+                    }
+
+                    if (!selectionsToRemove.isEmpty()) {
+                        for (DoubleAxisSelection doubleAxisSelection : selectionsToRemove) {
+                            getDataTable().removeColumnSelectionFromActiveQuery(doubleAxisSelection.getColumnSelection());
+                        }
+                    }
                 }
             }
         });
@@ -658,46 +688,53 @@ public class DoubleAxis extends UnivariateAxis {
                     overallDispersionBottomValue = doubleColumn().getStatistics().getPercentile25Value();
                 }
 
-                double typicalValueY = GraphicsUtil.mapValue(overallTypicalValue,
-                        doubleColumn().getStatistics().getMinValue(), doubleColumn().getStatistics().getMaxValue(),
-                        getFocusMinPosition(), getFocusMaxPosition());
-                overallTypicalLine.setStartX(doubleAxis().getBarLeftX());
-                overallTypicalLine.setEndX(doubleAxis().getBarRightX());
-                overallTypicalLine.setStartY(typicalValueY);
-                overallTypicalLine.setEndY(typicalValueY);
+                if (!(overallTypicalValue < getMinFocusValue()) && !(overallTypicalValue > getMaxFocusValue())) {
+                    double typicalValueY = GraphicsUtil.mapValue(overallTypicalValue,
+                            getMinFocusValue(), getMaxFocusValue(), getFocusMinPosition(), getFocusMaxPosition());
+//                    double typicalValueY = GraphicsUtil.mapValue(overallTypicalValue,
+//                            doubleColumn().getStatistics().getMinValue(), doubleColumn().getStatistics().getMaxValue(),
+//                            getFocusMinPosition(), getFocusMaxPosition());
+                    overallTypicalLine.setStartX(doubleAxis().getBarLeftX());
+                    overallTypicalLine.setEndX(doubleAxis().getBarRightX());
+                    overallTypicalLine.setStartY(typicalValueY);
+                    overallTypicalLine.setEndY(typicalValueY);
+                    overallTypicalLine.setVisible(true);
+                } else {
+                    overallTypicalLine.setVisible(false);
+                }
 
-                double overallDispersionTop = GraphicsUtil.mapValue(overallDispersionTopValue, doubleColumn().getStatistics().getMinValue(),
-                        doubleColumn().getStatistics().getMaxValue(), getFocusMinPosition(), getFocusMaxPosition());
-                overallDispersionTop = overallDispersionTop < getFocusMaxPosition() ? getFocusMaxPosition() : overallDispersionTop;
-                double overallDispersionBottom = GraphicsUtil.mapValue(overallDispersionBottomValue, doubleColumn().getStatistics().getMinValue(),
-                        doubleColumn().getStatistics().getMaxValue(), getFocusMinPosition(), getFocusMaxPosition());
-                overallDispersionBottom = overallDispersionBottom > getFocusMinPosition() ? getFocusMinPosition() : overallDispersionBottom;
-                overallDispersionRectangle.setX(overallTypicalLine.getStartX());
-                overallDispersionRectangle.setWidth(overallTypicalLine.getEndX() - overallTypicalLine.getStartX());
-                overallDispersionRectangle.setY(overallDispersionTop);
-                overallDispersionRectangle.setHeight(overallDispersionBottom - overallDispersionTop);
+                if (!(overallDispersionBottomValue > getMaxFocusValue()) || !(overallDispersionTopValue < getMinFocusValue())) {
+                    double overallDispersionTop = GraphicsUtil.mapValue(overallDispersionTopValue, getMinFocusValue(),
+                            getMaxFocusValue(), getFocusMinPosition(), getFocusMaxPosition());
+                    overallDispersionTop = overallDispersionTop < getFocusMaxPosition() ? getFocusMaxPosition() : overallDispersionTop;
+                    double overallDispersionBottom = GraphicsUtil.mapValue(overallDispersionBottomValue, getMinFocusValue(),
+                            getMaxFocusValue(), getFocusMinPosition(), getFocusMaxPosition());
+                    overallDispersionBottom = overallDispersionBottom > getFocusMinPosition() ? getFocusMinPosition() : overallDispersionBottom;
+                    overallDispersionRectangle.setX(overallTypicalLine.getStartX());
+                    overallDispersionRectangle.setWidth(overallTypicalLine.getEndX() - overallTypicalLine.getStartX());
+                    overallDispersionRectangle.setY(overallDispersionTop);
+                    overallDispersionRectangle.setHeight(overallDispersionBottom - overallDispersionTop);
+                    overallDispersionRectangle.setVisible(true);
+                } else {
+                    overallDispersionRectangle.setVisible(false);
+                }
 
                 if (!getGraphicsGroup().getChildren().contains(overallSummaryStatisticsGroup)) {
                     getGraphicsGroup().getChildren().add(overallSummaryStatisticsGroup);
-//                    int selectionIdx = graphicsGroup.getChildren().indexOf(axisSelectionGraphicsGroup);
-//                    if (selectionIdx != -1) {
-//                        graphicsGroup.getChildren().remove(axisSelectionGraphicsGroup);
-//                        graphicsGroup.getChildren().add(axisSelectionGraphicsGroup);
-//                    }
                 }
 
                 if (getDataTable().getActiveQuery().hasColumnSelections()) {
                     DoubleColumnSummaryStats queryColumnSummaryStats = (DoubleColumnSummaryStats)getDataTable().getActiveQuery().getColumnQuerySummaryStats(getColumn());
 
                     double queryDispersionRectangleWidth = doubleAxis().getAxisBar().getWidth() / 4.;
-                    double queryDispersionRectangleCenterOffset;
-                    double nonqueryDispersionRectangleCenterOffset;
-
-                    if (getDataTable().getCalculateNonQueryStatistics()) {
-                        queryDispersionRectangleCenterOffset = (doubleAxis().getAxisBar().getWidth() - queryDispersionRectangleWidth) / 2.;
-                    } else {
-                        queryDispersionRectangleCenterOffset = queryDispersionRectangleWidth / 2.;
-                    }
+//                    double queryDispersionRectangleCenterOffset;
+//                    double nonqueryDispersionRectangleCenterOffset;
+//
+//                    if (getDataTable().getCalculateNonQueryStatistics()) {
+//                        queryDispersionRectangleCenterOffset = (doubleAxis().getAxisBar().getWidth() - queryDispersionRectangleWidth) / 2.;
+//                    } else {
+//                        queryDispersionRectangleCenterOffset = queryDispersionRectangleWidth / 2.;
+//                    }
 
                     if (queryColumnSummaryStats != null) {
                         double queryTypicalValue;
@@ -714,26 +751,34 @@ public class DoubleAxis extends UnivariateAxis {
                             queryDispersionBottomValue = queryColumnSummaryStats.getPercentile25Value();
                         }
 
-                        typicalValueY = GraphicsUtil.mapValue(queryTypicalValue,
-                                doubleColumn().getStatistics().getMinValue(), doubleColumn().getStatistics().getMaxValue(),
-                                getFocusMinPosition(), getFocusMaxPosition());
-//                        queryTypicalLine.setStartX(getCenterX() - 4.);
-//                        queryTypicalLine.setEndX(getCenterX());
-                        queryTypicalLine.setStartX(getCenterX() - (queryDispersionRectangleWidth + 1));
-                        queryTypicalLine.setEndX(queryTypicalLine.getStartX() + queryDispersionRectangleWidth);
-                        queryTypicalLine.setStartY(typicalValueY);
-                        queryTypicalLine.setEndY(typicalValueY);
+                        if (!(queryTypicalValue < getMinFocusValue()) && !(queryTypicalValue > getMaxFocusValue())) {
+                            double typicalValueY = GraphicsUtil.mapValue(queryTypicalValue, getMinFocusValue(), getMaxFocusValue(),
+//                                    doubleColumn().getStatistics().getMinValue(), doubleColumn().getStatistics().getMaxValue(),
+                                    getFocusMinPosition(), getFocusMaxPosition());
+                            queryTypicalLine.setStartX(getCenterX() - (queryDispersionRectangleWidth + 1));
+                            queryTypicalLine.setEndX(queryTypicalLine.getStartX() + queryDispersionRectangleWidth);
+                            queryTypicalLine.setStartY(typicalValueY);
+                            queryTypicalLine.setEndY(typicalValueY);
+                            queryTypicalLine.setVisible(true);
+                        } else {
+                            queryTypicalLine.setVisible(false);
+                        }
 
-                        double queryDispersionTop = GraphicsUtil.mapValue(queryDispersionTopValue, doubleColumn().getStatistics().getMinValue(),
-                                doubleColumn().getStatistics().getMaxValue(), getFocusMinPosition(), getFocusMaxPosition());
-                        queryDispersionTop = queryDispersionTop < getFocusMaxPosition() ? getFocusMaxPosition() : queryDispersionTop;
-                        double queryDispersionBottom = GraphicsUtil.mapValue(queryDispersionBottomValue, doubleColumn().getStatistics().getMinValue(),
-                                doubleColumn().getStatistics().getMaxValue(), getFocusMinPosition(), getFocusMaxPosition());
-                        queryDispersionBottom = queryDispersionBottom > getFocusMinPosition() ? getFocusMinPosition() : queryDispersionBottom;
-                        queryDispersionRectangle.setX(queryTypicalLine.getStartX());
-                        queryDispersionRectangle.setWidth(queryTypicalLine.getEndX() - queryTypicalLine.getStartX());
-                        queryDispersionRectangle.setY(queryDispersionTop);
-                        queryDispersionRectangle.setHeight(queryDispersionBottom - queryDispersionTop);
+                        if (!(queryDispersionBottomValue > getMaxFocusValue()) || !(queryDispersionTopValue < getMinFocusValue())) {
+                            double queryDispersionTop = GraphicsUtil.mapValue(queryDispersionTopValue, getMinFocusValue(),
+                                    getMaxFocusValue(), getFocusMinPosition(), getFocusMaxPosition());
+                            queryDispersionTop = queryDispersionTop < getFocusMaxPosition() ? getFocusMaxPosition() : queryDispersionTop;
+                            double queryDispersionBottom = GraphicsUtil.mapValue(queryDispersionBottomValue, getMinFocusValue(),
+                                    getMaxFocusValue(), getFocusMinPosition(), getFocusMaxPosition());
+                            queryDispersionBottom = queryDispersionBottom > getFocusMinPosition() ? getFocusMinPosition() : queryDispersionBottom;
+                            queryDispersionRectangle.setX(queryTypicalLine.getStartX());
+                            queryDispersionRectangle.setWidth(queryTypicalLine.getEndX() - queryTypicalLine.getStartX());
+                            queryDispersionRectangle.setY(queryDispersionTop);
+                            queryDispersionRectangle.setHeight(queryDispersionBottom - queryDispersionTop);
+                            queryDispersionRectangle.setVisible(true);
+                        } else {
+                            queryDispersionRectangle.setVisible(false);
+                        }
 
                         if (!getGraphicsGroup().getChildren().contains(querySummaryStatisticsGroup)) {
                             getGraphicsGroup().getChildren().add(querySummaryStatisticsGroup);
@@ -760,26 +805,35 @@ public class DoubleAxis extends UnivariateAxis {
                             nonqueryDispersionBottomValue = nonqueryColumnSummaryStats.getPercentile25Value();
                         }
 
-                        typicalValueY = GraphicsUtil.mapValue(nonqueryTypicalValue,
-                                doubleColumn().getStatistics().getMinValue(), doubleColumn().getStatistics().getMaxValue(),
-                                getFocusMinPosition(), getFocusMaxPosition());
-//                        nonqueryTypicalLine.setStartX(getCenterX());
-//                        nonqueryTypicalLine.setEndX(getCenterX() + 4.);
-                        nonqueryTypicalLine.setStartX(getCenterX() + 1);
-                        nonqueryTypicalLine.setEndX(nonqueryTypicalLine.getStartX() + queryDispersionRectangleWidth);
-                        nonqueryTypicalLine.setStartY(typicalValueY);
-                        nonqueryTypicalLine.setEndY(typicalValueY);
+                        if (!(nonqueryTypicalValue < getMinFocusValue()) && !(nonqueryTypicalValue > getMaxFocusValue())) {
+                            double typicalValueY = GraphicsUtil.mapValue(nonqueryTypicalValue,
+                                    getMinFocusValue(), getMaxFocusValue(),
+                                    getFocusMinPosition(), getFocusMaxPosition());
+                            nonqueryTypicalLine.setStartX(getCenterX() + 1);
+                            nonqueryTypicalLine.setEndX(nonqueryTypicalLine.getStartX() + queryDispersionRectangleWidth);
+                            nonqueryTypicalLine.setStartY(typicalValueY);
+                            nonqueryTypicalLine.setEndY(typicalValueY);
+                            nonqueryTypicalLine.setVisible(true);
+                        } else {
+                            nonqueryTypicalLine.setVisible(false);
+                        }
 
-                        double nonqueryDispersionTop = GraphicsUtil.mapValue(nonqueryDispersionTopValue, doubleColumn().getStatistics().getMinValue(),
-                                doubleColumn().getStatistics().getMaxValue(), getFocusMinPosition(), getFocusMaxPosition());
-                        nonqueryDispersionTop = nonqueryDispersionTop < getFocusMaxPosition() ? getFocusMaxPosition() : nonqueryDispersionTop;
-                        double nonqueryDispersionBottom = GraphicsUtil.mapValue(nonqueryDispersionBottomValue, doubleColumn().getStatistics().getMinValue(),
-                                doubleColumn().getStatistics().getMaxValue(), getFocusMinPosition(), getFocusMaxPosition());
-                        nonqueryDispersionBottom = nonqueryDispersionBottom > getFocusMinPosition() ? getFocusMinPosition() : nonqueryDispersionBottom;
-                        nonqueryDispersionRectangle.setX(nonqueryTypicalLine.getStartX());
-                        nonqueryDispersionRectangle.setWidth(nonqueryTypicalLine.getEndX() - nonqueryTypicalLine.getStartX());
-                        nonqueryDispersionRectangle.setY(nonqueryDispersionTop);
-                        nonqueryDispersionRectangle.setHeight(nonqueryDispersionBottom - nonqueryDispersionTop);
+                        if (!(nonqueryDispersionBottomValue > getMaxFocusValue()) || !(nonqueryDispersionBottomValue < getMinFocusValue())) {
+                            double nonqueryDispersionTop = GraphicsUtil.mapValue(nonqueryDispersionTopValue, getMinFocusValue(),
+                                    getMaxFocusValue(), getFocusMinPosition(), getFocusMaxPosition());
+                            nonqueryDispersionTop = nonqueryDispersionTop < getFocusMaxPosition() ? getFocusMaxPosition() : nonqueryDispersionTop;
+                            double nonqueryDispersionBottom = GraphicsUtil.mapValue(nonqueryDispersionBottomValue,
+                                    getMinFocusValue(), getMaxFocusValue(), getFocusMinPosition(), getFocusMaxPosition());
+                            nonqueryDispersionBottom = nonqueryDispersionBottom > getFocusMinPosition() ? getFocusMinPosition() : nonqueryDispersionBottom;
+
+                            nonqueryDispersionRectangle.setX(nonqueryTypicalLine.getStartX());
+                            nonqueryDispersionRectangle.setWidth(nonqueryTypicalLine.getEndX() - nonqueryTypicalLine.getStartX());
+                            nonqueryDispersionRectangle.setY(nonqueryDispersionTop);
+                            nonqueryDispersionRectangle.setHeight(nonqueryDispersionBottom - nonqueryDispersionTop);
+                            nonqueryDispersionRectangle.setVisible(true);
+                        } else {
+                            nonqueryDispersionRectangle.setVisible(false);
+                        }
 
                         if (!getGraphicsGroup().getChildren().contains(nonquerySummaryStatisticsGroup)) {
                             getGraphicsGroup().getChildren().add(nonquerySummaryStatisticsGroup);

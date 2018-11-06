@@ -284,6 +284,21 @@ public class TemporalAxis extends UnivariateAxis {
                 if (!getFocusStartInstant().equals(draggingStartInstant)) {
                     setFocusStartInstant(draggingStartInstant);
                     getDataTableView().resizeView();
+
+                    ArrayList<TemporalAxisSelection> selectionsToRemove = new ArrayList<>();
+                    for (AxisSelection axisSelection : getAxisSelectionList()) {
+                        TemporalAxisSelection temporalAxisSelection = (TemporalAxisSelection)axisSelection;
+                        if (temporalAxisSelection.getTemporalColumnSelectionRange().getStartInstant().isBefore(getFocusStartInstant()) ||
+                                temporalAxisSelection.getTemporalColumnSelectionRange().getEndInstant().isAfter(getFocusEndInstant())) {
+                            selectionsToRemove.add(temporalAxisSelection);
+                        }
+                    }
+
+                    if (!selectionsToRemove.isEmpty()) {
+                        for (TemporalAxisSelection temporalAxisSelection : selectionsToRemove) {
+                            getDataTable().removeColumnSelectionFromActiveQuery(temporalAxisSelection.getColumnSelection());
+                        }
+                    }
                 }
             }
         });
@@ -341,6 +356,21 @@ public class TemporalAxis extends UnivariateAxis {
                 if (!getFocusEndInstant().equals(draggingEndInstant)) {
                     setFocusEndInstant(draggingEndInstant);
                     getDataTableView().resizeView();
+
+                    ArrayList<TemporalAxisSelection> selectionsToRemove = new ArrayList<>();
+                    for (AxisSelection axisSelection : getAxisSelectionList()) {
+                        TemporalAxisSelection temporalAxisSelection = (TemporalAxisSelection)axisSelection;
+                        if (temporalAxisSelection.getTemporalColumnSelectionRange().getStartInstant().isBefore(getFocusStartInstant()) ||
+                                temporalAxisSelection.getTemporalColumnSelectionRange().getEndInstant().isAfter(getFocusEndInstant())) {
+                            selectionsToRemove.add(temporalAxisSelection);
+                        }
+                    }
+
+                    if (!selectionsToRemove.isEmpty()) {
+                        for (TemporalAxisSelection temporalAxisSelection : selectionsToRemove) {
+                            getDataTable().removeColumnSelectionFromActiveQuery(temporalAxisSelection.getColumnSelection());
+                        }
+                    }
                 }
             }
         });

@@ -3,6 +3,7 @@ package gov.ornl.datatableview;
 import gov.ornl.datatable.DataTable;
 import gov.ornl.datatable.DoubleColumn;
 import gov.ornl.datatable.DoubleColumnSelectionRange;
+import gov.ornl.datatable.DoubleColumnSummaryStats;
 import gov.ornl.util.GraphicsUtil;
 import javafx.application.Platform;
 import javafx.beans.property.DoubleProperty;
@@ -331,14 +332,54 @@ public class DoubleAxisSelection extends UnivariateAxisSelection {
         maxText.setY(getTopY() - 2d);
     }
 
+    public DoubleColumnSelectionRange getDoubleColumnSelectionRange() { return (DoubleColumnSelectionRange)getColumnSelection(); }
     @Override
     public void resize() {
+//
+//        double topY = Double.NaN;
+//        if (doubleColumnSelection().getMaxValue() > doubleAxis().getMaxFocusValue()) {
+//            doubleColumnSelection().setMaxValue(doubleAxis().getMaxFocusValue());
+////            topY = GraphicsUtil.mapValue(doubleColumnSelection().getMaxValue(), doubleAxis().getMaxFocusValue(),
+////                    ((DoubleColumnSummaryStats)doubleAxis().getColumn().getStatistics()).getMaxValue(),
+////                    doubleAxis().getFocusMaxPosition(), doubleAxis().getUpperContextBar().getY());
+//        } else if (doubleColumnSelection().getMaxValue() < doubleAxis().getMinFocusValue()) {
+//            getAxis().getDataTable().removeColumnSelectionFromActiveQuery(getColumnSelection());
+////            topY = GraphicsUtil.mapValue(doubleColumnSelection().getMaxValue(), doubleAxis().getMinFocusValue(),
+////                    ((DoubleColumnSummaryStats)doubleAxis().getColumn().getStatistics()).getMinValue(),
+////                    doubleAxis().getFocusMinPosition(),
+////                    doubleAxis().getLowerContextBar().getY() + doubleAxis().getLowerContextBar().getHeight());
+//        } else {
+//            topY = GraphicsUtil.mapValue(doubleColumnSelection().getMaxValue(),
+//                    doubleAxis().getMinFocusValue(), doubleAxis().getMaxFocusValue(),
+//                    univariateAxis().getFocusMinPosition(), univariateAxis().getFocusMaxPosition());
+//        }
+//
+//        double bottomY = Double.NaN;
+//        if (doubleColumnSelection().getMinValue() > doubleAxis().getMaxFocusValue()) {
+//            getAxis().getDataTable().removeColumnSelectionFromActiveQuery(getColumnSelection());
+////            bottomY = GraphicsUtil.mapValue(doubleColumnSelection().getMinValue(), doubleAxis().getMaxFocusValue(),
+////                    ((DoubleColumnSummaryStats)doubleAxis().getColumn().getStatistics()).getMaxValue(),
+////                    doubleAxis().getFocusMaxPosition(), doubleAxis().getUpperContextBar().getY());
+//        } else if (doubleColumnSelection().getMinValue() < doubleAxis().getMinFocusValue()) {
+//            doubleColumnSelection().setMinValue(doubleAxis().getMinFocusValue());
+////            bottomY = GraphicsUtil.mapValue(doubleColumnSelection().getMinValue(), doubleAxis().getMinFocusValue(),
+////                    ((DoubleColumnSummaryStats)doubleAxis().getColumn().getStatistics()).getMinValue(),
+////                    doubleAxis().getFocusMinPosition(),
+////                    doubleAxis().getLowerContextBar().getY() + doubleAxis().getLowerContextBar().getHeight());
+//        } else {
+//            bottomY = GraphicsUtil.mapValue(doubleColumnSelection().getMinValue(),
+//                    doubleAxis().getMinFocusValue(), doubleAxis().getMaxFocusValue(),
+//                    univariateAxis().getFocusMinPosition(), univariateAxis().getFocusMaxPosition());
+//        }
+
         double topY = GraphicsUtil.mapValue(doubleColumnSelection().getMaxValue(),
                 doubleAxis().getMinFocusValue(), doubleAxis().getMaxFocusValue(),
                 univariateAxis().getFocusMinPosition(), univariateAxis().getFocusMaxPosition());
         double bottomY = GraphicsUtil.mapValue(doubleColumnSelection().getMinValue(),
                 doubleAxis().getMinFocusValue(), doubleAxis().getMaxFocusValue(),
                 univariateAxis().getFocusMinPosition(), univariateAxis().getFocusMaxPosition());
+        layoutGraphics(bottomY, topY);
+
 //        double topY = GraphicsUtil.mapValue(doubleColumnSelection().getMaxValue(),
 //                ((DoubleColumn)univariateAxis().getColumn()).getStatistics().getMinValue(),
 //                ((DoubleColumn)univariateAxis().getColumn()).getStatistics().getMaxValue(),
@@ -347,7 +388,10 @@ public class DoubleAxisSelection extends UnivariateAxisSelection {
 //                ((DoubleColumn)univariateAxis().getColumn()).getStatistics().getMinValue(),
 //                ((DoubleColumn)univariateAxis().getColumn()).getStatistics().getMaxValue(),
 //                univariateAxis().getFocusMinPosition(), univariateAxis().getFocusMaxPosition());
-        layoutGraphics(bottomY, topY);
+
+//        if (!Double.isNaN(bottomY) && !Double.isNaN(topY)) {
+//            layoutGraphics(bottomY, topY);
+//        }
     }
 
     protected void update(double minValue, double maxValue, double minValueY, double maxValueY) {

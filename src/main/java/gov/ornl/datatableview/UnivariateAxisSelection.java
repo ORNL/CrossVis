@@ -216,6 +216,7 @@ public abstract class UnivariateAxisSelection extends AxisSelection {
         if (rectangle != null) {
             double top = Math.min(bottomY, topY);
             double bottom = Math.max(bottomY, topY);
+
             double left = univariateAxis().getAxisBar().getX();
             double right = univariateAxis().getAxisBar().getX() + univariateAxis().getAxisBar().getWidth();
 //            double left = rectangle.getX() - 4;

@@ -293,6 +293,8 @@ public class TemporalAxisSelection extends UnivariateAxisSelection {
         });
     }
 
+    public TemporalColumnSelectionRange getTemporalColumnSelectionRange() { return (TemporalColumnSelectionRange)getColumnSelection(); }
+
     @Override
     public void resize() {
         double topY = GraphicsUtil.mapValue(temporalColumnSelection().getEndInstant(),
