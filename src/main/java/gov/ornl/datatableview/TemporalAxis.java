@@ -385,14 +385,23 @@ public class TemporalAxis extends UnivariateAxis {
                 overallHistogramRectangles.clear();
 
                 for (int i = 0; i < histogram.getNumBins(); i++) {
-                    double y = getFocusMaxPosition() + ((histogram.getNumBins() - i - 1) * binHeight);
-                    double binWidth = GraphicsUtil.mapValue(histogram.getBinCount(i), 0, histogram.getMaxBinCount(), DEFAULT_BAR_WIDTH + 2, DEFAULT_BAR_WIDTH + 2 + maxHistogramBinWidth);
-                    double x = getBounds().getMinX() + ((width - binWidth) / 2.);
-                    Rectangle rectangle = new Rectangle(x, y, binWidth, binHeight);
-                    rectangle.setStroke(histogramFill.darker());
-                    rectangle.setFill(histogramFill);
-                    overallHistogramRectangles.add(rectangle);
-                    overallHistogramGroup.getChildren().add(rectangle);
+                    Instant binLowerBound = histogram.getBinLowerBound(i);
+                    Instant binUpperBound = histogram.getBinUpperBound(i);
+
+                    if (!(binLowerBound.isBefore(getFocusStartInstant())) && !(binUpperBound.isAfter(getFocusEndInstant()))) {
+                        double binLowerY = GraphicsUtil.mapValue(binLowerBound, getFocusStartInstant(), getFocusEndInstant(), getFocusMinPosition(), getFocusMaxPosition());
+                        double binUpperY = GraphicsUtil.mapValue(binUpperBound, getFocusStartInstant(), getFocusEndInstant(), getFocusMinPosition(), getFocusMaxPosition());
+
+//                        double y = getFocusMaxPosition() + ((histogram.getNumBins() - i - 1) * binHeight);
+                        double binWidth = GraphicsUtil.mapValue(histogram.getBinCount(i), 0, histogram.getMaxBinCount(), DEFAULT_BAR_WIDTH + 2, DEFAULT_BAR_WIDTH + 2 + maxHistogramBinWidth);
+                        double x = getBounds().getMinX() + ((width - binWidth) / 2.);
+//                        Rectangle rectangle = new Rectangle(x, y, binWidth, binHeight);
+                        Rectangle rectangle = new Rectangle(x, binUpperY, binWidth, binLowerY - binUpperY);
+                        rectangle.setStroke(histogramFill.darker());
+                        rectangle.setFill(histogramFill);
+                        overallHistogramRectangles.add(rectangle);
+                        overallHistogramGroup.getChildren().add(rectangle);
+                    }
                 }
 
                 queryHistogramGroup.getChildren().clear();
@@ -406,23 +415,32 @@ public class TemporalAxis extends UnivariateAxis {
 
                     if (queryHistogram != null) {
                         if (getDataTable().getCalculateQueryStatistics()) {
-                            if (histogram.getNumBins() != queryHistogram.getNumBins()) {
-                                log.info("query histogram and overall histogram have different bin sizes");
-                            }
+//                            if (histogram.getNumBins() != queryHistogram.getNumBins()) {
+//                                log.info("query histogram and overall histogram have different bin sizes");
+//                            }
 
                             for (int i = 0; i < queryHistogram.getNumBins(); i++) {
                                 if (queryHistogram.getBinCount(i) > 0) {
-                                    double y = getFocusMaxPosition() + ((histogram.getNumBins() - i - 1) * binHeight);
-                                    double binWidth = GraphicsUtil.mapValue(queryHistogram.getBinCount(i),
-                                            0, histogram.getMaxBinCount(), DEFAULT_BAR_WIDTH + 2,
-                                            DEFAULT_BAR_WIDTH + 2 + maxHistogramBinWidth);
-                                    double x = getBounds().getMinX() + ((width - binWidth) / 2.);
-                                    Rectangle rectangle = new Rectangle(x, y, binWidth, binHeight);
-                                    rectangle.setStroke(queryHistogramFill.darker());
-                                    rectangle.setFill(queryHistogramFill);
+                                    Instant binLowerBound = queryHistogram.getBinLowerBound(i);
+                                    Instant binUpperBound = queryHistogram.getBinUpperBound(i);
 
-                                    queryHistogramRectangles.add(rectangle);
-                                    queryHistogramGroup.getChildren().add(rectangle);
+                                    if (!(binLowerBound.isBefore(getFocusStartInstant())) && !(binUpperBound.isAfter(getFocusEndInstant()))) {
+                                        double binLowerY = GraphicsUtil.mapValue(binLowerBound, getFocusStartInstant(), getFocusEndInstant(), getFocusMinPosition(), getFocusMaxPosition());
+                                        double binUpperY = GraphicsUtil.mapValue(binUpperBound, getFocusStartInstant(), getFocusEndInstant(), getFocusMinPosition(), getFocusMaxPosition());
+
+                                        //                                    double y = getFocusMaxPosition() + ((histogram.getNumBins() - i - 1) * binHeight);
+                                        double binWidth = GraphicsUtil.mapValue(queryHistogram.getBinCount(i),
+                                                0, histogram.getMaxBinCount(), DEFAULT_BAR_WIDTH + 2,
+                                                DEFAULT_BAR_WIDTH + 2 + maxHistogramBinWidth);
+                                        double x = getBounds().getMinX() + ((width - binWidth) / 2.);
+                                        //                                    Rectangle rectangle = new Rectangle(x, y, binWidth, binHeight);
+                                        Rectangle rectangle = new Rectangle(x, binUpperY, binWidth, binLowerY - binUpperY);
+                                        rectangle.setStroke(queryHistogramFill.darker());
+                                        rectangle.setFill(queryHistogramFill);
+
+                                        queryHistogramRectangles.add(rectangle);
+                                        queryHistogramGroup.getChildren().add(rectangle);
+                                    }
                                 }
                             }
                         }

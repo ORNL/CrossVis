@@ -540,17 +540,54 @@ public class DoubleAxis extends UnivariateAxis {
                 overallHistogramRectangles.clear();
                 overallHistogramGroup.getChildren().clear();
 
+//                int numBins = histogram.getNumBins();
+//                int maxBinIndex = 0;
+//                if (getMaxFocusValue() != doubleColumn().getStatistics().getMaxValue()) {
+//                    double binValueSize = (doubleColumn().getStatistics().getMaxValue() - doubleColumn().getStatistics().getMinValue()) /
+//                            histogram.getNumBins();
+//                    maxBinIndex = (int)Math.floor((doubleColumn().getStatistics().getMaxValue() - getMaxFocusValue()) / binValueSize);
+//
+//                }
+//
+//                int minBinIndex = histogram.getNumBins();
+//                if (getMinFocusValue() != doubleColumn().getStatistics().getMinValue()) {
+//                    double binValueSize = (doubleColumn().getStatistics().getMaxValue() - doubleColumn().getStatistics().getMinValue()) /
+//                            histogram.getNumBins();
+//                    minBinIndex = (int)Math.ceil((getMinFocusValue() - doubleColumn().getStatistics().getMinValue()) / binValueSize);
+//                    minBinIndex = histogram.getNumBins() - minBinIndex;
+//                }
+
+//                for (int i = maxBinIndex; i < minBinIndex; i++) {
                 for (int i = 0; i < histogram.getNumBins(); i++) {
-                    double y = getFocusMaxPosition() + ((histogram.getNumBins() - i - 1) * binHeight);
-                    double binWidth = GraphicsUtil.mapValue(histogram.getBinCount(i),
-                            0, histogram.getMaxBinCount(),
-                            getAxisBar().getWidth() + 2, getAxisBar().getWidth() + 2 + maxHistogramBinWidth);
-                    double x = getBounds().getMinX() + ((width - binWidth) / 2.);
-                    Rectangle rectangle = new Rectangle(x, y, binWidth, binHeight);
-                    rectangle.setStroke(histogramFill.darker());
-                    rectangle.setFill(histogramFill);
-                    overallHistogramGroup.getChildren().add(rectangle);
-                    overallHistogramRectangles.add(rectangle);
+                    double binLowerBound = histogram.getBinLowerBound(i);
+                    double binUpperBound = histogram.getBinUpperBound(i);
+
+                    if (!(binLowerBound < getMinFocusValue()) && !(binUpperBound > getMaxFocusValue())) {
+                        double binLowerY = GraphicsUtil.mapValue(binLowerBound, getMinFocusValue(), getMaxFocusValue(), getFocusMinPosition(), getFocusMaxPosition());
+                        double binUpperY = GraphicsUtil.mapValue(binUpperBound, getMinFocusValue(), getMaxFocusValue(), getFocusMinPosition(), getFocusMaxPosition());
+
+//                        double y = getFocusMaxPosition() + ((histogram.getNumBins() - i - 1) * binHeight);
+                        double binWidth = GraphicsUtil.mapValue(histogram.getBinCount(i),
+                                0, histogram.getMaxBinCount(),
+                                getAxisBar().getWidth() + 2, getAxisBar().getWidth() + 2 + maxHistogramBinWidth);
+                        double x = getBounds().getMinX() + ((width - binWidth) / 2.);
+                        Rectangle rectangle = new Rectangle(x, binUpperY, binWidth, binLowerY - binUpperY);
+                        rectangle.setStroke(histogramFill.darker());
+                        rectangle.setFill(histogramFill);
+                        overallHistogramGroup.getChildren().add(rectangle);
+                        overallHistogramRectangles.add(rectangle);
+                    }
+
+//                    double y = getFocusMaxPosition() + ((histogram.getNumBins() - i - 1) * binHeight);
+//                    double binWidth = GraphicsUtil.mapValue(histogram.getBinCount(i),
+//                            0, histogram.getMaxBinCount(),
+//                            getAxisBar().getWidth() + 2, getAxisBar().getWidth() + 2 + maxHistogramBinWidth);
+//                    double x = getBounds().getMinX() + ((width - binWidth) / 2.);
+//                    Rectangle rectangle = new Rectangle(x, y, binWidth, binHeight);
+//                    rectangle.setStroke(histogramFill.darker());
+//                    rectangle.setFill(histogramFill);
+//                    overallHistogramGroup.getChildren().add(rectangle);
+//                    overallHistogramRectangles.add(rectangle);
                 }
 
                 queryHistogramGroup.getChildren().clear();
@@ -564,18 +601,41 @@ public class DoubleAxis extends UnivariateAxis {
                             DoubleHistogram queryHistogram = ((DoubleColumnSummaryStats)getDataTable().getActiveQuery().getColumnQuerySummaryStats(doubleColumn())).getHistogram();
 
                             for (int i = 0; i < queryHistogram.getNumBins(); i++) {
-                                double y = getFocusMaxPosition() + ((queryHistogram.getNumBins() - i - 1) * binHeight);
-                                double binWidth = GraphicsUtil.mapValue(queryHistogram.getBinCount(i),
-                                        0, histogram.getMaxBinCount(),
-                                        getAxisBar().getWidth() + 2, getAxisBar().getWidth() + 2 + maxHistogramBinWidth);
-                                double x = getBounds().getMinX() + ((width - binWidth) / 2.);
-                                Rectangle rectangle = new Rectangle(x, y, binWidth, binHeight);
-                                rectangle.setStroke(queryHistogramFill.darker());
-                                rectangle.setFill(queryHistogramFill);
+                                if (queryHistogram.getBinCount(i) > 0) {
+                                    double binLowerBound = queryHistogram.getBinLowerBound(i);
+                                    double binUpperBound = queryHistogram.getBinUpperBound(i);
 
-                                queryHistogramRectangles.add(rectangle);
-                                queryHistogramGroup.getChildren().add(rectangle);
+                                    if (binLowerBound > getMinFocusValue() && binUpperBound < getMaxFocusValue()) {
+                                        double binLowerY = GraphicsUtil.mapValue(binLowerBound, getMinFocusValue(), getMaxFocusValue(), getFocusMinPosition(), getFocusMaxPosition());
+                                        double binUpperY = GraphicsUtil.mapValue(binUpperBound, getMinFocusValue(), getMaxFocusValue(), getFocusMinPosition(), getFocusMaxPosition());
+
+                                        double binWidth = GraphicsUtil.mapValue(queryHistogram.getBinCount(i),
+                                                0, histogram.getMaxBinCount(),
+                                                getAxisBar().getWidth() + 2, getAxisBar().getWidth() + 2 + maxHistogramBinWidth);
+                                        double x = getBounds().getMinX() + ((width - binWidth) / 2.);
+                                        Rectangle rectangle = new Rectangle(x, binUpperY, binWidth, binLowerY - binUpperY);
+                                        rectangle.setStroke(queryHistogramFill.darker());
+                                        rectangle.setFill(queryHistogramFill);
+
+                                        queryHistogramRectangles.add(rectangle);
+                                        queryHistogramGroup.getChildren().add(rectangle);
+                                    }
+                                }
                             }
+
+//                            for (int i = 0; i < queryHistogram.getNumBins(); i++) {
+//                                double y = getFocusMaxPosition() + ((queryHistogram.getNumBins() - i - 1) * binHeight);
+//                                double binWidth = GraphicsUtil.mapValue(queryHistogram.getBinCount(i),
+//                                        0, histogram.getMaxBinCount(),
+//                                        getAxisBar().getWidth() + 2, getAxisBar().getWidth() + 2 + maxHistogramBinWidth);
+//                                double x = getBounds().getMinX() + ((width - binWidth) / 2.);
+//                                Rectangle rectangle = new Rectangle(x, y, binWidth, binHeight);
+//                                rectangle.setStroke(queryHistogramFill.darker());
+//                                rectangle.setFill(queryHistogramFill);
+//
+//                                queryHistogramRectangles.add(rectangle);
+//                                queryHistogramGroup.getChildren().add(rectangle);
+//                            }
                         }
                     }
                 }
