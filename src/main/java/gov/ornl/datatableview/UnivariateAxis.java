@@ -26,21 +26,21 @@ public abstract class UnivariateAxis extends Axis {
         super(dataTableView, column);
 
         axisBar = new Rectangle();
-        axisBar.setStroke(Color.DARKGRAY);
+        axisBar.setStroke(Color.gray(0.6));
         axisBar.setFill(Color.WHITESMOKE);
         axisBar.setWidth(DEFAULT_BAR_WIDTH);
         axisBar.setSmooth(true);
         axisBar.setStrokeWidth(DEFAULT_STROKE_WIDTH);
 
         upperContextBar = new Rectangle();
-        upperContextBar.setStroke(Color.DARKGRAY);
-        upperContextBar.setFill(Color.WHITESMOKE);
+        upperContextBar.setStroke(Color.gray(0.75));
+        upperContextBar.setFill(Color.gray(.9));
         upperContextBar.setSmooth(true);
         upperContextBar.setStrokeWidth(DEFAULT_STROKE_WIDTH);
 
         lowerContextBar = new Rectangle();
-        lowerContextBar.setStroke(Color.DARKGRAY);
-        lowerContextBar.setFill(Color.WHITESMOKE);
+        lowerContextBar.setStroke(upperContextBar.getStroke());
+        lowerContextBar.setFill(upperContextBar.getFill());
         lowerContextBar.setSmooth(true);
         lowerContextBar.setStrokeWidth(DEFAULT_STROKE_WIDTH);
 
