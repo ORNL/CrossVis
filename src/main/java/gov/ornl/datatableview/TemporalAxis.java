@@ -74,7 +74,7 @@ public class TemporalAxis extends UnivariateAxis {
         focusEndInstantText.setFont(new Font(DEFAULT_TEXT_SIZE));
         focusEndInstantText.setSmooth(true);
 
-        getAxisBar().setWidth(DEFAULT_NARROW_BAR_WIDTH);
+        getAxisBar().setWidth(DEFAULT_BAR_WIDTH);
 
 //        startInstantText.setText(((TemporalColumn)column).getStatistics().getStartInstant().toString());
 //        endInstantText.setText(((TemporalColumn)column).getStatistics().getEndInstant().toString());
@@ -119,19 +119,47 @@ public class TemporalAxis extends UnivariateAxis {
     protected TemporalColumn temporalColumn() { return (TemporalColumn)getColumn(); }
 
     public double getAxisPositionForValue(Instant instant) {
-        double position = GraphicsUtil.mapValue(instant, temporalColumn().getStatistics().getStartInstant(),
-                temporalColumn().getStatistics().getEndInstant(), getFocusMinPosition(), getFocusMaxPosition());
-        return position;
+        if (instant.isAfter(getFocusEndInstant())) {
+            return GraphicsUtil.mapValue(instant, getFocusEndInstant(), temporalColumn().getStatistics().getEndInstant(),
+                    getFocusMaxPosition(), getUpperContextBar().getY());
+        } else if (instant.isBefore(getFocusStartInstant())) {
+            return GraphicsUtil.mapValue(instant, getFocusStartInstant(), temporalColumn().getStatistics().getStartInstant(),
+                    getFocusMinPosition(), getLowerContextBar().getY() + getLowerContextBar().getHeight());
+        }
+
+        return GraphicsUtil.mapValue(instant, getFocusStartInstant(), getFocusEndInstant(),
+                getFocusMinPosition(), getFocusMaxPosition());
+//        double position = GraphicsUtil.mapValue(instant, temporalColumn().getStatistics().getStartInstant(),
+//                temporalColumn().getStatistics().getEndInstant(), getFocusMinPosition(), getFocusMaxPosition());
+//        return position;
     }
 
     @Override
     protected Object getValueForAxisPosition(double axisPosition) {
-        Instant value = GraphicsUtil.mapValue(axisPosition, getFocusMinPosition(), getFocusMaxPosition(),
-                temporalColumn().getStatistics().getStartInstant(), temporalColumn().getStatistics().getEndInstant());
-        return value;
+        if (axisPosition < getFocusMaxPosition()) {
+            return GraphicsUtil.mapValue(axisPosition, getFocusMaxPosition(), getUpperContextBar().getY(),
+                    getFocusEndInstant(), temporalColumn().getStatistics().getEndInstant());
+        } else if (axisPosition > getFocusMinPosition()) {
+            return GraphicsUtil.mapValue(axisPosition, getFocusMinPosition(), getUpperContextBar().getY() + getUpperContextBar().getHeight(),
+                    getFocusStartInstant(), temporalColumn().getStatistics().getStartInstant());
+        }
+
+        return GraphicsUtil.mapValue(axisPosition, getFocusMinPosition(), getFocusMaxPosition(),
+                getFocusStartInstant(), getFocusEndInstant());
+//        Instant value = GraphicsUtil.mapValue(axisPosition, getFocusMinPosition(), getFocusMaxPosition(),
+//                temporalColumn().getStatistics().getStartInstant(), temporalColumn().getStatistics().getEndInstant());
+//        return value;
+    }
+
+    private void initAxisInteriorDataPlot() {
+        
     }
 
     private void registerListeners() {
+        getDataTableView().highlightedAxisProperty().addListener(observable -> {
+            initAxisInteriorDataPlot();
+        });
+
         ((TemporalColumn)getColumn()).getStatistics().startInstantProperty().addListener((observable, oldValue, newValue) -> {
             startInstantText.setText(newValue.toString());
         });

@@ -51,7 +51,7 @@ public abstract class UnivariateAxis extends Axis {
         hoverValueText.setFill(DEFAULT_TEXT_COLOR);
         hoverValueText.setTextOrigin(VPos.BOTTOM);
         hoverValueText.setMouseTransparent(true);
-//        getDataTableView().getChildren().add(hoverValueText);
+        getDataTableView().getPane().getChildren().add(hoverValueText);
 
         getGraphicsGroup().getChildren().addAll(upperContextBar, lowerContextBar, axisBar);
 

@@ -1090,16 +1090,23 @@ public class DataTableView extends Region implements DataTableListener {
         }
     }
 
-    private Axis getHighlightedAxis() {
-        if (dataTable.getHighlightedColumn() != null) {
-            for (Axis axis : axisList) {
-                if (axis.getColumn() == dataTable.getHighlightedColumn()) {
-                    return axis;
-                }
-            }
-        }
+    public void setHighlightedAxis(Axis axis) {
+        highlightedAxis.set(axis);
+    }
 
-        return null;
+    public ObjectProperty<Axis> highlightedAxisProperty() { return highlightedAxis; }
+
+    private Axis getHighlightedAxis() {
+        return highlightedAxis.get();
+//        if (dataTable.getHighlightedColumn() != null) {
+//            for (Axis axis : axisList) {
+//                if (axis.getColumn() == dataTable.getHighlightedColumn()) {
+//                    return axis;
+//                }
+//            }
+//        }
+//
+//        return null;
     }
 
     protected Pane getPane() { return pane; }
@@ -1363,10 +1370,12 @@ public class DataTableView extends Region implements DataTableListener {
             for (Axis axis : axisList) {
                 axis.setHighlighted(false);
             }
+            highlightedAxis.set(null);
         } else {
             for (Axis axis : axisList) {
                 if (axis.getColumn() == newHighlightedColumn) {
                     axis.setHighlighted(true);
+                    highlightedAxis.set(axis);
                 } else if (axis.getColumn() == oldHighlightedColumn) {
                     axis.setHighlighted(false);
                 }

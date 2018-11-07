@@ -48,8 +48,6 @@ public class DoubleAxis extends UnivariateAxis {
     private ArrayList<Rectangle> overallHistogramRectangles = new ArrayList<>();
     private Group queryHistogramGroup = new Group();
     private ArrayList<Rectangle> queryHistogramRectangles = new ArrayList<>();
-    private Group nonqueryHistogramGroup = new Group();
-    private ArrayList<Rectangle> nonqueryHistogramRectangles = new ArrayList<>();
 
     private Text minValueText;
     private Text maxValueText;
@@ -137,47 +135,52 @@ public class DoubleAxis extends UnivariateAxis {
         nonquerySummaryStatisticsGroup.setMouseTransparent(true);
         overallHistogramGroup.setMouseTransparent(true);
         queryHistogramGroup.setMouseTransparent(true);
-        nonqueryHistogramGroup.setMouseTransparent(true);
 
         if (dataTableView.isShowingSummaryStatistics()) {
             getGraphicsGroup().getChildren().add(overallSummaryStatisticsGroup);
-//            graphicsGroup.getChildren().add(querySummaryStatisticsGroup);
-//            graphicsGroup.getChildren().add(nonquerySummaryStatisticsGroup);
         }
 
         if (dataTableView.isShowingHistograms()) {
             getGraphicsGroup().getChildren().add(0, overallHistogramGroup);
             getGraphicsGroup().getChildren().add(1, queryHistogramGroup);
-            getGraphicsGroup().getChildren().add(2, nonqueryHistogramGroup);
         }
 
         getGraphicsGroup().getChildren().addAll(minValueText, maxValueText, minFocusValueText, maxFocusValueText);
-
-//        if ((getStatisticsDisplayMode() == PCPView.STATISTICS_DISPLAY_MODE.MEAN_BOXPLOT) ||
-//                (getStatisticsDisplayMode() == PCPView.STATISTICS_DISPLAY_MODE.MEDIAN_BOXPLOT)) {
-//            graphicsGroup.getChildren().add(overallSummaryStatisticsGroup);
-//            graphicsGroup.getChildren().add(querySummaryStatisticsGroup);
-//            graphicsGroup.getChildren().add(nonquerySummaryStatisticsGroup);
-//        } else if (getStatisticsDisplayMode() == PCPView.STATISTICS_DISPLAY_MODE.HISTOGRAM) {
-//            graphicsGroup.getChildren().add(0, overallHistogramGroup);
-//            graphicsGroup.getChildren().add(1, queryHistogramGroup);
-//            graphicsGroup.getChildren().add(nonqueryHistogramGroup);
-//        }
 
         registerListeners();
     }
 
     @Override
     protected Object getValueForAxisPosition(double axisPosition) {
-        double value = GraphicsUtil.mapValue(axisPosition, getFocusMinPosition(), getFocusMaxPosition(),
-                doubleColumn().getStatistics().getMinValue(), doubleColumn().getStatistics().getMaxValue());
-        return value;
+        if (axisPosition < getFocusMaxPosition()) {
+            return GraphicsUtil.mapValue(axisPosition, getFocusMaxPosition(), getUpperContextBar().getY(),
+                    getMaxFocusValue(), doubleColumn().getStatistics().getMaxValue());
+        } else if (axisPosition > getFocusMinPosition()) {
+            return GraphicsUtil.mapValue(axisPosition, getFocusMinPosition(), getLowerContextBar().getY() + getLowerContextBar().getHeight(),
+                    getMinFocusValue(), doubleColumn().getStatistics().getMinValue());
+        }
+
+        return GraphicsUtil.mapValue(axisPosition, getFocusMinPosition(), getFocusMaxPosition(),
+                getMinFocusValue(), getMaxFocusValue());
+
+//        double value = GraphicsUtil.mapValue(axisPosition, getFocusMinPosition(), getFocusMaxPosition(),
+//                doubleColumn().getStatistics().getMinValue(), doubleColumn().getStatistics().getMaxValue());
+//        return value;
     }
 
     private double getAxisPositionForValue(double value) {
-        double position = GraphicsUtil.mapValue(value, doubleColumn().getStatistics().getMinValue(),
-                doubleColumn().getStatistics().getMaxValue(), getFocusMinPosition(), getFocusMaxPosition());
-        return position;
+        if (value > getMaxFocusValue()) {
+            return GraphicsUtil.mapValue(value, getMaxFocusValue(), doubleColumn().getStatistics().getMaxValue(),
+                    getFocusMaxPosition(), getUpperContextBar().getY());
+        } else if (value < getMinFocusValue()) {
+            return GraphicsUtil.mapValue(value, getMinFocusValue(), doubleColumn().getStatistics().getMinValue(),
+                    getFocusMinPosition(), getLowerContextBar().getY() + getLowerContextBar().getHeight());
+        }
+
+        return GraphicsUtil.mapValue(value, getMinFocusValue(), getMaxFocusValue(), getFocusMinPosition(), getFocusMaxPosition());
+//        double position = GraphicsUtil.mapValue(value, doubleColumn().getStatistics().getMinValue(),
+//                doubleColumn().getStatistics().getMaxValue(), getFocusMinPosition(), getFocusMaxPosition());
+//        return position;
     }
 
     public DoubleColumn doubleColumn () {
@@ -210,11 +213,9 @@ public class DoubleAxis extends UnivariateAxis {
                 if (newValue) {
                     getGraphicsGroup().getChildren().add(0, overallHistogramGroup);
                     getGraphicsGroup().getChildren().add(1, queryHistogramGroup);
-                    getGraphicsGroup().getChildren().add(2, nonqueryHistogramGroup);
                 } else {
                     getGraphicsGroup().getChildren().remove(overallHistogramGroup);
                     getGraphicsGroup().getChildren().remove(queryHistogramGroup);
-                    getGraphicsGroup().getChildren().remove(nonqueryHistogramGroup);
                 }
 
                 resize(getBounds().getMinX(), getBounds().getMinY(), getBounds().getWidth(), getBounds().getHeight());
@@ -235,57 +236,10 @@ public class DoubleAxis extends UnivariateAxis {
 
         getDataTableView().summaryStatisticsDisplayModeProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue != null && newValue != oldValue) {
-//                // remove graphics from previous setting
-//                if (oldValue == PCPView.STATISTICS_DISPLAY_MODE.MEAN_BOXPLOT || oldValue == PCPView.STATISTICS_DISPLAY_MODE.MEDIAN_BOXPLOT) {
-//                    graphicsGroup.getChildren().remove(overallSummaryStatisticsGroup);
-//                    graphicsGroup.getChildren().remove(querySummaryStatisticsGroup);
-//                    graphicsGroup.getChildren().remove(nonquerySummaryStatisticsGroup);
-//                } else if (oldValue == PCPView.STATISTICS_DISPLAY_MODE.HISTOGRAM) {
-//                    graphicsGroup.getChildren().remove(overallHistogramGroup);
-//                    graphicsGroup.getChildren().remove(queryHistogramGroup);
-//                    graphicsGroup.getChildren().remove(nonqueryHistogramGroup);
-//                }
-//
-//                if ((newValue == PCPView.STATISTICS_DISPLAY_MODE.MEAN_BOXPLOT) ||
-//                        (newValue == PCPView.STATISTICS_DISPLAY_MODE.MEDIAN_BOXPLOT)) {
-//                    graphicsGroup.getChildren().add(overallSummaryStatisticsGroup);
-//                    graphicsGroup.getChildren().add(querySummaryStatisticsGroup);
-//                    graphicsGroup.getChildren().add(nonquerySummaryStatisticsGroup);
-//                } else if (newValue == PCPView.STATISTICS_DISPLAY_MODE.HISTOGRAM) {
-//                    graphicsGroup.getChildren().add(0, overallHistogramGroup);
-//                    graphicsGroup.getChildren().add(1, queryHistogramGroup);
-//                    graphicsGroup.getChildren().add(nonqueryHistogramGroup);
-//                }
-
                 // calculate graphics for new setting
                 resize(getBounds().getMinX(), getBounds().getMinY(), getBounds().getWidth(), getBounds().getHeight());
             }
         });
-
-//        getAxisBar().setOnScroll(event -> {
-//            double expandFactor = event.getDeltaY() / getAxisBar().getHeight();
-//            double expandValue = expandFactor * (doubleColumn().getStatistics().getMaxValue() - doubleColumn().getStatistics().getMinValue());
-//
-//            log.info("multiplyer: " + event.getMultiplierY());
-////            log.info("Scroll: deltaY = " + event.getDeltaY() + " expandFactor = " + expandFactor + " expandValue = " + expandValue);
-//            double newMaxFocusValue = getMaxFocusValue() - expandValue;
-//            double newMinFocusValue = getMinFocusValue() + expandValue;
-//
-//            if (newMinFocusValue < doubleColumn().getStatistics().getMinValue()) {
-//                newMinFocusValue = doubleColumn().getStatistics().getMinValue();
-//            }
-//
-//            if (newMaxFocusValue > doubleColumn().getStatistics().getMaxValue()) {
-//                newMaxFocusValue = doubleColumn().getStatistics().getMaxValue();
-//            }
-//
-//            if (newMaxFocusValue > newMinFocusValue  && (newMaxFocusValue != getMaxFocusValue() || newMinFocusValue != getMinFocusValue())) {
-//                maxFocusValue.set(newMaxFocusValue);
-//                minFocusValue.set(newMinFocusValue);
-//
-//                getDataTableView().resizeView();
-//            }
-//        });
 
         getLowerContextBar().setOnMouseDragged(event -> {
             if (!dragging) {
