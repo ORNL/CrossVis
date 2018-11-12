@@ -136,16 +136,19 @@ public class DoubleAxis extends UnivariateAxis {
         overallHistogramGroup.setMouseTransparent(true);
         queryHistogramGroup.setMouseTransparent(true);
 
-        if (dataTableView.isShowingSummaryStatistics()) {
-            getGraphicsGroup().getChildren().add(overallSummaryStatisticsGroup);
-        }
+//        if (dataTableView.isShowingSummaryStatistics()) {
+//            getGraphicsGroup().getChildren().add(overallSummaryStatisticsGroup);
+//        }
+//
+//        if (dataTableView.isShowingHistograms()) {
+//            getGraphicsGroup().getChildren().add(0, overallHistogramGroup);
+//            getGraphicsGroup().getChildren().add(1, queryHistogramGroup);
+//        }
 
-        if (dataTableView.isShowingHistograms()) {
-            getGraphicsGroup().getChildren().add(0, overallHistogramGroup);
-            getGraphicsGroup().getChildren().add(1, queryHistogramGroup);
-        }
-
-        getGraphicsGroup().getChildren().addAll(minValueText, maxValueText, minFocusValueText, maxFocusValueText);
+        getGraphicsGroup().getChildren().add(0, overallHistogramGroup);
+        getGraphicsGroup().getChildren().add(1, queryHistogramGroup);
+        getGraphicsGroup().getChildren().addAll(minValueText, maxValueText, minFocusValueText, maxFocusValueText,
+                overallSummaryStatisticsGroup, querySummaryStatisticsGroup, nonquerySummaryStatisticsGroup);
 
         registerListeners();
     }
@@ -210,27 +213,46 @@ public class DoubleAxis extends UnivariateAxis {
 
         getDataTableView().showHistogramsProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue != null && newValue != oldValue) {
+
                 if (newValue) {
-                    getGraphicsGroup().getChildren().add(0, overallHistogramGroup);
-                    getGraphicsGroup().getChildren().add(1, queryHistogramGroup);
-                } else {
-                    getGraphicsGroup().getChildren().remove(overallHistogramGroup);
-                    getGraphicsGroup().getChildren().remove(queryHistogramGroup);
+                    resize(getBounds().getMinX(), getBounds().getMinY(), getBounds().getWidth(), getBounds().getHeight());
                 }
 
-                resize(getBounds().getMinX(), getBounds().getMinY(), getBounds().getWidth(), getBounds().getHeight());
+                overallHistogramGroup.setVisible(newValue);
+                queryHistogramGroup.setVisible(newValue);
+
+//                if (newValue) {
+//                    getGraphicsGroup().getChildren().add(0, overallHistogramGroup);
+//                    getGraphicsGroup().getChildren().add(1, queryHistogramGroup);
+//                } else {
+//                    getGraphicsGroup().getChildren().remove(overallHistogramGroup);
+//                    getGraphicsGroup().getChildren().remove(queryHistogramGroup);
+//                }
+
+//                resize(getBounds().getMinX(), getBounds().getMinY(), getBounds().getWidth(), getBounds().getHeight());
             }
         });
 
         getDataTableView().showSummaryStatisticsProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue != null && newValue != oldValue) {
-                resize(getBounds().getMinX(), getBounds().getMinY(), getBounds().getWidth(), getBounds().getHeight());
+                overallSummaryStatisticsGroup.setVisible(newValue);
 
-                if (!newValue) {
-                    getGraphicsGroup().getChildren().remove(overallSummaryStatisticsGroup);
-                    getGraphicsGroup().getChildren().remove(querySummaryStatisticsGroup);
-                    getGraphicsGroup().getChildren().remove(nonquerySummaryStatisticsGroup);
+                if (newValue) {
+                    resize(getBounds().getMinX(), getBounds().getMinY(), getBounds().getWidth(), getBounds().getHeight());
+                    querySummaryStatisticsGroup.setVisible(getDataTable().getCalculateQueryStatistics());
+                    nonquerySummaryStatisticsGroup.setVisible(getDataTable().getCalculateNonQueryStatistics());
+                } else {
+                    querySummaryStatisticsGroup.setVisible(false);
+                    nonquerySummaryStatisticsGroup.setVisible(false);
                 }
+
+//                resize(getBounds().getMinX(), getBounds().getMinY(), getBounds().getWidth(), getBounds().getHeight());
+
+//                if (!newValue) {
+//                    getGraphicsGroup().getChildren().remove(overallSummaryStatisticsGroup);
+//                    getGraphicsGroup().getChildren().remove(querySummaryStatisticsGroup);
+//                    getGraphicsGroup().getChildren().remove(nonquerySummaryStatisticsGroup);
+//                }
             }
         });
 
@@ -589,7 +611,7 @@ public class DoubleAxis extends UnivariateAxis {
                                     double binLowerBound = queryHistogram.getBinLowerBound(i);
                                     double binUpperBound = queryHistogram.getBinUpperBound(i);
 
-                                    if (binLowerBound > getMinFocusValue() && binUpperBound < getMaxFocusValue()) {
+                                    if (binLowerBound >= getMinFocusValue() && binUpperBound <= getMaxFocusValue()) {
                                         double binLowerY = GraphicsUtil.mapValue(binLowerBound, getMinFocusValue(), getMaxFocusValue(), getFocusMinPosition(), getFocusMaxPosition());
                                         double binUpperY = GraphicsUtil.mapValue(binUpperBound, getMinFocusValue(), getMaxFocusValue(), getFocusMinPosition(), getFocusMaxPosition());
 
@@ -623,8 +645,8 @@ public class DoubleAxis extends UnivariateAxis {
                         }
                     }
                 }
-            } else {
-                getGraphicsGroup().getChildren().removeAll(queryHistogramGroup, overallHistogramGroup);
+//            } else {
+//                getGraphicsGroup().getChildren().removeAll(queryHistogramGroup, overallHistogramGroup);
             }
 
             if (getDataTableView().isShowingSummaryStatistics()) {
@@ -673,9 +695,9 @@ public class DoubleAxis extends UnivariateAxis {
                     overallDispersionRectangle.setVisible(false);
                 }
 
-                if (!getGraphicsGroup().getChildren().contains(overallSummaryStatisticsGroup)) {
-                    getGraphicsGroup().getChildren().add(overallSummaryStatisticsGroup);
-                }
+//                if (!getGraphicsGroup().getChildren().contains(overallSummaryStatisticsGroup)) {
+//                    getGraphicsGroup().getChildren().add(overallSummaryStatisticsGroup);
+//                }
 
                 if (getDataTable().getActiveQuery().hasColumnSelections()) {
                     DoubleColumnSummaryStats queryColumnSummaryStats = (DoubleColumnSummaryStats)getDataTable().getActiveQuery().getColumnQuerySummaryStats(getColumn());
@@ -734,11 +756,11 @@ public class DoubleAxis extends UnivariateAxis {
                             queryDispersionRectangle.setVisible(false);
                         }
 
-                        if (!getGraphicsGroup().getChildren().contains(querySummaryStatisticsGroup)) {
-                            getGraphicsGroup().getChildren().add(querySummaryStatisticsGroup);
-                        }
-                    } else {
-                        getGraphicsGroup().getChildren().remove(querySummaryStatisticsGroup);
+//                        if (!getGraphicsGroup().getChildren().contains(querySummaryStatisticsGroup)) {
+//                            getGraphicsGroup().getChildren().add(querySummaryStatisticsGroup);
+//                        }
+//                    } else {
+//                        getGraphicsGroup().getChildren().remove(querySummaryStatisticsGroup);
                     }
 
                     // draw nonquery statistics shapes
@@ -789,11 +811,11 @@ public class DoubleAxis extends UnivariateAxis {
                             nonqueryDispersionRectangle.setVisible(false);
                         }
 
-                        if (!getGraphicsGroup().getChildren().contains(nonquerySummaryStatisticsGroup)) {
-                            getGraphicsGroup().getChildren().add(nonquerySummaryStatisticsGroup);
-                        }
-                    } else {
-                        getGraphicsGroup().getChildren().remove(nonquerySummaryStatisticsGroup);
+//                        if (!getGraphicsGroup().getChildren().contains(nonquerySummaryStatisticsGroup)) {
+//                            getGraphicsGroup().getChildren().add(nonquerySummaryStatisticsGroup);
+//                        }
+//                    } else {
+//                        getGraphicsGroup().getChildren().remove(nonquerySummaryStatisticsGroup);
                     }
 
                     if (getGraphicsGroup().getChildren().contains(axisSelectionGraphicsGroup)) {
@@ -801,8 +823,8 @@ public class DoubleAxis extends UnivariateAxis {
                         getGraphicsGroup().getChildren().remove(axisSelectionGraphicsGroup);
                         getGraphicsGroup().getChildren().add(idx+1, axisSelectionGraphicsGroup);
                     }
-                } else {
-                    getGraphicsGroup().getChildren().removeAll(querySummaryStatisticsGroup, nonquerySummaryStatisticsGroup);
+//                } else {
+//                    getGraphicsGroup().getChildren().removeAll(querySummaryStatisticsGroup, nonquerySummaryStatisticsGroup);
                 }
             }
         }
