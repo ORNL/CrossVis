@@ -134,7 +134,7 @@ public class DoubleColumnSummaryStats extends ColumnSummaryStats {
         for (int icol = 0; icol < getColumn().getDataModel().getColumns().size(); icol++) {
             Column otherColumn = getColumn().getDataModel().getColumn(icol);
             double coefficient = Double.NaN;
-            if (otherColumn == this.column) {
+            if ((otherColumn == this.column) &&  (values.length > 1)) {
                 // no need to computer correlation with itself
                 coefficient = 1d;
             } else if ((otherColumn instanceof DoubleColumn) && (values.length > 1)) {

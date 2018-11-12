@@ -565,24 +565,25 @@ public class DoubleAxis extends UnivariateAxis {
 
 //                for (int i = maxBinIndex; i < minBinIndex; i++) {
                 for (int i = 0; i < histogram.getNumBins(); i++) {
-                    double binLowerBound = histogram.getBinLowerBound(i);
-                    double binUpperBound = histogram.getBinUpperBound(i);
+                    if (histogram.getBinCount(i) > 0) {
+                        double binLowerBound = histogram.getBinLowerBound(i);
+                        double binUpperBound = histogram.getBinUpperBound(i);
 
-                    if (!(binLowerBound < getMinFocusValue()) && !(binUpperBound > getMaxFocusValue())) {
-                        double binLowerY = GraphicsUtil.mapValue(binLowerBound, getMinFocusValue(), getMaxFocusValue(), getFocusMinPosition(), getFocusMaxPosition());
-                        double binUpperY = GraphicsUtil.mapValue(binUpperBound, getMinFocusValue(), getMaxFocusValue(), getFocusMinPosition(), getFocusMaxPosition());
+                        if (!(binLowerBound < getMinFocusValue()) && !(binUpperBound > getMaxFocusValue())) {
+                            double binLowerY = GraphicsUtil.mapValue(binLowerBound, getMinFocusValue(), getMaxFocusValue(), getFocusMinPosition(), getFocusMaxPosition());
+                            double binUpperY = GraphicsUtil.mapValue(binUpperBound, getMinFocusValue(), getMaxFocusValue(), getFocusMinPosition(), getFocusMaxPosition());
 
 //                        double y = getFocusMaxPosition() + ((histogram.getNumBins() - i - 1) * binHeight);
-                        double binWidth = GraphicsUtil.mapValue(histogram.getBinCount(i),
-                                0, histogram.getMaxBinCount(),
-                                getAxisBar().getWidth() + 2, getAxisBar().getWidth() + 2 + maxHistogramBinWidth);
-                        double x = getBounds().getMinX() + ((width - binWidth) / 2.);
-                        Rectangle rectangle = new Rectangle(x, binUpperY, binWidth, binLowerY - binUpperY);
-                        rectangle.setStroke(histogramFill.darker());
-                        rectangle.setFill(histogramFill);
-                        overallHistogramGroup.getChildren().add(rectangle);
-                        overallHistogramRectangles.add(rectangle);
-                    }
+                            double binWidth = GraphicsUtil.mapValue(histogram.getBinCount(i),
+                                    0, histogram.getMaxBinCount(),
+                                    getAxisBar().getWidth() + 2, getAxisBar().getWidth() + 2 + maxHistogramBinWidth);
+                            double x = getBounds().getMinX() + ((width - binWidth) / 2.);
+                            Rectangle rectangle = new Rectangle(x, binUpperY, binWidth, binLowerY - binUpperY);
+                            rectangle.setStroke(histogramFill.darker());
+                            rectangle.setFill(histogramFill);
+                            overallHistogramGroup.getChildren().add(rectangle);
+                            overallHistogramRectangles.add(rectangle);
+                        }
 
 //                    double y = getFocusMaxPosition() + ((histogram.getNumBins() - i - 1) * binHeight);
 //                    double binWidth = GraphicsUtil.mapValue(histogram.getBinCount(i),
@@ -594,6 +595,7 @@ public class DoubleAxis extends UnivariateAxis {
 //                    rectangle.setFill(histogramFill);
 //                    overallHistogramGroup.getChildren().add(rectangle);
 //                    overallHistogramRectangles.add(rectangle);
+                    }
                 }
 
                 queryHistogramGroup.getChildren().clear();
