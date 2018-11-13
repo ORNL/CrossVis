@@ -419,6 +419,11 @@ public class TemporalAxis extends UnivariateAxis {
     public void resize(double center, double top, double width, double height) {
         super.resize(center, top, width, height);
 
+        if (getDataTableView().getHighlightedAxis() != null  && getDataTableView().getHighlightedAxis() instanceof DoubleAxis) {
+            // build a time series histogram of the data values for the highlighted axis (bin values and calculate means)
+            // Draw binned data inside this axis's bar (line graph of mean with possible error bars for stdev range)
+        }
+
         startInstantText.setX(getBounds().getMinX() + ((width - startInstantText.getLayoutBounds().getWidth()) / 2.));
         startInstantText.setY(getLowerContextBar().getLayoutBounds().getMaxY() + MINMAX_VALUE_TEXT_HEIGHT);
 //        startInstantText.setY(getFocusMinPosition() + startInstantText.getLayoutBounds().getHeight());

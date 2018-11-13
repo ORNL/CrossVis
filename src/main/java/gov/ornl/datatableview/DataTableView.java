@@ -1142,7 +1142,7 @@ public class DataTableView extends Region implements DataTableListener {
 
     public ObjectProperty<Axis> highlightedAxisProperty() { return highlightedAxis; }
 
-    private Axis getHighlightedAxis() {
+    public Axis getHighlightedAxis() {
         return highlightedAxis.get();
 //        if (dataTable.getHighlightedColumn() != null) {
 //            for (Axis axis : axisList) {
