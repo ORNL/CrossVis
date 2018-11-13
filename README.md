@@ -8,6 +8,10 @@
  The application is developed and maintained by the [Oak Ridge National Laboratory](http://www.ornl.gov)
  Computational Data Analytics Group.  The lead developer is [Dr. Chad A. Steed](http://csteed.com/).
 
+CrossVis is an evolution of the EDEN visual analytics tool.  If you are using CrossVis for your work, please use the following citation:
+
+Chad A.&nbsp;Steed, Daniel M.&nbsp;Ricciuto, Galen Shipman, Brian Smith, Peter E.&nbsp;Thornton, Dali Wang, and Dean N.&nbsp;Williams. Big Data Visual Analytics for Exploratory Earth System Simulation Analysis. Computers & Geosciences, 61:71-32, 2013. http://dx.doi.org/10.1016/j.cageo.2013.07.025
+
 **CrossVis** has the following software dependencies:
 * Java SDK or JRE version 1.8 or higher
 * Simple Logging Facade for Java (SLF4j) - a logging abstraction framework for Java (http://www.slf4j.org/).
