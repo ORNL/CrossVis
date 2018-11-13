@@ -230,25 +230,42 @@ public class DataTableView extends Region implements DataTableListener {
             }
         });
 
-        dataItemsOpacity.addListener((observable, oldValue, newValue) -> {
+        dataItemsOpacity.addListener((observable) -> {
             setSelectedItemsColor(new Color(getSelectedItemsColor().getRed(), getSelectedItemsColor().getGreen(),
-                    getSelectedItemsColor().getBlue(), getOpacity()));
+                    getSelectedItemsColor().getBlue(), getDataItemsOpacity()));
             setUnselectedItemsColor(new Color(getUnselectedItemsColor().getRed(), getUnselectedItemsColor().getGreen(),
-                    getUnselectedItemsColor().getBlue(), getOpacity()));
+                    getUnselectedItemsColor().getBlue(), getDataItemsOpacity()));
             if (!scatterplotList.isEmpty()) {
                 for (Scatterplot scatterplot : scatterplotList) {
                     scatterplot.setPointStrokeOpacity(getDataItemsOpacity());
                 }
             }
+
+            for (Axis axis : axisList) {
+                if (axis instanceof BivariateAxis) {
+                    ((BivariateAxis)axis).getScatterplot().setPointStrokeOpacity(getDataItemsOpacity());
+                }
+            }
             redrawView();
         });
 
-        selectedItemsColor.addListener((observable, oldValue, newValue) -> {
+        selectedItemsColor.addListener((observable) -> {
             if (!scatterplotList.isEmpty()) {
                 for (Scatterplot scatterplot : scatterplotList) {
                     scatterplot.setSelectedPointStrokeColor(getSelectedItemsColor());
                 }
             }
+
+            for (Axis axis : axisList) {
+                if (axis instanceof BivariateAxis) {
+                    ((BivariateAxis)axis).getScatterplot().setSelectedPointStrokeColor(getSelectedItemsColor());
+                }
+            }
+
+            Color strokeColor = new Color(getSelectedItemsColor().getRed(), getSelectedItemsColor().getGreen(),
+                    getSelectedItemsColor().getBlue(), 1.);
+            selectionIndicatorLineSelected.setStroke(strokeColor);
+
             redrawView();
         });
 
@@ -258,15 +275,33 @@ public class DataTableView extends Region implements DataTableListener {
                     scatterplot.setUnselectedPointStrokeColor(getUnselectedItemsColor());
                 }
             }
+
+            for (Axis axis : axisList) {
+                if (axis instanceof BivariateAxis) {
+                    ((BivariateAxis)axis).getScatterplot().setUnselectedPointStrokeColor(getUnselectedItemsColor());
+                }
+            }
+
+            Color strokeColor = new Color(getUnselectedItemsColor().getRed(), getUnselectedItemsColor().getGreen(),
+                    getUnselectedItemsColor().getBlue(), 1.);
+            selectionIndicatorLineUnselected.setStroke(strokeColor);
+
             redrawView();
         });
 
-        showSelectedItems.addListener(((observable, oldValue, newValue) -> {
+        showSelectedItems.addListener(((observable) -> {
             if (!scatterplotList.isEmpty()) {
                 for (Scatterplot scatterplot : scatterplotList) {
                     scatterplot.setShowSelectedPoints(isShowingSelectedItems());
                 }
             }
+
+            for (Axis axis : axisList) {
+                if (axis instanceof BivariateAxis) {
+                    ((BivariateAxis)axis).getScatterplot().setShowSelectedPoints(isShowingSelectedItems());
+                }
+            }
+            
             redrawView();
         }));
 
@@ -276,6 +311,13 @@ public class DataTableView extends Region implements DataTableListener {
                     scatterplot.setShowUnselectedPoints(isShowingUnselectedItems());
                 }
             }
+
+            for (Axis axis : axisList) {
+                if (axis instanceof BivariateAxis) {
+                    ((BivariateAxis)axis).getScatterplot().setShowUnselectedPoints(isShowingUnselectedItems());
+                }
+            }
+
             redrawView();
         }));
 
@@ -400,12 +442,16 @@ public class DataTableView extends Region implements DataTableListener {
         backgroundColor = new SimpleObjectProperty<>(DEFAULT_BACKGROUND_COLOR);
 
         selectionIndicatorLineUnselected = new Line();
-        selectionIndicatorLineUnselected.strokeProperty().bind(unselectedItemsColor);
+        Color strokeColor = new Color(getUnselectedItemsColor().getRed(), getUnselectedItemsColor().getGreen(),
+                getUnselectedItemsColor().getBlue(), 1.);
+        selectionIndicatorLineUnselected.setStroke(strokeColor);
         selectionIndicatorLineUnselected.setStrokeWidth(8);
         selectionIndicatorLineUnselected.setStrokeLineCap(StrokeLineCap.BUTT);
 
         selectionIndicatorLineSelected = new Line();
-        selectionIndicatorLineSelected.strokeProperty().bind(selectedItemsColor);
+        strokeColor = new Color(getSelectedItemsColor().getRed(), getSelectedItemsColor().getGreen(),
+                getSelectedItemsColor().getBlue(), 1.);
+        selectionIndicatorLineSelected.setStroke(strokeColor);
         selectionIndicatorLineSelected.setStrokeWidth(8);
         selectionIndicatorLineSelected.setStrokeLineCap(StrokeLineCap.BUTT);
 

@@ -62,7 +62,7 @@ public abstract class Axis {
     protected boolean dragging = false;
 
     protected Color histogramFill = DEFAULT_HISTOGRAM_FILL;
-    protected Color histogramStroke = DEFAULT_HISTOGRAM_STROKE;
+//    protected Color histogramStroke = DEFAULT_HISTOGRAM_STROKE;
     protected Color queryHistogramFill = DEFAULT_QUERY_HISTOGRAM_FILL;
 
     private Column column;

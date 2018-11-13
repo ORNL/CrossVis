@@ -106,7 +106,7 @@ public class DoubleAxis extends UnivariateAxis {
 
         queryDispersionRectangle = new Rectangle();
         Color dispersionFill = new Color(dataTableView.getSelectedItemsColor().getRed(), dataTableView.getSelectedItemsColor().getGreen(),
-                dataTableView.getSelectedItemsColor().getBlue(), 1.);
+                dataTableView.getSelectedItemsColor().getBlue(), 0.8);
         queryDispersionRectangle.setFill(dispersionFill);
         queryDispersionRectangle.setStroke(Color.DARKGRAY);
         queryDispersionRectangle.setSmooth(true);
@@ -119,7 +119,7 @@ public class DoubleAxis extends UnivariateAxis {
 
         nonqueryDispersionRectangle = new Rectangle();
         dispersionFill = new Color(dataTableView.getUnselectedItemsColor().getRed(), dataTableView.getUnselectedItemsColor().getGreen(),
-                dataTableView.getUnselectedItemsColor().getBlue(), 1.);
+                dataTableView.getUnselectedItemsColor().getBlue(), 0.8);
         nonqueryDispersionRectangle.setFill(dispersionFill);
         nonqueryDispersionRectangle.setStroke(Color.DARKGRAY);
         nonqueryDispersionRectangle.setSmooth(true);
@@ -204,11 +204,13 @@ public class DoubleAxis extends UnivariateAxis {
         maxFocusValueText.textProperty().bind(Bindings.convert(maxFocusValue));
 
         getDataTableView().selectedItemsColorProperty().addListener((observable, oldValue, newValue) -> {
-            queryDispersionRectangle.setFill(newValue);
+            Color dispersionFill = new Color(newValue.getRed(), newValue.getGreen(), newValue.getBlue(), 0.8);
+            queryDispersionRectangle.setFill(dispersionFill);
         });
 
         getDataTableView().unselectedItemsColorProperty().addListener((observable, oldValue, newValue) -> {
-            nonqueryDispersionRectangle.setFill(newValue);
+            Color dispersionFill = new Color(newValue.getRed(), newValue.getGreen(), newValue.getBlue(), 0.8);
+            nonqueryDispersionRectangle.setFill(dispersionFill);
         });
 
         getDataTableView().showHistogramsProperty().addListener((observable, oldValue, newValue) -> {
@@ -700,6 +702,8 @@ public class DoubleAxis extends UnivariateAxis {
 //                if (!getGraphicsGroup().getChildren().contains(overallSummaryStatisticsGroup)) {
 //                    getGraphicsGroup().getChildren().add(overallSummaryStatisticsGroup);
 //                }
+                querySummaryStatisticsGroup.setVisible(false);
+                nonquerySummaryStatisticsGroup.setVisible(false);
 
                 if (getDataTable().getActiveQuery().hasColumnSelections()) {
                     DoubleColumnSummaryStats queryColumnSummaryStats = (DoubleColumnSummaryStats)getDataTable().getActiveQuery().getColumnQuerySummaryStats(getColumn());
@@ -715,6 +719,7 @@ public class DoubleAxis extends UnivariateAxis {
 //                    }
 
                     if (queryColumnSummaryStats != null) {
+                        querySummaryStatisticsGroup.setVisible(true);
                         double queryTypicalValue;
                         double queryDispersionTopValue;
                         double queryDispersionBottomValue;
@@ -769,6 +774,7 @@ public class DoubleAxis extends UnivariateAxis {
                     DoubleColumnSummaryStats nonqueryColumnSummaryStats = (DoubleColumnSummaryStats)getDataTable().getActiveQuery().getColumnNonquerySummaryStats(getColumn());
 
                     if (nonqueryColumnSummaryStats != null) {
+                        nonquerySummaryStatisticsGroup.setVisible(true);
                         double nonqueryTypicalValue;
                         double nonqueryDispersionTopValue;
                         double nonqueryDispersionBottomValue;
@@ -826,6 +832,8 @@ public class DoubleAxis extends UnivariateAxis {
                         getGraphicsGroup().getChildren().add(idx+1, axisSelectionGraphicsGroup);
                     }
 //                } else {
+//                    querySummaryStatisticsGroup.setVisible(false);
+//                    nonquerySummaryStatisticsGroup.setVisible(false);
 //                    getGraphicsGroup().getChildren().removeAll(querySummaryStatisticsGroup, nonquerySummaryStatisticsGroup);
                 }
             }
