@@ -10,7 +10,7 @@
 
 CrossVis is an evolution of the EDEN visual analytics tool.  If you are using CrossVis for your work, please use the following citation:
 
-Chad A.&nbsp;Steed, Daniel M.&nbsp;Ricciuto, Galen Shipman, Brian Smith, Peter E.&nbsp;Thornton, Dali Wang, and Dean N.&nbsp;Williams. Big Data Visual Analytics for Exploratory Earth System Simulation Analysis. Computers & Geosciences, 61:71-32, 2013. http://dx.doi.org/10.1016/j.cageo.2013.07.025
+ * Chad A.&nbsp;Steed, Daniel M.&nbsp;Ricciuto, Galen Shipman, Brian Smith, Peter E.&nbsp;Thornton, Dali Wang, and Dean N.&nbsp;Williams. Big Data Visual Analytics for Exploratory Earth System Simulation Analysis. Computers & Geosciences, 61:71-32, 2013. http://dx.doi.org/10.1016/j.cageo.2013.07.025
 
 **CrossVis** has the following software dependencies:
 * Java SDK or JRE version 1.8 or higher
