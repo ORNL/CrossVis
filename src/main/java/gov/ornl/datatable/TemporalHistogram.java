@@ -160,24 +160,26 @@ public class TemporalHistogram extends Histogram {
         Arrays.fill(binCounts, 0);
         maxBinCount = 0;
 
-        for (Instant value : values) {
-            Duration valueOffsetDuration = Duration.between(startInstant, value);
-            int binIndex = (int) (valueOffsetDuration.toMillis() / binDuration.toMillis());
+        if (values != null) {
+            for (Instant value : values) {
+                Duration valueOffsetDuration = Duration.between(startInstant, value);
+                int binIndex = (int) (valueOffsetDuration.toMillis() / binDuration.toMillis());
 
-            if (binIndex < 0) {
-                // the value is smaller than the minValue
-            } else if (binIndex >= numBins) {
-                // if the value is equal to the max value increment the last bin
-                if (value.equals(endInstant)) {
-                    binCounts[numBins - 1]++;
-                    if (binCounts[numBins - 1] > maxBinCount) {
-                        maxBinCount = binCounts[numBins - 1];
+                if (binIndex < 0) {
+                    // the value is smaller than the minValue
+                } else if (binIndex >= numBins) {
+                    // if the value is equal to the max value increment the last bin
+                    if (value.equals(endInstant)) {
+                        binCounts[numBins - 1]++;
+                        if (binCounts[numBins - 1] > maxBinCount) {
+                            maxBinCount = binCounts[numBins - 1];
+                        }
                     }
-                }
-            } else {
-                binCounts[binIndex]++;
-                if (binCounts[binIndex] > maxBinCount) {
-                    maxBinCount = binCounts[binIndex];
+                } else {
+                    binCounts[binIndex]++;
+                    if (binCounts[binIndex] > maxBinCount) {
+                        maxBinCount = binCounts[binIndex];
+                    }
                 }
             }
         }

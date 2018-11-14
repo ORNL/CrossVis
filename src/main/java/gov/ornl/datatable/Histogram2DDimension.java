@@ -101,7 +101,11 @@ public abstract class Histogram2DDimension {
         }
 
         public int size() {
-            return data.length;
+            if (data != null) {
+                return data.length;
+            } else {
+                return 0;
+            }
         }
 
         public int getNumBins() {

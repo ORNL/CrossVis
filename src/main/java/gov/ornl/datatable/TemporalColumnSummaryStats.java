@@ -53,17 +53,19 @@ public class TemporalColumnSummaryStats extends ColumnSummaryStats {
         Instant start = null;
         Instant end = null;
 
-        int columnIndex = getColumn().getDataModel().getColumnIndex(column);
+//        int columnIndex = getColumn().getDataModel().getColumnIndex(column);
 
-        for (int i = 0; i < values.length; i++) {
-            Instant instant = values[i];
-            if (i == 0) {
-                start = end = instant;
-            } else {
-                if (instant.isBefore(start)) {
-                    start = instant;
-                } else if (instant.isAfter(end)) {
-                    end = instant;
+        if (values != null) {
+            for (int i = 0; i < values.length; i++) {
+                Instant instant = values[i];
+                if (i == 0) {
+                    start = end = instant;
+                } else {
+                    if (instant.isBefore(start)) {
+                        start = instant;
+                    } else if (instant.isAfter(end)) {
+                        end = instant;
+                    }
                 }
             }
         }
@@ -102,7 +104,11 @@ public class TemporalColumnSummaryStats extends ColumnSummaryStats {
 
     public void setStartInstant(Instant startInstant) {
         startInstantProperty().set(startInstant);
-        startLocalDateTimeProperty().set(LocalDateTime.ofInstant(startInstant, ZoneOffset.UTC));
+        if (startInstant == null) {
+            startLocalDateTimeProperty().set(null);
+        } else {
+            startLocalDateTimeProperty().set(LocalDateTime.ofInstant(startInstant, ZoneOffset.UTC));
+        }
     }
 
     public Instant getStartInstant() {
@@ -125,7 +131,11 @@ public class TemporalColumnSummaryStats extends ColumnSummaryStats {
 
     public void setEndInstant(Instant endInstant) {
         endInstantProperty().set(endInstant);
-        endLocalDateTimeProperty().set(LocalDateTime.ofInstant(endInstant, ZoneOffset.UTC));
+        if (endInstant != null) {
+            endLocalDateTimeProperty().set(LocalDateTime.ofInstant(endInstant, ZoneOffset.UTC));
+        } else {
+            endLocalDateTimeProperty().set(null);
+        }
     }
 
     public Instant getEndInstant() {

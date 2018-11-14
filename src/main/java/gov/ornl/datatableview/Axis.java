@@ -9,6 +9,7 @@ import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.scene.Group;
+import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.Tooltip;
@@ -55,12 +56,14 @@ public abstract class Axis {
 
     // dragging variables
     protected Group axisDraggingGraphicsGroup;
+    protected Text axisDraggingMessageText;
+
     protected Point2D dragStartPoint;
     protected Point2D dragEndPoint;
     protected boolean dragging = false;
 
     protected Color histogramFill = DEFAULT_HISTOGRAM_FILL;
-    protected Color histogramStroke = DEFAULT_HISTOGRAM_STROKE;
+//    protected Color histogramStroke = DEFAULT_HISTOGRAM_STROKE;
     protected Color queryHistogramFill = DEFAULT_QUERY_HISTOGRAM_FILL;
 
     private Column column;
@@ -78,6 +81,11 @@ public abstract class Axis {
         titleText.setSmooth(true);
         titleText.setFill(DEFAULT_TEXT_COLOR);
         titleText.setMouseTransparent(true);
+
+        axisDraggingMessageText = new Text();
+        axisDraggingMessageText.setFont(new Font(DEFAULT_TEXT_SIZE));
+        axisDraggingMessageText.setFill(DEFAULT_TEXT_COLOR);
+        axisDraggingMessageText.setMouseTransparent(true);
 
         titleTextRectangle = new Rectangle();
         titleTextRectangle.setStrokeWidth(3.);
@@ -168,14 +176,22 @@ public abstract class Axis {
             if (event.isSecondaryButtonDown()) {
                 final ContextMenu contextMenu = new ContextMenu();
                 MenuItem hideMenuItem = new MenuItem("Remove Axis");
-                MenuItem closeMenuItem = new MenuItem("Close Menu");
-                contextMenu.getItems().addAll(hideMenuItem, closeMenuItem);
                 hideMenuItem.setOnAction(removeEvent -> {
                     // remove this axis from the data table view
 //                    dataTableView.removeAxis(this);
                     getDataTable().disableColumn(column);
                 });
+
+                MenuItem closeMenuItem = new MenuItem("Close Menu");
                 closeMenuItem.setOnAction(closeEvent -> contextMenu.hide());
+
+                contextMenu.getItems().addAll(hideMenuItem, closeMenuItem);
+
+                if (this instanceof CategoricalAxis) {
+                    CheckMenuItem showCategoryLabels = new CheckMenuItem("Show Category Labels");
+                    showCategoryLabels.selectedProperty().bindBidirectional(((CategoricalAxis)this).showCategoryLabelsProperty());
+                    contextMenu.getItems().add(0, showCategoryLabels);
+                }
                 contextMenu.show(dataTableView, event.getScreenX(), event.getScreenY());
             }
         });
@@ -184,6 +200,9 @@ public abstract class Axis {
             if (!dragging) {
                 dragging = true;
                 makeAxisDraggingGraphics();
+                axisDraggingMessageText.setX(getCenterX());
+                axisDraggingMessageText.setY(getCenterY());
+                axisDraggingGraphicsGroup.getChildren().add(axisDraggingMessageText);
                 axisDraggingGraphicsGroup.setEffect(new DropShadow());
                 dataTableView.getPane().getChildren().add(axisDraggingGraphicsGroup);
                 dragStartPoint = new Point2D(event.getX(), event.getY());
@@ -191,6 +210,21 @@ public abstract class Axis {
 
             dragEndPoint = new Point2D(event.getX(), event.getY());
             axisDraggingGraphicsGroup.setTranslateX(event.getX() - dragStartPoint.getX());
+
+            axisDraggingMessageText.setText("Move " + this.getColumn().getName() + " Axis");
+            if (this instanceof UnivariateAxis) {
+                for (int i = 0; i < dataTableView.getAxisCount(); i++) {
+                    Axis axis = dataTableView.getAxis(i);
+                    if (axis instanceof UnivariateAxis) {
+                        if (dragEndPoint.getX() >= ((UnivariateAxis)axis).getBarLeftX() &&
+                                dragEndPoint.getX() <= ((UnivariateAxis)axis).getBarRightX()) {
+                            axisDraggingMessageText.setText("Create BiVariate Axis (" + this.getColumn().getName() + " vs. " + axis.getColumn().getName());
+                        }
+                    }
+                }
+            }
+
+            axisDraggingMessageText.setX(getCenterX() - axisDraggingMessageText.getLayoutBounds().getWidth() / 2.);
         });
 
         titleTextRectangle.setOnMouseReleased(event -> {

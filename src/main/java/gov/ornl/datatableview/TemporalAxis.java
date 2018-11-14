@@ -76,9 +76,6 @@ public class TemporalAxis extends UnivariateAxis {
 
         getAxisBar().setWidth(DEFAULT_BAR_WIDTH);
 
-//        startInstantText.setText(((TemporalColumn)column).getStatistics().getStartInstant().toString());
-//        endInstantText.setText(((TemporalColumn)column).getStatistics().getEndInstant().toString());
-
         overallHistogramGroup.setMouseTransparent(true);
         queryHistogramGroup.setMouseTransparent(true);
 
@@ -129,9 +126,6 @@ public class TemporalAxis extends UnivariateAxis {
 
         return GraphicsUtil.mapValue(instant, getFocusStartInstant(), getFocusEndInstant(),
                 getFocusMinPosition(), getFocusMaxPosition());
-//        double position = GraphicsUtil.mapValue(instant, temporalColumn().getStatistics().getStartInstant(),
-//                temporalColumn().getStatistics().getEndInstant(), getFocusMinPosition(), getFocusMaxPosition());
-//        return position;
     }
 
     @Override
@@ -146,9 +140,6 @@ public class TemporalAxis extends UnivariateAxis {
 
         return GraphicsUtil.mapValue(axisPosition, getFocusMinPosition(), getFocusMaxPosition(),
                 getFocusStartInstant(), getFocusEndInstant());
-//        Instant value = GraphicsUtil.mapValue(axisPosition, getFocusMinPosition(), getFocusMaxPosition(),
-//                temporalColumn().getStatistics().getStartInstant(), temporalColumn().getStatistics().getEndInstant());
-//        return value;
     }
 
     private void initAxisInteriorDataPlot() {
@@ -209,17 +200,12 @@ public class TemporalAxis extends UnivariateAxis {
             selectionMaxY = selectionMaxY < getFocusMaxPosition() ? getFocusMaxPosition() : selectionMaxY;
             selectionMinY = selectionMinY > getFocusMinPosition() ? getFocusMinPosition() : selectionMinY;
 
-//            Instant selectionEndInstant = GraphicsUtil.mapValue(selectionMaxY, getFocusMaxPosition(), getFocusMinPosition(),
-//                    temporalColumn().getStatistics().getEndInstant(), temporalColumn().getStatistics().getStartInstant());
-//            Instant selectionStartInstant = GraphicsUtil.mapValue(selectionMinY, getFocusMaxPosition(), getFocusMinPosition(),
-//                    temporalColumn().getStatistics().getEndInstant(), temporalColumn().getStatistics().getStartInstant());
             Instant selectionEndInstant = GraphicsUtil.mapValue(selectionMaxY, getFocusMaxPosition(), getFocusMinPosition(),
                     getFocusEndInstant(), getFocusStartInstant());
             Instant selectionStartInstant = GraphicsUtil.mapValue(selectionMinY, getFocusMaxPosition(), getFocusMinPosition(),
                     getFocusEndInstant(), getFocusStartInstant());
 
             if (draggingSelection == null) {
-//                    DoubleColumnSelectionRange selectionRange = dataModel.addColumnSelectionRangeToActiveQuery(column, minSelectionValue, maxSelectionValue);
                 TemporalColumnSelectionRange selectionRange = new TemporalColumnSelectionRange(temporalColumn(), selectionStartInstant, selectionEndInstant);
                 draggingSelection = new TemporalAxisSelection(this, selectionRange, selectionMinY, selectionMaxY);
                 axisSelectionGraphicsGroup.getChildren().add(draggingSelection.getGraphicsGroup());
@@ -421,11 +407,9 @@ public class TemporalAxis extends UnivariateAxis {
 
         startInstantText.setX(getBounds().getMinX() + ((width - startInstantText.getLayoutBounds().getWidth()) / 2.));
         startInstantText.setY(getLowerContextBar().getLayoutBounds().getMaxY() + MINMAX_VALUE_TEXT_HEIGHT);
-//        startInstantText.setY(getFocusMinPosition() + startInstantText.getLayoutBounds().getHeight());
 
         endInstantText.setX(getBounds().getMinX() + ((width - endInstantText.getLayoutBounds().getWidth()) / 2.));
         endInstantText.setY(getUpperContextBar().getLayoutBounds().getMinY() - 4);
-//        endInstantText.setY(getFocusMaxPosition() - 4);
 
         focusStartInstantText.setX(getBarRightX() + 4);
         focusStartInstantText.setY(getFocusMinPosition() + focusStartInstantText.getFont().getSize());
@@ -437,7 +421,7 @@ public class TemporalAxis extends UnivariateAxis {
             if (getDataTableView().isShowingHistograms()) {
                 // resize histogram bin information
                 TemporalHistogram histogram = temporalColumn().getStatistics().getHistogram();
-                double binHeight = (getFocusMinPosition() - getFocusMaxPosition()) / histogram.getNumBins();
+//                double binHeight = (getFocusMinPosition() - getFocusMaxPosition()) / histogram.getNumBins();
 
                 overallHistogramGroup.getChildren().clear();
                 overallHistogramRectangles.clear();
@@ -486,7 +470,6 @@ public class TemporalAxis extends UnivariateAxis {
                                         double binLowerY = GraphicsUtil.mapValue(binLowerBound, getFocusStartInstant(), getFocusEndInstant(), getFocusMinPosition(), getFocusMaxPosition());
                                         double binUpperY = GraphicsUtil.mapValue(binUpperBound, getFocusStartInstant(), getFocusEndInstant(), getFocusMinPosition(), getFocusMaxPosition());
 
-                                        //                                    double y = getFocusMaxPosition() + ((histogram.getNumBins() - i - 1) * binHeight);
                                         double binWidth = GraphicsUtil.mapValue(queryHistogram.getBinCount(i),
                                                 0, histogram.getMaxBinCount(), DEFAULT_BAR_WIDTH + 2,
                                                 DEFAULT_BAR_WIDTH + 2 + maxHistogramBinWidth);
