@@ -2,6 +2,8 @@ package gov.ornl.datatableview;
 
 import gov.ornl.datatable.*;
 import gov.ornl.util.GraphicsUtil;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.scene.Group;
 import javafx.scene.control.Tooltip;
 import javafx.scene.paint.Color;
@@ -37,6 +39,8 @@ public class CategoricalAxis extends UnivariateAxis {
     private Group nonQueryCategoriesRectangleGroup;
     private HashMap<String, Rectangle> nonQueryCategoriesRectangleMap = new HashMap<>();
 
+    private BooleanProperty showCategoryLabels = new SimpleBooleanProperty(true);
+
     public CategoricalAxis(DataTableView dataTableView, Column column) {
         super(dataTableView, column);
 
@@ -49,6 +53,16 @@ public class CategoricalAxis extends UnivariateAxis {
 
         registerListeners();
     }
+
+    public boolean isShowingCategoryLabels() { return showCategoryLabels.get(); }
+
+    public void setShowCategoryLabels(boolean show) {
+        if (show != isShowingCategoryLabels()) {
+            showCategoryLabels.set(show);
+        }
+    }
+
+    public BooleanProperty showCategoryLabelsProperty() { return showCategoryLabels; }
 
     @Override
     protected AxisSelection addAxisSelection(ColumnSelection columnSelection) {
@@ -101,6 +115,7 @@ public class CategoricalAxis extends UnivariateAxis {
     }
 
     private void registerListeners() {
+        categoriesNameGraphicsGroup.visibleProperty().bind(showCategoryLabelsProperty());
     }
 
     private void handleCategoryRectangleClicked(Rectangle rectangle, String category) {
@@ -244,7 +259,10 @@ public class CategoricalAxis extends UnivariateAxis {
                         queryRectangle.setArcHeight(6);
                         queryRectangle.setArcWidth(6);
                         queryRectangle.setStroke(DEFAULT_QUERY_STROKE_COLOR);
-                        queryRectangle.setFill(getDataTableView().getSelectedItemsColor());
+                        queryRectangle.setFill(new Color(getDataTableView().getSelectedItemsColor().getRed(),
+                                getDataTableView().getSelectedItemsColor().getGreen(),
+                                getDataTableView().getSelectedItemsColor().getBlue(),
+                                1.0));
                         queryRectangle.setMouseTransparent(true);
 
                         queryCategoriesRectangleMap.put(category, queryRectangle);
@@ -265,7 +283,10 @@ public class CategoricalAxis extends UnivariateAxis {
                         nonQueryRectangle.setArcHeight(6);
                         nonQueryRectangle.setArcWidth(6);
                         nonQueryRectangle.setStroke(DEFAULT_QUERY_STROKE_COLOR);
-                        nonQueryRectangle.setFill(getDataTableView().getUnselectedItemsColor());
+                        nonQueryRectangle.setFill(new Color(getDataTableView().getUnselectedItemsColor().getRed(),
+                                getDataTableView().getUnselectedItemsColor().getGreen(),
+                                getDataTableView().getUnselectedItemsColor().getBlue(),
+                                1.0));
                         nonQueryRectangle.setMouseTransparent(true);
 
                         nonQueryCategoriesRectangleMap.put(category, nonQueryRectangle);

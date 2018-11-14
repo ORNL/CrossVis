@@ -9,6 +9,7 @@ import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.scene.Group;
+import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.Tooltip;
@@ -175,14 +176,22 @@ public abstract class Axis {
             if (event.isSecondaryButtonDown()) {
                 final ContextMenu contextMenu = new ContextMenu();
                 MenuItem hideMenuItem = new MenuItem("Remove Axis");
-                MenuItem closeMenuItem = new MenuItem("Close Menu");
-                contextMenu.getItems().addAll(hideMenuItem, closeMenuItem);
                 hideMenuItem.setOnAction(removeEvent -> {
                     // remove this axis from the data table view
 //                    dataTableView.removeAxis(this);
                     getDataTable().disableColumn(column);
                 });
+
+                MenuItem closeMenuItem = new MenuItem("Close Menu");
                 closeMenuItem.setOnAction(closeEvent -> contextMenu.hide());
+
+                contextMenu.getItems().addAll(hideMenuItem, closeMenuItem);
+
+                if (this instanceof CategoricalAxis) {
+                    CheckMenuItem showCategoryLabels = new CheckMenuItem("Show Category Labels");
+                    showCategoryLabels.selectedProperty().bindBidirectional(((CategoricalAxis)this).showCategoryLabelsProperty());
+                    contextMenu.getItems().add(0, showCategoryLabels);
+                }
                 contextMenu.show(dataTableView, event.getScreenX(), event.getScreenY());
             }
         });

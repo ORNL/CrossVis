@@ -7,6 +7,7 @@ import javafx.beans.property.*;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
+import javafx.geometry.VPos;
 import javafx.scene.Group;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.canvas.Canvas;
@@ -18,6 +19,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.StrokeLineCap;
+import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.transform.Scale;
 
@@ -42,7 +44,7 @@ public class DataTableView extends Region implements DataTableListener {
     private final static int DEFAULT_CORRELATION_RECTANGLE_WIDTH = 24;
     private final static POLYLINE_DISPLAY_MODE DEFAULT_POLYLINE_DISPLAY_MODE = POLYLINE_DISPLAY_MODE.POLYLINES;
 
-    private final static int DEFAULT_SELECTION_INDICATOR_LINE_SIZE = 14;
+    private final static int DEFAULT_SELECTION_INDICATOR_LINE_SIZE = 20;
 
     private static final DecimalFormat percentageFormat = new DecimalFormat("0.0#%");
 
@@ -61,6 +63,7 @@ public class DataTableView extends Region implements DataTableListener {
 
     private Line selectionIndicatorLineUnselected;
     private Line selectionIndicatorLineSelected;
+    private Text selectionIndicatorText;
 
     private DoubleProperty dataItemsOpacity;
 
@@ -445,16 +448,21 @@ public class DataTableView extends Region implements DataTableListener {
         Color strokeColor = new Color(getUnselectedItemsColor().getRed(), getUnselectedItemsColor().getGreen(),
                 getUnselectedItemsColor().getBlue(), 1.);
         selectionIndicatorLineUnselected.setStroke(strokeColor);
-        selectionIndicatorLineUnselected.setStrokeWidth(8);
+        selectionIndicatorLineUnselected.setStrokeWidth(DEFAULT_SELECTION_INDICATOR_LINE_SIZE / 2.);
         selectionIndicatorLineUnselected.setStrokeLineCap(StrokeLineCap.BUTT);
 
         selectionIndicatorLineSelected = new Line();
         strokeColor = new Color(getSelectedItemsColor().getRed(), getSelectedItemsColor().getGreen(),
                 getSelectedItemsColor().getBlue(), 1.);
         selectionIndicatorLineSelected.setStroke(strokeColor);
-        selectionIndicatorLineSelected.setStrokeWidth(8);
+        selectionIndicatorLineSelected.setStrokeWidth(DEFAULT_SELECTION_INDICATOR_LINE_SIZE / 2.);
         selectionIndicatorLineSelected.setStrokeLineCap(StrokeLineCap.BUTT);
 
+        selectionIndicatorText = new Text("Percent Selected Indicator");
+        selectionIndicatorText.setFill(DEFAULT_LABEL_COLOR);
+        selectionIndicatorText.setFont(Font.font(Axis.DEFAULT_TEXT_SIZE));
+//        selectionIndicatorText.setRotate(-90.);
+//        selectionIndicatorText.setTextOrigin(VPos.CENTER);
 //        summaryShapeGroup = new Group();
 
 //        plotRegionRectangle = new Rectangle();
@@ -462,7 +470,7 @@ public class DataTableView extends Region implements DataTableListener {
 //        plotRegionRectangle.setFill(Color.TRANSPARENT);
 //        plotRegionRectangle.setMouseTransparent(true);
 //        plotRegionRectangle.setStrokeWidth(1.5);
-//
+////
 //        pcpRegionRectangle = new Rectangle();
 //        pcpRegionRectangle.setStroke(Color.ORANGE);
 //        pcpRegionRectangle.setStrokeWidth(1.5);
@@ -483,7 +491,8 @@ public class DataTableView extends Region implements DataTableListener {
 
         pane = new Pane();
         pane.setBackground(new Background(new BackgroundFill(backgroundColor.get(), new CornerRadii(0), Insets.EMPTY)));
-        pane.getChildren().addAll(unselectedCanvas, selectedCanvas, correlationRectangleGroup, selectionIndicatorLineSelected);
+        pane.getChildren().addAll(unselectedCanvas, selectedCanvas, correlationRectangleGroup, selectionIndicatorLineSelected,
+                selectionIndicatorText);
 //        pane.getChildren().add(plotRegionRectangle);
         getChildren().add(pane);
     }
@@ -567,7 +576,9 @@ public class DataTableView extends Region implements DataTableListener {
             double percentSelectedY = GraphicsUtil.mapValue(percentSelected, 0, 1,
                     plotRegionBounds.getMaxY(), plotRegionBounds.getMinY());
 
-            selectionIndicatorLineSelected.setStartX(getInsets().getLeft() + (DEFAULT_SELECTION_INDICATOR_LINE_SIZE / 2.));
+//            selectionIndicatorLineSelected.setStartX(getInsets().getLeft() + (DEFAULT_SELECTION_INDICATOR_LINE_SIZE / 2.));
+//            selectionIndicatorLineSelected.setStartX(plotRegionBounds.getMinX() - (DEFAULT_SELECTION_INDICATOR_LINE_SIZE / 2.));
+            selectionIndicatorLineSelected.setStartX(plotRegionBounds.getMinX() - (selectionIndicatorLineSelected.getStrokeWidth() / 2.));
             selectionIndicatorLineSelected.setEndX(selectionIndicatorLineSelected.getStartX());
             selectionIndicatorLineSelected.setStartY(plotRegionBounds.getMaxY());
             selectionIndicatorLineSelected.setEndY(percentSelectedY);
@@ -586,7 +597,8 @@ public class DataTableView extends Region implements DataTableListener {
         } else {
             pane.getChildren().remove(selectionIndicatorLineUnselected);
 
-            selectionIndicatorLineSelected.setStartX(getInsets().getLeft() + (DEFAULT_SELECTION_INDICATOR_LINE_SIZE / 2.));
+            selectionIndicatorLineSelected.setStartX(plotRegionBounds.getMinX() - (selectionIndicatorLineSelected.getStrokeWidth() / 2.));
+//            selectionIndicatorLineSelected.setStartX(getInsets().getLeft() + (DEFAULT_SELECTION_INDICATOR_LINE_SIZE / 2.));
             selectionIndicatorLineSelected.setEndX(selectionIndicatorLineSelected.getStartX());
             selectionIndicatorLineSelected.setStartY(plotRegionBounds.getMaxY());
             selectionIndicatorLineSelected.setEndY(plotRegionBounds.getMinY());
@@ -594,35 +606,15 @@ public class DataTableView extends Region implements DataTableListener {
             Tooltip tooltip = new Tooltip("0 of " + dataTable.getTupleCount() + " data items selected");
             Tooltip.install(selectionIndicatorLineSelected, tooltip);
         }
-//        selectionIndicatorLineAll.setStartX(getInsets().getLeft() + (DEFAULT_SELECTION_INDICATOR_LINE_SIZE / 2.));
-//        selectionIndicatorLineAll.setEndX(selectionIndicatorLineAll.getStartX());
-//        selectionIndicatorLineAll.setStartY(plotRegionBounds.getMaxY());
-//        selectionIndicatorLineAll.setEndY(plotRegionBounds.getMinY());
-//
-//        if (dataTable.getActiveQuery().hasColumnSelections()) {
-//            if (!pane.getChildren().contains(selectionIndicatorLineSelected)) {
-//                pane.getChildren().add(selectionIndicatorLineSelected);
-//            }
-//
-//            double percentSelected = (double)dataTable.getActiveQuery().getQueriedTupleCount() / dataTable.getTupleCount();
-//
-//            selectionIndicatorLineSelected.setStartX(selectionIndicatorLineAll.getStartX());
-//            selectionIndicatorLineSelected.setEndX(selectionIndicatorLineAll.getStartX());
-//            selectionIndicatorLineSelected.setStartY(plotRegionBounds.getMaxY());
-//            double endY = GraphicsUtil.mapValue(percentSelected, 0, 1,
-//                    selectionIndicatorLineAll.getStartY(), selectionIndicatorLineAll.getEndY());
-//            selectionIndicatorLineSelected.setEndY(endY);
-////                    selectionIndicatorLineSelected.setEndY(plotRegionBounds.getMaxY() - plotRegionBounds.getHeight() / 2.);
-//
-//            tooltip = new Tooltip(dataTable.getActiveQuery().getQueriedTupleCount() + " of " + dataTable.getTupleCount() +
-//                    "(" + percentageFormat.format(percentSelected) + ") data items selected");
-//            Tooltip.install(selectionIndicatorLineSelected, tooltip);
-//        } else {
-//            pane.getChildren().remove(selectionIndicatorLineSelected);
-//            tooltip = new Tooltip("0 of " + dataTable.getTupleCount() + " data items selected");
-//        }
 
-//        Tooltip.install(selectionIndicatorLineSelected, tooltip);
+
+//        selectionIndicatorText.setX(selectionIndicatorLineSelected.getEndX() + (selectionIndicatorLineSelected.getLayoutBounds().getWidth() / 2.));
+//        selectionIndicatorText.setX(getInsets().getLeft() - (selectionIndicatorText.getLayoutBounds().getWidth() / 2.) + selectionIndicatorText.getLayoutBounds().getHeight());
+
+        selectionIndicatorText.setX((selectionIndicatorLineSelected.getStartX() - (DEFAULT_SELECTION_INDICATOR_LINE_SIZE / 2.)) - (selectionIndicatorText.getLayoutBounds().getWidth() / 2.) - 2.);
+        selectionIndicatorText.setY(plotRegionBounds.getMinY() + (plotRegionBounds.getHeight() / 2.));
+//        selectionIndicatorText.setY(selectionIndicatorLineSelected.getEndY() + (selectionIndicatorLineSelected.getLayoutBounds().getHeight() / 2.));
+        selectionIndicatorText.setRotate(-90);
     }
 
     protected void resizeView() {
@@ -736,7 +728,7 @@ public class DataTableView extends Region implements DataTableListener {
                                 }
                             }
 
-                            if (dataTable.getHighlightedColumn() == null || !(getHighlightedAxis() instanceof DoubleAxis || getHighlightedAxis() instanceof TemporalAxis)) {
+                            if (dataTable.getHighlightedColumn() == null || !(getHighlightedAxis() instanceof UnivariateAxis)) {
                                 double centerX = (yAxis.getCenterX() + xAxis.getCenterX()) / 2.;
                                 double left = centerX - (scatterplotSize / 2.) - (scatterplot.getAxisSize() / 2.);
                                 scatterplot.resize(left, scatterplotRegionBounds.getMinY(), scatterplotSize, scatterplotSize);
@@ -1054,10 +1046,10 @@ public class DataTableView extends Region implements DataTableListener {
 
         if (isShowingScatterplots()) {
             Axis highlightedAxis = getHighlightedAxis();
-            if (highlightedAxis != null && (highlightedAxis instanceof TemporalAxis || highlightedAxis instanceof DoubleAxis)) {
+            if (highlightedAxis != null && (highlightedAxis instanceof UnivariateAxis)) {
                 for (int iaxis = 0; iaxis < axisList.size(); iaxis++) {
                     Axis currentAxis = axisList.get(iaxis);
-                    if (highlightedAxis != currentAxis && (currentAxis instanceof TemporalAxis || currentAxis instanceof DoubleAxis)) {
+                    if (highlightedAxis != currentAxis && (currentAxis instanceof UnivariateAxis)) {
                         Scatterplot scatterplot = new Scatterplot(highlightedAxis.getColumn(), currentAxis.getColumn(), getSelectedItemsColor(),
                                 getUnselectedItemsColor(), getDataItemsOpacity());
                         scatterplotList.add(scatterplot);
@@ -1068,8 +1060,7 @@ public class DataTableView extends Region implements DataTableListener {
                 for (int iaxis = 1; iaxis < axisList.size(); iaxis++) {
                     Axis xAxis = axisList.get(iaxis);
                     Axis yAxis = axisList.get(iaxis - 1);
-                    if ((xAxis instanceof TemporalAxis || xAxis instanceof DoubleAxis) &&
-                            (yAxis instanceof TemporalAxis || yAxis instanceof DoubleAxis)) {
+                    if ((xAxis instanceof UnivariateAxis) && (yAxis instanceof UnivariateAxis)) {
                         Scatterplot scatterplot = new Scatterplot(xAxis.getColumn(), yAxis.getColumn(), getSelectedItemsColor(),
                                 getUnselectedItemsColor(), getDataItemsOpacity());
                         scatterplotList.add(scatterplot);

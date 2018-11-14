@@ -18,6 +18,8 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Random;
 import java.util.logging.Logger;
 
 public class Scatterplot {
@@ -88,6 +90,8 @@ public class Scatterplot {
     private Instant yAxisStartInstant;
     private Instant yAxisEndInstant;
 
+    private double categoryPadding = 4.;
+
 //    private ArrayList<EventHandler> selectionEventHandlers = new ArrayList<>();
 
 //    public Scatterplot(Column xColumn, Column yColumn) {
@@ -139,12 +143,6 @@ public class Scatterplot {
         registerListeners();
     }
 
-//    public void setOnSelectionDragged(EventHandler handler) {
-//        if (!selectionEventHandlers.contains(handler)) {
-//            selectionEventHandlers.add(handler);
-//        }
-//    }
-
     public Rectangle getPlotRectangle() { return plotRectangle; }
 
     public Bounds getPlotBounds() { return plotBounds; }
@@ -162,7 +160,6 @@ public class Scatterplot {
 
         return null;
     }
-
 
     public Object getXAxisMinValue() {
         if (xColumn instanceof DoubleColumn) {
@@ -183,7 +180,6 @@ public class Scatterplot {
 
         return null;
     }
-
 
     public Object getYAxisMinValue() {
         if (yColumn instanceof DoubleColumn) {
@@ -329,12 +325,6 @@ public class Scatterplot {
         });
     }
 
-//    private void fireSelectionEventHandlers() {
-//        for (EventHandler eventHandler : selectionEventHandlers) {
-//            eventHandler.handle(new ActionEvent(this, null));
-//        }
-//    }
-
     public void resize(double left, double top, double width, double height) {
         yAxisBounds = new BoundingBox(left, top, getAxisSize(), height - getAxisSize());
         xAxisBounds = new BoundingBox(yAxisBounds.getMaxX(), yAxisBounds.getMaxY(), width - getAxisSize(), getAxisSize());
@@ -414,6 +404,10 @@ public class Scatterplot {
         double yMinValuePosition = 0;
         double yMaxValuePosition = 0;
 
+        ArrayList<Double> xCategoryCenters = new ArrayList<>();
+        ArrayList<Double> yCategoryCenters = new ArrayList<>();
+        Random categoryJitter = new Random(System.currentTimeMillis());
+
         if (xColumn instanceof DoubleColumn) {
             double xRangePadding = (((DoubleColumn) xColumn).getStatistics().getMaxValue() -
                     ((DoubleColumn) xColumn).getStatistics().getMinValue()) * .05;
@@ -430,6 +424,17 @@ public class Scatterplot {
 
             xMinValuePosition = GraphicsUtil.mapValue(((TemporalColumn)xColumn).getStatistics().getStartInstant(), xAxisStartInstant, xAxisEndInstant, 0, plotBounds.getWidth());
             xMaxValuePosition = GraphicsUtil.mapValue(((TemporalColumn)xColumn).getStatistics().getEndInstant(), xAxisStartInstant, xAxisEndInstant, 0, plotBounds.getWidth());
+        } else if (xColumn instanceof CategoricalColumn) {
+            CategoricalColumn categoricalColumn = (CategoricalColumn)xColumn;
+
+            double categorySpacing = (plotBounds.getWidth() - (categoryPadding * (categoricalColumn.getCategories().size() + 1))) / categoricalColumn.getCategories().size();
+
+            for (int i = 0; i < categoricalColumn.getCategories().size(); i++) {
+                double left = categoryPadding + (i * categorySpacing) + (i * categoryPadding);
+                double right = left + categorySpacing;
+                double center = left + ((right - left) / 2.);
+                xCategoryCenters.add(center);
+            }
         }
 
         if (yColumn instanceof DoubleColumn) {
@@ -448,6 +453,17 @@ public class Scatterplot {
 
             yMinValuePosition = GraphicsUtil.mapValue(((TemporalColumn)yColumn).getStatistics().getStartInstant(), yAxisStartInstant, yAxisEndInstant, 0, plotBounds.getHeight());
             yMaxValuePosition = GraphicsUtil.mapValue(((TemporalColumn)yColumn).getStatistics().getEndInstant(), yAxisStartInstant, yAxisEndInstant, 0, plotBounds.getHeight());
+        } else if (yColumn instanceof CategoricalColumn) {
+            CategoricalColumn categoricalColumn = (CategoricalColumn)yColumn;
+
+            double categorySpacing = (plotBounds.getWidth() - (categoryPadding * (categoricalColumn.getCategories().size() + 1))) / categoricalColumn.getCategories().size();
+
+            for (int i = 0; i < categoricalColumn.getCategories().size(); i++) {
+                double top = categoryPadding + (i * categorySpacing) + (i * categoryPadding);
+                double bottom = top + categorySpacing;
+                double center = top + ((bottom - top) / 2.);
+                yCategoryCenters.add(center);
+            }
         }
 
         dataBounds = new BoundingBox(xMinValuePosition, yMinValuePosition, xMaxValuePosition - xMinValuePosition,
@@ -491,6 +507,105 @@ public class Scatterplot {
                 double point[] = new double[2];
                 point[0] = GraphicsUtil.mapValue(xValues[i], xAxisStartInstant, xAxisEndInstant, 0, plotBounds.getWidth());
                 point[1] = GraphicsUtil.mapValue(yValues[i], yAxisMinDoubleValue, yAxisMaxDoubleValue, plotBounds.getHeight(), 0.);
+                points.add(point);
+            }
+        } else if (xColumn instanceof CategoricalColumn && yColumn instanceof DoubleColumn) {
+            List<String> xCategoryValues = ((CategoricalColumn)xColumn).getValuesAsList();
+            ArrayList<String> categories = ((CategoricalColumn)xColumn).getCategories();
+            double yValues[] = ((DoubleColumn)yColumn).getValues();
+
+            for (int i = 0; i < xCategoryValues.size(); i++) {
+                int categoryIdx = categories.indexOf(xCategoryValues.get(i));
+                double categoryCenter = xCategoryCenters.get(categoryIdx);
+//                double jitter = categoryJitter.nextDouble() * ((categoryBounds[1] - categoryBounds[0]) / 2.);
+                double jitter = categoryJitter.nextDouble() * 2.;
+                if (categoryJitter.nextBoolean()) {
+                    jitter *= -1.;
+                }
+                double point[] = new double[2];
+                point[0] = categoryCenter + jitter;
+                point[1] = GraphicsUtil.mapValue(yValues[i], yAxisMinDoubleValue, yAxisMaxDoubleValue, plotBounds.getHeight(), 0.);
+                points.add(point);
+            }
+        } else if (xColumn instanceof CategoricalColumn && yColumn instanceof TemporalColumn) {
+            List<String> xCategoryValues = ((CategoricalColumn)xColumn).getValuesAsList();
+            ArrayList<String> categories = ((CategoricalColumn)xColumn).getCategories();
+            Instant yValues[] = ((TemporalColumn)yColumn).getValues();
+
+            for (int i = 0; i < xCategoryValues.size(); i++) {
+                int categoryIdx = categories.indexOf(xCategoryValues.get(i));
+                double categoryCenter = xCategoryCenters.get(categoryIdx);
+//                double jitter = categoryJitter.nextDouble() * ((categoryBounds[1] - categoryBounds[0]) / 2.);
+                double jitter = categoryJitter.nextDouble() * 2.;
+                if (categoryJitter.nextBoolean()) {
+                    jitter *= -1.;
+                }
+                double point[] = new double[2];
+                point[0] = categoryCenter + jitter;
+                point[1] = GraphicsUtil.mapValue(yValues[i], yAxisStartInstant, yAxisEndInstant, 0, plotBounds.getWidth());
+                points.add(point);
+            }
+        }  else if (xColumn instanceof DoubleColumn && yColumn instanceof CategoricalColumn) {
+            List<String> yCategoryValues = ((CategoricalColumn)yColumn).getValuesAsList();
+            ArrayList<String> categories = ((CategoricalColumn)yColumn).getCategories();
+            double xValues[] = ((DoubleColumn)xColumn).getValues();
+
+            for (int i = 0; i < yCategoryValues.size(); i++) {
+
+                int categoryIdx = categories.indexOf(yCategoryValues.get(i));
+                double categoryCenter = yCategoryCenters.get(categoryIdx);
+//                double jitter = categoryJitter.nextDouble() * ((categoryBounds[1] - categoryBounds[0]) / 2.);
+                double jitter = categoryJitter.nextDouble() * 2.;
+                if (categoryJitter.nextBoolean()) {
+                    jitter *= -1.;
+                }
+                double point[] = new double[2];
+                point[1] = categoryCenter + jitter;
+                point[0] = GraphicsUtil.mapValue(xValues[i], xAxisMinDoubleValue, xAxisMaxDoubleValue, plotBounds.getHeight(), 0.);
+                points.add(point);
+            }
+        }  else if (xColumn instanceof TemporalColumn && yColumn instanceof CategoricalColumn) {
+            List<String> yCategoryValues = ((CategoricalColumn)yColumn).getValuesAsList();
+            ArrayList<String> categories = ((CategoricalColumn)yColumn).getCategories();
+            Instant xValues[] = ((TemporalColumn)xColumn).getValues();
+
+            for (int i = 0; i < yCategoryValues.size(); i++) {
+
+                int categoryIdx = categories.indexOf(yCategoryValues.get(i));
+                double categoryCenter = yCategoryCenters.get(categoryIdx);
+                double jitter = categoryJitter.nextDouble() * 2.;
+                if (categoryJitter.nextBoolean()) {
+                    jitter *= -1.;
+                }
+                double point[] = new double[2];
+                point[1] = categoryCenter + jitter;
+                point[0] = GraphicsUtil.mapValue(xValues[i], xAxisStartInstant, xAxisEndInstant, 0, plotBounds.getWidth());
+                points.add(point);
+            }
+        }  else if (xColumn instanceof CategoricalColumn && yColumn instanceof CategoricalColumn) {
+            List<String> yCategoryValues = ((CategoricalColumn)yColumn).getValuesAsList();
+            ArrayList<String> yCategories = ((CategoricalColumn)yColumn).getCategories();
+            List<String> xCategoryValues = ((CategoricalColumn)xColumn).getValuesAsList();
+            ArrayList<String> xCategories = ((CategoricalColumn)xColumn).getCategories();
+
+            for (int i = 0; i < yCategoryValues.size(); i++) {
+                double point[] = new double[2];
+                int categoryIdx = yCategories.indexOf(yCategoryValues.get(i));
+                double categoryCenter = yCategoryCenters.get(categoryIdx);
+                double jitter = categoryJitter.nextDouble() * 2.;
+                if (categoryJitter.nextBoolean()) {
+                    jitter *= -1.;
+                }
+                point[1] = categoryCenter + jitter;
+
+                categoryIdx = xCategories.indexOf(xCategoryValues.get(i));
+                categoryCenter = xCategoryCenters.get(categoryIdx);
+                jitter = categoryJitter.nextDouble() * 2.;
+                if (categoryJitter.nextBoolean()) {
+                    jitter *= -1.;
+                }
+                point[0] = categoryCenter + jitter;
+
                 points.add(point);
             }
         }
