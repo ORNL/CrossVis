@@ -757,6 +757,8 @@ public class DataTableView extends Region implements DataTableListener {
             }
 
             redrawView();
+        } else {
+            pane.setPrefSize(getWidth(), getHeight());
         }
     }
 
