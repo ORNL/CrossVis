@@ -404,8 +404,9 @@ public class CrossVis extends Application implements DataTableListener {
         statusBar = new StatusBar();
 
         percentSelectedProgress = new ProgressBar();
-        percentSelectedProgress.setProgress(0.0);
+        percentSelectedProgress.setProgress(0.05);
         percentSelectedProgress.setTooltip(new Tooltip("Selected Tuples Percentage"));
+        percentSelectedProgress.setPrefWidth(300);
 
         statusBar.getLeftItems().add(percentSelectedProgress);
 
@@ -447,10 +448,9 @@ public class CrossVis extends Application implements DataTableListener {
             ToolBar toolBar = createToolBar(mainStage);
 
             createStatusBar();
-//        statusBar.progressProperty().bindBidirectional(pcpView.drawingProgressProperty());
 
             MenuBar menuBar = createMenuBar(mainStage);
-            menuBar.setUseSystemMenuBar(true);
+//            menuBar.setUseSystemMenuBar(true);
 
             createColumnTableViews();
 
@@ -1075,8 +1075,9 @@ public class CrossVis extends Application implements DataTableListener {
 
     private void updatePercentSelected() {
         if (dataTable != null && !dataTable.isEmpty()) {
-            double percentSelected = (double) dataTable.getActiveQuery().getQueriedTupleCount() / dataTable.getTupleCount();
+            double percentSelected = (double)dataTable.getActiveQuery().getQueriedTupleCount() / dataTable.getTupleCount();
             percentSelectedProgress.setProgress(percentSelected);
+            log.info("percentSelected is " + percentSelected);
             statusBar.setText(" " + dataTable.getActiveQuery().getQueriedTupleCount() + " of " + dataTable.getTupleCount() + " tuples selected (" + decimalFormat.format(percentSelected) + ")");
         } else {
             statusBar.setText(" Ready ");
