@@ -169,54 +169,56 @@ public class CategoricalAxis extends UnivariateAxis {
 
             for (String category : histogram.getCategories()) {
                 int categoryCount = histogram.getCategoryCount(category);
-                double y = lastRectangleBottomY;
-                double categoryHeight = GraphicsUtil.mapValue(categoryCount, 0, histogram.getTotalCount(), 0, getFocusMinPosition()-getFocusMaxPosition());
+                if (categoryCount > 0) {
+                    double y = lastRectangleBottomY;
+                    double categoryHeight = GraphicsUtil.mapValue(categoryCount, 0, histogram.getTotalCount(), 0, getFocusMinPosition() - getFocusMaxPosition());
 
-                Rectangle rectangle = new Rectangle(getAxisBar().getX(), y, getAxisBar().getWidth(), categoryHeight);
-                rectangle.setStroke(DEFAULT_CATEGORY_STROKE_COLOR);
-                rectangle.setFill(DEFAULT_CATEGORY_FILL_COLOR);
-                rectangle.setStrokeWidth(DEFAULT_CATEGORY_STROKE_WIDTH);
-                rectangle.setArcHeight(6);
-                rectangle.setArcWidth(6);
+                    Rectangle rectangle = new Rectangle(getAxisBar().getX(), y, getAxisBar().getWidth(), categoryHeight);
+                    rectangle.setStroke(DEFAULT_CATEGORY_STROKE_COLOR);
+                    rectangle.setFill(DEFAULT_CATEGORY_FILL_COLOR);
+                    rectangle.setStrokeWidth(DEFAULT_CATEGORY_STROKE_WIDTH);
+                    rectangle.setArcHeight(6);
+                    rectangle.setArcWidth(6);
 
-                Text categoryName = new Text(category);
-                categoryName.setFill(DEFAULT_TEXT_COLOR);
-                categoryName.setFont(Font.font(DEFAULT_TEXT_SIZE));
-                categoryName.setMouseTransparent(true);
-                categoryName.setX(getCenterX() - (categoryName.getLayoutBounds().getWidth() / 2.));
-                categoryName.setY(y + categoryName.getLayoutBounds().getHeight() + 6);
+                    Text categoryName = new Text(category);
+                    categoryName.setFill(DEFAULT_TEXT_COLOR);
+                    categoryName.setFont(Font.font(DEFAULT_TEXT_SIZE));
+                    categoryName.setMouseTransparent(true);
+                    categoryName.setX(getCenterX() - (categoryName.getLayoutBounds().getWidth() / 2.));
+                    categoryName.setY(y + categoryName.getLayoutBounds().getHeight() + 6);
 
-                Rectangle categoryNameRectangle = new Rectangle(categoryName.getLayoutBounds().getMinX(), categoryName.getLayoutBounds().getMinY(),
-                    categoryName.getLayoutBounds().getWidth(), categoryName.getLayoutBounds().getHeight());
-                categoryNameRectangle.setFill(Color.GHOSTWHITE.deriveColor(1., 1., 1., 0.7));
-                categoryNameRectangle.setStroke(Color.TRANSPARENT);
-                categoryNameRectangle.setMouseTransparent(true);
+                    Rectangle categoryNameRectangle = new Rectangle(categoryName.getLayoutBounds().getMinX(), categoryName.getLayoutBounds().getMinY(),
+                            categoryName.getLayoutBounds().getWidth(), categoryName.getLayoutBounds().getHeight());
+                    categoryNameRectangle.setFill(Color.GHOSTWHITE.deriveColor(1., 1., 1., 0.7));
+                    categoryNameRectangle.setStroke(Color.TRANSPARENT);
+                    categoryNameRectangle.setMouseTransparent(true);
 
-                rectangle.setOnMouseClicked(event -> {
-                    handleCategoryRectangleClicked(rectangle, category);
-                });
+                    rectangle.setOnMouseClicked(event -> {
+                        handleCategoryRectangleClicked(rectangle, category);
+                    });
 
-                Tooltip.install(rectangle, new Tooltip(category + " : " + categoryCount + " of " +
-                        histogram.getTotalCount() + " (" +
-                        percentageFormat.format((double)categoryCount/histogram.getTotalCount()) + " of total)"));
+                    Tooltip.install(rectangle, new Tooltip(category + " : " + categoryCount + " of " +
+                            histogram.getTotalCount() + " (" +
+                            percentageFormat.format((double) categoryCount / histogram.getTotalCount()) + " of total)"));
 
-                categoriesRectangleMap.put(category, rectangle);
-                categoriesRectangleGroup.getChildren().add(rectangle);
+                    categoriesRectangleMap.put(category, rectangle);
+                    categoriesRectangleGroup.getChildren().add(rectangle);
 
-                if (selectedCategories.contains(category)) {
-                    Rectangle innerRectangle = new Rectangle(rectangle.getX()+1, rectangle.getY()+1,
-                            rectangle.getWidth()-2, rectangle.getHeight()-2);
-                    innerRectangle.setStroke(DEFAULT_SELECTED_CATEGORY_STROKE_COLOR);
-                    innerRectangle.setFill(null);
-                    innerRectangle.setArcWidth(6);
-                    innerRectangle.setArcHeight(6);
-                    innerRectangle.setMouseTransparent(true);
-                    categoriesRectangleGroup.getChildren().add(innerRectangle);
+                    if (selectedCategories.contains(category)) {
+                        Rectangle innerRectangle = new Rectangle(rectangle.getX() + 1, rectangle.getY() + 1,
+                                rectangle.getWidth() - 2, rectangle.getHeight() - 2);
+                        innerRectangle.setStroke(DEFAULT_SELECTED_CATEGORY_STROKE_COLOR);
+                        innerRectangle.setFill(null);
+                        innerRectangle.setArcWidth(6);
+                        innerRectangle.setArcHeight(6);
+                        innerRectangle.setMouseTransparent(true);
+                        categoriesRectangleGroup.getChildren().add(innerRectangle);
+                    }
+
+                    lastRectangleBottomY = rectangle.getY() + rectangle.getHeight();
+
+                    categoriesNameGraphicsGroup.getChildren().addAll(categoryNameRectangle, categoryName);
                 }
-
-                lastRectangleBottomY = rectangle.getY() + rectangle.getHeight();
-
-                categoriesNameGraphicsGroup.getChildren().addAll(categoryNameRectangle, categoryName);
             }
 
             if (getGraphicsGroup().getChildren().contains(queryCategoriesRectangleGroup)) {
@@ -237,71 +239,74 @@ public class CategoricalAxis extends UnivariateAxis {
                 for (String category : queryHistogram.getCategories()) {
                     int queryCategoryCount = queryHistogram.getCategoryCount(category);
                     Rectangle overallCategoryRectangle = categoriesRectangleMap.get(category);
-                    int overallCategoryCount = histogram.getCategoryCount(category);
-                    int nonQueryCategoryCount = overallCategoryCount - queryCategoryCount;
 
-                    Rectangle queryRectangle = new Rectangle (overallCategoryRectangle.getLayoutBounds().getMinX() + 4,
-                            0, overallCategoryRectangle.getLayoutBounds().getWidth() - 8d, 0);
-                    Rectangle nonQueryRectangle = new Rectangle (overallCategoryRectangle.getLayoutBounds().getMinX() + 4,
-                            0, overallCategoryRectangle.getLayoutBounds().getWidth() - 8d, 0);
+                    if (overallCategoryRectangle != null) {
+                        int overallCategoryCount = histogram.getCategoryCount(category);
+                        int nonQueryCategoryCount = overallCategoryCount - queryCategoryCount;
 
-                    if (queryCategoryCount > 0) {
-                        queryRectangle.setY(overallCategoryRectangle.getY() + 2d);
+                        Rectangle queryRectangle = new Rectangle(overallCategoryRectangle.getLayoutBounds().getMinX() + 4,
+                                0, overallCategoryRectangle.getLayoutBounds().getWidth() - 8d, 0);
+                        Rectangle nonQueryRectangle = new Rectangle(overallCategoryRectangle.getLayoutBounds().getMinX() + 4,
+                                0, overallCategoryRectangle.getLayoutBounds().getWidth() - 8d, 0);
+
+                        if (queryCategoryCount > 0) {
+                            queryRectangle.setY(overallCategoryRectangle.getY() + 2d);
+
+                            if (nonQueryCategoryCount > 0) {
+                                double queryRectangleHeight = GraphicsUtil.mapValue(queryCategoryCount, 0, overallCategoryCount,
+                                        0, overallCategoryRectangle.getHeight() - 4);
+                                queryRectangle.setHeight(queryRectangleHeight);
+                            } else {
+                                queryRectangle.setHeight(overallCategoryRectangle.getHeight() - 4);
+                            }
+
+                            queryRectangle.setArcHeight(6);
+                            queryRectangle.setArcWidth(6);
+                            queryRectangle.setStroke(DEFAULT_QUERY_STROKE_COLOR);
+                            queryRectangle.setFill(new Color(getDataTableView().getSelectedItemsColor().getRed(),
+                                    getDataTableView().getSelectedItemsColor().getGreen(),
+                                    getDataTableView().getSelectedItemsColor().getBlue(),
+                                    1.0));
+                            queryRectangle.setMouseTransparent(true);
+
+                            queryCategoriesRectangleMap.put(category, queryRectangle);
+                            queryCategoriesRectangleGroup.getChildren().add(queryRectangle);
+                        }
 
                         if (nonQueryCategoryCount > 0) {
-                            double queryRectangleHeight = GraphicsUtil.mapValue(queryCategoryCount, 0, overallCategoryCount,
-                                    0, overallCategoryRectangle.getHeight() - 4);
-                            queryRectangle.setHeight(queryRectangleHeight);
-                        } else {
-                            queryRectangle.setHeight(overallCategoryRectangle.getHeight() - 4);
+                            if (queryCategoryCount > 0) {
+                                double nonQueryRectangleHeight = GraphicsUtil.mapValue(nonQueryCategoryCount, 0,
+                                        overallCategoryCount, 0, overallCategoryRectangle.getHeight() - 4);
+                                nonQueryRectangle.setHeight(nonQueryRectangleHeight);
+                                nonQueryRectangle.setY(queryRectangle.getY() + queryRectangle.getHeight());
+                            } else {
+                                nonQueryRectangle.setHeight(overallCategoryRectangle.getHeight() - 4);
+                                nonQueryRectangle.setY(overallCategoryRectangle.getY() + 2d);
+                            }
+
+                            nonQueryRectangle.setArcHeight(6);
+                            nonQueryRectangle.setArcWidth(6);
+                            nonQueryRectangle.setStroke(DEFAULT_QUERY_STROKE_COLOR);
+                            nonQueryRectangle.setFill(new Color(getDataTableView().getUnselectedItemsColor().getRed(),
+                                    getDataTableView().getUnselectedItemsColor().getGreen(),
+                                    getDataTableView().getUnselectedItemsColor().getBlue(),
+                                    1.0));
+                            nonQueryRectangle.setMouseTransparent(true);
+
+                            nonQueryCategoriesRectangleMap.put(category, nonQueryRectangle);
+                            nonQueryCategoriesRectangleGroup.getChildren().add(nonQueryRectangle);
                         }
 
-                        queryRectangle.setArcHeight(6);
-                        queryRectangle.setArcWidth(6);
-                        queryRectangle.setStroke(DEFAULT_QUERY_STROKE_COLOR);
-                        queryRectangle.setFill(new Color(getDataTableView().getSelectedItemsColor().getRed(),
-                                getDataTableView().getSelectedItemsColor().getGreen(),
-                                getDataTableView().getSelectedItemsColor().getBlue(),
-                                1.0));
-                        queryRectangle.setMouseTransparent(true);
-
-                        queryCategoriesRectangleMap.put(category, queryRectangle);
-                        queryCategoriesRectangleGroup.getChildren().add(queryRectangle);
-                    }
-
-                    if (nonQueryCategoryCount > 0) {
-                        if (queryCategoryCount > 0) {
-                            double nonQueryRectangleHeight = GraphicsUtil.mapValue(nonQueryCategoryCount, 0,
-                                    overallCategoryCount, 0, overallCategoryRectangle.getHeight() - 4);
-                            nonQueryRectangle.setHeight(nonQueryRectangleHeight);
-                            nonQueryRectangle.setY(queryRectangle.getY() + queryRectangle.getHeight());
-                        } else {
-                            nonQueryRectangle.setHeight(overallCategoryRectangle.getHeight() - 4);
-                            nonQueryRectangle.setY(overallCategoryRectangle.getY() + 2d);
-                        }
-
-                        nonQueryRectangle.setArcHeight(6);
-                        nonQueryRectangle.setArcWidth(6);
-                        nonQueryRectangle.setStroke(DEFAULT_QUERY_STROKE_COLOR);
-                        nonQueryRectangle.setFill(new Color(getDataTableView().getUnselectedItemsColor().getRed(),
-                                getDataTableView().getUnselectedItemsColor().getGreen(),
-                                getDataTableView().getUnselectedItemsColor().getBlue(),
-                                1.0));
-                        nonQueryRectangle.setMouseTransparent(true);
-
-                        nonQueryCategoriesRectangleMap.put(category, nonQueryRectangle);
-                        nonQueryCategoriesRectangleGroup.getChildren().add(nonQueryRectangle);
-                    }
-
-                    Tooltip.install(overallCategoryRectangle,
-                            new Tooltip (category + " : " + overallCategoryCount + " of " +
-                                    histogram.getTotalCount() + " (" +
-                                    percentageFormat.format((double)overallCategoryCount/histogram.getTotalCount()) + " of total)\n" +
-                                    queryCategoryCount + " of " + overallCategoryCount + " selected (" +
-                                    percentageFormat.format((double)queryCategoryCount / overallCategoryCount) + ")"));
+                        Tooltip.install(overallCategoryRectangle,
+                                new Tooltip(category + " : " + overallCategoryCount + " of " +
+                                        histogram.getTotalCount() + " (" +
+                                        percentageFormat.format((double) overallCategoryCount / histogram.getTotalCount()) + " of total)\n" +
+                                        queryCategoryCount + " of " + overallCategoryCount + " selected (" +
+                                        percentageFormat.format((double) queryCategoryCount / overallCategoryCount) + ")"));
 //                            ))
 //                            new Tooltip(category + ": " + queryCategoryCount + " of " + overallCategoryCount + " selected (" +
 //                                    percentageFormat.format((double)queryCategoryCount / overallCategoryCount) + ")"));
+                    }
                 }
 
                 getGraphicsGroup().getChildren().addAll(nonQueryCategoriesRectangleGroup, queryCategoriesRectangleGroup);

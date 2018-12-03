@@ -199,6 +199,18 @@ public class DoubleAxis extends UnivariateAxis {
         maxValueText.textProperty().bindBidirectional(((DoubleColumn)getColumn()).getStatistics().maxValueProperty(),
                 new NumberStringConverter());
 
+        doubleColumn().getStatistics().minValueProperty().addListener(observable -> {
+            if (getMinFocusValue() < doubleColumn().getStatistics().getMinValue()) {
+                setMinFocusValue(doubleColumn().getStatistics().getMinValue());
+            }
+        });
+
+        doubleColumn().getStatistics().maxValueProperty().addListener(observable -> {
+            if (getMaxFocusValue() > doubleColumn().getStatistics().getMaxValue()) {
+                setMaxFocusValue(doubleColumn().getStatistics().getMaxValue());
+            }
+        });
+
         minFocusValueText.textProperty().bind(Bindings.convert(minFocusValue));
 
         maxFocusValueText.textProperty().bind(Bindings.convert(maxFocusValue));

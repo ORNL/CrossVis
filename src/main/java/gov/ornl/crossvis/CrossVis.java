@@ -546,6 +546,7 @@ public class CrossVis extends Application implements DataTableListener {
             mainStage.setTitle("C r o s s V i s | (" + VERSION_STRING + ")");
             mainStage.setScene(scene);
             mainStage.show();
+
 //        } catch(Exception ex) {
 //            ex.printStackTrace();
 //            System.exit(0);

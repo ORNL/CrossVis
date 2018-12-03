@@ -153,10 +153,16 @@ public class TemporalAxis extends UnivariateAxis {
 
         ((TemporalColumn)getColumn()).getStatistics().startInstantProperty().addListener((observable, oldValue, newValue) -> {
             startInstantText.setText(newValue.toString());
+            if (getFocusStartInstant().isBefore(newValue)) {
+                setFocusStartInstant(newValue);
+            }
         });
 
         ((TemporalColumn)getColumn()).getStatistics().endInstantProperty().addListener((observable, oldValue, newValue) -> {
             endInstantText.setText(newValue.toString());
+            if (getFocusEndInstant().isAfter(newValue)) {
+                setFocusEndInstant(newValue);
+            }
         });
 
         focusStartInstantValue.addListener((observable, oldValue, newValue) -> {

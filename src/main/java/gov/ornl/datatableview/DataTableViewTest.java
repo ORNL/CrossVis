@@ -33,6 +33,20 @@ public class DataTableViewTest extends Application {
 		scrollPane.setFitToWidth(dataTableView.getFitToWidth());
 		scrollPane.setFitToHeight(true);
 
+		Button deleteSelectedDataButton = new Button("Delete Selected");
+		deleteSelectedDataButton.setOnAction(event -> {
+			if (dataTableView.getDataTable().getActiveQuery().hasColumnSelections()) {
+				dataTableView.getDataTable().removeSelectedTuples();
+			}
+		});
+
+		Button deleteUnselectedDataButton = new Button("Delete Unselected");
+		deleteUnselectedDataButton.setOnAction(event -> {
+			if (dataTableView.getDataTable().getActiveQuery().hasColumnSelections()) {
+				dataTableView.getDataTable().removeUnselectedTuples();
+			}
+		});
+
 		Button loadDataButton = new Button("Load Data");
 		loadDataButton.setOnAction(event -> {
 			try {
@@ -147,7 +161,8 @@ public class DataTableViewTest extends Application {
 
 		settingsPane.getChildren().addAll(loadDataButton, addBivariateAxisButton, showPolylinesCB,
 				showSelectedPolylinesCB, showUnselectedPolylinesCB, showHistogramCB, showSummaryStatsCB, showCorrelationIndicatorsCB,
-				showScatterplotsCB, statisticsDisplayModeChoiceBox, polylineDisplayModeChoiceBox, opacitySlider, addColumnButton);
+				showScatterplotsCB, statisticsDisplayModeChoiceBox, polylineDisplayModeChoiceBox, opacitySlider, addColumnButton,
+				deleteSelectedDataButton, deleteUnselectedDataButton);
 
 		BorderPane rootNode = new BorderPane();
 		rootNode.setCenter(scrollPane);

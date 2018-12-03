@@ -412,7 +412,8 @@ public class IOUtilities {
 					for (int i = 0; i < categoricalColumnIndices.length; i++) {
 						if (tokenCounter == categoricalColumnIndices[i]) {
 							category = token.trim();
-							((CategoricalColumn)columns.get(tokenCounter)).addCategory(category);
+//							((CategoricalColumn)columns.get(tokenCounter)).addCategory(category);
+							((CategoricalColumn)columns.get(tuple.getElementCount())).addCategory(category);
 							break;
 						}
 					}

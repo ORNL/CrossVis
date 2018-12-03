@@ -14,6 +14,7 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.WritableImage;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
@@ -209,6 +210,20 @@ public class DataTableView extends Region implements DataTableListener {
         widthProperty().addListener(o -> resizeView());
 
         heightProperty().addListener(o -> resizeView());
+
+//        setFocusTraversable(true);
+//        setOnKeyPressed(event -> {
+//            log.info("Got key event");
+//            if (event.getCode() == KeyCode.DELETE) {
+//                if (dataTable.getActiveQuery().hasColumnSelections()) {
+//                    if (event.isAltDown()) {
+//                        dataTable.removeUnselectedTuples();
+//                    } else {
+//                        dataTable.removeSelectedTuples();
+//                    }
+//                }
+//            }
+//        });
 
         fitToWidth.addListener(observable -> resizeView());
 
