@@ -191,6 +191,10 @@ public abstract class Axis {
                     CheckMenuItem showCategoryLabels = new CheckMenuItem("Show Category Labels");
                     showCategoryLabels.selectedProperty().bindBidirectional(((CategoricalAxis)this).showCategoryLabelsProperty());
                     contextMenu.getItems().add(0, showCategoryLabels);
+
+                    CheckMenuItem categoryHeightProportionalToCountCheck = new CheckMenuItem("Category Height Proportional To Count");
+                    categoryHeightProportionalToCountCheck.selectedProperty().bindBidirectional(((CategoricalAxis)this).categoryHeightProportionalToCountProperty());
+                    contextMenu.getItems().add(1, categoryHeightProportionalToCountCheck);
                 }
                 contextMenu.show(dataTableView, event.getScreenX(), event.getScreenY());
             }

@@ -429,7 +429,8 @@ public class Scatterplot {
 
             double categorySpacing = (plotBounds.getWidth() - (categoryPadding * (categoricalColumn.getCategories().size() + 1))) / categoricalColumn.getCategories().size();
 
-            for (int i = 0; i < categoricalColumn.getCategories().size(); i++) {
+            for (int i = categoricalColumn.getCategories().size() - 1; i >= 0; i--) {
+//            for (int i = 0; i < categoricalColumn.getCategories().size(); i++) {
                 double left = categoryPadding + (i * categorySpacing) + (i * categoryPadding);
                 double right = left + categorySpacing;
                 double center = left + ((right - left) / 2.);
