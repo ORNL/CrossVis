@@ -182,19 +182,7 @@ public class CategoricalAxis extends UnivariateAxis {
 
             List<String> categories = histogram.getCategories();
             if (isCategoryHeightProportionalToCount()) {
-                categories.sort(new Comparator<String>() {
-                    @Override
-                    public int compare(String o1, String o2) {
-                        return histogram.getCategoryCount(o2) - histogram.getCategoryCount(o1);
-//                        if (histogram.getCategoryCount(o1) > histogram.getCategoryCount(o2)) {
-//                            return -1;
-//                        } else if (histogram.getCategoryCount(o1) < histogram.getCategoryCount(o2)) {
-//                            return 1;
-//                        } else {
-//                            return 0;
-//                        }
-                    }
-                });
+                categories.sort((o1, o2) -> histogram.getCategoryCount(o2) - histogram.getCategoryCount(o1));
             } else {
                 categories.sort(Comparator.reverseOrder());
             }
