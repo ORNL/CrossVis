@@ -3,7 +3,6 @@ package gov.ornl.datatableview;
 import gov.ornl.datatable.*;
 import gov.ornl.util.GraphicsUtil;
 import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.scene.Group;
 import javafx.scene.control.Tooltip;
@@ -37,7 +36,7 @@ public class CategoricalAxis extends UnivariateAxis {
     private Group nonQueryCategoriesRectangleGroup;
     private HashMap<String, Rectangle> nonQueryCategoriesRectangleMap = new HashMap<>();
 
-    private BooleanProperty showCategoryLabels = new SimpleBooleanProperty(true);
+    private BooleanProperty showCategoryLabels = new SimpleBooleanProperty(false);
     private BooleanProperty categoryHeightProportionalToCount = new SimpleBooleanProperty(true);
 
     public CategoricalAxis(DataTableView dataTableView, Column column) {
@@ -103,6 +102,11 @@ public class CategoricalAxis extends UnivariateAxis {
         return null;
     }
 
+    protected double getAxisPositionForValue(String category) {
+        Rectangle categoryRectangle = categoriesRectangleMap.get(category);
+        return categoryRectangle.getY() + (categoryRectangle.getHeight() / 2.);
+    }
+
     public List<String> getCategories() {
         return categoricalColumn().getCategories();
     }
@@ -126,7 +130,6 @@ public class CategoricalAxis extends UnivariateAxis {
     private void registerListeners() {
         categoriesNameGraphicsGroup.visibleProperty().bind(showCategoryLabelsProperty());
         categoryHeightProportionalToCount.addListener(observable -> {
-//            resize(getBounds().getMinX(), getBounds().getMinY(), getBounds().getWidth(), getBounds().getHeight());
             getDataTableView().resizeView();
         });
     }
@@ -203,7 +206,6 @@ public class CategoricalAxis extends UnivariateAxis {
                     rectangle = new Rectangle(getAxisBar().getX(), y, getAxisBar().getWidth(), categoryHeight);
                 }
 
-//                Rectangle rectangle = new Rectangle(getAxisBar().getX(), y, getAxisBar().getWidth(), categoryHeight);
                 rectangle.setStroke(DEFAULT_CATEGORY_STROKE_COLOR);
                 rectangle.setFill(DEFAULT_CATEGORY_FILL_COLOR);
                 rectangle.setStrokeWidth(DEFAULT_CATEGORY_STROKE_WIDTH);
@@ -232,7 +234,9 @@ public class CategoricalAxis extends UnivariateAxis {
                         percentageFormat.format((double) categoryCount / histogram.getTotalCount()) + " of total)"));
 
                 categoriesRectangleMap.put(category, rectangle);
-                categoriesRectangleGroup.getChildren().add(rectangle);
+                if (categoricalColumn().getCategories().size() < (getAxisBar().getHeight()/4.)) {
+                    categoriesRectangleGroup.getChildren().add(rectangle);
+                }
 
                 if (selectedCategories.contains(category)) {
                     Rectangle innerRectangle = new Rectangle(rectangle.getX() + 1, rectangle.getY() + 1,
@@ -256,6 +260,7 @@ public class CategoricalAxis extends UnivariateAxis {
             if (getGraphicsGroup().getChildren().contains(nonQueryCategoriesRectangleGroup)) {
                 getGraphicsGroup().getChildren().remove(nonQueryCategoriesRectangleGroup);
             }
+
             queryCategoriesRectangleGroup.getChildren().clear();
             queryCategoriesRectangleMap.clear();
             nonQueryCategoriesRectangleGroup.getChildren().clear();
@@ -332,9 +337,6 @@ public class CategoricalAxis extends UnivariateAxis {
                                         percentageFormat.format((double) overallCategoryCount / histogram.getTotalCount()) + " of total)\n" +
                                         queryCategoryCount + " of " + overallCategoryCount + " selected (" +
                                         percentageFormat.format((double) queryCategoryCount / overallCategoryCount) + ")"));
-//                            ))
-//                            new Tooltip(category + ": " + queryCategoryCount + " of " + overallCategoryCount + " selected (" +
-//                                    percentageFormat.format((double)queryCategoryCount / overallCategoryCount) + ")"));
                     }
                 }
 

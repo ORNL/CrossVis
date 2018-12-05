@@ -2,7 +2,10 @@ package gov.ornl.crossvis;
 
 import gov.ornl.correlationview.CorrelationMatrixView;
 import gov.ornl.datatable.*;
+import gov.ornl.datatableview.Axis;
 import gov.ornl.datatableview.DataTableView;
+import gov.ornl.datatableview.DoubleAxis;
+import gov.ornl.datatableview.NumberTextField;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyObjectWrapper;
@@ -31,6 +34,7 @@ import javafx.stage.FileChooser;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.util.Callback;
+import javafx.util.Pair;
 import org.controlsfx.control.StatusBar;
 
 import javax.imageio.ImageIO;
@@ -848,6 +852,11 @@ public class CrossVis extends Application implements DataTableListener {
 
         axisLayoutMenu.getItems().addAll(fitPCPAxesToWidthCheckMI, changeAxisSpacingMI);
 
+        MenuItem setNumericalAxisExtentsMenuItem = new MenuItem("Sync Ranges of Numerical Axes...");
+        setNumericalAxisExtentsMenuItem.setOnAction(event -> {
+            syncNumericalAxesRanges();
+        });
+
         MenuItem changeHistogramBinCountMenuItem = new MenuItem("Change Number of Histogram Bins...");
         changeHistogramBinCountMenuItem.setOnAction(event -> {
             changeNumHistogramBins();
@@ -872,8 +881,8 @@ public class CrossVis extends Application implements DataTableListener {
         });
 
         viewMenu.getItems().addAll(showScatterplotsMI, showHistogramsMI, showPolylinesMI, showSummaryStatsMI, showCorrelationsMI,
-                summaryStatsDisplayModeMenu, polylineDisplayModeMenu, axisLayoutMenu, changeHistogramBinCountMenuItem,
-                enableDataTableUpdatesCheckMenuItem);
+                summaryStatsDisplayModeMenu, polylineDisplayModeMenu, axisLayoutMenu, setNumericalAxisExtentsMenuItem,
+                changeHistogramBinCountMenuItem, enableDataTableUpdatesCheckMenuItem);
 
 
         // Data Menu
@@ -917,6 +926,87 @@ public class CrossVis extends Application implements DataTableListener {
         queryMenu.getItems().addAll(showQueryStatisticsCheckMI, showNonQueryStatisticsCheckMI, removeAllQueriesMI);
 
         return menuBar;
+    }
+
+    private void syncNumericalAxesRanges() {
+        Dialog<double[]> dialog = new Dialog();
+        dialog.setTitle("Synchronize Numerical Axis Ranges");
+
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+
+        NumberTextField minValueTextField = new NumberTextField();
+        NumberTextField maxValueTextField = new NumberTextField();
+
+        ObservableList<DoubleAxis> doubleAxes = FXCollections.observableArrayList();
+        for (int i = 0; i < dataTableView.getAxisCount(); i++) {
+            if (dataTableView.getAxis(i) instanceof DoubleAxis) {
+                doubleAxes.add((DoubleAxis)dataTableView.getAxis(i));
+            }
+        }
+        ListView<DoubleAxis> axisListView = new ListView<>(doubleAxes);
+        axisListView.setPrefHeight(200);
+        axisListView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+        axisListView.getSelectionModel().selectedItemProperty().addListener(observable -> {
+            if (minValueTextField.getText().isEmpty()) {
+                minValueTextField.setText(String.valueOf(axisListView.getSelectionModel().getSelectedItem().doubleColumn().getStatistics().getMinValue()));
+            }
+            if (maxValueTextField.getText().isEmpty()) {
+                maxValueTextField.setText(String.valueOf(axisListView.getSelectionModel().getSelectedItem().doubleColumn().getStatistics().getMaxValue()));
+            }
+        });
+
+        Button useSelectedAxisExtentsButton = new Button("Use Range Extents of Selected Axes");
+        useSelectedAxisExtentsButton.setAlignment(Pos.CENTER);
+        useSelectedAxisExtentsButton.setOnAction(event -> {
+            double minValue = Double.NaN;
+            double maxValue = Double.NaN;
+            for (DoubleAxis axis : axisListView.getSelectionModel().getSelectedItems()) {
+                if (Double.isNaN(minValue) || axis.doubleColumn().getStatistics().getMinValue() < minValue) {
+                    minValue = axis.doubleColumn().getStatistics().getMinValue();
+                }
+                if (Double.isNaN(maxValue) || axis.doubleColumn().getStatistics().getMaxValue() > maxValue) {
+                    maxValue = axis.doubleColumn().getStatistics().getMaxValue();
+                }
+            }
+            minValueTextField.setText(String.valueOf(minValue));
+            maxValueTextField.setText(String.valueOf(maxValue));
+        });
+
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setPadding(new Insets(10));
+
+        grid.add(new Label("Numerical Axes"), 0, 0);
+        grid.add(axisListView, 0, 1, 1, 4);
+        grid.add(new Label("Maximum Value:"), 1, 1);
+        grid.add(maxValueTextField, 2, 1);
+        grid.add(new Label("Minimum Value:"), 1, 2);
+        grid.add(minValueTextField, 2, 2);
+        grid.add(useSelectedAxisExtentsButton, 1, 3, 2, 1);
+
+        dialog.getDialogPane().setContent(grid);
+
+        Platform.runLater(() -> axisListView.requestFocus());
+
+        dialog.setResultConverter(dialogButton -> {
+            if (dialogButton == ButtonType.OK && !axisListView.getSelectionModel().getSelectedItems().isEmpty()) {
+                return new double[] {Double.parseDouble(minValueTextField.getText()), Double.parseDouble(maxValueTextField.getText())};
+            }
+            return null;
+        });
+
+        Optional<double[]> result = dialog.showAndWait();
+        result.ifPresent(extents -> {
+            System.out.println("min = " + extents[0] + "max = " + extents[1]);
+            ArrayList<DoubleColumn> columns = new ArrayList<>();
+            for (DoubleAxis axis : axisListView.getSelectionModel().getSelectedItems()) {
+                columns.add(axis.doubleColumn());
+                axis.setMaxFocusValue(extents[1]);
+                axis.setMinFocusValue(extents[0]);
+            }
+            dataTableView.getDataTable().setDoubleColumnScaleExtents(columns, extents[0], extents[1]);
+        });
     }
 
     private void saveScreenShot() {
@@ -1224,8 +1314,8 @@ public class CrossVis extends Application implements DataTableListener {
     }
 
     @Override
-    public void dataModelReset(DataTable dataModel) {
-        removeAllQueriesMI.setDisable(!dataModel.getActiveQuery().hasColumnSelections());
+    public void dataModelReset(DataTable dataTable) {
+        removeAllQueriesMI.setDisable(!dataTable.getActiveQuery().hasColumnSelections());
 
         temporalColumnTableView.getItems().clear();
         ArrayList<TemporalColumn> temporalColumns = dataTable.getTemporalColumns();
@@ -1255,39 +1345,39 @@ public class CrossVis extends Application implements DataTableListener {
     }
 
     @Override
-    public void dataTableAllColumnSelectionsRemoved(DataTable dataModel) {
-        removeAllQueriesMI.setDisable(!dataModel.getActiveQuery().hasColumnSelections());
+    public void dataTableAllColumnSelectionsRemoved(DataTable dataTable) {
+        removeAllQueriesMI.setDisable(!dataTable.getActiveQuery().hasColumnSelections());
         setDataTableItems();
         updatePercentSelected();
-        doubleQueryTableView.setItems(dataModel.getActiveQuery().columnSelectionRangesProperty().filtered(selection -> selection instanceof DoubleColumnSelectionRange));
-        temporalQueryTableView.setItems(dataModel.getActiveQuery().columnSelectionRangesProperty().filtered(selection -> selection instanceof TemporalColumnSelectionRange));
-        categoricalQueryTableView.setItems(dataModel.getActiveQuery().columnSelectionRangesProperty().filtered(selection -> selection instanceof CategoricalColumnSelection));
+        doubleQueryTableView.setItems(dataTable.getActiveQuery().columnSelectionRangesProperty().filtered(selection -> selection instanceof DoubleColumnSelectionRange));
+        temporalQueryTableView.setItems(dataTable.getActiveQuery().columnSelectionRangesProperty().filtered(selection -> selection instanceof TemporalColumnSelectionRange));
+        categoricalQueryTableView.setItems(dataTable.getActiveQuery().columnSelectionRangesProperty().filtered(selection -> selection instanceof CategoricalColumnSelection));
     }
 
     @Override
-    public void dataTableAllColumnSelectionsForColumnRemoved(DataTable dataModel, Column column) {
-        removeAllQueriesMI.setDisable(!dataModel.getActiveQuery().hasColumnSelections());
-        setDataTableItems();
-        updatePercentSelected();
-    }
-
-    @Override
-    public void dataModelColumnSelectionAdded(DataTable dataModel, ColumnSelection columnSelectionRange) {
-        removeAllQueriesMI.setDisable(!dataModel.getActiveQuery().hasColumnSelections());
+    public void dataTableAllColumnSelectionsForColumnRemoved(DataTable dataTable, Column column) {
+        removeAllQueriesMI.setDisable(!dataTable.getActiveQuery().hasColumnSelections());
         setDataTableItems();
         updatePercentSelected();
     }
 
     @Override
-    public void dataModelColumnSelectionRemoved(DataTable dataModel, ColumnSelection columnSelectionRange) {
-        removeAllQueriesMI.setDisable(!dataModel.getActiveQuery().hasColumnSelections());
+    public void dataModelColumnSelectionAdded(DataTable dataTable, ColumnSelection columnSelectionRange) {
+        removeAllQueriesMI.setDisable(!dataTable.getActiveQuery().hasColumnSelections());
         setDataTableItems();
         updatePercentSelected();
     }
 
     @Override
-    public void dataModelColumnSelectionChanged(DataTable dataModel, ColumnSelection columnSelectionRange) {
-        removeAllQueriesMI.setDisable(!dataModel.getActiveQuery().hasColumnSelections());
+    public void dataModelColumnSelectionRemoved(DataTable dataTable, ColumnSelection columnSelectionRange) {
+        removeAllQueriesMI.setDisable(!dataTable.getActiveQuery().hasColumnSelections());
+        setDataTableItems();
+        updatePercentSelected();
+    }
+
+    @Override
+    public void dataModelColumnSelectionChanged(DataTable dataTable, ColumnSelection columnSelectionRange) {
+        removeAllQueriesMI.setDisable(!dataTable.getActiveQuery().hasColumnSelections());
         queryTableView.refresh();
         doubleQueryTableView.refresh();
         temporalQueryTableView.refresh();
@@ -1299,7 +1389,7 @@ public class CrossVis extends Application implements DataTableListener {
     }
 
     @Override
-    public void dataModelHighlightedColumnChanged(DataTable dataModel, Column oldHighlightedColumn, Column newHighlightedColumn) {
+    public void dataModelHighlightedColumnChanged(DataTable dataTable, Column oldHighlightedColumn, Column newHighlightedColumn) {
         if (newHighlightedColumn != null) {
             if (newHighlightedColumn instanceof TemporalColumn) {
                 temporalColumnTableView.getSelectionModel().select((TemporalColumn)newHighlightedColumn);
@@ -1313,23 +1403,26 @@ public class CrossVis extends Application implements DataTableListener {
     }
 
     @Override
-    public void dataModelTuplesAdded(DataTable dataModel, ArrayList<Tuple> newTuples) {
+    public void dataModelTuplesAdded(DataTable dataTable, ArrayList<Tuple> newTuples) {
         updatePercentSelected();
     }
 
     @Override
-    public void dataModelTuplesRemoved(DataTable dataModel, int numTuplesRemoved) {
+    public void dataModelTuplesRemoved(DataTable dataTable, int numTuplesRemoved) {
         updatePercentSelected();
     }
 
     @Override
-    public void dataModelNumHistogramBinsChanged(DataTable dataModel) {}
+    public void dataModelNumHistogramBinsChanged(DataTable dataTable) {}
 
     @Override
-    public void dataModelStatisticsChanged(DataTable dataModel) { }
+    public void dataTableStatisticsChanged(DataTable dataTable) { }
 
     @Override
-    public void dataModelColumnDisabled(DataTable dataModel, Column disabledColumn) {
+    public void dataTableColumnExtentsChanged(DataTable dataTable) {}
+
+    @Override
+    public void dataModelColumnDisabled(DataTable dataTable, Column disabledColumn) {
         // reset the data datamodel columns
         tupleTableView.getItems().clear();
         tupleTableView.getColumns().clear();
@@ -1342,12 +1435,12 @@ public class CrossVis extends Application implements DataTableListener {
     }
 
     @Override
-    public void dataModelColumnsDisabled(DataTable dataModel, ArrayList<Column> disabledColumns) {
+    public void dataModelColumnsDisabled(DataTable dataTable, ArrayList<Column> disabledColumns) {
 
     }
 
     @Override
-    public void dataModelColumnEnabled(DataTable dataModel, Column enabledColumn) {
+    public void dataModelColumnEnabled(DataTable dataTable, Column enabledColumn) {
 
     }
 
@@ -1357,12 +1450,12 @@ public class CrossVis extends Application implements DataTableListener {
     }
 
     @Override
-    public void dataModelColumnOrderChanged(DataTable dataModel) {
+    public void dataModelColumnOrderChanged(DataTable dataTable) {
 
     }
 
     @Override
-    public void dataModelColumnNameChanged(DataTable dataModel, Column column) {
+    public void dataModelColumnNameChanged(DataTable dataTable, Column column) {
 
     }
 }

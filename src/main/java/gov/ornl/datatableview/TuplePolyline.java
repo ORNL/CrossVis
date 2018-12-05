@@ -97,9 +97,10 @@ public class TuplePolyline {
 //                        rectangle = categoricalAxis.getNonQueryCategoryRectangle(category);
 //                    }
 //                }
-                Rectangle rectangle = categoricalAxis.getCategoryRectangle(category);
+//                Rectangle rectangle = categoricalAxis.getCategoryRectangle(category);
+//                yPoints[i] = rectangle.getY() + (rectangle.getHeight() / 2.);
                 xPoints[i] = axis.getCenterX();
-                yPoints[i] = rectangle.getY() + (rectangle.getHeight() / 2.);
+                yPoints[i] = categoricalAxis.getAxisPositionForValue(category);
             } else if (axis instanceof BivariateAxis) {
                 BivariateAxis biAxis = (BivariateAxis)axis;
                 Object values[] = (Object[])tuple.getElement(i);

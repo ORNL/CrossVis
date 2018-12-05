@@ -97,13 +97,13 @@ public class DataTable {
     public void setCalculateQueryStatistics(boolean enabled) {
 	    calculateQueryStatistics.set(enabled);
 	    getActiveQuery().calculateStatistics();
-	    fireDataModelStatisticsChanged();
+	    fireDataTableStatisticsChanged();
     }
 
     public void setCalculateNonQueryStatistics(boolean enabled) {
 	    calculateNonQueryStatistics.set(enabled);
 	    getActiveQuery().calculateStatistics();
-	    fireDataModelStatisticsChanged();
+	    fireDataTableStatisticsChanged();
     }
 
 	public int getNumHistogramBins() {
@@ -433,6 +433,14 @@ public class DataTable {
 		fireBivariateColumnAdded(biColumn);
 	}
 
+	public void setDoubleColumnScaleExtents(ArrayList<DoubleColumn> columns, double minValue, double maxValue) {
+		for (DoubleColumn column : columns) {
+			column.setMinimumScaleValue(minValue);
+			column.setMaximumScaleValue(maxValue);
+		}
+		fireDataTableColumnExtentsChanged();
+	}
+
 	public void enableColumn(Column column) {
 		if (disabledColumns.contains(column)) {
             // move elements from disable column tuples to active tuples list
@@ -486,6 +494,12 @@ public class DataTable {
 			tuples.addAll(getActiveQuery().getNonQueriedTuples());
 			getActiveQuery().clear();
 			calculateStatistics();
+			for (Column column : columns) {
+				if (column instanceof DoubleColumn) {
+					((DoubleColumn)column).setMinimumScaleValue(((DoubleColumn)column).getStatistics().getMinValue());
+					((DoubleColumn)column).setMaximumScaleValue(((DoubleColumn)column).getStatistics().getMaxValue());
+				}
+			}
 			getActiveQuery().setQueriedTuples();
             fireTuplesRemoved(tuplesRemoved);
         }
@@ -849,9 +863,15 @@ public class DataTable {
 		}
 	}
 
-	private void fireDataModelStatisticsChanged() {
+	private void fireDataTableColumnExtentsChanged() {
+		for (DataTableListener listener : listeners) {
+			listener.dataTableColumnExtentsChanged(this);
+		}
+	}
+
+	private void fireDataTableStatisticsChanged() {
 	    for (DataTableListener listener : listeners) {
-	        listener.dataModelStatisticsChanged(this);
+	        listener.dataTableStatisticsChanged(this);
         }
     }
 

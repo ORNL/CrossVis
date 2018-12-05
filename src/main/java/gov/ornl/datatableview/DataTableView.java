@@ -993,8 +993,6 @@ public class DataTableView extends Region implements DataTableListener {
             Tuple tuple = dataTable.getTuple(iTuple);
             TuplePolyline tuplePolyline = new TuplePolyline(tuple);
             tuplePolylines.add(tuplePolyline);
-//            PCPTuple pcpTuple = new PCPTuple(tuple);
-//            tupleList.add(pcpTuple);
         }
 
         fillTupleSets();
@@ -1266,8 +1264,14 @@ public class DataTableView extends Region implements DataTableListener {
     }
 
     @Override
-    public void dataModelStatisticsChanged(DataTable dataModel) {
+    public void dataTableStatisticsChanged(DataTable dataModel) {
         handleQueryChange();
+    }
+
+    @Override
+    public void dataTableColumnExtentsChanged(DataTable dataTable) {
+        //TODO: Relayout everything
+        initView();
     }
 
     @Override

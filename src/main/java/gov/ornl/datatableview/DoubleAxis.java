@@ -75,14 +75,16 @@ public class DoubleAxis extends UnivariateAxis {
         draggingContextValueText.setFill(Color.BLACK);
         draggingContextValueText.setFont(Font.font(DEFAULT_TEXT_SIZE));
 
-        minFocusValue = new SimpleDoubleProperty(column.getStatistics().getMinValue());
-        maxFocusValue = new SimpleDoubleProperty(column.getStatistics().getMaxValue());
+//        minFocusValue = new SimpleDoubleProperty(column.getStatistics().getMinValue());
+//        maxFocusValue = new SimpleDoubleProperty(column.getStatistics().getMaxValue());
+        minFocusValue = new SimpleDoubleProperty(column.getMinimumScaleValue());
+        maxFocusValue = new SimpleDoubleProperty(column.getMaximumScaleValue());
 
-        minValueText = new Text();
+        minValueText = new Text(String.valueOf(column.getMinimumScaleValue()));
         minValueText.setFont(new Font(DEFAULT_TEXT_SIZE));
         minValueText.setSmooth(true);
 
-        maxValueText = new Text();
+        maxValueText = new Text(String.valueOf(column.getMaximumScaleValue()));
         maxValueText.setFont(new Font(DEFAULT_TEXT_SIZE));
         maxValueText.setSmooth(true);
 
@@ -157,10 +159,14 @@ public class DoubleAxis extends UnivariateAxis {
     protected Object getValueForAxisPosition(double axisPosition) {
         if (axisPosition < getFocusMaxPosition()) {
             return GraphicsUtil.mapValue(axisPosition, getFocusMaxPosition(), getUpperContextBar().getY(),
-                    getMaxFocusValue(), doubleColumn().getStatistics().getMaxValue());
+                    getMaxFocusValue(), doubleColumn().getMaximumScaleValue());
+//            return GraphicsUtil.mapValue(axisPosition, getFocusMaxPosition(), getUpperContextBar().getY(),
+//                    getMaxFocusValue(), doubleColumn().getStatistics().getMaxValue());
         } else if (axisPosition > getFocusMinPosition()) {
             return GraphicsUtil.mapValue(axisPosition, getFocusMinPosition(), getLowerContextBar().getY() + getLowerContextBar().getHeight(),
-                    getMinFocusValue(), doubleColumn().getStatistics().getMinValue());
+                    getMinFocusValue(), doubleColumn().getMinimumScaleValue());
+//            return GraphicsUtil.mapValue(axisPosition, getFocusMinPosition(), getLowerContextBar().getY() + getLowerContextBar().getHeight(),
+//                    getMinFocusValue(), doubleColumn().getStatistics().getMinValue());
         }
 
         return GraphicsUtil.mapValue(axisPosition, getFocusMinPosition(), getFocusMaxPosition(),
@@ -173,11 +179,15 @@ public class DoubleAxis extends UnivariateAxis {
 
     private double getAxisPositionForValue(double value) {
         if (value > getMaxFocusValue()) {
-            return GraphicsUtil.mapValue(value, getMaxFocusValue(), doubleColumn().getStatistics().getMaxValue(),
+            return GraphicsUtil.mapValue(value, getMaxFocusValue(), doubleColumn().getMaximumScaleValue(),
                     getFocusMaxPosition(), getUpperContextBar().getY());
+//            return GraphicsUtil.mapValue(value, getMaxFocusValue(), doubleColumn().getStatistics().getMaxValue(),
+//                    getFocusMaxPosition(), getUpperContextBar().getY());
         } else if (value < getMinFocusValue()) {
-            return GraphicsUtil.mapValue(value, getMinFocusValue(), doubleColumn().getStatistics().getMinValue(),
+            return GraphicsUtil.mapValue(value, getMinFocusValue(), doubleColumn().getMinimumScaleValue(),
                     getFocusMinPosition(), getLowerContextBar().getY() + getLowerContextBar().getHeight());
+//            return GraphicsUtil.mapValue(value, getMinFocusValue(), doubleColumn().getStatistics().getMinValue(),
+//                    getFocusMinPosition(), getLowerContextBar().getY() + getLowerContextBar().getHeight());
         }
 
         return GraphicsUtil.mapValue(value, getMinFocusValue(), getMaxFocusValue(), getFocusMinPosition(), getFocusMaxPosition());
@@ -192,24 +202,41 @@ public class DoubleAxis extends UnivariateAxis {
 
     public DoubleAxis doubleAxis() { return (DoubleAxis)this; }
 
+    public String toString() {
+        return doubleColumn().getName();
+    }
+
     private void registerListeners() {
-        minValueText.textProperty().bindBidirectional(((DoubleColumn)getColumn()).getStatistics().minValueProperty(),
-                new NumberStringConverter());
-
-        maxValueText.textProperty().bindBidirectional(((DoubleColumn)getColumn()).getStatistics().maxValueProperty(),
-                new NumberStringConverter());
-
-        doubleColumn().getStatistics().minValueProperty().addListener(observable -> {
-            if (getMinFocusValue() < doubleColumn().getStatistics().getMinValue()) {
-                setMinFocusValue(doubleColumn().getStatistics().getMinValue());
+        doubleColumn().minimumScaleValueProperty().addListener(observable -> {
+            minValueText.setText(String.valueOf(doubleColumn().getMinimumScaleValue()));
+            if (getMinFocusValue() < doubleColumn().getMinimumScaleValue()) {
+                setMinFocusValue(doubleColumn().getMinimumScaleValue());
             }
         });
 
-        doubleColumn().getStatistics().maxValueProperty().addListener(observable -> {
-            if (getMaxFocusValue() > doubleColumn().getStatistics().getMaxValue()) {
-                setMaxFocusValue(doubleColumn().getStatistics().getMaxValue());
+        doubleColumn().maximumScaleValueProperty().addListener(observable -> {
+            maxValueText.setText(String.valueOf(doubleColumn().getMaximumScaleValue()));
+            if (getMaxFocusValue() > doubleColumn().getMaximumScaleValue()) {
+                setMaxFocusValue(doubleColumn().getMaximumScaleValue());
             }
         });
+//        minValueText.textProperty().bindBidirectional(((DoubleColumn)getColumn()).getStatistics().minValueProperty(),
+//                new NumberStringConverter());
+//
+//        maxValueText.textProperty().bindBidirectional(((DoubleColumn)getColumn()).getStatistics().maxValueProperty(),
+//                new NumberStringConverter());
+//
+//        doubleColumn().getStatistics().minValueProperty().addListener(observable -> {
+//            if (getMinFocusValue() < doubleColumn().getStatistics().getMinValue()) {
+//                setMinFocusValue(doubleColumn().getStatistics().getMinValue());
+//            }
+//        });
+//
+//        doubleColumn().getStatistics().maxValueProperty().addListener(observable -> {
+//            if (getMaxFocusValue() > doubleColumn().getStatistics().getMaxValue()) {
+//                setMaxFocusValue(doubleColumn().getStatistics().getMaxValue());
+//            }
+//        });
 
         minFocusValueText.textProperty().bind(Bindings.convert(minFocusValue));
 
@@ -300,15 +327,20 @@ public class DoubleAxis extends UnivariateAxis {
             double newMinFocusValue;
             if (y > getFocusMinPosition()) {
                 // above the min position (use context range)
-                newMinFocusValue = GraphicsUtil.mapValue(y, getFocusMinPosition(), getLowerContextBar().getLayoutBounds().getMaxY(), getMinFocusValue(),
-                        doubleColumn().getStatistics().getMinValue());
-                if (newMinFocusValue < doubleColumn().getStatistics().getMinValue()) {
-                    newMinFocusValue = doubleColumn().getStatistics().getMinValue();
+                newMinFocusValue = GraphicsUtil.mapValue(y, getFocusMinPosition(),
+                        getLowerContextBar().getLayoutBounds().getMaxY(), getMinFocusValue(),
+                        doubleColumn().getMinimumScaleValue());
+//                        doubleColumn().getStatistics().getMinValue());
+                if (newMinFocusValue < doubleColumn().getMinimumScaleValue()) {
+                    newMinFocusValue = doubleColumn().getMinimumScaleValue();
+//                    if (newMinFocusValue < doubleColumn().getStatistics().getMinValue()) {
+//                    newMinFocusValue = doubleColumn().getStatistics().getMinValue();
                     dy = getUpperContextBar().getHeight();
                 }
             } else {
                 // in focus region (use focus min / max)
-                newMinFocusValue = GraphicsUtil.mapValue(y, getFocusMaxPosition(), getFocusMinPosition(), getMaxFocusValue(), getMinFocusValue());
+                newMinFocusValue = GraphicsUtil.mapValue(y, getFocusMaxPosition(), getFocusMinPosition(),
+                        getMaxFocusValue(), getMinFocusValue());
                 if (newMinFocusValue > getMaxFocusValue()) {
                     newMinFocusValue = getMaxFocusValue();
                     dy = -getAxisBar().getHeight();
@@ -371,15 +403,19 @@ public class DoubleAxis extends UnivariateAxis {
             double newMaxFocusValue;
             if (y < getFocusMaxPosition()) {
                 // above the max position (use context range)
-                newMaxFocusValue = GraphicsUtil.mapValue(y, getFocusMaxPosition(), getUpperContextBar().getY(), getMaxFocusValue(),
-                        doubleColumn().getStatistics().getMaxValue());
-                if (newMaxFocusValue > doubleColumn().getStatistics().getMaxValue()) {
-                    newMaxFocusValue = doubleColumn().getStatistics().getMaxValue();
+                newMaxFocusValue = GraphicsUtil.mapValue(y, getFocusMaxPosition(), getUpperContextBar().getY(),
+                        getMaxFocusValue(), doubleColumn().getMaximumScaleValue());
+//                        doubleColumn().getStatistics().getMaxValue());
+                if (newMaxFocusValue > doubleColumn().getMaximumScaleValue()) {
+                    newMaxFocusValue = doubleColumn().getMaximumScaleValue();
+//                if (newMaxFocusValue > doubleColumn().getStatistics().getMaxValue()) {
+//                    newMaxFocusValue = doubleColumn().getStatistics().getMaxValue();
                     dy = -getUpperContextBar().getHeight();
                 }
             } else {
                 // in focus region (use focus min / max)
-                newMaxFocusValue = GraphicsUtil.mapValue(y, getFocusMaxPosition(), getFocusMinPosition(), getMaxFocusValue(), getMinFocusValue());
+                newMaxFocusValue = GraphicsUtil.mapValue(y, getFocusMaxPosition(), getFocusMinPosition(),
+                        getMaxFocusValue(), getMinFocusValue());
                 if (newMaxFocusValue < getMinFocusValue()) {
                     newMaxFocusValue = getMinFocusValue();
                     dy = getAxisBar().getHeight();

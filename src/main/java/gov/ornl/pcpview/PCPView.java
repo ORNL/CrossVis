@@ -1096,8 +1096,13 @@ public class PCPView extends Region implements DataTableListener {
     }
 
     @Override
-    public void dataModelStatisticsChanged(DataTable dataModel) {
+    public void dataTableStatisticsChanged(DataTable dataModel) {
         handleQueryChange();
+    }
+
+    @Override
+    public void dataTableColumnExtentsChanged(DataTable dataTable) {
+
     }
 
     @Override

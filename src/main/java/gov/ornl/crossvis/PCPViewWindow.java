@@ -346,7 +346,12 @@ public class PCPViewWindow extends Application implements DataTableListener {
     }
 
     @Override
-    public void dataModelStatisticsChanged(DataTable dataModel) {
+    public void dataTableStatisticsChanged(DataTable dataModel) {
+
+    }
+
+    @Override
+    public void dataTableColumnExtentsChanged(DataTable dataTable) {
 
     }
 

@@ -1,12 +1,17 @@
 package gov.ornl.datatable;
 
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.ReadOnlyDoubleProperty;
+import javafx.beans.property.SimpleDoubleProperty;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
 public class DoubleColumn extends Column {
-
     private DoubleColumnSummaryStats summaryStats;
+    private DoubleProperty minimumScaleValue = new SimpleDoubleProperty(Double.NaN);
+    private DoubleProperty maximumScaleValue = new SimpleDoubleProperty(Double.NaN);
 
     public DoubleColumn(String name) {
         super(name);
@@ -17,7 +22,26 @@ public class DoubleColumn extends Column {
             summaryStats = new DoubleColumnSummaryStats(this, getDataModel().getNumHistogramBins(), null);
         }
         summaryStats.setValues(getValues(), getDataModel().getNumHistogramBins());
+
+        if (Double.isNaN(getMinimumScaleValue())) {
+            setMinimumScaleValue(summaryStats.getMinValue());
+        }
+        if (Double.isNaN(getMaximumScaleValue())) {
+            setMaximumScaleValue(summaryStats.getMaxValue());
+        }
     }
+
+    public double getMinimumScaleValue() { return minimumScaleValue.get(); }
+
+    protected void setMinimumScaleValue(double value) { minimumScaleValue.set(value); }
+
+    public ReadOnlyDoubleProperty minimumScaleValueProperty() { return minimumScaleValue; }
+
+    public double getMaximumScaleValue() { return maximumScaleValue.get(); }
+
+    protected void setMaximumScaleValue(double value) { maximumScaleValue.set(value); }
+
+    public ReadOnlyDoubleProperty maximumScaleValueProperty() { return maximumScaleValue; }
 
     public double[] getValues() {
         int columnIndex = getDataModel().getColumnIndex(this);

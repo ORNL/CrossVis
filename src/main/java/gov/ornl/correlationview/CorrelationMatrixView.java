@@ -537,10 +537,15 @@ public class CorrelationMatrixView extends Region implements DataTableListener {
     }
 
     @Override
-    public void dataModelStatisticsChanged(DataTable dataModel) {
+    public void dataTableStatisticsChanged(DataTable dataModel) {
         clearView();
         initView();
         resizeView();
+    }
+
+    @Override
+    public void dataTableColumnExtentsChanged(DataTable dataTable) {
+
     }
 
     @Override
