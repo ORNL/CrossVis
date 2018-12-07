@@ -45,13 +45,22 @@ public class DoubleColumn extends Column {
 
     public double[] getValues() {
         int columnIndex = getDataModel().getColumnIndex(this);
+        if (columnIndex == -1) {
+            columnIndex = getDataModel().getDisabledColumns().indexOf(this);
+            double values[] = new double[getDataModel().getTupleCount()];
+            for (int i = 0; i < getDataModel().getTupleCount(); i++) {
+                values[i] = (double) getDataModel().getDisabledTuple(i).getElement(columnIndex);
+            }
 
-        double values[] = new double[getDataModel().getTupleCount()];
-        for (int i = 0; i < getDataModel().getTupleCount(); i++) {
-            values[i] = (double)getDataModel().getTuple(i).getElement(columnIndex);
+            return values;
+        } else {
+            double values[] = new double[getDataModel().getTupleCount()];
+            for (int i = 0; i < getDataModel().getTupleCount(); i++) {
+                values[i] = (double) getDataModel().getTuple(i).getElement(columnIndex);
+            }
+
+            return values;
         }
-        
-        return values;
     }
 
     public List<Double> getValuesAsList() {

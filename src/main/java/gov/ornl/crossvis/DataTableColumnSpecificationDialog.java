@@ -27,19 +27,19 @@ public class DataTableColumnSpecificationDialog {
     private static final Logger log = Logger.getLogger(DataTableColumnSpecificationDialog.class.getName());
 
     private static String dateTimeFormatExampleString =
-        "BASIC_ISO_DATE: '20111203'\n" +
-        "ISO_DATE: '2011-12-03' or '2011-12-03+01:00'\n" +
+//        "BASIC_ISO_DATE: '20111203'\n" +
+//        "ISO_DATE: '2011-12-03' or '2011-12-03+01:00'\n" +
         "ISO_DATE_TIME: '2011-12-03T10:15:30', '2011-12-03T10:15:30+01:00' or '2011-12-03T10:15:30+01:00[Europe/Paris]'\n" +
         "ISO_INSTANT: '2011-12-03T10:15:30Z'\n" +
-        "ISO_LOCAL_DATE: '2011-12-03'\n" +
+//        "ISO_LOCAL_DATE: '2011-12-03'\n" +
         "ISO_LOCAL_DATE_TIME: '2011-12-03T10:15:30'\n" +
-        "ISO_LOCAL_TIME: '10:15' or '10:15:30'\n" +
-        "ISO_OFFSET_DATE: '2011-12-03+01:00'\n" +
+//        "ISO_LOCAL_TIME: '10:15' or '10:15:30'\n" +
+//        "ISO_OFFSET_DATE: '2011-12-03+01:00'\n" +
         "ISO_OFFSET_DATE_TIME: '2011-12-03T10:15:30+01:00'\n" +
-        "ISO_OFFSET_TIME: '10:15+01:00' or '10:15:30+01:00'\n" +
-        "ISO_ORDINAL_DATE: '2012-337'\n" +
-        "ISO_TIME: '10:15', '10:15:30' or '10:15:30+01:00'\n" +
-        "ISO_WEEK_DATE: '2012-W48-6'\n" +
+//        "ISO_OFFSET_TIME: '10:15+01:00' or '10:15:30+01:00'\n" +
+//        "ISO_ORDINAL_DATE: '2012-337'\n" +
+//        "ISO_TIME: '10:15', '10:15:30' or '10:15:30+01:00'\n" +
+//        "ISO_WEEK_DATE: '2012-W48-6'\n" +
         "ISO_ZONED_DATE_TIME: '2011-12-03T10:15:30+01:00[Europe/Paris]'\n" +
         "RFC_1123_DATE_TIME: 'Tue, 3 Jun 2008 11:05:30 GMT'\n";
 
@@ -117,19 +117,19 @@ public class DataTableColumnSpecificationDialog {
 
         ArrayList<String> parsePatterns = new ArrayList<>();
         parsePatterns.add("");
-        parsePatterns.add("BASIC_ISO_DATE");
-        parsePatterns.add("ISO_DATE");
+//        parsePatterns.add("BASIC_ISO_DATE");
+//        parsePatterns.add("ISO_DATE");
         parsePatterns.add("ISO_DATE_TIME");
         parsePatterns.add("ISO_INSTANT");
-        parsePatterns.add("ISO_LOCAL_DATE");
+//        parsePatterns.add("ISO_LOCAL_DATE");
         parsePatterns.add("ISO_LOCAL_DATE_TIME");
-        parsePatterns.add("ISO_LOCAL_TIME");
-        parsePatterns.add("ISO_OFFSET_DATE");
+//        parsePatterns.add("ISO_LOCAL_TIME");
+//        parsePatterns.add("ISO_OFFSET_DATE");
         parsePatterns.add("ISO_OFFSET_DATE_TIME");
-        parsePatterns.add("ISO_OFFSET_TIME");
-        parsePatterns.add("ISO_ORDINAL_DATE");
-        parsePatterns.add("ISO_TIME");
-        parsePatterns.add("ISO_WEEK_DATE");
+//        parsePatterns.add("ISO_OFFSET_TIME");
+//        parsePatterns.add("ISO_ORDINAL_DATE");
+//        parsePatterns.add("ISO_TIME");
+//        parsePatterns.add("ISO_WEEK_DATE");
         parsePatterns.add("ISO_ZONED_DATE_TIME");
         parsePatterns.add("RFC_1123_DATE_TIME");
 

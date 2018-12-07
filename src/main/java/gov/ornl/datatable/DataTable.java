@@ -334,6 +334,10 @@ public class DataTable {
 		return tuples.get(idx);
 	}
 
+	public Tuple getDisabledTuple(int idx) {
+		return disabledColumnTuples.get(idx);
+	}
+
 	public Column getColumn(int idx) {
 		return columns.get(idx);
 	}
