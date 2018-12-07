@@ -1,9 +1,6 @@
 package gov.ornl.crossvis;
 
-import gov.ornl.datatable.CategoricalColumnSelection;
-import gov.ornl.datatable.ColumnSelection;
-import gov.ornl.datatable.DoubleColumnSelectionRange;
-import gov.ornl.datatable.TemporalColumnSelectionRange;
+import gov.ornl.datatable.*;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ObservableValue;
 import javafx.scene.control.Alert;
@@ -16,6 +13,8 @@ import javafx.util.Callback;
 
 import java.time.Instant;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
+import java.util.HashSet;
 
 public class QueryTableFactory {
     private static TableColumn<ColumnSelection, String> createMaxValueColumn(TableView tableView, boolean isTemporal) {
@@ -132,7 +131,20 @@ public class QueryTableFactory {
         categoriesColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<ColumnSelection, String>, ObservableValue<String>>() {
             public ObservableValue<String> call(TableColumn.CellDataFeatures<ColumnSelection, String> t) {
 //                if (t.getValue() instanceof CategoricalColumnSelection) {
-                    return new ReadOnlyObjectWrapper(((CategoricalColumnSelection)t.getValue()).getSelectedCategories().toString());
+                if (((CategoricalColumnSelection)t.getValue()).getSelectedCategories().isEmpty()) {
+                    return new ReadOnlyObjectWrapper("");
+                } else {
+                    String categoriesString = "";
+                    int counter = 0;
+                    for (String selectedCategory : ((CategoricalColumnSelection)t.getValue()).getSelectedCategories()) {
+                        categoriesString += selectedCategory;
+                        if (++counter < ((CategoricalColumnSelection)t.getValue()).getSelectedCategories().size()) {
+                            categoriesString += ", ";
+                        }
+                    }
+                    return new ReadOnlyObjectWrapper<>(categoriesString);
+                }
+//                    return new ReadOnlyObjectWrapper(((CategoricalColumnSelection)t.getValue()).getSelectedCategories().toString());
 //                    return new ReadOnlyObjectWrapper(((TemporalColumnSelectionRange)t.getValue()).getStartInstant().toString());
 //                } else {
 //                    return new ReadOnlyObjectWrapper(String.valueOf(((DoubleColumnSelectionRange)t.getValue()).getMinValue()));
@@ -140,8 +152,32 @@ public class QueryTableFactory {
             }
         });
         categoriesColumn.setOnEditCommit((TableColumn.CellEditEvent<ColumnSelection, String> t) -> {
-            String categoriesString = t.getNewValue();
+            String categoriesString = t.getNewValue().trim();
             System.out.println("categoriesString in setOnEditCommit() is " + categoriesString);
+
+            if (categoriesString.isEmpty()) {
+                t.getRowValue().getColumn().getDataModel().removeColumnSelectionFromActiveQuery(t.getRowValue());
+            } else {
+                CategoricalColumn categoricalColumn = (CategoricalColumn)t.getRowValue().getColumn();
+                // parse new selected categories string
+                HashSet<String> newSelectedCategories = new HashSet<>();
+                String userEnteredCategories[] = categoriesString.split(",");
+
+                for (int i = 0; i < userEnteredCategories.length; i++) {
+                    String userEnteredCategory = userEnteredCategories[i].trim();
+                    if (categoricalColumn.getCategories().contains(userEnteredCategory)) {
+                        newSelectedCategories.add(userEnteredCategory);
+                    }
+                }
+
+                if (newSelectedCategories.isEmpty()) {
+                    t.getRowValue().getColumn().getDataModel().removeColumnSelectionFromActiveQuery(t.getRowValue());
+                } else {
+                    CategoricalColumnSelection categoricalColumnSelection = (CategoricalColumnSelection)t.getRowValue();
+                    categoricalColumnSelection.setSelectedCategories(newSelectedCategories);
+                    t.getTableView().refresh();
+                }
+            }
 //            if (t.getRowValue() instanceof TemporalColumnSelectionRange) {
 //                try {
 //                    Instant instant = Instant.parse(t.getNewValue());
@@ -214,6 +250,7 @@ public class QueryTableFactory {
     public static TableView<ColumnSelection> buildCategoricalSelectionTable() {
         // create tableview for categorical column selections
         TableView<ColumnSelection> categoricalSelectionTableView = new TableView<>();
+        categoricalSelectionTableView.setEditable(true);
 
         TableColumn<ColumnSelection, String> nameColumn = new TableColumn<>("Column");
         nameColumn.setMinWidth(140);
