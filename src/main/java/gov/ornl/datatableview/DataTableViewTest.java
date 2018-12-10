@@ -54,21 +54,21 @@ public class DataTableViewTest extends Application {
 				dataTable.setCalculateNonQueryStatistics(true);
 
 				// reads titan data with date field
-//                ArrayList<String> temporalColumnNames = new ArrayList<>();
-//                temporalColumnNames.add("Date");
-//                ArrayList<DateTimeFormatter> temporalColumnFormatters = new ArrayList<>();
-//                temporalColumnFormatters.add(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss"));
-//                IOUtilities.readCSV(new File("data/csv/titan-performance.csv"), null, null,
-//                        temporalColumnNames, temporalColumnFormatters, dataTable);
+                ArrayList<String> temporalColumnNames = new ArrayList<>();
+                temporalColumnNames.add("Date");
+                ArrayList<DateTimeFormatter> temporalColumnFormatters = new ArrayList<>();
+                temporalColumnFormatters.add(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss"));
+                IOUtilities.readCSV(new File("data/csv/titan-performance.csv"), null, null,
+                        temporalColumnNames, temporalColumnFormatters, dataTable);
 
 				// Reads cars data set
 //                IOUtilities.readCSV(new File("data/csv/cars.csv"), null, null, null, null, dataTable);
 
-				ArrayList<String> categoricalColumnNames = new ArrayList<>();
-				categoricalColumnNames.add("Origin");
-				categoricalColumnNames.add("Cylinders");
-				IOUtilities.readCSV(new File("data/csv/cars-cat.csv"), null, categoricalColumnNames, null, null,
-						dataTable);
+//				ArrayList<String> categoricalColumnNames = new ArrayList<>();
+//				categoricalColumnNames.add("Origin");
+//				categoricalColumnNames.add("Cylinders");
+//				IOUtilities.readCSV(new File("data/csv/cars-cat.csv"), null, categoricalColumnNames, null, null,
+//						dataTable);
 
 //				ArrayList<String> categoricalColumnNames = new ArrayList<>();
 //				categoricalColumnNames.add("TYPE");

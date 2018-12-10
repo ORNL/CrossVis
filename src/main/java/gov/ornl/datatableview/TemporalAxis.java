@@ -5,6 +5,7 @@ import gov.ornl.util.GraphicsUtil;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.Point2D;
+import javafx.geometry.VPos;
 import javafx.scene.Group;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
@@ -26,7 +27,6 @@ public class TemporalAxis extends UnivariateAxis {
     private ArrayList<Rectangle> queryHistogramRectangles = new ArrayList<>();
 
     private Color histogramFill = DEFAULT_HISTOGRAM_FILL;
-    private Color histogramStroke = DEFAULT_HISTOGRAM_STROKE;
     private Color queryHistogramFill = DEFAULT_QUERY_HISTOGRAM_FILL;
 
     private Text startInstantText;
@@ -49,8 +49,10 @@ public class TemporalAxis extends UnivariateAxis {
         super(dataTableView, column);
 
         draggingContextLine = new Line();
-        draggingContextLine.setStroke(Color.BLACK);
-        draggingContextLine.setStrokeWidth(2.);
+        draggingContextLine.setStroke(getLowerContextBarHandle().getStroke());
+        draggingContextLine.setStrokeWidth(getLowerContextBarHandle().getStrokeWidth());
+        draggingContextLine.setStrokeLineCap(getLowerContextBarHandle().getStrokeLineCap());
+//        draggingContextLine.setStrokeWidth(2.);
 
         draggingContextInstantText = new Text();
         draggingContextInstantText.setFill(Color.BLACK);
@@ -59,20 +61,30 @@ public class TemporalAxis extends UnivariateAxis {
         startInstantText = new Text(temporalColumn().getStatistics().getStartInstant().toString());
         startInstantText.setFont(new Font(DEFAULT_TEXT_SIZE));
         startInstantText.setSmooth(true);
+        startInstantText.setTextOrigin(VPos.TOP);
+        startInstantText.setTranslateY(1.);
 
         endInstantText = new Text(temporalColumn().getStatistics().getEndInstant().toString());
         endInstantText.setFont(new Font(DEFAULT_TEXT_SIZE));
         endInstantText.setSmooth(true);
+        endInstantText.setTextOrigin(VPos.BOTTOM);
+        endInstantText.setTranslateY(-2.);
 
-        focusStartInstantValue = new SimpleObjectProperty<>(temporalColumn().getStatistics().getStartInstant());
+        focusStartInstantValue = new SimpleObjectProperty<>(temporalColumn().getStartScaleValue());
         focusStartInstantText = new Text(focusStartInstantValue.get().toString());
         focusStartInstantText.setFont(new Font(DEFAULT_TEXT_SIZE));
         focusStartInstantText.setSmooth(true);
+        focusStartInstantText.setTextOrigin(VPos.TOP);
+        focusStartInstantText.setTranslateY(2.);
+        focusStartInstantText.setMouseTransparent(true);
 
-        focusEndInstantValue = new SimpleObjectProperty<>(temporalColumn().getStatistics().getEndInstant());
+        focusEndInstantValue = new SimpleObjectProperty<>(temporalColumn().getEndScaleValue());
         focusEndInstantText = new Text(focusEndInstantValue.get().toString());
         focusEndInstantText.setFont(new Font(DEFAULT_TEXT_SIZE));
         focusEndInstantText.setSmooth(true);
+        focusEndInstantText.setTextOrigin(VPos.BOTTOM);
+        focusEndInstantText.setTranslateY(-3.);
+        focusEndInstantText.setMouseTransparent(true);
 
         getAxisBar().setWidth(DEFAULT_BAR_WIDTH);
 
@@ -117,11 +129,15 @@ public class TemporalAxis extends UnivariateAxis {
 
     public double getAxisPositionForValue(Instant instant) {
         if (instant.isAfter(getFocusEndInstant())) {
-            return GraphicsUtil.mapValue(instant, getFocusEndInstant(), temporalColumn().getStatistics().getEndInstant(),
+            return GraphicsUtil.mapValue(instant, getFocusEndInstant(), temporalColumn().getEndScaleValue(),
                     getFocusMaxPosition(), getUpperContextBar().getY());
+//            return GraphicsUtil.mapValue(instant, getFocusEndInstant(), temporalColumn().getStatistics().getEndInstant(),
+//                    getFocusMaxPosition(), getUpperContextBar().getY());
         } else if (instant.isBefore(getFocusStartInstant())) {
-            return GraphicsUtil.mapValue(instant, getFocusStartInstant(), temporalColumn().getStatistics().getStartInstant(),
+            return GraphicsUtil.mapValue(instant, getFocusStartInstant(), temporalColumn().getStartScaleValue(),
                     getFocusMinPosition(), getLowerContextBar().getY() + getLowerContextBar().getHeight());
+//            return GraphicsUtil.mapValue(instant, getFocusStartInstant(), temporalColumn().getStatistics().getStartInstant(),
+//                    getFocusMinPosition(), getLowerContextBar().getY() + getLowerContextBar().getHeight());
         }
 
         return GraphicsUtil.mapValue(instant, getFocusStartInstant(), getFocusEndInstant(),
@@ -132,10 +148,14 @@ public class TemporalAxis extends UnivariateAxis {
     protected Object getValueForAxisPosition(double axisPosition) {
         if (axisPosition < getFocusMaxPosition()) {
             return GraphicsUtil.mapValue(axisPosition, getFocusMaxPosition(), getUpperContextBar().getY(),
-                    getFocusEndInstant(), temporalColumn().getStatistics().getEndInstant());
+                    getFocusEndInstant(), temporalColumn().getEndScaleValue());
+//            return GraphicsUtil.mapValue(axisPosition, getFocusMaxPosition(), getUpperContextBar().getY(),
+//                    getFocusEndInstant(), temporalColumn().getStatistics().getEndInstant());
         } else if (axisPosition > getFocusMinPosition()) {
             return GraphicsUtil.mapValue(axisPosition, getFocusMinPosition(), getUpperContextBar().getY() + getUpperContextBar().getHeight(),
-                    getFocusStartInstant(), temporalColumn().getStatistics().getStartInstant());
+                    getFocusStartInstant(), temporalColumn().getStartScaleValue());
+//            return GraphicsUtil.mapValue(axisPosition, getFocusMinPosition(), getUpperContextBar().getY() + getUpperContextBar().getHeight(),
+//                    getFocusStartInstant(), temporalColumn().getStatistics().getStartInstant());
         }
 
         return GraphicsUtil.mapValue(axisPosition, getFocusMinPosition(), getFocusMaxPosition(),
@@ -143,7 +163,7 @@ public class TemporalAxis extends UnivariateAxis {
     }
 
     private void initAxisInteriorDataPlot() {
-        
+
     }
 
     private void registerListeners() {
@@ -151,19 +171,33 @@ public class TemporalAxis extends UnivariateAxis {
             initAxisInteriorDataPlot();
         });
 
-        ((TemporalColumn)getColumn()).getStatistics().startInstantProperty().addListener((observable, oldValue, newValue) -> {
-            startInstantText.setText(newValue.toString());
-            if (getFocusStartInstant().isBefore(newValue)) {
-                setFocusStartInstant(newValue);
+        temporalColumn().startScaleValueProperty().addListener(observable -> {
+            startInstantText.setText(temporalColumn().getStartScaleValue().toString());
+            if (getFocusStartInstant().isBefore(temporalColumn().getStartScaleValue())) {
+                setFocusStartInstant(temporalColumn().getStartScaleValue());
             }
         });
 
-        ((TemporalColumn)getColumn()).getStatistics().endInstantProperty().addListener((observable, oldValue, newValue) -> {
-            endInstantText.setText(newValue.toString());
-            if (getFocusEndInstant().isAfter(newValue)) {
-                setFocusEndInstant(newValue);
+        temporalColumn().endScaleValueProperty().addListener(observable -> {
+            endInstantText.setText(temporalColumn().getEndScaleValue().toString());
+            if (getFocusEndInstant().isAfter(temporalColumn().getEndScaleValue())) {
+                setFocusEndInstant(temporalColumn().getEndScaleValue());
             }
         });
+
+//        ((TemporalColumn)getColumn()).getStatistics().startInstantProperty().addListener((observable, oldValue, newValue) -> {
+//            startInstantText.setText(newValue.toString());
+//            if (getFocusStartInstant().isBefore(newValue)) {
+//                setFocusStartInstant(newValue);
+//            }
+//        });
+//
+//        ((TemporalColumn)getColumn()).getStatistics().endInstantProperty().addListener((observable, oldValue, newValue) -> {
+//            endInstantText.setText(newValue.toString());
+//            if (getFocusEndInstant().isAfter(newValue)) {
+//                setFocusEndInstant(newValue);
+//            }
+//        });
 
         focusStartInstantValue.addListener((observable, oldValue, newValue) -> {
             focusStartInstantText.setText(newValue.toString());
@@ -251,19 +285,22 @@ public class TemporalAxis extends UnivariateAxis {
 //            hoverValueText.toFront();
         });
 
-        getLowerContextBar().setOnMouseDragged(event -> {
+        getLowerContextBarHandle().setOnMouseDragged(event -> {
             if (!dragging) {
                 dragging = true;
                 dragStartPoint = new Point2D(event.getX(), event.getY());
-                draggingContextLine.setStartX(getBarLeftX());
-                draggingContextLine.setEndX(getBarRightX());
-                draggingContextLine.setStartY(getFocusMinPosition());
-                draggingContextLine.setEndY(getFocusMinPosition());
+                draggingContextLine.setStartX(getLowerContextBarHandle().getStartX());
+                draggingContextLine.setEndX(getLowerContextBarHandle().getEndX());
+                draggingContextLine.setStartY(getLowerContextBarHandle().getStartY());
+                draggingContextLine.setEndY(getLowerContextBarHandle().getEndY());
                 draggingContextLine.setTranslateY(0);
-                draggingContextInstantText.setX(focusStartInstantText.getX());
+                draggingContextInstantText.setX(getCenterX());
                 draggingContextInstantText.setY(focusStartInstantText.getY());
                 draggingContextInstantText.setTranslateY(0);
+                draggingContextInstantText.setTextOrigin(VPos.TOP);
                 getGraphicsGroup().getChildren().addAll(draggingContextLine, draggingContextInstantText);
+                getLowerContextBarHandle().setVisible(false);
+                focusStartInstantText.setVisible(false);
             }
 
             dragEndPoint = new Point2D(event.getX(), event.getY());
@@ -274,11 +311,15 @@ public class TemporalAxis extends UnivariateAxis {
             Instant newFocusStartInstant;
             if (y > getFocusMinPosition()) {
                 // above the focus start instant in lower context region (use context range)
-                newFocusStartInstant = GraphicsUtil.mapValue(y, getFocusMinPosition(), getLowerContextBar().getLayoutBounds().getMaxY(),
-                        getFocusStartInstant(), temporalColumn().getStatistics().getStartInstant());
-                if (newFocusStartInstant.isBefore(temporalColumn().getStatistics().getStartInstant())) {
-                    newFocusStartInstant = Instant.from(temporalColumn().getStatistics().getStartInstant());
-                    dy = getUpperContextBar().getHeight();
+                newFocusStartInstant = GraphicsUtil.mapValue(y, getFocusMinPosition(),
+                        getLowerContextBar().getLayoutBounds().getMaxY(),
+                        getFocusStartInstant(), temporalColumn().getStartScaleValue());
+                if (newFocusStartInstant.isBefore(temporalColumn().getStartScaleValue())) {
+                    newFocusStartInstant = Instant.from(temporalColumn().getStartScaleValue());
+//                    dy = getUpperContextBar().getHeight();
+                }
+                if (y > getLowerContextBar().getLayoutBounds().getMaxY()) {
+                    dy = getLowerContextBar().getLayoutBounds().getMaxY() - dragStartPoint.getY();
                 }
             } else {
                 // inside focus region (use focus start and end)
@@ -292,15 +333,19 @@ public class TemporalAxis extends UnivariateAxis {
 
             draggingStartInstant = Instant.from(newFocusStartInstant);
             draggingContextInstantText.setText(draggingStartInstant.toString());
-            draggingContextInstantText.setTranslateY(dy);
+            draggingContextInstantText.setTranslateY(dy + 2);
+            draggingContextInstantText.setTranslateX(-draggingContextInstantText.getLayoutBounds().getWidth() / 2.);
 
             draggingContextLine.setTranslateY(dy);
         });
 
-        getLowerContextBar().setOnMouseReleased(event -> {
+        getLowerContextBarHandle().setOnMouseReleased(event -> {
             if (dragging) {
                 dragging = false;
                 getGraphicsGroup().getChildren().removeAll(draggingContextInstantText, draggingContextLine);
+                getLowerContextBarHandle().setVisible(true);
+                focusStartInstantText.setVisible(true);
+
                 if (!getFocusStartInstant().equals(draggingStartInstant)) {
                     setFocusStartInstant(draggingStartInstant);
                     getDataTableView().resizeView();
@@ -323,19 +368,22 @@ public class TemporalAxis extends UnivariateAxis {
             }
         });
 
-        getUpperContextBar().setOnMouseDragged(event -> {
+        getUpperContextBarHandle().setOnMouseDragged(event -> {
             if (!dragging) {
                 dragging = true;
                 dragStartPoint = new Point2D(event.getX(), event.getY());
-                draggingContextLine.setStartX(getBarLeftX());
-                draggingContextLine.setEndX(getBarRightX());
-                draggingContextLine.setStartY(getFocusMaxPosition());
-                draggingContextLine.setEndY(getFocusMaxPosition());
+                draggingContextLine.setStartX(getUpperContextBarHandle().getStartX());
+                draggingContextLine.setEndX(getUpperContextBarHandle().getEndX());
+                draggingContextLine.setStartY(getUpperContextBarHandle().getStartY());
+                draggingContextLine.setEndY(getUpperContextBarHandle().getEndY());
                 draggingContextLine.setTranslateY(0);
-                draggingContextInstantText.setX(focusEndInstantText.getX());
+                draggingContextInstantText.setX(getCenterX());
                 draggingContextInstantText.setY(focusEndInstantText.getY());
+                draggingContextInstantText.setTextOrigin(VPos.BOTTOM);
                 draggingContextInstantText.setTranslateY(0);
                 getGraphicsGroup().getChildren().addAll(draggingContextLine, draggingContextInstantText);
+                getUpperContextBarHandle().setVisible(false);
+                focusEndInstantText.setVisible(false);
             }
 
             dragEndPoint = new Point2D(event.getX(), event.getY());
@@ -347,10 +395,13 @@ public class TemporalAxis extends UnivariateAxis {
             if (y < getFocusMaxPosition()) {
                 // above the focus end instant in upper context region (use context range)
                 newFocusEndInstant = GraphicsUtil.mapValue(y, getFocusMaxPosition(), getUpperContextBar().getY(),
-                        getFocusEndInstant(), temporalColumn().getStatistics().getEndInstant());
-                if (newFocusEndInstant.isAfter(temporalColumn().getStatistics().getEndInstant())) {
-                    newFocusEndInstant = Instant.from(temporalColumn().getStatistics().getEndInstant());
-                    dy = -getUpperContextBar().getHeight();
+                        getFocusEndInstant(), temporalColumn().getEndScaleValue());
+                if (newFocusEndInstant.isAfter(temporalColumn().getEndScaleValue())) {
+                    newFocusEndInstant = Instant.from(temporalColumn().getEndScaleValue());
+//                    dy = -getUpperContextBar().getHeight();
+                }
+                if (y < getUpperContextBar().getY()) {
+                    dy = getUpperContextBar().getY() - dragStartPoint.getY();
                 }
             } else {
                 // inside focus region (use focus start and end)
@@ -364,15 +415,18 @@ public class TemporalAxis extends UnivariateAxis {
 
             draggingEndInstant = Instant.from(newFocusEndInstant);
             draggingContextInstantText.setText(draggingEndInstant.toString());
-            draggingContextInstantText.setTranslateY(dy);
+            draggingContextInstantText.setTranslateY(dy - 2);
+            draggingContextInstantText.setTranslateX(-draggingContextInstantText.getLayoutBounds().getWidth() / 2.);
 
             draggingContextLine.setTranslateY(dy);
         });
 
-        getUpperContextBar().setOnMouseReleased(event -> {
+        getUpperContextBarHandle().setOnMouseReleased(event -> {
             if (dragging) {
                 dragging = false;
                 getGraphicsGroup().getChildren().removeAll(draggingContextInstantText, draggingContextLine);
+                getUpperContextBarHandle().setVisible(true);
+                focusEndInstantText.setVisible(true);
                 if (!getFocusEndInstant().equals(draggingEndInstant)) {
                     setFocusEndInstant(draggingEndInstant);
                     getDataTableView().resizeView();
@@ -412,16 +466,21 @@ public class TemporalAxis extends UnivariateAxis {
         super.resize(center, top, width, height);
 
         startInstantText.setX(getBounds().getMinX() + ((width - startInstantText.getLayoutBounds().getWidth()) / 2.));
-        startInstantText.setY(getLowerContextBar().getLayoutBounds().getMaxY() + RANGE_VALUE_TEXT_HEIGHT);
+        startInstantText.setY(getLowerContextBar().getY() + getLowerContextBar().getHeight());
 
         endInstantText.setX(getBounds().getMinX() + ((width - endInstantText.getLayoutBounds().getWidth()) / 2.));
-        endInstantText.setY(getUpperContextBar().getLayoutBounds().getMinY() - 4);
+//        endInstantText.setY(getUpperContextBar().getLayoutBounds().getMinY() - 4);
+        endInstantText.setY(getUpperContextBar().getY());
 
-        focusStartInstantText.setX(getBarRightX() + 4);
-        focusStartInstantText.setY(getFocusMinPosition() + focusStartInstantText.getFont().getSize());
+        focusStartInstantText.setX(getBounds().getMinX() + ((width - focusStartInstantText.getLayoutBounds().getWidth()) / 2.));
+        focusStartInstantText.setY(getAxisBar().getY() + getAxisBar().getHeight());
+//        focusStartInstantText.setX(getBarRightX() + 4);
+//        focusStartInstantText.setY(getFocusMinPosition() + focusStartInstantText.getFont().getSize());
 
-        focusEndInstantText.setX(getBarRightX() + 4);
-        focusEndInstantText.setY(getFocusMaxPosition());
+        focusEndInstantText.setX(getBounds().getMinX() + ((width - focusEndInstantText.getLayoutBounds().getWidth()) / 2.));
+        focusEndInstantText.setY(getAxisBar().getY());
+//        focusEndInstantText.setX(getBarRightX() + 4);
+//        focusEndInstantText.setY(getFocusMaxPosition());
 
         if (!getDataTable().isEmpty()) {
             if (getDataTableView().isShowingHistograms()) {

@@ -4,6 +4,7 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.SetChangeListener;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
@@ -441,6 +442,14 @@ public class DataTable {
 		for (DoubleColumn column : columns) {
 			column.setMinimumScaleValue(minValue);
 			column.setMaximumScaleValue(maxValue);
+		}
+		fireDataTableColumnExtentsChanged();
+	}
+
+	public void setTemporalColumnScaleExtents(ArrayList<TemporalColumn> columns, Instant startInstant, Instant endInstant) {
+		for (TemporalColumn column : columns) {
+			column.setStartScaleValue(startInstant);
+			column.setEndScaleValue(endInstant);
 		}
 		fireDataTableColumnExtentsChanged();
 	}

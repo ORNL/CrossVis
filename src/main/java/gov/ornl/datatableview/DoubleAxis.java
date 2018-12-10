@@ -150,15 +150,6 @@ public class DoubleAxis extends UnivariateAxis {
         overallHistogramGroup.setMouseTransparent(true);
         queryHistogramGroup.setMouseTransparent(true);
 
-//        if (dataTableView.isShowingSummaryStatistics()) {
-//            getGraphicsGroup().getChildren().add(overallSummaryStatisticsGroup);
-//        }
-//
-//        if (dataTableView.isShowingHistograms()) {
-//            getGraphicsGroup().getChildren().add(0, overallHistogramGroup);
-//            getGraphicsGroup().getChildren().add(1, queryHistogramGroup);
-//        }
-
         getGraphicsGroup().getChildren().add(0, overallHistogramGroup);
         getGraphicsGroup().getChildren().add(1, queryHistogramGroup);
         getGraphicsGroup().getChildren().addAll(minValueText, maxValueText, minFocusValueText, maxFocusValueText,
@@ -399,7 +390,7 @@ public class DoubleAxis extends UnivariateAxis {
                         getLowerContextBar().getLayoutBounds().getMaxY(), getMinFocusValue(),
                         doubleColumn().getMinimumScaleValue());
 //                        doubleColumn().getStatistics().getMinValue());
-                log.info("newMinFocusValue = " + newMinFocusValue + "  y = " + y + "  dy = " + dy);
+//                log.info("newMinFocusValue = " + newMinFocusValue + "  y = " + y + "  dy = " + dy);
                 if (newMinFocusValue < doubleColumn().getMinimumScaleValue()) {
                     newMinFocusValue = doubleColumn().getMinimumScaleValue();
 //                    if (newMinFocusValue < doubleColumn().getStatistics().getMinValue()) {
