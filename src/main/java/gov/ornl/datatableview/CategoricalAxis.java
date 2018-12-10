@@ -48,6 +48,11 @@ public class CategoricalAxis extends UnivariateAxis {
         nonQueryCategoriesRectangleGroup = new Group();
 
         getGraphicsGroup().getChildren().addAll(categoriesRectangleGroup, categoriesNameGraphicsGroup);
+        
+        getUpperContextBar().setVisible(false);
+        getLowerContextBar().setVisible(false);
+        getUpperContextBarHandle().setVisible(false);
+        getLowerContextBarHandle().setVisible(false);
 
         registerListeners();
     }

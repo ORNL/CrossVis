@@ -412,7 +412,7 @@ public class TemporalAxis extends UnivariateAxis {
         super.resize(center, top, width, height);
 
         startInstantText.setX(getBounds().getMinX() + ((width - startInstantText.getLayoutBounds().getWidth()) / 2.));
-        startInstantText.setY(getLowerContextBar().getLayoutBounds().getMaxY() + MINMAX_VALUE_TEXT_HEIGHT);
+        startInstantText.setY(getLowerContextBar().getLayoutBounds().getMaxY() + RANGE_VALUE_TEXT_HEIGHT);
 
         endInstantText.setX(getBounds().getMinX() + ((width - endInstantText.getLayoutBounds().getWidth()) / 2.));
         endInstantText.setY(getUpperContextBar().getLayoutBounds().getMinY() - 4);

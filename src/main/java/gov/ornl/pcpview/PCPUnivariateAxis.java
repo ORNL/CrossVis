@@ -90,43 +90,6 @@ public abstract class PCPUnivariateAxis extends PCPAxis {
 
         highlighted = new SimpleBooleanProperty(getDataTable().getHighlightedColumn() == this.column);
 
-//        titleText = new Text(column.getName());
-//        Tooltip tooltip = new Tooltip();
-//        tooltip.textProperty().bindBidirectional(column.nameProperty());
-//        Tooltip.install(titleText, tooltip);
-//        titleText.setFont(new Font(DEFAULT_NAME_TEXT_SIZE));
-//        titleText.setSmooth(true);
-//        titleText.rotateProperty().bindBidirectional(titleTextRotation);
-//        titleText.setFill(labelColor);
-//        titleText.setMouseTransparent(true);
-
-//        titleTextRectangle = new Rectangle();
-//        titleTextRectangle.setStrokeWidth(3.);
-//        titleTextRectangle.setStroke(Color.TRANSPARENT);
-//        titleTextRectangle.setFill(Color.TRANSPARENT);
-//        titleTextRectangle.setArcWidth(6.);
-//        titleTextRectangle.setArcHeight(6.);
-
-//        overallCorrelationCoefficientIndicatorRectangle = new Rectangle();
-//        overallCorrelationCoefficientIndicatorRectangle.setStroke(Color.BLACK);
-//        overallCorrelationCoefficientIndicatorRectangle.setFill(Color.TRANSPARENT);
-//        overallCorrelationCoefficientIndicatorRectangle.setHeight(DEFAULT_CORRELATION_INDICATOR_HEIGHT);
-//        overallCorrelationCoefficientIndicatorRectangle.setWidth(DEFAULT_CORRELATION_INDICATOR_WIDTH);
-//
-//        queryCorrelationCoefficientIndicatorRectangle = new Rectangle();
-//        queryCorrelationCoefficientIndicatorRectangle.setStroke(Color.BLACK);
-//        queryCorrelationCoefficientIndicatorRectangle.setFill(Color.TRANSPARENT);
-//        queryCorrelationCoefficientIndicatorRectangle.setHeight(DEFAULT_CORRELATION_INDICATOR_HEIGHT);
-//        queryCorrelationCoefficientIndicatorRectangle.setWidth(DEFAULT_CORRELATION_INDICATOR_WIDTH/2);
-//
-//        nonqueryCorrelationCoefficientIndicatorRectangle = new Rectangle();
-//        nonqueryCorrelationCoefficientIndicatorRectangle.setStroke(Color.BLACK);
-//        nonqueryCorrelationCoefficientIndicatorRectangle.setFill(Color.TRANSPARENT);
-//        nonqueryCorrelationCoefficientIndicatorRectangle.setHeight(DEFAULT_CORRELATION_INDICATOR_HEIGHT);
-//        nonqueryCorrelationCoefficientIndicatorRectangle.setWidth(DEFAULT_CORRELATION_INDICATOR_WIDTH/2);
-//
-//        correlationCoefficientIndicatorGroup.getChildren().add(overallCorrelationCoefficientIndicatorRectangle);
-
         minValueText = new Text();
 //        minValueText.textProperty().bindBidirectional(column.minValueProperty(), new NumberStringConverter());
         minValueText.setFont(new Font(DEFAULT_TEXT_SIZE));
@@ -451,25 +414,12 @@ public abstract class PCPUnivariateAxis extends PCPAxis {
     public void resize(double left, double top, double width, double height) {
         super.resize(left, top, width, height);
 
-//        overallCorrelationCoefficientIndicatorRectangle.setY(titleText.getLayoutBounds().getMaxY() + 4);
-//        overallCorrelationCoefficientIndicatorRectangle.setX(bounds.getMinX());
-//        overallCorrelationCoefficientIndicatorRectangle.setWidth(bounds.getWidth());
-
         double barTopY = titleText.getLayoutBounds().getMaxY() + minValueText.getLayoutBounds().getHeight() + 4;
-//        if (pcpView.isShowingCorrelations()) {
-//            barTopY += overallCorrelationCoefficientIndicatorRectangle.getLayoutBounds().getMaxY();
-//        }
-//        double barTopY = correlationCoefficientIndicatorRectangle.getLayoutBounds().getMaxY() + minValueText.getLayoutBounds().getHeight() + 4;
         double barBottomY = bounds.getMinY() + bounds.getHeight() - maxValueText.getLayoutBounds().getHeight();
         double focusTopY = barTopY + contextRegionHeight;
         double focusBottomY = barBottomY - contextRegionHeight;
-//        barTopY = top + DEFAULT_NAME_LABEL_HEIGHT;
-//        barBottomY = bounds.getY() + bounds.getHeight() - maxValueText.getLayoutBounds().getHeight();
-//        focusTopY = top + DEFAULT_NAME_LABEL_HEIGHT + contextRegionHeight;
-//        focusBottomY = barBottomY - contextRegionHeight;
 
         minValueText.setX(bounds.getMinX() + ((width - minValueText.getLayoutBounds().getWidth()) / 2.));
-//        minValueText.setX(titleText.getX());
         minValueText.setY(barBottomY + minValueText.getLayoutBounds().getHeight());
 
         maxValueText.setX(bounds.getMinX() + ((width - maxValueText.getLayoutBounds().getWidth()) / 2.));
@@ -479,7 +429,6 @@ public abstract class PCPUnivariateAxis extends PCPAxis {
 
         axisBar.setX(centerX - (axisBar.getWidth() / 2.));
         axisBar.setY(focusTopY);
-//        axisBar.setWidth(DEFAULT_BAR_WIDTH);
         axisBar.setHeight(focusBottomY - focusTopY);
 
         topContexBar.setX(axisBar.getX());

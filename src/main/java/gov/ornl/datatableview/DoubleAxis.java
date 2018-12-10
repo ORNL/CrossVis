@@ -6,13 +6,14 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.geometry.Point2D;
+import javafx.geometry.VPos;
 import javafx.scene.Group;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.shape.StrokeLineCap;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
-import javafx.util.converter.NumberStringConverter;
 
 import java.util.ArrayList;
 import java.util.logging.Logger;
@@ -68,8 +69,9 @@ public class DoubleAxis extends UnivariateAxis {
         super(dataTableView, column);
 
         draggingContextLine = new Line();
-        draggingContextLine.setStroke(Color.BLACK);
-        draggingContextLine.setStrokeWidth(2.);
+        draggingContextLine.setStroke(getLowerContextBarHandle().getStroke());
+        draggingContextLine.setStrokeWidth(getLowerContextBarHandle().getStrokeWidth());
+        draggingContextLine.setStrokeLineCap(StrokeLineCap.ROUND);
 
         draggingContextValueText = new Text();
         draggingContextValueText.setFill(Color.BLACK);
@@ -83,18 +85,28 @@ public class DoubleAxis extends UnivariateAxis {
         minValueText = new Text(String.valueOf(column.getMinimumScaleValue()));
         minValueText.setFont(new Font(DEFAULT_TEXT_SIZE));
         minValueText.setSmooth(true);
+        minValueText.setTextOrigin(VPos.TOP);
+        minValueText.setTranslateY(1.);
 
         maxValueText = new Text(String.valueOf(column.getMaximumScaleValue()));
         maxValueText.setFont(new Font(DEFAULT_TEXT_SIZE));
         maxValueText.setSmooth(true);
+        maxValueText.setTextOrigin(VPos.BOTTOM);
+        maxValueText.setTranslateY(-2.);
 
         minFocusValueText = new Text();
         minFocusValueText.setFont(new Font(DEFAULT_TEXT_SIZE));
         minFocusValueText.setSmooth(true);
+        minFocusValueText.setTextOrigin(VPos.TOP);
+        minFocusValueText.setTranslateY(2.);
+        minFocusValueText.setMouseTransparent(true);
 
         maxFocusValueText = new Text();
         maxFocusValueText.setFont(new Font(DEFAULT_TEXT_SIZE));
         maxFocusValueText.setSmooth(true);
+        maxFocusValueText.setTextOrigin(VPos.BOTTOM);
+        maxFocusValueText.setTranslateY(-3.);
+        maxFocusValueText.setMouseTransparent(true);
 
         overallDispersionRectangle = new Rectangle();
         overallDispersionRectangle.setFill(overallDispersionFill);
@@ -304,95 +316,22 @@ public class DoubleAxis extends UnivariateAxis {
             }
         });
 
-        getLowerContextBar().setOnMouseDragged(event -> {
+        getUpperContextBarHandle().setOnMouseDragged(event -> {
             if (!dragging) {
                 dragging = true;
                 dragStartPoint = new Point2D(event.getX(), event.getY());
-                draggingContextLine.setStartX(getBarLeftX());
-                draggingContextLine.setEndX(getBarRightX());
-                draggingContextLine.setStartY(getFocusMinPosition());
-                draggingContextLine.setEndY(draggingContextLine.getStartY());
+                draggingContextLine.setStartX(getUpperContextBarHandle().getStartX());
+                draggingContextLine.setEndX(getUpperContextBarHandle().getEndX());
+                draggingContextLine.setStartY(getUpperContextBarHandle().getStartY());
+                draggingContextLine.setEndY(getUpperContextBarHandle().getEndY());
                 draggingContextLine.setTranslateY(0);
-                draggingContextValueText.setX(minFocusValueText.getX());
-                draggingContextValueText.setY(minFocusValueText.getY());
-                draggingContextValueText.setTranslateY(0);
-                getGraphicsGroup().getChildren().addAll(draggingContextLine, draggingContextValueText);
-            }
-
-            dragEndPoint = new Point2D(event.getX(), event.getY());
-            double dy = dragEndPoint.getY() - dragStartPoint.getY();
-
-            double y = draggingContextLine.getStartY() + dy;
-
-            double newMinFocusValue;
-            if (y > getFocusMinPosition()) {
-                // above the min position (use context range)
-                newMinFocusValue = GraphicsUtil.mapValue(y, getFocusMinPosition(),
-                        getLowerContextBar().getLayoutBounds().getMaxY(), getMinFocusValue(),
-                        doubleColumn().getMinimumScaleValue());
-//                        doubleColumn().getStatistics().getMinValue());
-                if (newMinFocusValue < doubleColumn().getMinimumScaleValue()) {
-                    newMinFocusValue = doubleColumn().getMinimumScaleValue();
-//                    if (newMinFocusValue < doubleColumn().getStatistics().getMinValue()) {
-//                    newMinFocusValue = doubleColumn().getStatistics().getMinValue();
-                    dy = getUpperContextBar().getHeight();
-                }
-            } else {
-                // in focus region (use focus min / max)
-                newMinFocusValue = GraphicsUtil.mapValue(y, getFocusMaxPosition(), getFocusMinPosition(),
-                        getMaxFocusValue(), getMinFocusValue());
-                if (newMinFocusValue > getMaxFocusValue()) {
-                    newMinFocusValue = getMaxFocusValue();
-                    dy = -getAxisBar().getHeight();
-                }
-            }
-
-            draggingMinFocusValue = newMinFocusValue;
-            draggingContextValueText.setText(String.valueOf(draggingMinFocusValue));
-            draggingContextValueText.setTranslateY(dy);
-
-            draggingContextLine.setTranslateY(dy);
-        });
-
-        getLowerContextBar().setOnMouseReleased(event -> {
-            if (dragging) {
-                dragging = false;
-                getGraphicsGroup().getChildren().removeAll(draggingContextValueText, draggingContextLine);
-                if (getMinFocusValue() != draggingMinFocusValue) {
-                    setMinFocusValue(draggingMinFocusValue);
-                    getDataTableView().resizeView();
-
-                    ArrayList<DoubleAxisSelection> selectionsToRemove = new ArrayList<>();
-                    for (AxisSelection axisSelection : getAxisSelectionList()) {
-                        DoubleAxisSelection doubleAxisSelection = (DoubleAxisSelection)axisSelection;
-                        if (doubleAxisSelection.getDoubleColumnSelectionRange().getMinValue() < getMinFocusValue() ||
-                            doubleAxisSelection.getDoubleColumnSelectionRange().getMaxValue() > getMaxFocusValue()) {
-                            selectionsToRemove.add(doubleAxisSelection);
-                        }
-                    }
-
-                    if (!selectionsToRemove.isEmpty()) {
-                        for (DoubleAxisSelection doubleAxisSelection : selectionsToRemove) {
-                            getDataTable().removeColumnSelectionFromActiveQuery(doubleAxisSelection.getColumnSelection());
-                        }
-                    }
-                }
-            }
-        });
-
-        getUpperContextBar().setOnMouseDragged(event -> {
-            if (!dragging) {
-                dragging = true;
-                dragStartPoint = new Point2D(event.getX(), event.getY());
-                draggingContextLine.setStartX(getBarLeftX());
-                draggingContextLine.setEndX(getBarRightX());
-                draggingContextLine.setStartY(getFocusMaxPosition());
-                draggingContextLine.setEndY(draggingContextLine.getStartY());
-                draggingContextLine.setTranslateY(0);
-                draggingContextValueText.setX(maxFocusValueText.getX());
+                draggingContextValueText.setX(getCenterX());
                 draggingContextValueText.setY(maxFocusValueText.getY());
+                draggingContextValueText.setTextOrigin(VPos.BOTTOM);
                 draggingContextValueText.setTranslateY(0);
                 getGraphicsGroup().getChildren().addAll(draggingContextLine, draggingContextValueText);
+                getUpperContextBarHandle().setVisible(false);
+                maxFocusValueText.setVisible(false);
             }
 
             dragEndPoint = new Point2D(event.getX(), event.getY());
@@ -405,12 +344,12 @@ public class DoubleAxis extends UnivariateAxis {
                 // above the max position (use context range)
                 newMaxFocusValue = GraphicsUtil.mapValue(y, getFocusMaxPosition(), getUpperContextBar().getY(),
                         getMaxFocusValue(), doubleColumn().getMaximumScaleValue());
-//                        doubleColumn().getStatistics().getMaxValue());
                 if (newMaxFocusValue > doubleColumn().getMaximumScaleValue()) {
                     newMaxFocusValue = doubleColumn().getMaximumScaleValue();
-//                if (newMaxFocusValue > doubleColumn().getStatistics().getMaxValue()) {
-//                    newMaxFocusValue = doubleColumn().getStatistics().getMaxValue();
-                    dy = -getUpperContextBar().getHeight();
+                }
+                if (y < getUpperContextBar().getY()) {
+//                    dy = getUpperContextBar().getY();
+                    dy = getUpperContextBar().getY() - dragStartPoint.getY();
                 }
             } else {
                 // in focus region (use focus min / max)
@@ -424,15 +363,229 @@ public class DoubleAxis extends UnivariateAxis {
 
             draggingMaxFocusValue = newMaxFocusValue;
             draggingContextValueText.setText(String.valueOf(draggingMaxFocusValue));
-            draggingContextValueText.setTranslateY(dy);
+            draggingContextValueText.setTranslateY(dy - 2);
+            draggingContextValueText.setTranslateX(-draggingContextValueText.getLayoutBounds().getWidth() / 2.);
 
             draggingContextLine.setTranslateY(dy);
         });
 
-        getUpperContextBar().setOnMouseReleased(event -> {
+        getLowerContextBarHandle().setOnMouseDragged(event -> {
+            if (!dragging) {
+                dragging = true;
+                dragStartPoint = new Point2D(event.getX(), event.getY());
+                draggingContextLine.setStartX(getLowerContextBarHandle().getStartX());
+                draggingContextLine.setEndX(getLowerContextBarHandle().getEndX());
+                draggingContextLine.setStartY(getLowerContextBarHandle().getStartY());
+                draggingContextLine.setEndY(getLowerContextBarHandle().getEndY());
+                draggingContextLine.setTranslateY(0);
+                draggingContextValueText.setX(getCenterX());
+                draggingContextValueText.setY(minFocusValueText.getY());
+                draggingContextValueText.setTranslateY(0);
+                draggingContextValueText.setTextOrigin(VPos.TOP);
+                getGraphicsGroup().getChildren().addAll(draggingContextLine, draggingContextValueText);
+                getLowerContextBarHandle().setVisible(false);
+                minFocusValueText.setVisible(false);
+            }
+
+            dragEndPoint = new Point2D(event.getX(), event.getY());
+            double dy = dragEndPoint.getY() - dragStartPoint.getY();
+
+            double y = draggingContextLine.getStartY() + dy;
+
+            double newMinFocusValue;
+            if (y > getFocusMinPosition()) {
+                // below the min position (use context range)
+                newMinFocusValue = GraphicsUtil.mapValue(y, getFocusMinPosition(),
+                        getLowerContextBar().getLayoutBounds().getMaxY(), getMinFocusValue(),
+                        doubleColumn().getMinimumScaleValue());
+//                        doubleColumn().getStatistics().getMinValue());
+                log.info("newMinFocusValue = " + newMinFocusValue + "  y = " + y + "  dy = " + dy);
+                if (newMinFocusValue < doubleColumn().getMinimumScaleValue()) {
+                    newMinFocusValue = doubleColumn().getMinimumScaleValue();
+//                    if (newMinFocusValue < doubleColumn().getStatistics().getMinValue()) {
+//                    newMinFocusValue = doubleColumn().getStatistics().getMinValue();
+//                    dy = getLowerContextBar().getHeight() + RANGE_VALUE_TEXT_HEIGHT;
+                }
+                if (y > getLowerContextBar().getLayoutBounds().getMaxY()) {
+                    dy = getLowerContextBar().getLayoutBounds().getMaxY() - dragStartPoint.getY();
+                }
+            } else {
+                // in focus region (use focus min / max)
+                newMinFocusValue = GraphicsUtil.mapValue(y, getFocusMaxPosition(), getFocusMinPosition(),
+                        getMaxFocusValue(), getMinFocusValue());
+                if (newMinFocusValue > getMaxFocusValue()) {
+                    newMinFocusValue = getMaxFocusValue();
+                    dy = -getAxisBar().getHeight();
+                }
+            }
+
+            draggingMinFocusValue = newMinFocusValue;
+            draggingContextValueText.setText(String.valueOf(draggingMinFocusValue));
+            draggingContextValueText.setTranslateY(dy + 2);
+            draggingContextValueText.setTranslateX(-draggingContextValueText.getLayoutBounds().getWidth() / 2.);
+
+            draggingContextLine.setTranslateY(dy);
+        });
+
+//        getLowerContextBar().setOnMouseDragged(event -> {
+//            if (!dragging) {
+//                dragging = true;
+//                dragStartPoint = new Point2D(event.getX(), event.getY());
+//                draggingContextLine.setStartX(getBarLeftX());
+//                draggingContextLine.setEndX(getBarRightX());
+//                draggingContextLine.setStartY(getFocusMinPosition());
+//                draggingContextLine.setEndY(draggingContextLine.getStartY());
+//                draggingContextLine.setTranslateY(0);
+//                draggingContextValueText.setX(minFocusValueText.getX());
+//                draggingContextValueText.setY(minFocusValueText.getY());
+//                draggingContextValueText.setTranslateY(0);
+//                getGraphicsGroup().getChildren().addAll(draggingContextLine, draggingContextValueText);
+//            }
+//
+//            dragEndPoint = new Point2D(event.getX(), event.getY());
+//            double dy = dragEndPoint.getY() - dragStartPoint.getY();
+//
+//            double y = draggingContextLine.getStartY() + dy;
+//
+//            double newMinFocusValue;
+//            if (y > getFocusMinPosition()) {
+//                // above the min position (use context range)
+//                newMinFocusValue = GraphicsUtil.mapValue(y, getFocusMinPosition(),
+//                        getLowerContextBar().getLayoutBounds().getMaxY(), getMinFocusValue(),
+//                        doubleColumn().getMinimumScaleValue());
+////                        doubleColumn().getStatistics().getMinValue());
+//                if (newMinFocusValue < doubleColumn().getMinimumScaleValue()) {
+//                    newMinFocusValue = doubleColumn().getMinimumScaleValue();
+////                    if (newMinFocusValue < doubleColumn().getStatistics().getMinValue()) {
+////                    newMinFocusValue = doubleColumn().getStatistics().getMinValue();
+//                    dy = getUpperContextBar().getHeight();
+//                }
+//            } else {
+//                // in focus region (use focus min / max)
+//                newMinFocusValue = GraphicsUtil.mapValue(y, getFocusMaxPosition(), getFocusMinPosition(),
+//                        getMaxFocusValue(), getMinFocusValue());
+//                if (newMinFocusValue > getMaxFocusValue()) {
+//                    newMinFocusValue = getMaxFocusValue();
+//                    dy = -getAxisBar().getHeight();
+//                }
+//            }
+//
+//            draggingMinFocusValue = newMinFocusValue;
+//            draggingContextValueText.setText(String.valueOf(draggingMinFocusValue));
+//            draggingContextValueText.setTranslateY(dy);
+//
+//            draggingContextLine.setTranslateY(dy);
+//        });
+
+        getLowerContextBarHandle().setOnMouseReleased(event -> {
             if (dragging) {
                 dragging = false;
                 getGraphicsGroup().getChildren().removeAll(draggingContextValueText, draggingContextLine);
+                getLowerContextBarHandle().setVisible(true);
+                minFocusValueText.setVisible(true);
+                if (getMinFocusValue() != draggingMinFocusValue) {
+                    setMinFocusValue(draggingMinFocusValue);
+                    getDataTableView().resizeView();
+
+                    ArrayList<DoubleAxisSelection> selectionsToRemove = new ArrayList<>();
+                    for (AxisSelection axisSelection : getAxisSelectionList()) {
+                        DoubleAxisSelection doubleAxisSelection = (DoubleAxisSelection)axisSelection;
+                        if (doubleAxisSelection.getDoubleColumnSelectionRange().getMinValue() < getMinFocusValue() ||
+                                doubleAxisSelection.getDoubleColumnSelectionRange().getMaxValue() > getMaxFocusValue()) {
+                            selectionsToRemove.add(doubleAxisSelection);
+                        }
+                    }
+
+                    if (!selectionsToRemove.isEmpty()) {
+                        for (DoubleAxisSelection doubleAxisSelection : selectionsToRemove) {
+                            getDataTable().removeColumnSelectionFromActiveQuery(doubleAxisSelection.getColumnSelection());
+                        }
+                    }
+                }
+            }
+        });
+
+//        getLowerContextBar().setOnMouseReleased(event -> {
+//            if (dragging) {
+//                dragging = false;
+//                getGraphicsGroup().getChildren().removeAll(draggingContextValueText, draggingContextLine);
+//                if (getMinFocusValue() != draggingMinFocusValue) {
+//                    setMinFocusValue(draggingMinFocusValue);
+//                    getDataTableView().resizeView();
+//
+//                    ArrayList<DoubleAxisSelection> selectionsToRemove = new ArrayList<>();
+//                    for (AxisSelection axisSelection : getAxisSelectionList()) {
+//                        DoubleAxisSelection doubleAxisSelection = (DoubleAxisSelection)axisSelection;
+//                        if (doubleAxisSelection.getDoubleColumnSelectionRange().getMinValue() < getMinFocusValue() ||
+//                            doubleAxisSelection.getDoubleColumnSelectionRange().getMaxValue() > getMaxFocusValue()) {
+//                            selectionsToRemove.add(doubleAxisSelection);
+//                        }
+//                    }
+//
+//                    if (!selectionsToRemove.isEmpty()) {
+//                        for (DoubleAxisSelection doubleAxisSelection : selectionsToRemove) {
+//                            getDataTable().removeColumnSelectionFromActiveQuery(doubleAxisSelection.getColumnSelection());
+//                        }
+//                    }
+//                }
+//            }
+//        });
+
+//        getUpperContextBar().setOnMouseDragged(event -> {
+//            if (!dragging) {
+//                dragging = true;
+//                dragStartPoint = new Point2D(event.getX(), event.getY());
+//                draggingContextLine.setStartX(getBarLeftX());
+//                draggingContextLine.setEndX(getBarRightX());
+//                draggingContextLine.setStartY(getFocusMaxPosition());
+//                draggingContextLine.setEndY(draggingContextLine.getStartY());
+//                draggingContextLine.setTranslateY(0);
+//                draggingContextValueText.setX(maxFocusValueText.getX());
+//                draggingContextValueText.setY(maxFocusValueText.getY());
+//                draggingContextValueText.setTranslateY(0);
+//                getGraphicsGroup().getChildren().addAll(draggingContextLine, draggingContextValueText);
+//            }
+//
+//            dragEndPoint = new Point2D(event.getX(), event.getY());
+//            double dy = dragEndPoint.getY() - dragStartPoint.getY();
+//
+//            double y = draggingContextLine.getStartY() + dy;
+//
+//            double newMaxFocusValue;
+//            if (y < getFocusMaxPosition()) {
+//                // above the max position (use context range)
+//                newMaxFocusValue = GraphicsUtil.mapValue(y, getFocusMaxPosition(), getUpperContextBar().getY(),
+//                        getMaxFocusValue(), doubleColumn().getMaximumScaleValue());
+////                        doubleColumn().getStatistics().getMaxValue());
+//                if (newMaxFocusValue > doubleColumn().getMaximumScaleValue()) {
+//                    newMaxFocusValue = doubleColumn().getMaximumScaleValue();
+////                if (newMaxFocusValue > doubleColumn().getStatistics().getMaxValue()) {
+////                    newMaxFocusValue = doubleColumn().getStatistics().getMaxValue();
+//                    dy = -getUpperContextBar().getHeight();
+//                }
+//            } else {
+//                // in focus region (use focus min / max)
+//                newMaxFocusValue = GraphicsUtil.mapValue(y, getFocusMaxPosition(), getFocusMinPosition(),
+//                        getMaxFocusValue(), getMinFocusValue());
+//                if (newMaxFocusValue < getMinFocusValue()) {
+//                    newMaxFocusValue = getMinFocusValue();
+//                    dy = getAxisBar().getHeight();
+//                }
+//            }
+//
+//            draggingMaxFocusValue = newMaxFocusValue;
+//            draggingContextValueText.setText(String.valueOf(draggingMaxFocusValue));
+//            draggingContextValueText.setTranslateY(dy);
+//
+//            draggingContextLine.setTranslateY(dy);
+//        });
+
+        getUpperContextBarHandle().setOnMouseReleased(event -> {
+            if (dragging) {
+                dragging = false;
+                getGraphicsGroup().getChildren().removeAll(draggingContextValueText, draggingContextLine);
+                getUpperContextBarHandle().setVisible(true);
+                maxFocusValueText.setVisible(true);
                 if (getMaxFocusValue() != draggingMaxFocusValue) {
                     setMaxFocusValue(draggingMaxFocusValue);
                     getDataTableView().resizeView();
@@ -454,6 +607,32 @@ public class DoubleAxis extends UnivariateAxis {
                 }
             }
         });
+
+//        getUpperContextBar().setOnMouseReleased(event -> {
+//            if (dragging) {
+//                dragging = false;
+//                getGraphicsGroup().getChildren().removeAll(draggingContextValueText, draggingContextLine);
+//                if (getMaxFocusValue() != draggingMaxFocusValue) {
+//                    setMaxFocusValue(draggingMaxFocusValue);
+//                    getDataTableView().resizeView();
+//
+//                    ArrayList<DoubleAxisSelection> selectionsToRemove = new ArrayList<>();
+//                    for (AxisSelection axisSelection : getAxisSelectionList()) {
+//                        DoubleAxisSelection doubleAxisSelection = (DoubleAxisSelection)axisSelection;
+//                        if (doubleAxisSelection.getDoubleColumnSelectionRange().getMinValue() < getMinFocusValue() ||
+//                                doubleAxisSelection.getDoubleColumnSelectionRange().getMaxValue() > getMaxFocusValue()) {
+//                            selectionsToRemove.add(doubleAxisSelection);
+//                        }
+//                    }
+//
+//                    if (!selectionsToRemove.isEmpty()) {
+//                        for (DoubleAxisSelection doubleAxisSelection : selectionsToRemove) {
+//                            getDataTable().removeColumnSelectionFromActiveQuery(doubleAxisSelection.getColumnSelection());
+//                        }
+//                    }
+//                }
+//            }
+//        });
 
         getAxisBar().setOnMousePressed(event -> {
             dragStartPoint = new Point2D(event.getX(), event.getY());
@@ -570,23 +749,30 @@ public class DoubleAxis extends UnivariateAxis {
         super.resize(left, top, width, height);
 
         minValueText.setX(getBounds().getMinX() + ((width - minValueText.getLayoutBounds().getWidth()) / 2.));
-        minValueText.setY(getLowerContextBar().getLayoutBounds().getMaxY() + MINMAX_VALUE_TEXT_HEIGHT);
+        minValueText.setY(getLowerContextBar().getY() + getLowerContextBar().getHeight());
+//        minValueText.setY(getLowerContextBar().getLayoutBounds().getMaxY() + RANGE_VALUE_TEXT_HEIGHT - 2.);
 //        minValueText.setY(getFocusMinPosition() + minValueText.getLayoutBounds().getHeight());
 //        minValueText.setX(getBarRightX() + 2.);
 //        minValueText.setY(getFocusMinPosition() + (minValueText.getLayoutBounds().getHeight() / 4.));
 
 //        maxValueText.setX(getBarRightX() + 2.);
         maxValueText.setX(getBounds().getMinX() + ((width - maxValueText.getLayoutBounds().getWidth()) / 2.));
-        maxValueText.setY(getUpperContextBar().getLayoutBounds().getMinY() - 4);
+        maxValueText.setY(getUpperContextBar().getY());
+//        maxValueText.setY(getUpperContextBar().getLayoutBounds().getMinY() - 2.);
 //        maxValueText.setY(getFocusMaxPosition() - 4);
 //        maxValueText.setY(getFocusMaxPosition() + (maxValueText.getLayoutBounds().getHeight() / 4.));
 
-        minFocusValueText.setX(getBarRightX() + 4.);
-        minFocusValueText.setY(getFocusMinPosition() + minFocusValueText.getFont().getSize());
+//        minFocusValueText.setX(getBarRightX() + 4.);
+        minFocusValueText.setX(getBounds().getMinX() + ((width - minFocusValueText.getLayoutBounds().getWidth()) / 2));
+//        minFocusValueText.setY(getFocusMinPosition() + minFocusValueText.getFont().getSize());
+//        minFocusValueText.setY(getAxisBar().getY() + getAxisBar().getHeight() + RANGE_VALUE_TEXT_HEIGHT - 2.);
+        minFocusValueText.setY(getAxisBar().getY() + getAxisBar().getHeight());
 
-        maxFocusValueText.setX(getBarRightX() + 4.);
-        maxFocusValueText.setY(getFocusMaxPosition());
-//        maxFocusValueText.setY(getFocusMaxPosition() - (minFocusValueText.getLayoutBounds().getHeight() / 2.));
+//        maxFocusValueText.setX(getBarRightX() + 4.);
+        maxFocusValueText.setX(getBounds().getMinX() + ((width - maxFocusValueText.getLayoutBounds().getWidth()) / 2.));
+        maxFocusValueText.setY(getAxisBar().getY());
+//        maxFocusValueText.setY(getAxisBar().getY() - 2.);
+//        maxFocusValueText.setY(getFocusMaxPosition());
 
         if (!getDataTable().isEmpty()) {
             if (getDataTableView().isShowingHistograms()) {

@@ -111,7 +111,7 @@ public class DataTableView extends Region implements DataTableListener {
     private BoundingBox scatterplotRegionBounds;
     private double plotRegionPadding = 4.;
 
-    private Rectangle plotRegionRectangle;
+//    private Rectangle plotRegionRectangle;
 //    private Rectangle pcpRegionRectangle;
 //    private Rectangle scatterplotRegionRectangle;
 
@@ -445,7 +445,7 @@ public class DataTableView extends Region implements DataTableListener {
 //        plotRegionRectangle.setFill(Color.TRANSPARENT);
 //        plotRegionRectangle.setMouseTransparent(true);
 //        plotRegionRectangle.setStrokeWidth(1.5);
-////
+
 //        pcpRegionRectangle = new Rectangle();
 //        pcpRegionRectangle.setStroke(Color.ORANGE);
 //        pcpRegionRectangle.setStrokeWidth(1.5);
@@ -467,7 +467,7 @@ public class DataTableView extends Region implements DataTableListener {
         pane = new Pane();
         pane.setBackground(new Background(new BackgroundFill(backgroundColor.get(), new CornerRadii(0), Insets.EMPTY)));
         pane.getChildren().addAll(unselectedCanvas, selectedCanvas, correlationRectangleGroup);
-//        pane.getChildren().add(plotRegionRectangle);
+//        pane.getChildren().addAll(plotRegionRectangle, pcpRegionRectangle);
         getChildren().add(pane);
     }
 
