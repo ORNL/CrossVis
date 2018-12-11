@@ -52,7 +52,6 @@ public class TemporalAxis extends UnivariateAxis {
         draggingContextLine.setStroke(getLowerContextBarHandle().getStroke());
         draggingContextLine.setStrokeWidth(getLowerContextBarHandle().getStrokeWidth());
         draggingContextLine.setStrokeLineCap(getLowerContextBarHandle().getStrokeLineCap());
-//        draggingContextLine.setStrokeWidth(2.);
 
         draggingContextInstantText = new Text();
         draggingContextInstantText.setFill(Color.BLACK);
