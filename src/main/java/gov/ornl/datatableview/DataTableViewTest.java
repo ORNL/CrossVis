@@ -69,6 +69,8 @@ public class DataTableViewTest extends Application {
 				categoricalColumnNames.add("Cylinders");
 				IOUtilities.readCSV(new File("data/csv/cars-cat.csv"), null, categoricalColumnNames, null, null,
 						dataTable);
+//				IOUtilities.readCSV(new File("data/csv/cars-cat-small.csv"), null, categoricalColumnNames, null, null,
+//						dataTable);
 
 //				ArrayList<String> categoricalColumnNames = new ArrayList<>();
 //				categoricalColumnNames.add("TYPE");
@@ -119,18 +121,6 @@ public class DataTableViewTest extends Application {
 		CheckBox showCorrelationIndicatorsCB = new CheckBox("Show Correlations");
 		showCorrelationIndicatorsCB.selectedProperty().bindBidirectional(dataTableView.showCorrelationsProperty());
 
-		ChoiceBox<DataTableView.POLYLINE_DISPLAY_MODE> polylineDisplayModeChoiceBox =
-				new ChoiceBox<>(FXCollections.observableArrayList(DataTableView.POLYLINE_DISPLAY_MODE.POLYLINES,
-						DataTableView.POLYLINE_DISPLAY_MODE.BINNED_POLYLINES));
-		if (dataTableView.getPolylineDisplayMode() == DataTableView.POLYLINE_DISPLAY_MODE.POLYLINES) {
-			polylineDisplayModeChoiceBox.getSelectionModel().select(0);
-		} else {
-			polylineDisplayModeChoiceBox.getSelectionModel().select(1);
-		}
-		polylineDisplayModeChoiceBox.setOnAction(event -> {
-			dataTableView.setPolylineDisplayMode(polylineDisplayModeChoiceBox.getValue());
-		});
-
 		ChoiceBox<DataTableView.STATISTICS_DISPLAY_MODE> statisticsDisplayModeChoiceBox =
 				new ChoiceBox<>(FXCollections.observableArrayList(DataTableView.STATISTICS_DISPLAY_MODE.MEAN_BOXPLOT,
 						DataTableView.STATISTICS_DISPLAY_MODE.MEDIAN_BOXPLOT));
@@ -161,7 +151,7 @@ public class DataTableViewTest extends Application {
 
 		settingsPane.getChildren().addAll(loadDataButton, addBivariateAxisButton, showPolylinesCB,
 				showSelectedPolylinesCB, showUnselectedPolylinesCB, showHistogramCB, showSummaryStatsCB, showCorrelationIndicatorsCB,
-				showScatterplotsCB, statisticsDisplayModeChoiceBox, polylineDisplayModeChoiceBox, opacitySlider, addColumnButton,
+				showScatterplotsCB, statisticsDisplayModeChoiceBox, opacitySlider, addColumnButton,
 				deleteSelectedDataButton, deleteUnselectedDataButton);
 
 		BorderPane rootNode = new BorderPane();

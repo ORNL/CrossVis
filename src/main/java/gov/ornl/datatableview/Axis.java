@@ -3,7 +3,6 @@ package gov.ornl.datatableview;
 import gov.ornl.datatable.Column;
 import gov.ornl.datatable.ColumnSelection;
 import gov.ornl.datatable.DataTable;
-import gov.ornl.pcpview.PCPAxisSelection;
 import javafx.beans.property.*;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;

@@ -17,7 +17,6 @@ public class Query {
     private ListProperty<ColumnSelection> columnSelectionRanges;
     private HashMap<Column, ColumnSummaryStats> columnQuerySummaryStatsMap;
     private HashMap<Column, ColumnSummaryStats> columnNonquerySummaryStatsMap;
-    private int maxHistogram2DBinCount;
     private DataTable dataModel;
 
     private HashSet<Tuple> queriedTuples;
@@ -29,7 +28,6 @@ public class Query {
         columnSelectionRanges = new SimpleListProperty<>(FXCollections.observableArrayList());
         columnQuerySummaryStatsMap = new HashMap<>();
         columnNonquerySummaryStatsMap = new HashMap<>();
-        maxHistogram2DBinCount = 0;
         queriedTuples = new HashSet<>();
         nonQueriedTuples = new HashSet<>();
     }
@@ -123,99 +121,75 @@ public class Query {
             summaryStats.setNumHistogramBins(numBins);
         }
         
-        calculateColumn2DHistograms();
     }
 
     public void calculateStatistics() {
         long start = System.currentTimeMillis();
 
-//        if (!queriedTuples.isEmpty()) {
-            for (int icolumn = 0; icolumn < dataModel.getColumnCount(); icolumn++) {
-                Column column = dataModel.getColumn(icolumn);
-                ColumnSummaryStats queryColumnSummaryStats = columnQuerySummaryStatsMap.get(column);
-                ColumnSummaryStats nonqueryColumnSummaryStats = columnNonquerySummaryStatsMap.get(column);
+        for (int icolumn = 0; icolumn < dataModel.getColumnCount(); icolumn++) {
+            Column column = dataModel.getColumn(icolumn);
+            ColumnSummaryStats queryColumnSummaryStats = columnQuerySummaryStatsMap.get(column);
+            ColumnSummaryStats nonqueryColumnSummaryStats = columnNonquerySummaryStatsMap.get(column);
 
-                if (column instanceof TemporalColumn) {
-                    Instant queriedValues[] = ((TemporalColumn)column).getQueriedValues();
+            if (column instanceof TemporalColumn) {
+                Instant queriedValues[] = ((TemporalColumn)column).getQueriedValues();
+                if (queryColumnSummaryStats == null) {
+                    queryColumnSummaryStats = new TemporalColumnSummaryStats(column, dataModel.getNumHistogramBins(), this);
+                    columnQuerySummaryStatsMap.put(column, queryColumnSummaryStats);
+                }
+                ((TemporalColumnSummaryStats)queryColumnSummaryStats).setValues(queriedValues);
+
+                Instant nonqueriedValues[] = ((TemporalColumn)column).getNonqueriedValues();
+                if (nonqueryColumnSummaryStats == null) {
+                    nonqueryColumnSummaryStats = new TemporalColumnSummaryStats(column, dataModel.getNumHistogramBins(), this);
+                    columnNonquerySummaryStatsMap.put(column, nonqueryColumnSummaryStats);
+                }
+                ((TemporalColumnSummaryStats)nonqueryColumnSummaryStats).setValues(nonqueriedValues);
+            } else if (column instanceof DoubleColumn) {
+                if (dataModel.getCalculateQueryStatistics()) {
+                    double queriedValues[] = ((DoubleColumn) column).getQueriedValues();
                     if (queryColumnSummaryStats == null) {
-                        queryColumnSummaryStats = new TemporalColumnSummaryStats(column, dataModel.getNumHistogramBins(), this);
+                        queryColumnSummaryStats = new DoubleColumnSummaryStats(column, dataModel.getNumHistogramBins(), this);
                         columnQuerySummaryStatsMap.put(column, queryColumnSummaryStats);
                     }
-                    ((TemporalColumnSummaryStats)queryColumnSummaryStats).setValues(queriedValues);
+                    ((DoubleColumnSummaryStats) queryColumnSummaryStats).setValues(queriedValues);
+                } else {
+                    columnQuerySummaryStatsMap.remove(column);
+                }
 
-                    Instant nonqueriedValues[] = ((TemporalColumn)column).getNonqueriedValues();
+                if (dataModel.getCalculateNonQueryStatistics()) {
+                    double nonqueriedValues[] = ((DoubleColumn) column).getNonqueriedValues();
                     if (nonqueryColumnSummaryStats == null) {
-                        nonqueryColumnSummaryStats = new TemporalColumnSummaryStats(column, dataModel.getNumHistogramBins(), this);
+                        nonqueryColumnSummaryStats = new DoubleColumnSummaryStats(column, dataModel.getNumHistogramBins(), this);
                         columnNonquerySummaryStatsMap.put(column, nonqueryColumnSummaryStats);
                     }
-                    ((TemporalColumnSummaryStats)nonqueryColumnSummaryStats).setValues(nonqueriedValues);
-                } else if (column instanceof DoubleColumn) {
-                    if (dataModel.getCalculateQueryStatistics()) {
-                        double queriedValues[] = ((DoubleColumn) column).getQueriedValues();
-                        if (queryColumnSummaryStats == null) {
-                            queryColumnSummaryStats = new DoubleColumnSummaryStats(column, dataModel.getNumHistogramBins(), this);
-                            columnQuerySummaryStatsMap.put(column, queryColumnSummaryStats);
-                        }
-                        ((DoubleColumnSummaryStats) queryColumnSummaryStats).setValues(queriedValues);
-                    } else {
-                        columnQuerySummaryStatsMap.remove(column);
-                    }
-
-                    if (dataModel.getCalculateNonQueryStatistics()) {
-                        double nonqueriedValues[] = ((DoubleColumn) column).getNonqueriedValues();
-                        if (nonqueryColumnSummaryStats == null) {
-                            nonqueryColumnSummaryStats = new DoubleColumnSummaryStats(column, dataModel.getNumHistogramBins(), this);
-                            columnNonquerySummaryStatsMap.put(column, nonqueryColumnSummaryStats);
-                        }
-                        ((DoubleColumnSummaryStats) nonqueryColumnSummaryStats).setValues(nonqueriedValues);
-                    } else {
-                        columnNonquerySummaryStatsMap.remove(column);
-                    }
-                } else if (column instanceof CategoricalColumn) {
-                    String queriedValues[] = ((CategoricalColumn)column).getQueriedValues();
-                    if (queryColumnSummaryStats == null) {
-                        queryColumnSummaryStats = new CategoricalColumnSummaryStats(column, this);
-                        columnQuerySummaryStatsMap.put(column, queryColumnSummaryStats);
-                    }
-                    ((CategoricalColumnSummaryStats)queryColumnSummaryStats).setValues(queriedValues);
-
-                    String nonqueriedValues[] = ((CategoricalColumn)column).getNonqueriedValues();
-                    if (nonqueryColumnSummaryStats == null) {
-                        nonqueryColumnSummaryStats = new CategoricalColumnSummaryStats(column, this);
-                        columnNonquerySummaryStatsMap.put(column, nonqueryColumnSummaryStats);
-                    }
-                    ((CategoricalColumnSummaryStats)nonqueryColumnSummaryStats).setValues(nonqueriedValues);
+                    ((DoubleColumnSummaryStats) nonqueryColumnSummaryStats).setValues(nonqueriedValues);
+                } else {
+                    columnNonquerySummaryStatsMap.remove(column);
                 }
-            }
-            calculateColumn2DHistograms();
-//        }
-        long elapsed = System.currentTimeMillis() - start;
-        log.info("calculateStatistics() took " + elapsed + "ms");
-    }
-
-    private void calculateColumn2DHistograms() {
-        maxHistogram2DBinCount = 0;
-        for (ColumnSummaryStats columnSummaryStats : columnQuerySummaryStatsMap.values()) {
-            for (ColumnSummaryStats compareColumnSummaryStats : columnQuerySummaryStatsMap.values()) {
-                if (columnSummaryStats != compareColumnSummaryStats) {
-                    columnSummaryStats.calculateHistogram2D(compareColumnSummaryStats);
-                    if (columnSummaryStats.getMaxHistogram2DBinCount() > maxHistogram2DBinCount) {
-                        maxHistogram2DBinCount = columnSummaryStats.getMaxHistogram2DBinCount();
-                    }
+            } else if (column instanceof CategoricalColumn) {
+                String queriedValues[] = ((CategoricalColumn)column).getQueriedValues();
+                if (queryColumnSummaryStats == null) {
+                    queryColumnSummaryStats = new CategoricalColumnSummaryStats(column, this);
+                    columnQuerySummaryStatsMap.put(column, queryColumnSummaryStats);
                 }
+                ((CategoricalColumnSummaryStats)queryColumnSummaryStats).setValues(queriedValues);
+
+                String nonqueriedValues[] = ((CategoricalColumn)column).getNonqueriedValues();
+                if (nonqueryColumnSummaryStats == null) {
+                    nonqueryColumnSummaryStats = new CategoricalColumnSummaryStats(column, this);
+                    columnNonquerySummaryStatsMap.put(column, nonqueryColumnSummaryStats);
+                }
+                ((CategoricalColumnSummaryStats)nonqueryColumnSummaryStats).setValues(nonqueriedValues);
             }
         }
+        long elapsed = System.currentTimeMillis() - start;
+        log.info("calculateStatistics() took " + elapsed + "ms");
     }
 
     public final ObservableList<ColumnSelection> getColumnSelectionRanges() { return columnSelectionRanges.get(); }
 
     public ListProperty<ColumnSelection> columnSelectionRangesProperty() { return columnSelectionRanges; }
-
-    public int getMaxHistogram2DBinCount() { return maxHistogram2DBinCount; }
-
-    public void setMaxHistogram2DBinCount(int maxHistogram2DBinCount) {
-        this.maxHistogram2DBinCount = maxHistogram2DBinCount;
-    }
 
     public boolean hasColumnSelections() {
         if (columnSelectionRanges.isEmpty()) {

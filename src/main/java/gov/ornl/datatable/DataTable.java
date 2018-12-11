@@ -7,6 +7,7 @@ import javafx.collections.SetChangeListener;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Logger;
 
 public class DataTable {
@@ -119,8 +120,6 @@ public class DataTable {
             }
 
             activeQuery.setNumHistogramBins(numHistogramBins);
-
-			calculateColumn2DHistograms();
 
 			fireNumHistogramBinsChanged();
 		}
@@ -487,36 +486,83 @@ public class DataTable {
 
         if (getActiveQuery().hasColumnSelections()) {
 			tuplesRemoved = getActiveQuery().getNonQueriedTuples().size();
-			tuples.clear();
-			tuples.addAll(getActiveQuery().getQueriedTuples());
-			getActiveQuery().clear();
-			calculateStatistics();
-			getActiveQuery().setQueriedTuples();
+        	removeTuples(getActiveQuery().getNonQueriedTuples(), getActiveQuery().getQueriedTuples());
+//			tuplesRemoved = getActiveQuery().getNonQueriedTuples().size();
+//			tuples.clear();
+//			tuples.addAll(getActiveQuery().getQueriedTuples());
+//			getActiveQuery().clear();
+//			calculateStatistics();
+//			for (Column column : columns) {
+//				if (column instanceof DoubleColumn) {
+//					((DoubleColumn)column).setMinimumScaleValue(((DoubleColumn)column).getStatistics().getMinValue());
+//					((DoubleColumn)column).setMaximumScaleValue(((DoubleColumn)column).getStatistics().getMaxValue());
+//				} else if (column instanceof TemporalColumn) {
+//					((TemporalColumn)column).setStartScaleValue(((TemporalColumn)column).getStatistics().getStartInstant());
+//					((TemporalColumn)column).setEndScaleValue(((TemporalColumn)column).getStatistics().getEndInstant());
+//				}
+//			}
+//			getActiveQuery().setQueriedTuples();
             fireTuplesRemoved(tuplesRemoved);
         }
 
         return tuplesRemoved;
     }
 
+    private void removeTuples(Set<Tuple> tuplesToRemove, Set<Tuple> tuplesToKeep) {
+		tuples.clear();
+		tuples.addAll(tuplesToKeep);
+		getActiveQuery().clear();
+		for (Column column : columns) {
+			if (column instanceof CategoricalColumn) {
+				((CategoricalColumn)column).getCategories().clear();
+				int columnIndex = columns.indexOf(column);
+				for (Tuple tuple : tuples) {
+					((CategoricalColumn)column).addCategory((String)tuple.getElement(columnIndex));
+				}
+			}
+		}
+		calculateStatistics();
+		for (Column column : columns) {
+			if (column instanceof DoubleColumn) {
+				((DoubleColumn)column).setMinimumScaleValue(((DoubleColumn)column).getStatistics().getMinValue());
+				((DoubleColumn)column).setMaximumScaleValue(((DoubleColumn)column).getStatistics().getMaxValue());
+			} else if (column instanceof TemporalColumn) {
+				((TemporalColumn)column).setStartScaleValue(((TemporalColumn)column).getStatistics().getStartInstant());
+				((TemporalColumn)column).setEndScaleValue(((TemporalColumn)column).getStatistics().getEndInstant());
+			}
+		}
+		getActiveQuery().setQueriedTuples();
+	}
+
 	public int removeSelectedTuples() {
         int tuplesRemoved = 0;
 
 		if (getActiveQuery().hasColumnSelections()) {
 			tuplesRemoved = getActiveQuery().getQueriedTuples().size();
-			tuples.clear();
-			tuples.addAll(getActiveQuery().getNonQueriedTuples());
-			getActiveQuery().clear();
-			calculateStatistics();
-			for (Column column : columns) {
-				if (column instanceof DoubleColumn) {
-					((DoubleColumn)column).setMinimumScaleValue(((DoubleColumn)column).getStatistics().getMinValue());
-					((DoubleColumn)column).setMaximumScaleValue(((DoubleColumn)column).getStatistics().getMaxValue());
-				} else if (column instanceof TemporalColumn) {
-					((TemporalColumn)column).setStartScaleValue(((TemporalColumn)column).getStatistics().getStartInstant());
-					((TemporalColumn)column).setEndScaleValue(((TemporalColumn)column).getStatistics().getEndInstant());
-				}
-			}
-			getActiveQuery().setQueriedTuples();
+			removeTuples(getActiveQuery().getQueriedTuples(), getActiveQuery().getNonQueriedTuples());
+//			tuples.clear();
+//			tuples.addAll(getActiveQuery().getNonQueriedTuples());
+//			getActiveQuery().clear();
+//			for (Column column : columns) {
+//				if (column instanceof CategoricalColumn) {
+//					((CategoricalColumn)column).getCategories().clear();
+//					int columnIndex = columns.indexOf(column);
+//					for (Tuple tuple : tuples) {
+//						((CategoricalColumn)column).addCategory((String)tuple.getElement(columnIndex));
+//					}
+//				}
+//			}
+//			calculateStatistics();
+//			for (Column column : columns) {
+//				if (column instanceof DoubleColumn) {
+//					((DoubleColumn)column).setMinimumScaleValue(((DoubleColumn)column).getStatistics().getMinValue());
+//					((DoubleColumn)column).setMaximumScaleValue(((DoubleColumn)column).getStatistics().getMaxValue());
+//				} else if (column instanceof TemporalColumn) {
+//					((TemporalColumn)column).setStartScaleValue(((TemporalColumn)column).getStatistics().getStartInstant());
+//					((TemporalColumn)column).setEndScaleValue(((TemporalColumn)column).getStatistics().getEndInstant());
+//				}
+//			}
+//			getActiveQuery().setQueriedTuples();
             fireTuplesRemoved(tuplesRemoved);
         }
 
@@ -833,25 +879,6 @@ public class DataTable {
 
         long elapsed = System.currentTimeMillis() - start;
         log.info("Calling column.calculateStatistics for all columns took " + elapsed + " ms");
-
-        start = System.currentTimeMillis();
-        calculateColumn2DHistograms();
-        elapsed = System.currentTimeMillis() - start;
-        log.info("Calling calculatedColumn2DHistograms() took " + elapsed + " ms");
-    }
-
-    private void calculateColumn2DHistograms() {
-        maxHistogram2DBinCount = 0;
-        for (Column column : columns) {
-            for (Column compareColumn : columns) {
-                if (column != compareColumn && !(column instanceof BivariateColumn) && !(compareColumn instanceof BivariateColumn)) {
-                    column.getStatistics().calculateHistogram2D(compareColumn.getStatistics());
-                    if (column.getStatistics().getMaxHistogram2DBinCount() > maxHistogram2DBinCount) {
-                        maxHistogram2DBinCount = column.getStatistics().getMaxHistogram2DBinCount();
-                    }
-                }
-            }
-        }
     }
 
     public void fireNumHistogramBinsChanged() {

@@ -43,9 +43,6 @@ public class DataTableView extends Region implements DataTableListener {
             Color.LIGHTGRAY.getGreen(), Color.LIGHTGRAY.getBlue(), DEFAULT_LINE_OPACITY);
     private final static int DEFAULT_CORRELATION_RECTANGLE_HEIGHT = 14;
     private final static int DEFAULT_CORRELATION_RECTANGLE_WIDTH = 24;
-    private final static POLYLINE_DISPLAY_MODE DEFAULT_POLYLINE_DISPLAY_MODE = POLYLINE_DISPLAY_MODE.POLYLINES;
-
-//    private final static int DEFAULT_SELECTION_INDICATOR_LINE_SIZE = 20;
 
     private static final DecimalFormat percentageFormat = new DecimalFormat("0.0#%");
 
@@ -93,7 +90,6 @@ public class DataTableView extends Region implements DataTableListener {
     private HashSet<TuplePolyline> selectedTuplePolylines = new HashSet<>();
     private HashSet<TuplePolyline> contextTuplePolylines = new HashSet<>();
 
-    private ObjectProperty<POLYLINE_DISPLAY_MODE> polylineDisplayMode;
     private ObjectProperty<STATISTICS_DISPLAY_MODE> summaryStatisticsDisplayMode = new SimpleObjectProperty<>(STATISTICS_DISPLAY_MODE.MEAN_BOXPLOT);
 
     private BooleanProperty showSummaryStatistics = new SimpleBooleanProperty(true);
@@ -104,7 +100,6 @@ public class DataTableView extends Region implements DataTableListener {
 
     private BooleanProperty fitToWidth = new SimpleBooleanProperty(true);
     private DoubleProperty nameTextRotation;
-    private ArrayList<TuplePolylineBinSet> PCPBinSetList;
 
     private BoundingBox plotRegionBounds;
     private BoundingBox pcpRegionBounds;
@@ -384,21 +379,6 @@ public class DataTableView extends Region implements DataTableListener {
                 resizeView();
             }
         });
-
-        polylineDisplayMode.addListener(((observable, oldValue, newValue) -> {
-            if (selectedTuplesTimer != null && selectedTuplesTimer.isRunning()) {
-                selectedTuplesTimer.stop();
-            }
-            if (unselectedTuplesTimer != null && unselectedTuplesTimer.isRunning()) {
-                unselectedTuplesTimer.stop();
-            }
-
-            if (newValue == POLYLINE_DISPLAY_MODE.POLYLINES) {
-                fillTupleSets();
-            }
-
-            resizeView();
-        }));
     }
 
     private void fillTupleSets() {
@@ -432,7 +412,6 @@ public class DataTableView extends Region implements DataTableListener {
 
         showSelectedItems = new SimpleBooleanProperty(true);
         showUnselectedItems = new SimpleBooleanProperty(true);
-        polylineDisplayMode = new SimpleObjectProperty<>(DEFAULT_POLYLINE_DISPLAY_MODE);
 
         selectedCanvas = new Canvas(getWidth(), getHeight());
         unselectedCanvas = new Canvas(getWidth(), getHeight());
@@ -530,11 +509,7 @@ public class DataTableView extends Region implements DataTableListener {
         }
 
         if (isShowingPolylines()) {
-            if (getPolylineDisplayMode() == POLYLINE_DISPLAY_MODE.POLYLINES) {
-                drawTuplePolylines();
-            } else if (getPolylineDisplayMode() == POLYLINE_DISPLAY_MODE.BINNED_POLYLINES) {
-                drawPCPBins();
-            }
+            drawTuplePolylines();
         }
     }
 
@@ -715,16 +690,9 @@ public class DataTableView extends Region implements DataTableListener {
                     }
 
                     // add tuples polylines from data model
-                    if (getPolylineDisplayMode() == POLYLINE_DISPLAY_MODE.POLYLINES) {
-                        if (tuplePolylines != null) {
-                            for (TuplePolyline pcpTuple : tuplePolylines) {
-                                pcpTuple.layout(axisList);
-                            }
-                        }
-                    } else if (getPolylineDisplayMode() == POLYLINE_DISPLAY_MODE.BINNED_POLYLINES) {
-                        // resize PCPBins
-                        for (TuplePolylineBinSet TuplePolylineBinSet : PCPBinSetList) {
-                            TuplePolylineBinSet.layoutBins();
+                    if (tuplePolylines != null) {
+                        for (TuplePolyline pcpTuple : tuplePolylines) {
+                            pcpTuple.layout(axisList);
                         }
                     }
                 }
@@ -763,72 +731,6 @@ public class DataTableView extends Region implements DataTableListener {
         }
 
         return pcpRegionBounds.getHeight();
-    }
-
-    private void drawPCPBins() {
-        selectedCanvas.getGraphicsContext2D().setLineCap(StrokeLineCap.BUTT);
-        selectedCanvas.getGraphicsContext2D().clearRect(0, 0, getWidth(), getHeight());
-        selectedCanvas.getGraphicsContext2D().setLineWidth(2d);
-
-        unselectedCanvas.getGraphicsContext2D().setLineCap(StrokeLineCap.BUTT);
-        unselectedCanvas.getGraphicsContext2D().clearRect(0, 0, getWidth(), getHeight());
-        unselectedCanvas.getGraphicsContext2D().setLineWidth(2d);
-
-        if ((PCPBinSetList != null) && (!PCPBinSetList.isEmpty())) {
-            if (dataTable.getActiveQuery().hasColumnSelections()) {
-                if (isShowingUnselectedItems()) {
-                    for (TuplePolylineBinSet binSet : PCPBinSetList) {
-                        for (TuplePolylineBin bin : binSet.getBins()) {
-                            if (bin.queryCount == 0) {
-                                Color binColor = new Color(getUnselectedItemsColor().getRed(), getUnselectedItemsColor().getGreen(),
-                                        getUnselectedItemsColor().getBlue(), 0.2);
-                                unselectedCanvas.getGraphicsContext2D().setFill(binColor);
-
-                                double xValues[] = new double[]{bin.left, bin.right, bin.right, bin.left};
-                                double yValues[] = new double[]{bin.leftTop, bin.rightTop, bin.rightBottom, bin.leftBottom};
-
-                                unselectedCanvas.getGraphicsContext2D().fillPolygon(xValues, yValues, xValues.length);
-                            }
-                        }
-                    }
-                }
-
-                if (isShowingSelectedItems()) {
-                    for (TuplePolylineBinSet binSet : PCPBinSetList) {
-                        for (TuplePolylineBin bin : binSet.getBins()) {
-                            if (bin.queryCount > 0) {
-                                Color binColor = new Color(getSelectedItemsColor().getRed(), getSelectedItemsColor().getGreen(),
-                                        getSelectedItemsColor().getBlue(), 0.2);
-
-                                selectedCanvas.getGraphicsContext2D().setFill(binColor);
-
-                                double xValues[] = new double[]{bin.left, bin.right, bin.right, bin.left};
-                                double yValues[] = new double[]{bin.leftTop, bin.rightTop, bin.rightBottom, bin.leftBottom};
-
-                                selectedCanvas.getGraphicsContext2D().fillPolygon(xValues, yValues, xValues.length);
-                            }
-                        }
-                    }
-                }
-            } else {
-                if (isShowingSelectedItems()) {
-                    for (TuplePolylineBinSet binSet : PCPBinSetList) {
-                        for (TuplePolylineBin bin : binSet.getBins()) {
-                            Color binColor = new Color(getSelectedItemsColor().getRed(), getSelectedItemsColor().getGreen(),
-                                    getSelectedItemsColor().getBlue(), bin.fillColor.getOpacity());
-
-                            selectedCanvas.getGraphicsContext2D().setFill(binColor);
-
-                            double xValues[] = new double[]{bin.left, bin.right, bin.right, bin.left};
-                            double yValues[] = new double[]{bin.leftTop, bin.rightTop, bin.rightBottom, bin.leftBottom};
-
-                            selectedCanvas.getGraphicsContext2D().fillPolygon(xValues, yValues, xValues.length);
-                        }
-                    }
-                }
-            }
-        }
-
     }
 
     public void setDataTable(DataTable dataTable) {
@@ -874,12 +776,6 @@ public class DataTableView extends Region implements DataTableListener {
     public ObjectProperty<Color> textColorProperty() {
         return textColor;
     }
-
-    public ObjectProperty<POLYLINE_DISPLAY_MODE> polylineDisplayModeProperty() { return polylineDisplayMode; }
-
-    public final POLYLINE_DISPLAY_MODE getPolylineDisplayMode() { return polylineDisplayMode.get(); }
-
-    public final void setPolylineDisplayMode(POLYLINE_DISPLAY_MODE displayMode) { polylineDisplayMode.set(displayMode); }
 
     public final boolean isShowingSelectedItems() { return showSelectedItems.get(); }
 
@@ -997,30 +893,9 @@ public class DataTableView extends Region implements DataTableListener {
 
         fillTupleSets();
 
-        // create PCPBinSets for axis configuration
-        initPCPBinSets();
-//        PCPBinSetList = new ArrayList<>();
-//        for (int iaxis = 0; iaxis < axisList.size()-1; iaxis++) {
-//            if (axisList.get(iaxis) instanceof UnivariateAxis && axisList.get(iaxis + 1) instanceof UnivariateAxis) {
-//                TuplePolylineBinSet binSet = new TuplePolylineBinSet((UnivariateAxis) axisList.get(iaxis),
-//                        (UnivariateAxis) axisList.get(iaxis + 1), dataTable);
-//                PCPBinSetList.add(binSet);
-//            }
-//        }
-
         resizeView();
     }
 
-    private void initPCPBinSets() {
-        PCPBinSetList = new ArrayList<>();
-        for (int iaxis = 0; iaxis < axisList.size()-1; iaxis++) {
-            if (axisList.get(iaxis) instanceof UnivariateAxis && axisList.get(iaxis + 1) instanceof UnivariateAxis) {
-                TuplePolylineBinSet binSet = new TuplePolylineBinSet((UnivariateAxis) axisList.get(iaxis),
-                        (UnivariateAxis) axisList.get(iaxis + 1), dataTable);
-                PCPBinSetList.add(binSet);
-            }
-        }
-    }
     private void initScatterplots() {
         if (!scatterplotList.isEmpty()) {
             for (Scatterplot scatterplot : scatterplotList) {
@@ -1120,15 +995,6 @@ public class DataTableView extends Region implements DataTableListener {
 
     public Axis getHighlightedAxis() {
         return highlightedAxis.get();
-//        if (dataTable.getHighlightedColumn() != null) {
-//            for (Axis axis : axisList) {
-//                if (axis.getColumn() == dataTable.getHighlightedColumn()) {
-//                    return axis;
-//                }
-//            }
-//        }
-//
-//        return null;
     }
 
     protected Pane getPane() { return pane; }
@@ -1137,13 +1003,6 @@ public class DataTableView extends Region implements DataTableListener {
 
     private int getAxisIndex(Axis axis) {
         return axisList.indexOf(axis);
-//        for (int i = 0; i < axisList.size(); i++) {
-//            if (axis == axisList.get(i)) {
-//                return i;
-//            }
-//        }
-//
-//        return -1;
     }
 
     private int getAxisIndex(Column column) {
@@ -1155,43 +1014,29 @@ public class DataTableView extends Region implements DataTableListener {
 
         return -1;
     }
-
-//    public void setAxisPosition(Axis axis, int position) {
-//        if (axisList.contains(axis)) {
-//            int newPosition = position < 0 ? 0 : position >= axisList.size() ? axisList.size()-1 : position;
 //
-//            int currentPosition = axisList.indexOf(axis);
-//
-//            if (currentPosition != newPosition) {
-//                axisList.remove(axis);
-//                axisList.add(newPosition, axis);
-//                resizeView();
-//            }
+//    private void addUnivariateAxis(Column column, int position) {
+//        Axis pcpAxis = null;
+//        if (column instanceof DoubleColumn) {
+//            pcpAxis = new DoubleAxis(this, (DoubleColumn)column);
+//        } else if (column instanceof TemporalColumn) {
+////            pcpAxis = new PCPTemporalAxis(this, column);
+//        } else if (column instanceof CategoricalColumn) {
+////            pcpAxis = new PCPCategoricalAxis(this, column);
 //        }
+//
+//        if (position >= axisList.size()) {
+//            axisList.add(axisList.size(), pcpAxis);
+//        } else if (position <= 0) {
+//            axisList.add(0, pcpAxis);
+//        } else {
+//            axisList.add(position, pcpAxis);
+//        }
+//
+//        axisList.add(pcpAxis);
+////        pcpAxis.titleTextRotationProperty().bind(nameTextRotationProperty());
+//        pane.getChildren().add(pcpAxis.getGraphicsGroup());
 //    }
-
-    private void addUnivariateAxis(Column column, int position) {
-        Axis pcpAxis = null;
-        if (column instanceof DoubleColumn) {
-            pcpAxis = new DoubleAxis(this, (DoubleColumn)column);
-        } else if (column instanceof TemporalColumn) {
-//            pcpAxis = new PCPTemporalAxis(this, column);
-        } else if (column instanceof CategoricalColumn) {
-//            pcpAxis = new PCPCategoricalAxis(this, column);
-        }
-
-        if (position >= axisList.size()) {
-            axisList.add(axisList.size(), pcpAxis);
-        } else if (position <= 0) {
-            axisList.add(0, pcpAxis);
-        } else {
-            axisList.add(position, pcpAxis);
-        }
-
-        axisList.add(pcpAxis);
-//        pcpAxis.titleTextRotationProperty().bind(nameTextRotationProperty());
-        pane.getChildren().add(pcpAxis.getGraphicsGroup());
-    }
 
     private void addBivariateAxis(BivariateColumn bivariateColumn, int position) {
         BivariateAxis bivariateAxis = new BivariateAxis(this, bivariateColumn);
@@ -1229,19 +1074,9 @@ public class DataTableView extends Region implements DataTableListener {
         }
 
         if (isShowingPolylines()) {
-            if (getPolylineDisplayMode() == POLYLINE_DISPLAY_MODE.POLYLINES) {
-                fillTupleSets();
-                redrawView();
-            } else if (getPolylineDisplayMode() == POLYLINE_DISPLAY_MODE.BINNED_POLYLINES) {
-                initPCPBinSets();
-                for (TuplePolylineBinSet TuplePolylineBinSet : PCPBinSetList) {
-                    TuplePolylineBinSet.layoutBins();
-                }
-                redrawView();
-            }
+            fillTupleSets();
+            redrawView();
         }
-
-//        resizeSelectionIndicator();
     }
 
     private void clearView() {
@@ -1294,13 +1129,6 @@ public class DataTableView extends Region implements DataTableListener {
                 double axisLeft = plotRegionBounds.getMinX() + (iaxis * axisSpacing);
                 pcpAxis.resize(axisLeft, pcpRegionBounds.getMinY(), axisSpacing, pcpRegionBounds.getHeight());
             }
-        }
-
-        if (getPolylineDisplayMode() == POLYLINE_DISPLAY_MODE.BINNED_POLYLINES) {
-            for (TuplePolylineBinSet TuplePolylineBinSet : PCPBinSetList) {
-                TuplePolylineBinSet.layoutBins();
-            }
-            redrawView();
         }
     }
 
@@ -1461,20 +1289,6 @@ public class DataTableView extends Region implements DataTableListener {
                 initCorrelationRectangles();
                 initScatterplots();
 
-                // create PCPBinSets for axis configuration
-                PCPBinSetList = new ArrayList<>();
-                for (int i = 0; i < axisList.size()-1; i++) {
-                    if (axisList.get(i) instanceof UnivariateAxis && axisList.get(i + 1) instanceof UnivariateAxis) {
-                        TuplePolylineBinSet binSet = new TuplePolylineBinSet((UnivariateAxis)axisList.get(i),
-                                (UnivariateAxis)axisList.get(i + 1), dataTable);
-                        binSet.layoutBins();
-                        PCPBinSetList.add(binSet);
-                    }
-//                    TuplePolylineBinSet binSet = new TuplePolylineBinSet(axisList.get(i), axisList.get(i+1), dataModel);
-//                    binSet.layoutBins();
-//                    PCPBinSetList.add(binSet);
-                }
-
                 // add tuples polylines from data model
                 tuplePolylines = new ArrayList<>();
                 for (int iTuple = 0; iTuple < dataModel.getTupleCount(); iTuple++) {
@@ -1512,16 +1326,6 @@ public class DataTableView extends Region implements DataTableListener {
 
         fillTupleSets();
 
-        // create PCPBinSets for axis configuration
-        PCPBinSetList = new ArrayList<>();
-        for (int iaxis = 0; iaxis < axisList.size()-1; iaxis++) {
-            if (axisList.get(iaxis) instanceof UnivariateAxis && axisList.get(iaxis + 1) instanceof UnivariateAxis) {
-                TuplePolylineBinSet binSet = new TuplePolylineBinSet((UnivariateAxis)axisList.get(iaxis),
-                        (UnivariateAxis)axisList.get(iaxis + 1), dataModel);
-                PCPBinSetList.add(binSet);
-            }
-        }
-
         resizeView();
     }
 
@@ -1541,16 +1345,6 @@ public class DataTableView extends Region implements DataTableListener {
 
         fillTupleSets();
 
-        // create PCPBinSets for axis configuration
-        PCPBinSetList = new ArrayList<>();
-        for (int iaxis = 0; iaxis < axisList.size()-1; iaxis++) {
-            if (axisList.get(iaxis) instanceof UnivariateAxis && axisList.get(iaxis + 1) instanceof UnivariateAxis) {
-                TuplePolylineBinSet binSet = new TuplePolylineBinSet((UnivariateAxis)axisList.get(iaxis),
-                        (UnivariateAxis)axisList.get(iaxis + 1), dataTable);
-                PCPBinSetList.add(binSet);
-            }
-        }
-
         resizeView();
     }
 
@@ -1561,8 +1355,6 @@ public class DataTableView extends Region implements DataTableListener {
 
     @Override
     public void dataModelColumnNameChanged(DataTable dataModel, Column column) { }
-
-    public enum POLYLINE_DISPLAY_MODE {POLYLINES, BINNED_POLYLINES}
 
     public enum STATISTICS_DISPLAY_MODE {MEDIAN_BOXPLOT, MEAN_BOXPLOT}
 }

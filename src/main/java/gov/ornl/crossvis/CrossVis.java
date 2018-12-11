@@ -785,44 +785,6 @@ public class CrossVis extends Application implements DataTableListener {
             }
         });
 
-        Menu polylineDisplayModeMenu = new Menu("TuplePolyline Display Mode");
-        ToggleGroup polylineDisplayModeMenuGroup = new ToggleGroup();
-
-        RadioMenuItem lineDisplayModeMI = new RadioMenuItem("TuplePolyline Display Mode");
-        lineDisplayModeMI.setToggleGroup(polylineDisplayModeMenuGroup);
-        if (dataTableView.getPolylineDisplayMode() == DataTableView.POLYLINE_DISPLAY_MODE.POLYLINES) {
-            lineDisplayModeMI.setSelected(true);
-        }
-
-        RadioMenuItem binDisplayModeMI = new RadioMenuItem("Binned TuplePolyline Display Mode");
-        binDisplayModeMI.setToggleGroup(polylineDisplayModeMenuGroup);
-        if (dataTableView.getPolylineDisplayMode() == DataTableView.POLYLINE_DISPLAY_MODE.BINNED_POLYLINES) {
-            lineDisplayModeMI.setSelected(true);
-        }
-
-        polylineDisplayModeMenu.getItems().addAll(lineDisplayModeMI, binDisplayModeMI);
-
-        polylineDisplayModeMenuGroup.selectedToggleProperty().addListener((observable, oldValue, newValue) -> {
-            if (newValue != null && newValue != oldValue) {
-                RadioMenuItem toggleItem = (RadioMenuItem)newValue;
-                if (toggleItem.getText().equals(lineDisplayModeMI.getText())) {
-                    dataTableView.setPolylineDisplayMode(DataTableView.POLYLINE_DISPLAY_MODE.POLYLINES);
-                } else if (toggleItem.getText().equals(binDisplayModeMI.getText())) {
-                    dataTableView.setPolylineDisplayMode(DataTableView.POLYLINE_DISPLAY_MODE.BINNED_POLYLINES);
-                }
-            }
-        });
-
-        dataTableView.polylineDisplayModeProperty().addListener((observable, oldValue, newValue) -> {
-            if (newValue != null && newValue != oldValue) {
-                if (newValue == DataTableView.POLYLINE_DISPLAY_MODE.POLYLINES) {
-                    lineDisplayModeMI.setSelected(true);
-                } else {
-                    binDisplayModeMI.setSelected(true);
-                }
-            }
-        });
-
         Menu axisLayoutMenu = new Menu("Axis Layout");
 
         MenuItem changeAxisSpacingMI = new MenuItem("Change Axis Spacing...");
@@ -881,7 +843,7 @@ public class CrossVis extends Application implements DataTableListener {
         });
 
         viewMenu.getItems().addAll(showScatterplotsMI, showHistogramsMI, showPolylinesMI, showSummaryStatsMI, showCorrelationsMI,
-                summaryStatsDisplayModeMenu, polylineDisplayModeMenu, axisLayoutMenu, setNumericalAxisExtentsMenuItem,
+                summaryStatsDisplayModeMenu, axisLayoutMenu, setNumericalAxisExtentsMenuItem,
                 changeHistogramBinCountMenuItem, enableDataTableUpdatesCheckMenuItem);
 
 
