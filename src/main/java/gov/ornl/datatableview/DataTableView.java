@@ -781,7 +781,7 @@ public class DataTableView extends Region implements DataTableListener {
                         for (TuplePolylineBin bin : binSet.getBins()) {
                             if (bin.queryCount == 0) {
                                 Color binColor = new Color(getUnselectedItemsColor().getRed(), getUnselectedItemsColor().getGreen(),
-                                        getUnselectedItemsColor().getBlue(), bin.fillColor.getOpacity());
+                                        getUnselectedItemsColor().getBlue(), 0.2);
                                 unselectedCanvas.getGraphicsContext2D().setFill(binColor);
 
                                 double xValues[] = new double[]{bin.left, bin.right, bin.right, bin.left};
@@ -798,7 +798,7 @@ public class DataTableView extends Region implements DataTableListener {
                         for (TuplePolylineBin bin : binSet.getBins()) {
                             if (bin.queryCount > 0) {
                                 Color binColor = new Color(getSelectedItemsColor().getRed(), getSelectedItemsColor().getGreen(),
-                                        getSelectedItemsColor().getBlue(), bin.queryFillColor.getOpacity());
+                                        getSelectedItemsColor().getBlue(), 0.2);
 
                                 selectedCanvas.getGraphicsContext2D().setFill(binColor);
 
@@ -998,6 +998,20 @@ public class DataTableView extends Region implements DataTableListener {
         fillTupleSets();
 
         // create PCPBinSets for axis configuration
+        initPCPBinSets();
+//        PCPBinSetList = new ArrayList<>();
+//        for (int iaxis = 0; iaxis < axisList.size()-1; iaxis++) {
+//            if (axisList.get(iaxis) instanceof UnivariateAxis && axisList.get(iaxis + 1) instanceof UnivariateAxis) {
+//                TuplePolylineBinSet binSet = new TuplePolylineBinSet((UnivariateAxis) axisList.get(iaxis),
+//                        (UnivariateAxis) axisList.get(iaxis + 1), dataTable);
+//                PCPBinSetList.add(binSet);
+//            }
+//        }
+
+        resizeView();
+    }
+
+    private void initPCPBinSets() {
         PCPBinSetList = new ArrayList<>();
         for (int iaxis = 0; iaxis < axisList.size()-1; iaxis++) {
             if (axisList.get(iaxis) instanceof UnivariateAxis && axisList.get(iaxis + 1) instanceof UnivariateAxis) {
@@ -1006,10 +1020,7 @@ public class DataTableView extends Region implements DataTableListener {
                 PCPBinSetList.add(binSet);
             }
         }
-
-        resizeView();
     }
-
     private void initScatterplots() {
         if (!scatterplotList.isEmpty()) {
             for (Scatterplot scatterplot : scatterplotList) {
@@ -1222,6 +1233,7 @@ public class DataTableView extends Region implements DataTableListener {
                 fillTupleSets();
                 redrawView();
             } else if (getPolylineDisplayMode() == POLYLINE_DISPLAY_MODE.BINNED_POLYLINES) {
+                initPCPBinSets();
                 for (TuplePolylineBinSet TuplePolylineBinSet : PCPBinSetList) {
                     TuplePolylineBinSet.layoutBins();
                 }

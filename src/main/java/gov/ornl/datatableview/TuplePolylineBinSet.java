@@ -9,6 +9,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.shape.Rectangle;
 
+import java.time.Instant;
 import java.util.ArrayList;
 
 /**
@@ -56,6 +57,10 @@ public class TuplePolylineBinSet {
     public void layoutBins() {
         bins = new ArrayList<>();
         binsWithQueries = 0;
+//
+//        if (leftAxis.getColumn().getName().equals("Displacement") && rightAxis.getColumn().getName().equals("Cylinders")) {
+//            System.out.println("Yo!");
+//        }
 
         if (leftAxis instanceof UnivariateAxis && rightAxis instanceof UnivariateAxis) {
             Histogram2D histogram2D = leftAxis.getColumn().getStatistics().getColumnHistogram2D(rightAxis.getColumn());
@@ -66,9 +71,9 @@ public class TuplePolylineBinSet {
 
             double leftX = leftAxis.getBarRightX();
             double rightX = rightAxis.getBarLeftX();
-            double leftBinHeight = (leftAxis.getFocusMinPosition() - leftAxis.getFocusMaxPosition()) / histogram2D.getXDimension().getNumBins();
-            double leftQueryBinHeight = 2d * (leftBinHeight / 3d);
-            double queryHeightOffset = (leftBinHeight - leftQueryBinHeight) / 2d;
+//            double leftBinHeight = (leftAxis.getFocusMinPosition() - leftAxis.getFocusMaxPosition()) / histogram2D.getXDimension().getNumBins();
+//            double leftQueryBinHeight = 2d * (leftBinHeight / 3d);
+//            double queryHeightOffset = (leftBinHeight - leftQueryBinHeight) / 2d;
 
             for (int ix = 0; ix < histogram2D.getXDimension().getNumBins(); ix++) {
                 double leftBottom = 0;
@@ -79,9 +84,40 @@ public class TuplePolylineBinSet {
                     Rectangle categoryRectangle = ((CategoricalAxis)leftAxis).getCategoryRectangle(category);
                     leftBottom = categoryRectangle.getLayoutBounds().getMaxY();
                     leftTop = categoryRectangle.getLayoutBounds().getMinY();
-                } else if (leftAxis instanceof DoubleAxis || leftAxis instanceof TemporalAxis) {
-                    leftBottom = leftAxis.getFocusMinPosition() - (ix * leftBinHeight);
-                    leftTop = leftAxis.getFocusMinPosition() - ((ix + 1) * leftBinHeight);
+                } else if (leftAxis instanceof DoubleAxis) {
+//                    leftBottom = leftAxis.getFocusMinPosition() - (ix * leftBinHeight);
+//                    leftTop = leftAxis.getFocusMinPosition() - ((ix + 1) * leftBinHeight);
+                    Histogram2DDimension.Double doubleXDimension = ((Histogram2DDimension.Double)histogram2D.getXDimension());
+                    double binLowerBound = doubleXDimension.getBinLowerBound(ix);
+                    double binUpperBound = doubleXDimension.getBinUpperBound(ix);
+
+                    if (binLowerBound >= ((DoubleAxis)leftAxis).getMinFocusValue() &&
+                        binUpperBound <= ((DoubleAxis)leftAxis).getMaxFocusValue()) {
+                        leftBottom = GraphicsUtil.mapValue(binLowerBound, ((DoubleAxis)leftAxis).getMinFocusValue(),
+                                ((DoubleAxis)leftAxis).getMaxFocusValue(), leftAxis.getFocusMinPosition(),
+                                leftAxis.getFocusMaxPosition());
+                        leftTop = GraphicsUtil.mapValue(binUpperBound, ((DoubleAxis)leftAxis).getMinFocusValue(),
+                                ((DoubleAxis)leftAxis).getMaxFocusValue(), leftAxis.getFocusMinPosition(),
+                                leftAxis.getFocusMaxPosition());
+                    } else {
+                        continue;
+                    }
+                } else if (leftAxis instanceof TemporalAxis) {
+                    Histogram2DDimension.Temporal temporalXDimension = ((Histogram2DDimension.Temporal)histogram2D.getXDimension());
+                    Instant binLowerBound = temporalXDimension.getBinLowerBound(ix);
+                    Instant binUpperBound = temporalXDimension.getBinUpperBound(ix);
+
+                    if (binLowerBound.isAfter(((TemporalAxis)leftAxis).getFocusStartInstant()) &&
+                            binUpperBound.isBefore(((TemporalAxis)leftAxis).getFocusEndInstant())) {
+                        leftBottom = GraphicsUtil.mapValue(binLowerBound, ((TemporalAxis)leftAxis).getFocusStartInstant(),
+                                ((TemporalAxis)leftAxis).getFocusEndInstant(), leftAxis.getFocusMinPosition(),
+                                leftAxis.getFocusMaxPosition());
+                        leftTop = GraphicsUtil.mapValue(binUpperBound, ((TemporalAxis)leftAxis).getFocusStartInstant(),
+                                ((TemporalAxis)leftAxis).getFocusEndInstant(), leftAxis.getFocusMinPosition(),
+                                leftAxis.getFocusMaxPosition());
+                    } else {
+                        continue;
+                    }
                 }
 
                 for (int iy = 0; iy < histogram2D.getYDimension().getNumBins(); iy++) {
@@ -98,10 +134,41 @@ public class TuplePolylineBinSet {
                             Rectangle categoryRectangle = ((CategoricalAxis)rightAxis).getCategoryRectangle(category);
                             rightBottom = categoryRectangle.getLayoutBounds().getMaxY();
                             rightTop = categoryRectangle.getLayoutBounds().getMinY();
-                        } else if (rightAxis instanceof DoubleAxis || rightAxis instanceof TemporalAxis) {
-                            double rightBinHeight = (rightAxis.getFocusMinPosition() - rightAxis.getFocusMaxPosition()) / histogram2D.getYDimension().getNumBins();
-                            rightBottom = rightAxis.getFocusMinPosition() - (iy * rightBinHeight);
-                            rightTop = rightAxis.getFocusMinPosition() - ((iy + 1) * rightBinHeight);
+                        } else if (rightAxis instanceof DoubleAxis) {
+//                            double rightBinHeight = (rightAxis.getFocusMinPosition() - rightAxis.getFocusMaxPosition()) / histogram2D.getYDimension().getNumBins();
+//                            rightBottom = rightAxis.getFocusMinPosition() - (iy * rightBinHeight);
+//                            rightTop = rightAxis.getFocusMinPosition() - ((iy + 1) * rightBinHeight);
+                            Histogram2DDimension.Double doubleYDimension = ((Histogram2DDimension.Double)histogram2D.getYDimension());
+                            double binLowerBound = doubleYDimension.getBinLowerBound(iy);
+                            double binUpperBound = doubleYDimension.getBinUpperBound(iy);
+
+                            if (binLowerBound >= ((DoubleAxis)rightAxis).getMinFocusValue() &&
+                                    binUpperBound <= ((DoubleAxis)rightAxis).getMaxFocusValue()) {
+                                rightBottom = GraphicsUtil.mapValue(binLowerBound, ((DoubleAxis)rightAxis).getMinFocusValue(),
+                                        ((DoubleAxis)rightAxis).getMaxFocusValue(), rightAxis.getFocusMinPosition(),
+                                        rightAxis.getFocusMaxPosition());
+                                rightTop = GraphicsUtil.mapValue(binUpperBound, ((DoubleAxis)rightAxis).getMinFocusValue(),
+                                        ((DoubleAxis)rightAxis).getMaxFocusValue(), rightAxis.getFocusMinPosition(),
+                                        rightAxis.getFocusMaxPosition());
+                            } else {
+                                continue;
+                            }
+                        } else if (rightAxis instanceof TemporalAxis) {
+                            Histogram2DDimension.Temporal temporalYDimension = ((Histogram2DDimension.Temporal)histogram2D.getYDimension());
+                            Instant binLowerBound = temporalYDimension.getBinLowerBound(iy);
+                            Instant binUpperBound = temporalYDimension.getBinUpperBound(iy);
+
+                            if (binLowerBound.isAfter(((TemporalAxis)rightAxis).getFocusStartInstant()) &&
+                                    binUpperBound.isBefore(((TemporalAxis)rightAxis).getFocusEndInstant())) {
+                                rightBottom = GraphicsUtil.mapValue(binLowerBound, ((TemporalAxis)rightAxis).getFocusStartInstant(),
+                                        ((TemporalAxis)rightAxis).getFocusEndInstant(), rightAxis.getFocusMinPosition(),
+                                        rightAxis.getFocusMaxPosition());
+                                rightTop = GraphicsUtil.mapValue(binUpperBound, ((TemporalAxis)rightAxis).getFocusStartInstant(),
+                                        ((TemporalAxis)rightAxis).getFocusEndInstant(), rightAxis.getFocusMinPosition(),
+                                        rightAxis.getFocusMaxPosition());
+                            } else {
+                                continue;
+                            }
                         }
 
                         // compute fill color
@@ -129,11 +196,18 @@ public class TuplePolylineBinSet {
                         bin.rightTop = rightTop;
                         bin.rightBottom = rightBottom;
 
-                        bin.leftQueryBottom = bin.leftBottom - queryHeightOffset;
-                        bin.leftQueryTop = bin.leftTop + queryHeightOffset;
+                        double leftQueryBinHeightOffset = (leftBottom - leftTop) / 6.;
+                        double rightQueryBinHeightOffset = (rightBottom - rightTop) / 6.;
 
-                        bin.rightQueryBottom = bin.rightBottom - queryHeightOffset;
-                        bin.rightQueryTop = bin.rightTop + queryHeightOffset;
+                        bin.leftQueryBottom = bin.leftBottom - leftQueryBinHeightOffset;
+                        bin.leftQueryTop = bin.leftTop + leftQueryBinHeightOffset;
+                        bin.rightQueryBottom = bin.rightBottom - rightQueryBinHeightOffset;
+                        bin.rightQueryTop = bin.rightTop + rightQueryBinHeightOffset;
+//                        bin.leftQueryBottom = bin.leftBottom - queryHeightOffset;
+//                        bin.leftQueryTop = bin.leftTop + queryHeightOffset;
+//
+//                        bin.rightQueryBottom = bin.rightBottom - queryHeightOffset;
+//                        bin.rightQueryTop = bin.rightTop + queryHeightOffset;
 
                         bins.add(bin);
                     }
@@ -141,124 +215,4 @@ public class TuplePolylineBinSet {
             }
         }
     }
-/*
-    public void layoutBinsOld() {
-        bins = new ArrayList<>();
-        binsWithQueries = 0;
-
-        Histogram2D histogram2D = leftAxis.getColumn().getStatistics().getColumnHistogram2D(rightAxis.getColumn());
-//        if (histogram2D == null ) {
-//            System.out.println("Problem here.");
-//        }
-        Histogram2D queryHistogram2D = null;
-        if (dataModel.getActiveQuery().hasColumnSelections()) {
-            queryHistogram2D = dataModel.getActiveQuery().getColumnQuerySummaryStats(leftAxis.getColumn()).getColumnHistogram2D(rightAxis.getColumn());
-//            queryHistogram2D = dataModel.getActiveQuery().getColumnQuerySummaryStats((QuantitativeColumn)leftAxis.getColumn()).getHistogram2DList().get(rightAxis.getColumnDataModelIndex());
-        }
-
-        double leftX = leftAxis.getCenterX();
-        double rightX = rightAxis.getCenterX();
-        double leftBinHeight = 0;
-        if (leftAxis instanceof UnivariateAxis) {
-            leftX = ((UnivariateAxis)leftAxis).getBarRightX();
-            leftBinHeight = (((UnivariateAxis)leftAxis).getFocusMinPosition() - ((UnivariateAxis)leftAxis).getFocusMaxPosition()) / histogram2D.getXDimension().getNumBins();
-        } else if (leftAxis instanceof BivariateAxis) {
-            leftX = ((BivariateAxis)leftAxis).getScatterplot().getPlotBounds().getMaxX();
-            leftBinHeight = ((BivariateAxis)leftAxis).getScatterplot().getDataBounds().getHeight() / histogram2D.getXDimension().getNumBins();
-        }
-
-        if (rightAxis instanceof UnivariateAxis) {
-            rightX = ((UnivariateAxis)rightAxis).getBarLeftX();
-        } else if (rightAxis instanceof BivariateAxis) {
-            rightX = ((BivariateAxis)rightAxis).getScatterplot().getPlotBounds().getMinX();
-        }
-//        double leftX = leftAxis.getAxisBar().getLayoutBounds().getMaxX();
-//        double rightX = rightAxis.getAxisBar().getLayoutBounds().getMinX();
-//        double leftX = leftAxis.getCenterX();
-//        double rightX = rightAxis.getCenterX();
-
-//        double leftBinHeight = (leftAxis.getFocusBottomY() - leftAxis.getFocusTopY()) / histogram2D.getXDimension().getNumBins();
-        double leftQueryBinHeight = 2d * (leftBinHeight / 3d);
-        double queryHeightOffset = (leftBinHeight - leftQueryBinHeight) / 2d;
-
-        for (int ix = 0; ix < histogram2D.getXDimension().getNumBins(); ix++) {
-            double leftBottom = 0;
-            double leftTop = 0;
-
-            if (leftAxis instanceof CategoricalAxis) {
-                String category = ((Histogram2DDimension.Categorical)histogram2D.getXDimension()).getBinCategory(ix);
-                Rectangle categoryRectangle = ((CategoricalAxis)leftAxis).getCategoryRectangle(category);
-                leftBottom = categoryRectangle.getLayoutBounds().getMaxY();
-                leftTop = categoryRectangle.getLayoutBounds().getMinY();
-            } else if (leftAxis instanceof DoubleAxis || leftAxis instanceof TemporalAxis) {
-                leftBottom = ((UnivariateAxis)leftAxis).getFocusMinPosition() - (ix * leftBinHeight);
-                leftTop = ((UnivariateAxis)leftAxis).getFocusMinPosition() - ((ix + 1) * leftBinHeight);
-            } else if (leftAxis instanceof BivariateAxis) {
-                leftBottom = ((BivariateAxis)leftAxis).getScatterplot().getDataBounds().getMinY() - (ix * leftBinHeight);
-                leftTop = ((BivariateAxis)leftAxis).getScatterplot().getDataBounds().getMinY() - ((ix + 1) * leftBinHeight);
-            }
-
-            for (int iy = 0; iy < histogram2D.getYDimension().getNumBins(); iy++) {
-                int count = histogram2D.getBinCount(ix, iy);
-
-                if (count > 0) {
-                    TuplePolylineBin bin = new TuplePolylineBin();
-                    bin.count = count;
-
-                    double rightBottom = 0.;
-                    double rightTop = 0.;
-                    if (rightAxis instanceof CategoricalAxis) {
-                        String category = ((Histogram2DDimension.Categorical)histogram2D.getYDimension()).getBinCategory(iy);
-                        Rectangle categoryRectangle = ((CategoricalAxis)rightAxis).getCategoryRectangle(category);
-                        rightBottom = categoryRectangle.getLayoutBounds().getMaxY();
-                        rightTop = categoryRectangle.getLayoutBounds().getMinY();
-                    } else if (rightAxis instanceof DoubleAxis || rightAxis instanceof TemporalAxis) {
-                        double rightBinHeight = (((UnivariateAxis)rightAxis).getFocusMinPosition() - ((UnivariateAxis)rightAxis).getFocusMaxPosition()) / histogram2D.getYDimension().getNumBins();
-                        rightBottom = ((UnivariateAxis)rightAxis).getFocusMinPosition() - (iy * rightBinHeight);
-                        rightTop = ((UnivariateAxis)rightAxis).getFocusMinPosition() - ((iy + 1) * rightBinHeight);
-                    } else if (rightAxis instanceof BivariateAxis) {
-                        double rightBinHeight = ((BivariateAxis)rightAxis).getScatterplot().getDataBounds().getHeight() / histogram2D.getYDimension().getNumBins();
-                        rightBottom = ((BivariateAxis)rightAxis).getScatterplot().getDataBounds().getMinY() - (iy * rightBinHeight);
-                        rightTop = ((BivariateAxis)rightAxis).getScatterplot().getDataBounds().getMinY() - ((iy + 1) * rightBinHeight);
-                    }
-
-                    // compute fill color
-                    double normCount = GraphicsUtil.norm(count, 0, dataModel.getMaxHistogram2DBinCount());
-                    Color fillColor = GraphicsUtil.lerpColorFX(minCountFillColor, maxCountFillColor, normCount);
-                    bin.fillColor = fillColor;
-
-                    // compute query fill color
-                    if (queryHistogram2D != null) {
-                        int queryCount = queryHistogram2D.getBinCount(ix, iy);
-
-                        bin.queryCount = queryCount;
-                        if (queryCount > 0) {
-                            normCount = GraphicsUtil.norm(queryCount, 0, dataModel.getActiveQuery().getMaxHistogram2DBinCount());
-                            Color queryFillColor = GraphicsUtil.lerpColorFX(minQueryCountFillColor, maxQueryCountFillColor, normCount);
-                            bin.queryFillColor = queryFillColor;
-                            binsWithQueries++;
-                        }
-                    }
-
-                    bin.left = leftX;
-                    bin.right = rightX;
-                    bin.leftTop = leftTop;
-                    bin.leftBottom = leftBottom;
-                    bin.rightTop = rightTop;
-                    bin.rightBottom = rightBottom;
-//                    bin.rightBottom = rightAxis.getFocusBottomY() - (iy * rightBinHeight);
-//                    bin.rightTop = rightAxis.getFocusBottomY() - ((iy + 1) * rightBinHeight);
-
-                    bin.leftQueryBottom = bin.leftBottom - queryHeightOffset;
-                    bin.leftQueryTop = bin.leftTop + queryHeightOffset;
-
-                    bin.rightQueryBottom = bin.rightBottom - queryHeightOffset;
-                    bin.rightQueryTop = bin.rightTop + queryHeightOffset;
-
-                    bins.add(bin);
-                }
-            }
-        }
-    }
-    */
 }

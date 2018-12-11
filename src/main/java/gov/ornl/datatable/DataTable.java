@@ -598,7 +598,6 @@ public class DataTable {
 			((CategoricalColumnSelection)newColumnSelectionRange).selectedCategoriesProperty().addListener(new SetChangeListener<String>() {
 			    @Override
                 public void onChanged(Change<? extends String> change) {
-			        log.info("categorical column selection changed");
 			        if (((CategoricalColumnSelection) newColumnSelectionRange).getSelectedCategories().isEmpty()) {
 			        	getActiveQuery().removeColumnSelectionRange(newColumnSelectionRange);
 					}
