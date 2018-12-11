@@ -511,6 +511,9 @@ public class DataTable {
 				if (column instanceof DoubleColumn) {
 					((DoubleColumn)column).setMinimumScaleValue(((DoubleColumn)column).getStatistics().getMinValue());
 					((DoubleColumn)column).setMaximumScaleValue(((DoubleColumn)column).getStatistics().getMaxValue());
+				} else if (column instanceof TemporalColumn) {
+					((TemporalColumn)column).setStartScaleValue(((TemporalColumn)column).getStatistics().getStartInstant());
+					((TemporalColumn)column).setEndScaleValue(((TemporalColumn)column).getStatistics().getEndInstant());
 				}
 			}
 			getActiveQuery().setQueriedTuples();

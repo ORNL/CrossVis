@@ -77,8 +77,6 @@ public class DoubleAxis extends UnivariateAxis {
         draggingContextValueText.setFill(Color.BLACK);
         draggingContextValueText.setFont(Font.font(DEFAULT_TEXT_SIZE));
 
-//        minFocusValue = new SimpleDoubleProperty(column.getStatistics().getMinValue());
-//        maxFocusValue = new SimpleDoubleProperty(column.getStatistics().getMaxValue());
         minFocusValue = new SimpleDoubleProperty(column.getMinimumScaleValue());
         maxFocusValue = new SimpleDoubleProperty(column.getMaximumScaleValue());
 
@@ -152,8 +150,9 @@ public class DoubleAxis extends UnivariateAxis {
 
         getGraphicsGroup().getChildren().add(0, overallHistogramGroup);
         getGraphicsGroup().getChildren().add(1, queryHistogramGroup);
-        getGraphicsGroup().getChildren().addAll(minValueText, maxValueText, minFocusValueText, maxFocusValueText,
-                overallSummaryStatisticsGroup, querySummaryStatisticsGroup, nonquerySummaryStatisticsGroup);
+        getGraphicsGroup().getChildren().addAll(minValueText,
+                maxValueText, minFocusValueText, maxFocusValueText, overallSummaryStatisticsGroup,
+                querySummaryStatisticsGroup, nonquerySummaryStatisticsGroup);
 
         registerListeners();
     }

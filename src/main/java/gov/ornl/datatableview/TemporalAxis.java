@@ -91,12 +91,10 @@ public class TemporalAxis extends UnivariateAxis {
         overallHistogramGroup.setMouseTransparent(true);
         queryHistogramGroup.setMouseTransparent(true);
 
-        if (getDataTableView().isShowingHistograms()) {
-            getGraphicsGroup().getChildren().add(0, overallHistogramGroup);
-            getGraphicsGroup().getChildren().add(1, queryHistogramGroup);
-        }
-
-        getGraphicsGroup().getChildren().addAll(startInstantText, endInstantText, focusStartInstantText, focusEndInstantText);
+        getGraphicsGroup().getChildren().add(0, overallHistogramGroup);
+        getGraphicsGroup().getChildren().add(1, queryHistogramGroup);
+        getGraphicsGroup().getChildren().addAll(startInstantText,
+                endInstantText, focusStartInstantText, focusEndInstantText);
 
         registerListeners();
     }
@@ -210,16 +208,18 @@ public class TemporalAxis extends UnivariateAxis {
         getDataTableView().showHistogramsProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue != null && newValue != oldValue) {
                 if (newValue) {
-                    getGraphicsGroup().getChildren().add(0, overallHistogramGroup);
-                    getGraphicsGroup().getChildren().add(1, queryHistogramGroup);
-//                    graphicsGroup.getChildren().add(2, nonqueryHistogramGroup);
-                } else {
-                    getGraphicsGroup().getChildren().remove(overallHistogramGroup);
-                    getGraphicsGroup().getChildren().remove(queryHistogramGroup);
-//                    graphicsGroup.getChildren().remove(nonqueryHistogramGroup);
+                    resize(getBounds().getMinX(), getBounds().getMinY(), getBounds().getWidth(), getBounds().getHeight());
+//                    getGraphicsGroup().getChildren().add(0, overallHistogramGroup);
+//                    getGraphicsGroup().getChildren().add(1, queryHistogramGroup);
+////                    graphicsGroup.getChildren().add(2, nonqueryHistogramGroup);
+//                } else {
+//                    getGraphicsGroup().getChildren().remove(overallHistogramGroup);
+//                    getGraphicsGroup().getChildren().remove(queryHistogramGroup);
+////                    graphicsGroup.getChildren().remove(nonqueryHistogramGroup);
                 }
 
-                resize(getBounds().getMinX(), getBounds().getMinY(), getBounds().getWidth(), getBounds().getHeight());
+                overallHistogramGroup.setVisible(newValue);
+                queryHistogramGroup.setVisible(newValue);
             }
         });
 
