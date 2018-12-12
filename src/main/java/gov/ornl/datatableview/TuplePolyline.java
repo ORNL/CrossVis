@@ -82,8 +82,8 @@ public class TuplePolyline {
                 xPoints[i] = axis.getCenterX();
                 yPoints[i] = yPosition;
             } else if (axis instanceof CategoricalAxis) {
-                CategoricalAxis categoricalAxis = (CategoricalAxis)axis;
-                String category = (String)tuple.getElement(i);
+                CategoricalAxis categoricalAxis = (CategoricalAxis) axis;
+                String category = (String) tuple.getElement(i);
 //                Rectangle rectangle;
 //                if (!axis.dataModel.getActiveQuery().hasColumnSelections()) {
 //                    log.info("nothing is queried");

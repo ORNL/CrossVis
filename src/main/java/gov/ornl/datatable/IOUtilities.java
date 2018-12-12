@@ -5,6 +5,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.logging.Logger;
 
@@ -364,7 +365,7 @@ public class IOUtilities {
 
 			skip_line = false;
 			while (st.hasMoreTokens()) {
-				String token = st.nextToken(",");
+				String token = st.nextToken(",").trim();
 
 				if (ignoreColumnIndices != null) {
 					boolean ignoreColumn = false;
@@ -388,9 +389,15 @@ public class IOUtilities {
 				    for (int i = 0; i < temporalColumnIndices.length; i++) {
 				        if (tokenCounter == temporalColumnIndices[i]) {
 //							LocalDateTime test = LocalDateTime.parse(token, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
-                            LocalDateTime localDateTime = LocalDateTime.parse(token, temporalColumnFormatters.get(i));
+							LocalDateTime localDateTime = null;
+                            try {
+								localDateTime = LocalDateTime.parse(token, temporalColumnFormatters.get(i));
+								instant = localDateTime.toInstant(ZoneOffset.UTC);
+							} catch (DateTimeParseException ex) {
+                            	instant = Instant.parse(token);
+							}
 
-                            instant = localDateTime.toInstant(ZoneOffset.UTC);
+//                            instant = localDateTime.toInstant(ZoneOffset.UTC);
 //                            tuple.addElement(instant);
 //                            tokenCounter++;
                             break;
