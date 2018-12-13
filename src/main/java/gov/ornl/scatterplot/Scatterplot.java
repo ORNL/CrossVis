@@ -63,8 +63,8 @@ public class Scatterplot {
     private Color unselectedPointStrokeColor;
 
     private double axisSize = 12.;
-    private double pointSize = 4.;
-    private double pointStrokeWidth = 1.2;
+    private double pointSize = 2.;
+    private double pointStrokeWidth = 1.;
     private double pointStrokeOpacity;
 
     private boolean showSelectedPoints = true;

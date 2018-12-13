@@ -6,19 +6,36 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalUnit;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 public class TemporalHistogram extends Histogram {
     public Instant values[];
+    public Tuple tuples[] = null;
     private int numBins;
     private Duration binDuration;
 
-    private int binCounts[];
+//    private int binCounts[];
+    private Bin bins[];
     private int maxBinCount;
 
     private Instant startInstant;
     private Instant endInstant;
     private Duration histogramDuration;
+
+    public TemporalHistogram(String name, Instant values[], Tuple tuples[], int numBins, Instant startInstant,
+                             Instant endInstant){
+        super(name);
+        this.values = values;
+        this.tuples = tuples;
+        this.numBins = numBins;
+
+        this.startInstant = Instant.from(startInstant);
+        this.endInstant = Instant.from(endInstant);
+
+        calculate();
+    }
 
     public TemporalHistogram(String name, Instant values[], int numBins) {
         super(name);
@@ -34,14 +51,23 @@ public class TemporalHistogram extends Histogram {
 
         this.values = values;
         this.numBins = numBins;
-        this.startInstant = startInstant;
-        this.endInstant = endInstant;
+
+        this.startInstant = Instant.from(startInstant);
+        this.endInstant = Instant.from(endInstant);
 
         calculate();
     }
 
     public int getBinCount(int i) {
-        return binCounts[i];
+        return bins[i].binValues.size();
+    }
+
+    public List<Instant> getBinValues(int i) {
+        return bins[i].binValues;
+    }
+
+    public List<Tuple> getBinTuples(int i) {
+        return bins[i].binTuples;
     }
 
     public Instant getBinLowerBound(int i) {
@@ -71,6 +97,13 @@ public class TemporalHistogram extends Histogram {
 
     public void setValues (Instant values[]) {
         this.values = values;
+        this.tuples = null;
+        calculate();
+    }
+
+    public void setValues (Instant values[], Tuple tuples[]) {
+        this.values = values;
+        this.tuples = tuples;
         calculate();
     }
 
@@ -156,12 +189,19 @@ public class TemporalHistogram extends Histogram {
 
         binDuration = histogramDuration.dividedBy(numBins);
 
-        binCounts = new int[numBins];
-        Arrays.fill(binCounts, 0);
+
+//        binCounts = new int[numBins];
+//        Arrays.fill(binCounts, 0);
+        bins = new Bin[numBins];
+        for (int i = 0; i < bins.length; i++) {
+            bins[i] = new Bin();
+        }
         maxBinCount = 0;
 
         if (values != null) {
-            for (Instant value : values) {
+            for (int ivalue = 0; ivalue < values.length; ivalue++) {
+                Instant value = values[ivalue];
+
                 Duration valueOffsetDuration = Duration.between(startInstant, value);
                 int binIndex = (int) (valueOffsetDuration.toMillis() / binDuration.toMillis());
 
@@ -170,18 +210,39 @@ public class TemporalHistogram extends Histogram {
                 } else if (binIndex >= numBins) {
                     // if the value is equal to the max value increment the last bin
                     if (value.equals(endInstant)) {
-                        binCounts[numBins - 1]++;
-                        if (binCounts[numBins - 1] > maxBinCount) {
-                            maxBinCount = binCounts[numBins - 1];
+                        bins[numBins - 1].binValues.add(value);
+                        if (tuples != null) {
+                            bins[numBins - 1].binTuples.add(tuples[ivalue]);
                         }
+
+                        if (bins[numBins-1].binValues.size() > maxBinCount) {
+                            maxBinCount = bins[numBins-1].binValues.size();
+                        }
+
+//                        binCounts[numBins - 1]++;
+//                        if (binCounts[numBins - 1] > maxBinCount) {
+//                            maxBinCount = binCounts[numBins - 1];
+//                        }
                     }
                 } else {
-                    binCounts[binIndex]++;
-                    if (binCounts[binIndex] > maxBinCount) {
-                        maxBinCount = binCounts[binIndex];
+                    bins[binIndex].binValues.add(value);
+                    if (tuples != null) {
+                        bins[binIndex].binTuples.add(tuples[ivalue]);
                     }
+                    if (bins[binIndex].binValues.size() > maxBinCount) {
+                        maxBinCount = bins[binIndex].binValues.size();
+                    }
+//                    binCounts[binIndex]++;
+//                    if (binCounts[binIndex] > maxBinCount) {
+//                        maxBinCount = binCounts[binIndex];
+//                    }
                 }
             }
         }
+    }
+
+    class Bin {
+        public ArrayList<Instant> binValues = new ArrayList<>();
+        public ArrayList<Tuple> binTuples = new ArrayList<>();
     }
 }

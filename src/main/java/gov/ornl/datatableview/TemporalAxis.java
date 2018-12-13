@@ -15,6 +15,8 @@ import javafx.scene.text.Text;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 import java.util.logging.Logger;
 
 public class TemporalAxis extends UnivariateAxis {
@@ -44,6 +46,9 @@ public class TemporalAxis extends UnivariateAxis {
     private Instant draggingEndInstant;
     private Text draggingContextInstantText;
     private Line draggingContextLine;
+
+    private Group overallInteriorHistogramRectangleGroup = new Group();
+    private Group queryInteriorHistogramRectangleGroup = new Group();
 
     public TemporalAxis(DataTableView dataTableView, Column column) {
         super(dataTableView, column);
@@ -90,12 +95,17 @@ public class TemporalAxis extends UnivariateAxis {
         overallHistogramGroup.setMouseTransparent(true);
         queryHistogramGroup.setMouseTransparent(true);
 
-        getGraphicsGroup().getChildren().add(0, overallHistogramGroup);
-        getGraphicsGroup().getChildren().add(1, queryHistogramGroup);
+//        getGraphicsGroup().getChildren().add(0, overallHistogramGroup);
+//        getGraphicsGroup().getChildren().add(1, queryHistogramGroup);
         getGraphicsGroup().getChildren().addAll(startInstantText,
-                endInstantText, focusStartInstantText, focusEndInstantText);
+                endInstantText, focusStartInstantText, focusEndInstantText, overallInteriorHistogramRectangleGroup,
+                queryInteriorHistogramRectangleGroup);
 
+        overallInteriorHistogramRectangleGroup.setMouseTransparent(true);
+        queryInteriorHistogramRectangleGroup.setMouseTransparent(true);
         registerListeners();
+
+//        rebuildAxisInteriorSummaryData();
     }
 
     @Override
@@ -159,14 +169,54 @@ public class TemporalAxis extends UnivariateAxis {
                 getFocusStartInstant(), getFocusEndInstant());
     }
 
-    private void initAxisInteriorDataPlot() {
+//    public void rebuildAxisInteriorSummaryData() {
+//        Tuple tuples[];
+//        Instant values[];
+//
+//        if (getDataTable().getActiveQuery().hasColumnSelections()) {
+//            Set<Tuple> tupleList = getDataTable().getActiveQuery().getQueriedTuples();
+//            tuples = new Tuple[tupleList.size()];
+//            int idx = 0;
+//            for (Tuple tuple : tupleList) {
+//                tuples[idx++] = tuple;
+//            }
+//            values = temporalColumn().getQueriedValues();
+//        } else {
+//            List<Tuple> tupleList = getDataTable().getTuples();
+//            tuples = new Tuple[tupleList.size()];
+//            for (int i = 0; i < tupleList.size(); i++) {
+//                tuples[i] = tupleList.get(i);
+//            }
+//            values = temporalColumn().getValues();
+//        }
+//
+//        axisInteriorHistogram = new TemporalHistogram("interior", values, tuples,
+//                (int)(getAxisBar().getHeight() / 2.), getFocusStartInstant(), getFocusEndInstant());
+////        TemporalHistogram interiorHistogram = new TemporalHistogram("interior", )
+//    }
 
-    }
+//    private void initAxisInteriorGraphics() {
+//        axisInteriorRectangleGroup.getChildren().clear();
+//
+//        if (getDataTableView().getHighlightedAxis() != this) {
+//            for (int ibin = axisInteriorHistogram.getNumBins() - 1; ibin >= 0; ibin--) {
+//                double value = axisInteriorHistogram.getBinCount(ibin);
+//                double binRectangleWidth = GraphicsUtil.mapValue(value, 0, axisInteriorHistogram.getMaxBinCount(),
+//                        0, getAxisBar().getWidth());
+//                double y = getFocusMaxPosition() + (ibin * 2.);
+//                Rectangle binRectangle = new Rectangle(getCenterX() - (binRectangleWidth / 2.), y,
+//                        binRectangleWidth, 2.);
+//                binRectangle.setFill(Color.BLUE);
+//                binRectangle.setStroke(Color.BLUE);
+//                axisInteriorRectangleGroup.getChildren().add(binRectangle);
+//            }
+//        }
+//    }
 
     private void registerListeners() {
-        getDataTableView().highlightedAxisProperty().addListener(observable -> {
-            initAxisInteriorDataPlot();
-        });
+//        getDataTableView().highlightedAxisProperty().addListener(observable -> {
+//            initAxisInteriorGraphics();
+//        });
 
         temporalColumn().startScaleValueProperty().addListener(observable -> {
             startInstantText.setText(temporalColumn().getStartScaleValue().toString());
@@ -182,20 +232,6 @@ public class TemporalAxis extends UnivariateAxis {
             }
         });
 
-//        ((TemporalColumn)getColumn()).getStatistics().startInstantProperty().addListener((observable, oldValue, newValue) -> {
-//            startInstantText.setText(newValue.toString());
-//            if (getFocusStartInstant().isBefore(newValue)) {
-//                setFocusStartInstant(newValue);
-//            }
-//        });
-//
-//        ((TemporalColumn)getColumn()).getStatistics().endInstantProperty().addListener((observable, oldValue, newValue) -> {
-//            endInstantText.setText(newValue.toString());
-//            if (getFocusEndInstant().isAfter(newValue)) {
-//                setFocusEndInstant(newValue);
-//            }
-//        });
-
         focusStartInstantValue.addListener((observable, oldValue, newValue) -> {
             focusStartInstantText.setText(newValue.toString());
         });
@@ -204,23 +240,16 @@ public class TemporalAxis extends UnivariateAxis {
             focusEndInstantText.setText(newValue.toString());
         });
 
-        getDataTableView().showHistogramsProperty().addListener((observable, oldValue, newValue) -> {
-            if (newValue != null && newValue != oldValue) {
-                if (newValue) {
-                    resize(getBounds().getMinX(), getBounds().getMinY(), getBounds().getWidth(), getBounds().getHeight());
-//                    getGraphicsGroup().getChildren().add(0, overallHistogramGroup);
-//                    getGraphicsGroup().getChildren().add(1, queryHistogramGroup);
-////                    graphicsGroup.getChildren().add(2, nonqueryHistogramGroup);
-//                } else {
-//                    getGraphicsGroup().getChildren().remove(overallHistogramGroup);
-//                    getGraphicsGroup().getChildren().remove(queryHistogramGroup);
-////                    graphicsGroup.getChildren().remove(nonqueryHistogramGroup);
-                }
-
-                overallHistogramGroup.setVisible(newValue);
-                queryHistogramGroup.setVisible(newValue);
-            }
-        });
+//        getDataTableView().showHistogramsProperty().addListener((observable, oldValue, newValue) -> {
+//            if (newValue != null && newValue != oldValue) {
+//                if (newValue) {
+//                    resize(getBounds().getMinX(), getBounds().getMinY(), getBounds().getWidth(), getBounds().getHeight());
+//                }
+//
+//                overallHistogramGroup.setVisible(newValue);
+//                queryHistogramGroup.setVisible(newValue);
+//            }
+//        });
 
         getAxisBar().setOnMousePressed(event -> {
             dragStartPoint = new Point2D(event.getX(), event.getY());
@@ -281,7 +310,7 @@ public class TemporalAxis extends UnivariateAxis {
             } else {
                 hoverValueText.setText("");
             }
-//            hoverValueText.toFront();
+            hoverValueText.toFront();
         });
 
         getLowerContextBarHandle().setOnMouseDragged(event -> {
@@ -464,6 +493,8 @@ public class TemporalAxis extends UnivariateAxis {
     public void resize(double center, double top, double width, double height) {
         super.resize(center, top, width, height);
 
+//        rebuildAxisInteriorSummaryData();
+
         startInstantText.setX(getBounds().getMinX() + ((width - startInstantText.getLayoutBounds().getWidth()) / 2.));
         startInstantText.setY(getLowerContextBar().getY() + getLowerContextBar().getHeight());
 
@@ -482,9 +513,56 @@ public class TemporalAxis extends UnivariateAxis {
 //        focusEndInstantText.setY(getFocusMaxPosition());
 
         if (!getDataTable().isEmpty()) {
+            TemporalHistogram histogram = temporalColumn().getStatistics().getHistogram();
+            TemporalHistogram queryHistogram = null;
+            if (getDataTable().getActiveQuery().hasColumnSelections()) {
+                queryHistogram = ((TemporalColumnSummaryStats) getDataTable().getActiveQuery().getColumnQuerySummaryStats(temporalColumn())).getHistogram();
+            }
+
+            overallInteriorHistogramRectangleGroup.getChildren().clear();
+            queryInteriorHistogramRectangleGroup.getChildren().clear();
+
+            Line zeroLine = new Line(getCenterX(), getFocusMaxPosition(), getCenterX(), getFocusMinPosition());
+            zeroLine.setStroke(histogramFill.darker());
+            overallInteriorHistogramRectangleGroup.getChildren().add(zeroLine);
+
+            for (int i = 0; i < histogram.getNumBins(); i++) {
+                Instant binLowerBound = histogram.getBinLowerBound(i);
+                Instant binUpperBound = histogram.getBinUpperBound(i);
+
+                if (!(binLowerBound.isBefore(getFocusStartInstant())) && !(binUpperBound.isAfter(getFocusEndInstant()))) {
+                    double binLowerY = GraphicsUtil.mapValue(binLowerBound, getFocusStartInstant(), getFocusEndInstant(), getFocusMinPosition(), getFocusMaxPosition());
+                    double binUpperY = GraphicsUtil.mapValue(binUpperBound, getFocusStartInstant(), getFocusEndInstant(), getFocusMinPosition(), getFocusMaxPosition());
+
+                    if (histogram.getBinCount(i) > 0) {
+//                        double y = getFocusMaxPosition() + ((histogram.getNumBins() - i - 1) * binHeight);
+                        double binWidth = GraphicsUtil.mapValue(histogram.getBinCount(i), 0,
+                                histogram.getMaxBinCount(), 1, getAxisBar().getWidth());
+                        double x = getCenterX() - (binWidth / 2.);
+//                        Rectangle rectangle = new Rectangle(x, y, binWidth, binHeight);
+                        Rectangle rectangle = new Rectangle(x, binUpperY, binWidth, binLowerY - binUpperY);
+                        rectangle.setStroke(histogramFill.darker());
+                        rectangle.setFill(histogramFill);
+                        overallInteriorHistogramRectangleGroup.getChildren().add(rectangle);
+
+                        if (queryHistogram != null) {
+                            binWidth = GraphicsUtil.mapValue(queryHistogram.getBinCount(i),
+                                    0, histogram.getMaxBinCount(), 1.,
+                                    getAxisBar().getWidth());
+                            x = getCenterX() - (binWidth / 2.);
+                            rectangle = new Rectangle(x, binUpperY, binWidth, binLowerY - binUpperY);
+                            rectangle.setStroke(queryHistogramFill.darker());
+                            rectangle.setFill(queryHistogramFill);
+                            queryInteriorHistogramRectangleGroup.getChildren().add(rectangle);
+                        }
+                    }
+                }
+            }
+
+            /*
             if (getDataTableView().isShowingHistograms()) {
                 // resize histogram bin information
-                TemporalHistogram histogram = temporalColumn().getStatistics().getHistogram();
+                histogram = temporalColumn().getStatistics().getHistogram();
 //                double binHeight = (getFocusMinPosition() - getFocusMaxPosition()) / histogram.getNumBins();
 
                 overallHistogramGroup.getChildren().clear();
@@ -517,7 +595,7 @@ public class TemporalAxis extends UnivariateAxis {
 //                    TemporalColumnSummaryStats queryColumnSummaryStats = (TemporalColumnSummaryStats) dataModel.getActiveQuery().getColumnQuerySummaryStats(getColumn());
 
                     // resize query histogram bins
-                    TemporalHistogram queryHistogram = ((TemporalColumnSummaryStats) getDataTable().getActiveQuery().getColumnQuerySummaryStats(temporalColumn())).getHistogram();
+                    queryHistogram = ((TemporalColumnSummaryStats) getDataTable().getActiveQuery().getColumnQuerySummaryStats(temporalColumn())).getHistogram();
 
                     if (queryHistogram != null) {
                         if (getDataTable().getCalculateQueryStatistics()) {
@@ -552,6 +630,7 @@ public class TemporalAxis extends UnivariateAxis {
                     }
                 }
             }
+            */
         }
     }
 }
