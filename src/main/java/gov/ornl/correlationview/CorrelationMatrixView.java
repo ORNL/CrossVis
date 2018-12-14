@@ -3,10 +3,7 @@ package gov.ornl.correlationview;
 import gov.ornl.datatable.*;
 import gov.ornl.util.GraphicsUtil;
 import javafx.beans.property.*;
-import javafx.geometry.BoundingBox;
-import javafx.geometry.Insets;
-import javafx.geometry.Orientation;
-import javafx.geometry.VPos;
+import javafx.geometry.*;
 import javafx.scene.Group;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
@@ -76,6 +73,10 @@ public class CorrelationMatrixView extends Region implements DataTableListener {
     private BooleanProperty showColorScale = new SimpleBooleanProperty(true);
 
     private Stop colorScaleGradientStops[];
+
+    private boolean dragging = false;
+    private Point2D dragStartPoint;
+    private Point2D dragEndPoint;
 
     public CorrelationMatrixView () {
         setMinSize(200, 200);
@@ -234,6 +235,36 @@ public class CorrelationMatrixView extends Region implements DataTableListener {
             initView();
             resizeView();
         });
+//
+//        this.setOnZoomStarted(event -> {
+//
+//        });
+//
+//        this.setOnZoom(event -> {
+//            log.info("onZoom(): zoomFactor=" + event.getZoomFactor() + "  totalZoomFactor=" + event.getTotalZoomFactor());
+//        });
+//
+//
+//        this.setOnMouseReleased(event -> {
+//            log.info("mouseDragReleased()");
+//        });
+//
+//        this.setOnMouseDragged(event -> {
+//            log.info("onMouseDragged()");
+//            if (!dragging) {
+//                dragging = true;
+//                dragStartPoint = new Point2D(event.getX(), event.getY());
+//            }
+//
+//            dragEndPoint = new Point2D(event.getX(), event.getY());
+//
+//            pane.setTranslateX(dragEndPoint.getX() - dragStartPoint.getX());
+//            pane.setTranslateY(dragEndPoint.getY() - dragStartPoint.getY());
+//        });
+//
+//        this.setOnZoomFinished(event -> {
+//
+//        });
     }
 
     private void setCellColors() {
@@ -545,6 +576,11 @@ public class CorrelationMatrixView extends Region implements DataTableListener {
 
     @Override
     public void dataTableColumnExtentsChanged(DataTable dataTable) {
+
+    }
+
+    @Override
+    public void dataTableColumnFocusExtentsChanged(DataTable dataTable) {
 
     }
 

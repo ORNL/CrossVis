@@ -96,9 +96,9 @@ public abstract class UnivariateAxis extends Axis {
 
     public Rectangle getLowerContextBar() { return lowerContextBar; }
 
-    public double getFocusMinPosition() { return axisBar.getY() + axisBar.getHeight(); }
+    public double getMinFocusPosition() { return axisBar.getY() + axisBar.getHeight(); }
 
-    public double getFocusMaxPosition() { return axisBar.getY(); }
+    public double getMaxFocusPosition() { return axisBar.getY(); }
 
     @Override
     public void resize (double left, double top, double width, double height) {

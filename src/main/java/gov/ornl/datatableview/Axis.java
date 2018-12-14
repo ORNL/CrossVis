@@ -14,6 +14,7 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.control.Tooltip;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.Paint;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
@@ -28,9 +29,10 @@ public abstract class Axis {
     public final static double DEFAULT_TEXT_SIZE = 10d;
     public final static double DEFAULT_STROKE_WIDTH = 1.5;
     public final static Color DEFAULT_TEXT_COLOR = Color.BLACK;
-    public final static Color DEFAULT_HISTOGRAM_FILL = Color.SILVER.deriveColor(1, 1, 1, .8);
-    public final static Color DEFAULT_QUERY_HISTOGRAM_FILL = Color.SLATEGRAY.deriveColor(1., 1., 1., 0.8);
-    public final static Color DEFAULT_HISTOGRAM_STROKE = Color.DARKGRAY;
+    public final static Color DEFAULT_HISTOGRAM_FILL = new Color(Color.SILVER.getRed(), Color.SILVER.getGreen(),
+            Color.SILVER.getBlue(), 0.6);
+//    public final static Color DEFAULT_QUERY_HISTOGRAM_FILL = Color.SLATEGRAY.deriveColor(1., 1., 1., 0.8);
+    public final static Color DEFAULT_HISTOGRAM_STROKE = Color.SILVER.darker();
     public final static int DEFAULT_MAX_HISTOGRAM_BIN_WIDTH = 30;
 
     private DataTableView dataTableView;
@@ -61,9 +63,15 @@ public abstract class Axis {
     protected Point2D dragEndPoint;
     protected boolean dragging = false;
 
-    protected Color histogramFill = DEFAULT_HISTOGRAM_FILL;
-//    protected Color histogramStroke = DEFAULT_HISTOGRAM_STROKE;
-    protected Color queryHistogramFill = DEFAULT_QUERY_HISTOGRAM_FILL;
+    protected SimpleObjectProperty<Paint> overallHistogramFill = new SimpleObjectProperty<>(DEFAULT_HISTOGRAM_FILL);
+    protected SimpleObjectProperty<Paint> overallHistogramStroke = new SimpleObjectProperty<>(DEFAULT_HISTOGRAM_STROKE);
+    protected SimpleObjectProperty<Paint> queryHistogramFill;
+    protected SimpleObjectProperty<Paint> queryHistogramStroke;
+
+//
+//    protected Color histogramFill = DEFAULT_HISTOGRAM_FILL;
+////    protected Color histogramStroke = DEFAULT_HISTOGRAM_STROKE;
+//    protected Color queryHistogramFill = DEFAULT_QUERY_HISTOGRAM_FILL;
 
     private Column column;
 
@@ -71,6 +79,11 @@ public abstract class Axis {
         this.column = column;
 
         this.dataTableView = dataTableView;
+
+        queryHistogramFill = new SimpleObjectProperty<>(new Color(dataTableView.getSelectedItemsColor().getRed(),
+                dataTableView.getSelectedItemsColor().getGreen(),
+                dataTableView.getSelectedItemsColor().getBlue(), ((Color)overallHistogramFill.get()).getOpacity()));
+        queryHistogramStroke = new SimpleObjectProperty<>(((Color)queryHistogramFill.get()).darker());
 
         titleText = new Text(column.getName());
         Tooltip tooltip = new Tooltip();
@@ -157,6 +170,13 @@ public abstract class Axis {
         titleText.textProperty().addListener((observable, oldValue, newValue) -> {
             titleText.setX(bounds.getMinX() + ((bounds.getWidth() - titleText.getLayoutBounds().getWidth()) / 2.));
             titleText.setY(bounds.getMinY() + titleText.getLayoutBounds().getHeight());
+        });
+
+        dataTableView.selectedItemsColorProperty().addListener(observable -> {
+            queryHistogramFill.set(new Color(dataTableView.getSelectedItemsColor().getRed(),
+                    dataTableView.getSelectedItemsColor().getGreen(),
+                    dataTableView.getSelectedItemsColor().getBlue(), ((Color)overallHistogramFill.get()).getOpacity()));
+            queryHistogramStroke = new SimpleObjectProperty<>(((Color)queryHistogramFill.get()).darker());
         });
 
         titleTextRectangle.setOnMouseClicked(event -> {

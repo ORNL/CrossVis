@@ -1,10 +1,8 @@
 package gov.ornl.datatableview;
 
 import gov.ornl.datatable.*;
-import gov.ornl.scatterplot.Scatterplot;
 import gov.ornl.util.GraphicsUtil;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Rectangle;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -17,10 +15,13 @@ public class TuplePolyline {
     private Color color;
     private double[] xPoints;
     private double[] yPoints;
+    private boolean inContext = false;
 
     public TuplePolyline(Tuple tuple) {
         this.tuple = tuple;
     }
+
+    public boolean isInContext() { return inContext; }
 
     public Color getColor() { return color; }
 
@@ -32,6 +33,8 @@ public class TuplePolyline {
         xPoints = new double[tuple.getElementCount()];
         yPoints = new double[tuple.getElementCount()];
 
+        inContext = false;
+
         for (int i = 0; i < tuple.getElementCount(); i++) {
             Axis axis = axisList.get(i);
             if (axis instanceof TemporalAxis) {
@@ -39,23 +42,25 @@ public class TuplePolyline {
                 Instant instant = (Instant)tuple.getElement(i);
 
                 double yPosition;
-                if (instant.isBefore(temporalAxis.getFocusStartInstant())) {
+                if (instant.isBefore(temporalAxis.temporalColumn().getStartFocusValue())) {
                     // in lower context region
                     yPosition = temporalAxis.getLowerContextBar().getY() + (temporalAxis.getLowerContextBar().getHeight() / 2.);
-                } else if (instant.isAfter(temporalAxis.getFocusEndInstant())) {
+                    inContext = true;
+                } else if (instant.isAfter(temporalAxis.temporalColumn().getEndFocusValue())) {
                     // in upper context region
                     yPosition = temporalAxis.getUpperContextBar().getY() + (temporalAxis.getUpperContextBar().getHeight() / 2.);
+                    inContext = true;
                 } else {
                     // in focus region
-                    yPosition = GraphicsUtil.mapValue(instant, temporalAxis.getFocusStartInstant(),
-                            temporalAxis.getFocusEndInstant(), temporalAxis.getFocusMinPosition(),
-                            temporalAxis.getFocusMaxPosition());
+                    yPosition = GraphicsUtil.mapValue(instant, temporalAxis.temporalColumn().getStartFocusValue(),
+                            temporalAxis.temporalColumn().getEndFocusValue(), temporalAxis.getMinFocusPosition(),
+                            temporalAxis.getMaxFocusPosition());
                 }
 //                double yPosition = GraphicsUtil.mapValue(instant,
 //                        ((TemporalColumn)axis.getColumn()).getStatistics().getStartInstant(),
 //                        ((TemporalColumn)axis.getColumn()).getStatistics().getEndInstant(),
-//                        temporalAxis.getFocusMinPosition(),
-//                        temporalAxis.getFocusMaxPosition());
+//                        temporalAxis.getMinFocusPosition(),
+//                        temporalAxis.getMaxFocusPosition());
                 xPoints[i] = temporalAxis.getCenterX();
                 yPoints[i] = yPosition;
             } else if (axis instanceof DoubleAxis) {
@@ -63,22 +68,30 @@ public class TuplePolyline {
                 double value = (Double)tuple.getElement(i);
 
                 double yPosition;
-                if (value < doubleAxis.getMinFocusValue()) {
+//                if (value < doubleAxis.getMinFocusValue()) {
+                if (value < doubleAxis.doubleColumn().getMinimumFocusValue()) {
                     // in lower context region
                     yPosition = doubleAxis.getLowerContextBar().getY() + (doubleAxis.getLowerContextBar().getHeight() / 2.);
-                } else if (value > doubleAxis.getMaxFocusValue()) {
+                    inContext = true;
+                } else if (value > doubleAxis.doubleColumn().getMaximumFocusValue()) {
+//                } else if (value > doubleAxis.getMaxFocusValue()) {
                     // in upper context region
                     yPosition = doubleAxis.getUpperContextBar().getY() + (doubleAxis.getUpperContextBar().getHeight() / 2.);
+                    inContext = true;
                 } else {
                     // in focus region
-                    yPosition = GraphicsUtil.mapValue(value, doubleAxis.getMinFocusValue(), doubleAxis.getMaxFocusValue(),
-                            doubleAxis.getFocusMinPosition(), doubleAxis.getFocusMaxPosition());
+                    yPosition = GraphicsUtil.mapValue(value, doubleAxis.doubleColumn().getMinimumFocusValue(),
+                            doubleAxis.doubleColumn().getMaximumFocusValue(),
+                            doubleAxis.getMinFocusPosition(),
+                            doubleAxis.getMaxFocusPosition());
+//                    yPosition = GraphicsUtil.mapValue(value, doubleAxis.getMinFocusValue(), doubleAxis.getMaxFocusValue(),
+//                            doubleAxis.getMinFocusPosition(), doubleAxis.getMaxFocusPosition());
                 }
 
 //                double yPosition = GraphicsUtil.mapValue(value,
 //                        doubleAxis.doubleColumn().getStatistics().getMinValue(),
 //                        doubleAxis.doubleColumn().getStatistics().getMaxValue(),
-//                        doubleAxis.getFocusMinPosition(), doubleAxis.getFocusMaxPosition());
+//                        doubleAxis.getMinFocusPosition(), doubleAxis.getMaxFocusPosition());
                 xPoints[i] = axis.getCenterX();
                 yPoints[i] = yPosition;
             } else if (axis instanceof CategoricalAxis) {

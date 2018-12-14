@@ -39,7 +39,7 @@ public class CategoricalAxis extends UnivariateAxis {
     private BooleanProperty showCategoryLabels = new SimpleBooleanProperty(false);
     private BooleanProperty categoryHeightProportionalToCount = new SimpleBooleanProperty(true);
 
-    public CategoricalAxis(DataTableView dataTableView, Column column) {
+    public CategoricalAxis(DataTableView dataTableView, CategoricalColumn column) {
         super(dataTableView, column);
 
         categoriesRectangleGroup = new Group();
@@ -186,7 +186,7 @@ public class CategoricalAxis extends UnivariateAxis {
             categoriesRectangleMap.clear();
             categoriesNameGraphicsGroup.getChildren().clear();
 
-            double lastRectangleBottomY = getFocusMaxPosition();
+            double lastRectangleBottomY = getMaxFocusPosition();
 
             List<String> categories = histogram.getCategories();
             if (isCategoryHeightProportionalToCount()) {
@@ -204,10 +204,10 @@ public class CategoricalAxis extends UnivariateAxis {
                 double y = lastRectangleBottomY;
                 Rectangle rectangle;
                 if (isCategoryHeightProportionalToCount()) {
-                    double categoryHeight = GraphicsUtil.mapValue(categoryCount, 0, histogram.getTotalCount(), 0, getFocusMinPosition() - getFocusMaxPosition());
+                    double categoryHeight = GraphicsUtil.mapValue(categoryCount, 0, histogram.getTotalCount(), 0, getMinFocusPosition() - getMaxFocusPosition());
                     rectangle = new Rectangle(getAxisBar().getX(), y, getAxisBar().getWidth(), categoryHeight);
                 } else {
-                    double categoryHeight = (getFocusMinPosition() - getFocusMaxPosition()) / categoricalColumn().getCategories().size();
+                    double categoryHeight = (getMinFocusPosition() - getMaxFocusPosition()) / categoricalColumn().getCategories().size();
                     rectangle = new Rectangle(getAxisBar().getX(), y, getAxisBar().getWidth(), categoryHeight);
                 }
 

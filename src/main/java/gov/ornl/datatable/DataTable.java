@@ -445,6 +445,18 @@ public class DataTable {
 		fireDataTableColumnExtentsChanged();
 	}
 
+	public void setDoubleColumnFocusExtents(DoubleColumn column, double minValue, double maxValue) {
+		column.setMinimumFocusValue(minValue);
+		column.setMaximumFocusValue(maxValue);
+		fireDataTableColumnFocusExtentsChanged();
+	}
+
+	public void setTemporalColumnFocusExtents(TemporalColumn column, Instant startInstant, Instant endInstant) {
+		column.setStartFocusValue(startInstant);
+		column.setEndFocusValue(endInstant);
+		fireDataTableColumnFocusExtentsChanged();
+	}
+
 	public void setTemporalColumnScaleExtents(ArrayList<TemporalColumn> columns, Instant startInstant, Instant endInstant) {
 		for (TemporalColumn column : columns) {
 			column.setStartScaleValue(startInstant);
@@ -902,6 +914,12 @@ public class DataTable {
 	private void fireColumnEnabled(Column column) {
 		for (DataTableListener listener : listeners) {
 			listener.dataModelColumnEnabled(this, column);
+		}
+	}
+
+	private void fireDataTableColumnFocusExtentsChanged() {
+		for (DataTableListener listener : listeners) {
+			listener.dataTableColumnFocusExtentsChanged(this);
 		}
 	}
 

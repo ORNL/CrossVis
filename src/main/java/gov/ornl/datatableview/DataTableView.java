@@ -848,9 +848,9 @@ public class DataTableView extends Region implements DataTableListener {
             for (int i = 0; i < dataTable.getColumnCount(); i++) {
                 Axis axis = null;
                 if (dataTable.getColumn(i) instanceof TemporalColumn) {
-                    axis = new TemporalAxis(this, dataTable.getColumn(i));
+                    axis = new TemporalAxis(this, (TemporalColumn)dataTable.getColumn(i));
                 } else if (dataTable.getColumn(i) instanceof CategoricalColumn) {
-                    axis = new CategoricalAxis(this, dataTable.getColumn(i));
+                    axis = new CategoricalAxis(this, (CategoricalColumn)dataTable.getColumn(i));
                 } else if (dataTable.getColumn(i) instanceof DoubleColumn){
                     axis = new DoubleAxis(this, (DoubleColumn)dataTable.getColumn(i));
                 } else if (dataTable.getColumn(i) instanceof BivariateColumn) {
@@ -1117,7 +1117,10 @@ public class DataTableView extends Region implements DataTableListener {
 
     @Override
     public void dataTableColumnExtentsChanged(DataTable dataTable) {
-        //TODO: Relayout everything
+        initView();
+    }
+
+    public void dataTableColumnFocusExtentsChanged(DataTable dataTable) {
         initView();
     }
 

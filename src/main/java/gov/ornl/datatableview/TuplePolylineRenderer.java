@@ -48,10 +48,16 @@ public class TuplePolylineRenderer extends AnimationTimer {
 
         for (int ituple = 0; ituple < maxTuplesPerFrame; ituple++) {
             TuplePolyline pcpTuple = tupleQueue.poll();
+
             if (pcpTuple == null) {
                 this.stop();
                 break;
             } else {
+//                if (pcpTuple.isInContext()) {
+//                    canvas.getGraphicsContext2D().setStroke(tupleColor.desaturate());
+//                } else {
+//                    canvas.getGraphicsContext2D().setStroke(tupleColor);
+//                }
                 for (int i = 1; i < pcpTuple.getXPoints().length; i++) {
                     double x0, x1;
 

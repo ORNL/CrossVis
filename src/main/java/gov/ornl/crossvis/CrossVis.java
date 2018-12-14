@@ -964,8 +964,8 @@ public class CrossVis extends Application implements DataTableListener {
             ArrayList<DoubleColumn> columns = new ArrayList<>();
             for (DoubleAxis axis : axisListView.getSelectionModel().getSelectedItems()) {
                 columns.add(axis.doubleColumn());
-                axis.setMaxFocusValue(extents[1]);
-                axis.setMinFocusValue(extents[0]);
+//                axis.setMaxFocusValue(extents[1]);
+//                axis.setMinFocusValue(extents[0]);
             }
             dataTableView.getDataTable().setDoubleColumnScaleExtents(columns, extents[0], extents[1]);
         });
@@ -1381,7 +1381,10 @@ public class CrossVis extends Application implements DataTableListener {
     public void dataTableStatisticsChanged(DataTable dataTable) { }
 
     @Override
-    public void dataTableColumnExtentsChanged(DataTable dataTable) {}
+    public void dataTableColumnExtentsChanged(DataTable dataTable) { }
+
+    @Override
+    public void dataTableColumnFocusExtentsChanged(DataTable dataTable) { }
 
     @Override
     public void dataModelColumnDisabled(DataTable dataTable, Column disabledColumn) {

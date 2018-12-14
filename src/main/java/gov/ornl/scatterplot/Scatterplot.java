@@ -452,8 +452,8 @@ public class Scatterplot {
             yAxisStartInstant = ((TemporalColumn)yColumn).getStatistics().getStartInstant().minusMillis(yRangePaddingMillis);
             yAxisEndInstant = ((TemporalColumn)yColumn).getStatistics().getEndInstant().plusMillis(yRangePaddingMillis);
 
-            yMinValuePosition = GraphicsUtil.mapValue(((TemporalColumn)yColumn).getStatistics().getStartInstant(), yAxisStartInstant, yAxisEndInstant, 0, plotBounds.getHeight());
-            yMaxValuePosition = GraphicsUtil.mapValue(((TemporalColumn)yColumn).getStatistics().getEndInstant(), yAxisStartInstant, yAxisEndInstant, 0, plotBounds.getHeight());
+            yMinValuePosition = GraphicsUtil.mapValue(((TemporalColumn)yColumn).getStatistics().getStartInstant(), yAxisStartInstant, yAxisEndInstant, plotBounds.getHeight(), 0);
+            yMaxValuePosition = GraphicsUtil.mapValue(((TemporalColumn)yColumn).getStatistics().getEndInstant(), yAxisStartInstant, yAxisEndInstant, plotBounds.getHeight(), 0);
         } else if (yColumn instanceof CategoricalColumn) {
             CategoricalColumn categoricalColumn = (CategoricalColumn)yColumn;
 
@@ -543,7 +543,7 @@ public class Scatterplot {
                 }
                 double point[] = new double[2];
                 point[0] = categoryCenter + jitter;
-                point[1] = GraphicsUtil.mapValue(yValues[i], yAxisStartInstant, yAxisEndInstant, 0, plotBounds.getWidth());
+                point[1] = GraphicsUtil.mapValue(yValues[i], yAxisStartInstant, yAxisEndInstant, plotBounds.getHeight(), 0);
                 points.add(point);
             }
         }  else if (xColumn instanceof DoubleColumn && yColumn instanceof CategoricalColumn) {
@@ -562,7 +562,7 @@ public class Scatterplot {
                 }
                 double point[] = new double[2];
                 point[1] = categoryCenter + jitter;
-                point[0] = GraphicsUtil.mapValue(xValues[i], xAxisMinDoubleValue, xAxisMaxDoubleValue, plotBounds.getHeight(), 0.);
+                point[0] = GraphicsUtil.mapValue(xValues[i], xAxisMinDoubleValue, xAxisMaxDoubleValue, plotBounds.getWidth(), 0.);
                 points.add(point);
             }
         }  else if (xColumn instanceof TemporalColumn && yColumn instanceof CategoricalColumn) {

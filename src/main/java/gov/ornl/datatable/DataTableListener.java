@@ -11,6 +11,8 @@ public interface DataTableListener {
 
 	public void dataTableColumnExtentsChanged(DataTable dataTable);
 
+	public void dataTableColumnFocusExtentsChanged(DataTable dataTable);
+
 	// Called when the number of histogram bins is changed
 	public void dataModelNumHistogramBinsChanged(DataTable dataTable);
 

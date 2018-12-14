@@ -10,20 +10,46 @@ public class TemporalColumn extends Column {
     private TemporalColumnSummaryStats summaryStats;
     private ObjectProperty<Instant> startScaleValue = new SimpleObjectProperty<>(null);
     private ObjectProperty<Instant> endScaleValue = new SimpleObjectProperty<>(null);
+    private ObjectProperty<Instant> startFocusValue = new SimpleObjectProperty<>(null);
+    private ObjectProperty<Instant> endFocusValue = new SimpleObjectProperty<>(null);
 
     public TemporalColumn(String name) {
         super(name);
     }
 
+    public Instant getStartFocusValue() { return startFocusValue.get(); }
+
+    protected void setStartFocusValue(Instant instant) { startFocusValue.set(instant); }
+
+    public ReadOnlyObjectProperty<Instant> startFocusValueProperty() { return startFocusValue; }
+
+    public Instant getEndFocusValue() { return endFocusValue.get(); }
+
+    protected void setEndFocusValue(Instant instant) { endFocusValue.set(instant); }
+
+    public ReadOnlyObjectProperty<Instant> endFocusValueProperty() { return endFocusValue; }
+
     public Instant getStartScaleValue() { return startScaleValue.get(); }
 
-    protected void setStartScaleValue(Instant instant) { startScaleValue.set(instant); }
+    protected void setStartScaleValue(Instant instant) {
+        startScaleValue.set(instant);
+
+        if (getStartFocusValue() == null || getStartFocusValue().isBefore(getStartScaleValue())) {
+            setStartFocusValue(instant);
+        }
+    }
 
     public ReadOnlyObjectProperty<Instant> startScaleValueProperty() { return startScaleValue; }
 
     public Instant getEndScaleValue() { return endScaleValue.get(); }
 
-    protected void setEndScaleValue(Instant instant) { endScaleValue.set(instant); }
+    protected void setEndScaleValue(Instant instant) {
+        endScaleValue.set(instant);
+
+        if (getEndFocusValue() == null || getEndFocusValue().isAfter(getEndScaleValue())) {
+            setEndFocusValue(instant);
+        }
+    }
 
     public ReadOnlyObjectProperty<Instant> endScaleValueProperty() { return endScaleValue; }
 
@@ -39,6 +65,14 @@ public class TemporalColumn extends Column {
 
         if (getEndScaleValue() == null) {
             setEndScaleValue(summaryStats.getEndInstant());
+        }
+
+        if (getStartFocusValue() == null) {
+            setStartFocusValue(summaryStats.getStartInstant());
+        }
+
+        if (getEndFocusValue() == null) {
+            setEndFocusValue(summaryStats.getEndInstant());
         }
     }
 

@@ -15,8 +15,6 @@ import javafx.scene.text.Text;
 
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
 import java.util.logging.Logger;
 
 public class TemporalAxis extends UnivariateAxis {
@@ -28,8 +26,8 @@ public class TemporalAxis extends UnivariateAxis {
     private Group queryHistogramGroup= new Group();
     private ArrayList<Rectangle> queryHistogramRectangles = new ArrayList<>();
 
-    private Color histogramFill = DEFAULT_HISTOGRAM_FILL;
-    private Color queryHistogramFill = DEFAULT_QUERY_HISTOGRAM_FILL;
+//    private Color histogramFill = DEFAULT_HISTOGRAM_FILL;
+//    private Color queryHistogramFill = DEFAULT_QUERY_HISTOGRAM_FILL;
 
     private Text startInstantText;
     private Text endInstantText;
@@ -37,8 +35,8 @@ public class TemporalAxis extends UnivariateAxis {
     private Text focusStartInstantText;
     private Text focusEndInstantText;
 
-    private ObjectProperty<Instant> focusStartInstantValue;
-    private ObjectProperty<Instant> focusEndInstantValue;
+//    private ObjectProperty<Instant> focusStartInstantValue;
+//    private ObjectProperty<Instant> focusEndInstantValue;
 
     private TemporalAxisSelection draggingSelection;
 
@@ -50,7 +48,7 @@ public class TemporalAxis extends UnivariateAxis {
     private Group overallInteriorHistogramRectangleGroup = new Group();
     private Group queryInteriorHistogramRectangleGroup = new Group();
 
-    public TemporalAxis(DataTableView dataTableView, Column column) {
+    public TemporalAxis(DataTableView dataTableView, TemporalColumn column) {
         super(dataTableView, column);
 
         draggingContextLine = new Line();
@@ -74,16 +72,16 @@ public class TemporalAxis extends UnivariateAxis {
         endInstantText.setTextOrigin(VPos.BOTTOM);
         endInstantText.setTranslateY(-2.);
 
-        focusStartInstantValue = new SimpleObjectProperty<>(temporalColumn().getStartScaleValue());
-        focusStartInstantText = new Text(focusStartInstantValue.get().toString());
+//        focusStartInstantValue = new SimpleObjectProperty<>(temporalColumn().getStartScaleValue());
+        focusStartInstantText = new Text(column.getStartFocusValue().toString());
         focusStartInstantText.setFont(new Font(DEFAULT_TEXT_SIZE));
         focusStartInstantText.setSmooth(true);
         focusStartInstantText.setTextOrigin(VPos.TOP);
         focusStartInstantText.setTranslateY(2.);
         focusStartInstantText.setMouseTransparent(true);
 
-        focusEndInstantValue = new SimpleObjectProperty<>(temporalColumn().getEndScaleValue());
-        focusEndInstantText = new Text(focusEndInstantValue.get().toString());
+//        focusEndInstantValue = new SimpleObjectProperty<>(temporalColumn().getEndScaleValue());
+        focusEndInstantText = new Text(column.getEndFocusValue().toString());
         focusEndInstantText.setFont(new Font(DEFAULT_TEXT_SIZE));
         focusEndInstantText.setSmooth(true);
         focusEndInstantText.setTextOrigin(VPos.BOTTOM);
@@ -104,8 +102,6 @@ public class TemporalAxis extends UnivariateAxis {
         overallInteriorHistogramRectangleGroup.setMouseTransparent(true);
         queryInteriorHistogramRectangleGroup.setMouseTransparent(true);
         registerListeners();
-
-//        rebuildAxisInteriorSummaryData();
     }
 
     @Override
@@ -135,38 +131,39 @@ public class TemporalAxis extends UnivariateAxis {
     protected TemporalColumn temporalColumn() { return (TemporalColumn)getColumn(); }
 
     public double getAxisPositionForValue(Instant instant) {
-        if (instant.isAfter(getFocusEndInstant())) {
-            return GraphicsUtil.mapValue(instant, getFocusEndInstant(), temporalColumn().getEndScaleValue(),
-                    getFocusMaxPosition(), getUpperContextBar().getY());
+        if (instant.isAfter(temporalColumn().getEndFocusValue())) {
+            return GraphicsUtil.mapValue(instant, temporalColumn().getEndFocusValue(), temporalColumn().getEndScaleValue(),
+                    getMaxFocusPosition(), getUpperContextBar().getY());
 //            return GraphicsUtil.mapValue(instant, getFocusEndInstant(), temporalColumn().getStatistics().getEndInstant(),
-//                    getFocusMaxPosition(), getUpperContextBar().getY());
-        } else if (instant.isBefore(getFocusStartInstant())) {
-            return GraphicsUtil.mapValue(instant, getFocusStartInstant(), temporalColumn().getStartScaleValue(),
-                    getFocusMinPosition(), getLowerContextBar().getY() + getLowerContextBar().getHeight());
+//                    getMaxFocusPosition(), getUpperContextBar().getY());
+        } else if (instant.isBefore(temporalColumn().getStartFocusValue())) {
+            return GraphicsUtil.mapValue(instant, temporalColumn().getStartFocusValue(), temporalColumn().getStartScaleValue(),
+                    getMinFocusPosition(), getLowerContextBar().getY() + getLowerContextBar().getHeight());
 //            return GraphicsUtil.mapValue(instant, getFocusStartInstant(), temporalColumn().getStatistics().getStartInstant(),
-//                    getFocusMinPosition(), getLowerContextBar().getY() + getLowerContextBar().getHeight());
+//                    getMinFocusPosition(), getLowerContextBar().getY() + getLowerContextBar().getHeight());
         }
 
-        return GraphicsUtil.mapValue(instant, getFocusStartInstant(), getFocusEndInstant(),
-                getFocusMinPosition(), getFocusMaxPosition());
+        return GraphicsUtil.mapValue(instant, temporalColumn().getStartFocusValue(),
+                temporalColumn().getEndFocusValue(),
+                getMinFocusPosition(), getMaxFocusPosition());
     }
 
     @Override
     protected Object getValueForAxisPosition(double axisPosition) {
-        if (axisPosition < getFocusMaxPosition()) {
-            return GraphicsUtil.mapValue(axisPosition, getFocusMaxPosition(), getUpperContextBar().getY(),
-                    getFocusEndInstant(), temporalColumn().getEndScaleValue());
-//            return GraphicsUtil.mapValue(axisPosition, getFocusMaxPosition(), getUpperContextBar().getY(),
+        if (axisPosition < getMaxFocusPosition()) {
+            return GraphicsUtil.mapValue(axisPosition, getMaxFocusPosition(), getUpperContextBar().getY(),
+                    temporalColumn().getEndFocusValue(), temporalColumn().getEndScaleValue());
+//            return GraphicsUtil.mapValue(axisPosition, getMaxFocusPosition(), getUpperContextBar().getY(),
 //                    getFocusEndInstant(), temporalColumn().getStatistics().getEndInstant());
-        } else if (axisPosition > getFocusMinPosition()) {
-            return GraphicsUtil.mapValue(axisPosition, getFocusMinPosition(), getUpperContextBar().getY() + getUpperContextBar().getHeight(),
-                    getFocusStartInstant(), temporalColumn().getStartScaleValue());
-//            return GraphicsUtil.mapValue(axisPosition, getFocusMinPosition(), getUpperContextBar().getY() + getUpperContextBar().getHeight(),
+        } else if (axisPosition > getMinFocusPosition()) {
+            return GraphicsUtil.mapValue(axisPosition, getMinFocusPosition(), getUpperContextBar().getY() + getUpperContextBar().getHeight(),
+                    temporalColumn().getStartFocusValue(), temporalColumn().getStartScaleValue());
+//            return GraphicsUtil.mapValue(axisPosition, getMinFocusPosition(), getUpperContextBar().getY() + getUpperContextBar().getHeight(),
 //                    getFocusStartInstant(), temporalColumn().getStatistics().getStartInstant());
         }
 
-        return GraphicsUtil.mapValue(axisPosition, getFocusMinPosition(), getFocusMaxPosition(),
-                getFocusStartInstant(), getFocusEndInstant());
+        return GraphicsUtil.mapValue(axisPosition, getMinFocusPosition(), getMaxFocusPosition(),
+                temporalColumn().getStartFocusValue(), temporalColumn().getEndFocusValue());
     }
 
 //    public void rebuildAxisInteriorSummaryData() {
@@ -203,7 +200,7 @@ public class TemporalAxis extends UnivariateAxis {
 //                double value = axisInteriorHistogram.getBinCount(ibin);
 //                double binRectangleWidth = GraphicsUtil.mapValue(value, 0, axisInteriorHistogram.getMaxBinCount(),
 //                        0, getAxisBar().getWidth());
-//                double y = getFocusMaxPosition() + (ibin * 2.);
+//                double y = getMaxFocusPosition() + (ibin * 2.);
 //                Rectangle binRectangle = new Rectangle(getCenterX() - (binRectangleWidth / 2.), y,
 //                        binRectangleWidth, 2.);
 //                binRectangle.setFill(Color.BLUE);
@@ -220,25 +217,33 @@ public class TemporalAxis extends UnivariateAxis {
 
         temporalColumn().startScaleValueProperty().addListener(observable -> {
             startInstantText.setText(temporalColumn().getStartScaleValue().toString());
-            if (getFocusStartInstant().isBefore(temporalColumn().getStartScaleValue())) {
-                setFocusStartInstant(temporalColumn().getStartScaleValue());
-            }
+//            if (getFocusStartInstant().isBefore(temporalColumn().getStartScaleValue())) {
+//                setFocusStartInstant(temporalColumn().getStartScaleValue());
+//            }
         });
 
         temporalColumn().endScaleValueProperty().addListener(observable -> {
             endInstantText.setText(temporalColumn().getEndScaleValue().toString());
-            if (getFocusEndInstant().isAfter(temporalColumn().getEndScaleValue())) {
-                setFocusEndInstant(temporalColumn().getEndScaleValue());
-            }
+//            if (getFocusEndInstant().isAfter(temporalColumn().getEndScaleValue())) {
+//                setFocusEndInstant(temporalColumn().getEndScaleValue());
+//            }
         });
 
-        focusStartInstantValue.addListener((observable, oldValue, newValue) -> {
-            focusStartInstantText.setText(newValue.toString());
+        temporalColumn().startFocusValueProperty().addListener(observable -> {
+            focusStartInstantText.setText(temporalColumn().getStartFocusValue().toString());
         });
 
-        focusEndInstantValue.addListener((observable, oldValue, newValue) -> {
-            focusEndInstantText.setText(newValue.toString());
+        temporalColumn().endFocusValueProperty().addListener(observable -> {
+            focusEndInstantText.setText(temporalColumn().getEndFocusValue().toString());
         });
+//
+//        focusStartInstantValue.addListener((observable, oldValue, newValue) -> {
+//            focusStartInstantText.setText(newValue.toString());
+//        });
+//
+//        focusEndInstantValue.addListener((observable, oldValue, newValue) -> {
+//            focusEndInstantText.setText(newValue.toString());
+//        });
 
 //        getDataTableView().showHistogramsProperty().addListener((observable, oldValue, newValue) -> {
 //            if (newValue != null && newValue != oldValue) {
@@ -265,13 +270,13 @@ public class TemporalAxis extends UnivariateAxis {
             double selectionMaxY = Math.min(dragStartPoint.getY(), dragEndPoint.getY());
             double selectionMinY = Math.max(dragStartPoint.getY(), dragEndPoint.getY());
 
-            selectionMaxY = selectionMaxY < getFocusMaxPosition() ? getFocusMaxPosition() : selectionMaxY;
-            selectionMinY = selectionMinY > getFocusMinPosition() ? getFocusMinPosition() : selectionMinY;
+            selectionMaxY = selectionMaxY < getMaxFocusPosition() ? getMaxFocusPosition() : selectionMaxY;
+            selectionMinY = selectionMinY > getMinFocusPosition() ? getMinFocusPosition() : selectionMinY;
 
-            Instant selectionEndInstant = GraphicsUtil.mapValue(selectionMaxY, getFocusMaxPosition(), getFocusMinPosition(),
-                    getFocusEndInstant(), getFocusStartInstant());
-            Instant selectionStartInstant = GraphicsUtil.mapValue(selectionMinY, getFocusMaxPosition(), getFocusMinPosition(),
-                    getFocusEndInstant(), getFocusStartInstant());
+            Instant selectionEndInstant = GraphicsUtil.mapValue(selectionMaxY, getMaxFocusPosition(), getMinFocusPosition(),
+                    temporalColumn().getEndFocusValue(), temporalColumn().getStartFocusValue());
+            Instant selectionStartInstant = GraphicsUtil.mapValue(selectionMinY, getMaxFocusPosition(), getMinFocusPosition(),
+                    temporalColumn().getEndFocusValue(), temporalColumn().getStartFocusValue());
 
             if (draggingSelection == null) {
                 TemporalColumnSelectionRange selectionRange = new TemporalColumnSelectionRange(temporalColumn(), selectionStartInstant, selectionEndInstant);
@@ -337,11 +342,11 @@ public class TemporalAxis extends UnivariateAxis {
             double y = draggingContextLine.getStartY() + dy;
 
             Instant newFocusStartInstant;
-            if (y > getFocusMinPosition()) {
+            if (y > getMinFocusPosition()) {
                 // above the focus start instant in lower context region (use context range)
-                newFocusStartInstant = GraphicsUtil.mapValue(y, getFocusMinPosition(),
+                newFocusStartInstant = GraphicsUtil.mapValue(y, getMinFocusPosition(),
                         getLowerContextBar().getLayoutBounds().getMaxY(),
-                        getFocusStartInstant(), temporalColumn().getStartScaleValue());
+                        temporalColumn().getStartFocusValue(), temporalColumn().getStartScaleValue());
                 if (newFocusStartInstant.isBefore(temporalColumn().getStartScaleValue())) {
                     newFocusStartInstant = Instant.from(temporalColumn().getStartScaleValue());
 //                    dy = getUpperContextBar().getHeight();
@@ -351,10 +356,10 @@ public class TemporalAxis extends UnivariateAxis {
                 }
             } else {
                 // inside focus region (use focus start and end)
-                newFocusStartInstant = GraphicsUtil.mapValue(y, getFocusMaxPosition(), getFocusMinPosition(),
-                        getFocusEndInstant(), getFocusStartInstant());
-                if (newFocusStartInstant.isAfter(getFocusEndInstant())) {
-                    newFocusStartInstant = Instant.from(getFocusEndInstant());
+                newFocusStartInstant = GraphicsUtil.mapValue(y, getMaxFocusPosition(), getMinFocusPosition(),
+                        temporalColumn().getEndFocusValue(), temporalColumn().getStartFocusValue());
+                if (newFocusStartInstant.isAfter(temporalColumn().getEndFocusValue())) {
+                    newFocusStartInstant = Instant.from(temporalColumn().getEndFocusValue());
                     dy = -getAxisBar().getHeight();
                 }
             }
@@ -374,24 +379,26 @@ public class TemporalAxis extends UnivariateAxis {
                 getLowerContextBarHandle().setVisible(true);
                 focusStartInstantText.setVisible(true);
 
-                if (!getFocusStartInstant().equals(draggingStartInstant)) {
-                    setFocusStartInstant(draggingStartInstant);
-                    getDataTableView().resizeView();
-
-                    ArrayList<TemporalAxisSelection> selectionsToRemove = new ArrayList<>();
-                    for (AxisSelection axisSelection : getAxisSelectionList()) {
-                        TemporalAxisSelection temporalAxisSelection = (TemporalAxisSelection)axisSelection;
-                        if (temporalAxisSelection.getTemporalColumnSelectionRange().getStartInstant().isBefore(getFocusStartInstant()) ||
-                                temporalAxisSelection.getTemporalColumnSelectionRange().getEndInstant().isAfter(getFocusEndInstant())) {
-                            selectionsToRemove.add(temporalAxisSelection);
-                        }
-                    }
-
-                    if (!selectionsToRemove.isEmpty()) {
-                        for (TemporalAxisSelection temporalAxisSelection : selectionsToRemove) {
-                            getDataTable().removeColumnSelectionFromActiveQuery(temporalAxisSelection.getColumnSelection());
-                        }
-                    }
+                if (!temporalColumn().getStartFocusValue().equals(draggingStartInstant)) {
+                    getDataTable().setTemporalColumnFocusExtents(temporalColumn(), draggingStartInstant,
+                            temporalColumn().getEndFocusValue());
+//                    setFocusStartInstant(draggingStartInstant);
+//                    getDataTableView().resizeView();
+//
+//                    ArrayList<TemporalAxisSelection> selectionsToRemove = new ArrayList<>();
+//                    for (AxisSelection axisSelection : getAxisSelectionList()) {
+//                        TemporalAxisSelection temporalAxisSelection = (TemporalAxisSelection)axisSelection;
+//                        if (temporalAxisSelection.getTemporalColumnSelectionRange().getStartInstant().isBefore(getFocusStartInstant()) ||
+//                                temporalAxisSelection.getTemporalColumnSelectionRange().getEndInstant().isAfter(getFocusEndInstant())) {
+//                            selectionsToRemove.add(temporalAxisSelection);
+//                        }
+//                    }
+//
+//                    if (!selectionsToRemove.isEmpty()) {
+//                        for (TemporalAxisSelection temporalAxisSelection : selectionsToRemove) {
+//                            getDataTable().removeColumnSelectionFromActiveQuery(temporalAxisSelection.getColumnSelection());
+//                        }
+//                    }
                 }
             }
         });
@@ -420,10 +427,10 @@ public class TemporalAxis extends UnivariateAxis {
             double y = draggingContextLine.getStartY() + dy;
 
             Instant newFocusEndInstant;
-            if (y < getFocusMaxPosition()) {
+            if (y < getMaxFocusPosition()) {
                 // above the focus end instant in upper context region (use context range)
-                newFocusEndInstant = GraphicsUtil.mapValue(y, getFocusMaxPosition(), getUpperContextBar().getY(),
-                        getFocusEndInstant(), temporalColumn().getEndScaleValue());
+                newFocusEndInstant = GraphicsUtil.mapValue(y, getMaxFocusPosition(), getUpperContextBar().getY(),
+                        temporalColumn().getEndFocusValue(), temporalColumn().getEndScaleValue());
                 if (newFocusEndInstant.isAfter(temporalColumn().getEndScaleValue())) {
                     newFocusEndInstant = Instant.from(temporalColumn().getEndScaleValue());
 //                    dy = -getUpperContextBar().getHeight();
@@ -433,10 +440,10 @@ public class TemporalAxis extends UnivariateAxis {
                 }
             } else {
                 // inside focus region (use focus start and end)
-                newFocusEndInstant = GraphicsUtil.mapValue(y, getFocusMaxPosition(), getFocusMinPosition(),
-                        getFocusEndInstant(), getFocusStartInstant());
-                if (newFocusEndInstant.isBefore(getFocusStartInstant())) {
-                    newFocusEndInstant = Instant.from(getFocusStartInstant());
+                newFocusEndInstant = GraphicsUtil.mapValue(y, getMaxFocusPosition(), getMinFocusPosition(),
+                        temporalColumn().getEndFocusValue(), temporalColumn().getStartFocusValue());
+                if (newFocusEndInstant.isBefore(temporalColumn().getStartFocusValue())) {
+                    newFocusEndInstant = Instant.from(temporalColumn().getStartFocusValue());
                     dy = getAxisBar().getHeight();
                 }
             }
@@ -455,40 +462,42 @@ public class TemporalAxis extends UnivariateAxis {
                 getGraphicsGroup().getChildren().removeAll(draggingContextInstantText, draggingContextLine);
                 getUpperContextBarHandle().setVisible(true);
                 focusEndInstantText.setVisible(true);
-                if (!getFocusEndInstant().equals(draggingEndInstant)) {
-                    setFocusEndInstant(draggingEndInstant);
-                    getDataTableView().resizeView();
-
-                    ArrayList<TemporalAxisSelection> selectionsToRemove = new ArrayList<>();
-                    for (AxisSelection axisSelection : getAxisSelectionList()) {
-                        TemporalAxisSelection temporalAxisSelection = (TemporalAxisSelection)axisSelection;
-                        if (temporalAxisSelection.getTemporalColumnSelectionRange().getStartInstant().isBefore(getFocusStartInstant()) ||
-                                temporalAxisSelection.getTemporalColumnSelectionRange().getEndInstant().isAfter(getFocusEndInstant())) {
-                            selectionsToRemove.add(temporalAxisSelection);
-                        }
-                    }
-
-                    if (!selectionsToRemove.isEmpty()) {
-                        for (TemporalAxisSelection temporalAxisSelection : selectionsToRemove) {
-                            getDataTable().removeColumnSelectionFromActiveQuery(temporalAxisSelection.getColumnSelection());
-                        }
-                    }
+                if (!temporalColumn().getEndFocusValue().equals(draggingEndInstant)) {
+                    getDataTable().setTemporalColumnFocusExtents(temporalColumn(), temporalColumn().getStartFocusValue(),
+                            draggingEndInstant);
+//                    setFocusEndInstant(draggingEndInstant);
+//                    getDataTableView().resizeView();
+//
+//                    ArrayList<TemporalAxisSelection> selectionsToRemove = new ArrayList<>();
+//                    for (AxisSelection axisSelection : getAxisSelectionList()) {
+//                        TemporalAxisSelection temporalAxisSelection = (TemporalAxisSelection)axisSelection;
+//                        if (temporalAxisSelection.getTemporalColumnSelectionRange().getStartInstant().isBefore(getFocusStartInstant()) ||
+//                                temporalAxisSelection.getTemporalColumnSelectionRange().getEndInstant().isAfter(getFocusEndInstant())) {
+//                            selectionsToRemove.add(temporalAxisSelection);
+//                        }
+//                    }
+//
+//                    if (!selectionsToRemove.isEmpty()) {
+//                        for (TemporalAxisSelection temporalAxisSelection : selectionsToRemove) {
+//                            getDataTable().removeColumnSelectionFromActiveQuery(temporalAxisSelection.getColumnSelection());
+//                        }
+//                    }
                 }
             }
         });
     }
 
-    public Instant getFocusEndInstant() { return focusEndInstantValue.get(); }
+//    public Instant getFocusEndInstant() { return focusEndInstantValue.get(); }
 
-    public void setFocusEndInstant(Instant instant) { focusEndInstantValue.set(instant); }
+//    public void setFocusEndInstant(Instant instant) { focusEndInstantValue.set(instant); }
 
-    public ObjectProperty<Instant> focusEndInstantProperty() { return focusEndInstantValue; }
+//    public ObjectProperty<Instant> focusEndInstantProperty() { return focusEndInstantValue; }
 
-    public Instant getFocusStartInstant() { return focusStartInstantValue.get(); }
+//    public Instant getFocusStartInstant() { return focusStartInstantValue.get(); }
 
-    public void setFocusStartInstant(Instant instant) { focusStartInstantValue.set(instant); }
+//    public void setFocusStartInstant(Instant instant) { focusStartInstantValue.set(instant); }
 
-    public ObjectProperty<Instant> focusStartInstantProperty() { return focusStartInstantValue; }
+//    public ObjectProperty<Instant> focusStartInstantProperty() { return focusStartInstantValue; }
 
     public void resize(double center, double top, double width, double height) {
         super.resize(center, top, width, height);
@@ -505,12 +514,12 @@ public class TemporalAxis extends UnivariateAxis {
         focusStartInstantText.setX(getBounds().getMinX() + ((width - focusStartInstantText.getLayoutBounds().getWidth()) / 2.));
         focusStartInstantText.setY(getAxisBar().getY() + getAxisBar().getHeight());
 //        focusStartInstantText.setX(getBarRightX() + 4);
-//        focusStartInstantText.setY(getFocusMinPosition() + focusStartInstantText.getFont().getSize());
+//        focusStartInstantText.setY(getMinFocusPosition() + focusStartInstantText.getFont().getSize());
 
         focusEndInstantText.setX(getBounds().getMinX() + ((width - focusEndInstantText.getLayoutBounds().getWidth()) / 2.));
         focusEndInstantText.setY(getAxisBar().getY());
 //        focusEndInstantText.setX(getBarRightX() + 4);
-//        focusEndInstantText.setY(getFocusMaxPosition());
+//        focusEndInstantText.setY(getMaxFocusPosition());
 
         if (!getDataTable().isEmpty()) {
             TemporalHistogram histogram = temporalColumn().getStatistics().getHistogram();
@@ -522,27 +531,32 @@ public class TemporalAxis extends UnivariateAxis {
             overallInteriorHistogramRectangleGroup.getChildren().clear();
             queryInteriorHistogramRectangleGroup.getChildren().clear();
 
-            Line zeroLine = new Line(getCenterX(), getFocusMaxPosition(), getCenterX(), getFocusMinPosition());
-            zeroLine.setStroke(histogramFill.darker());
+            Line zeroLine = new Line(getCenterX(), getMaxFocusPosition(), getCenterX(), getMinFocusPosition());
+            zeroLine.strokeProperty().bind(overallHistogramStroke);
+
             overallInteriorHistogramRectangleGroup.getChildren().add(zeroLine);
 
             for (int i = 0; i < histogram.getNumBins(); i++) {
                 Instant binLowerBound = histogram.getBinLowerBound(i);
                 Instant binUpperBound = histogram.getBinUpperBound(i);
 
-                if (!(binLowerBound.isBefore(getFocusStartInstant())) && !(binUpperBound.isAfter(getFocusEndInstant()))) {
-                    double binLowerY = GraphicsUtil.mapValue(binLowerBound, getFocusStartInstant(), getFocusEndInstant(), getFocusMinPosition(), getFocusMaxPosition());
-                    double binUpperY = GraphicsUtil.mapValue(binUpperBound, getFocusStartInstant(), getFocusEndInstant(), getFocusMinPosition(), getFocusMaxPosition());
+                if (!(binLowerBound.isBefore(temporalColumn().getStartFocusValue())) && !(binUpperBound.isAfter(temporalColumn().getEndFocusValue()))) {
+                    double binLowerY = GraphicsUtil.mapValue(binLowerBound, temporalColumn().getStartFocusValue(),
+                            temporalColumn().getEndFocusValue(), getMinFocusPosition(), getMaxFocusPosition());
+                    double binUpperY = GraphicsUtil.mapValue(binUpperBound, temporalColumn().getStartFocusValue(),
+                            temporalColumn().getEndFocusValue(), getMinFocusPosition(), getMaxFocusPosition());
 
                     if (histogram.getBinCount(i) > 0) {
-//                        double y = getFocusMaxPosition() + ((histogram.getNumBins() - i - 1) * binHeight);
+//                        double y = getMaxFocusPosition() + ((histogram.getNumBins() - i - 1) * binHeight);
                         double binWidth = GraphicsUtil.mapValue(histogram.getBinCount(i), 0,
                                 histogram.getMaxBinCount(), 1, getAxisBar().getWidth());
                         double x = getCenterX() - (binWidth / 2.);
 //                        Rectangle rectangle = new Rectangle(x, y, binWidth, binHeight);
                         Rectangle rectangle = new Rectangle(x, binUpperY, binWidth, binLowerY - binUpperY);
-                        rectangle.setStroke(histogramFill.darker());
-                        rectangle.setFill(histogramFill);
+                        rectangle.fillProperty().bind(overallHistogramFill);
+                        rectangle.strokeProperty().bind(overallHistogramStroke);
+//                        rectangle.setStroke(histogramFill.darker());
+//                        rectangle.setFill(histogramFill);
                         overallInteriorHistogramRectangleGroup.getChildren().add(rectangle);
 
                         if (queryHistogram != null) {
@@ -551,8 +565,10 @@ public class TemporalAxis extends UnivariateAxis {
                                     getAxisBar().getWidth());
                             x = getCenterX() - (binWidth / 2.);
                             rectangle = new Rectangle(x, binUpperY, binWidth, binLowerY - binUpperY);
-                            rectangle.setStroke(queryHistogramFill.darker());
-                            rectangle.setFill(queryHistogramFill);
+                            rectangle.strokeProperty().bind(queryHistogramStroke);
+                            rectangle.fillProperty().bind(queryHistogramFill);
+//                            rectangle.setStroke(queryHistogramFill.darker());
+//                            rectangle.setFill(queryHistogramFill);
                             queryInteriorHistogramRectangleGroup.getChildren().add(rectangle);
                         }
                     }
@@ -563,7 +579,7 @@ public class TemporalAxis extends UnivariateAxis {
             if (getDataTableView().isShowingHistograms()) {
                 // resize histogram bin information
                 histogram = temporalColumn().getStatistics().getHistogram();
-//                double binHeight = (getFocusMinPosition() - getFocusMaxPosition()) / histogram.getNumBins();
+//                double binHeight = (getMinFocusPosition() - getMaxFocusPosition()) / histogram.getNumBins();
 
                 overallHistogramGroup.getChildren().clear();
                 overallHistogramRectangles.clear();
@@ -573,10 +589,10 @@ public class TemporalAxis extends UnivariateAxis {
                     Instant binUpperBound = histogram.getBinUpperBound(i);
 
                     if (!(binLowerBound.isBefore(getFocusStartInstant())) && !(binUpperBound.isAfter(getFocusEndInstant()))) {
-                        double binLowerY = GraphicsUtil.mapValue(binLowerBound, getFocusStartInstant(), getFocusEndInstant(), getFocusMinPosition(), getFocusMaxPosition());
-                        double binUpperY = GraphicsUtil.mapValue(binUpperBound, getFocusStartInstant(), getFocusEndInstant(), getFocusMinPosition(), getFocusMaxPosition());
+                        double binLowerY = GraphicsUtil.mapValue(binLowerBound, getFocusStartInstant(), getFocusEndInstant(), getMinFocusPosition(), getMaxFocusPosition());
+                        double binUpperY = GraphicsUtil.mapValue(binUpperBound, getFocusStartInstant(), getFocusEndInstant(), getMinFocusPosition(), getMaxFocusPosition());
 
-//                        double y = getFocusMaxPosition() + ((histogram.getNumBins() - i - 1) * binHeight);
+//                        double y = getMaxFocusPosition() + ((histogram.getNumBins() - i - 1) * binHeight);
                         double binWidth = GraphicsUtil.mapValue(histogram.getBinCount(i), 0, histogram.getMaxBinCount(), DEFAULT_BAR_WIDTH + 2, DEFAULT_BAR_WIDTH + 2 + maxHistogramBinWidth);
                         double x = getBounds().getMinX() + ((width - binWidth) / 2.);
 //                        Rectangle rectangle = new Rectangle(x, y, binWidth, binHeight);
@@ -609,8 +625,8 @@ public class TemporalAxis extends UnivariateAxis {
                                     Instant binUpperBound = queryHistogram.getBinUpperBound(i);
 
                                     if (!(binLowerBound.isBefore(getFocusStartInstant())) && !(binUpperBound.isAfter(getFocusEndInstant()))) {
-                                        double binLowerY = GraphicsUtil.mapValue(binLowerBound, getFocusStartInstant(), getFocusEndInstant(), getFocusMinPosition(), getFocusMaxPosition());
-                                        double binUpperY = GraphicsUtil.mapValue(binUpperBound, getFocusStartInstant(), getFocusEndInstant(), getFocusMinPosition(), getFocusMaxPosition());
+                                        double binLowerY = GraphicsUtil.mapValue(binLowerBound, getFocusStartInstant(), getFocusEndInstant(), getMinFocusPosition(), getMaxFocusPosition());
+                                        double binUpperY = GraphicsUtil.mapValue(binUpperBound, getFocusStartInstant(), getFocusEndInstant(), getMinFocusPosition(), getMaxFocusPosition());
 
                                         double binWidth = GraphicsUtil.mapValue(queryHistogram.getBinCount(i),
                                                 0, histogram.getMaxBinCount(), DEFAULT_BAR_WIDTH + 2,

@@ -2,6 +2,7 @@ package gov.ornl.datatable;
 
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ReadOnlyDoubleProperty;
+import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 
 import java.util.ArrayList;
@@ -12,6 +13,8 @@ public class DoubleColumn extends Column {
     private DoubleColumnSummaryStats summaryStats;
     private DoubleProperty minimumScaleValue = new SimpleDoubleProperty(Double.NaN);
     private DoubleProperty maximumScaleValue = new SimpleDoubleProperty(Double.NaN);
+    private DoubleProperty minimumFocusValue = new SimpleDoubleProperty(Double.NaN);
+    private DoubleProperty maximumFocusValue = new SimpleDoubleProperty(Double.NaN);
 
     public DoubleColumn(String name) {
         super(name);
@@ -23,23 +26,54 @@ public class DoubleColumn extends Column {
         }
         summaryStats.setValues(getValues(), getDataModel().getNumHistogramBins());
 
+        if (Double.isNaN(getMinimumFocusValue())) {
+            setMinimumFocusValue(summaryStats.getMinValue());
+        }
+
+        if (Double.isNaN(getMaximumScaleValue())) {
+            setMaximumFocusValue(summaryStats.getMaxValue());
+        }
+
         if (Double.isNaN(getMinimumScaleValue())) {
             setMinimumScaleValue(summaryStats.getMinValue());
         }
+
         if (Double.isNaN(getMaximumScaleValue())) {
             setMaximumScaleValue(summaryStats.getMaxValue());
         }
     }
 
+    public double getMaximumFocusValue() { return maximumFocusValue.get(); }
+
+    protected void setMaximumFocusValue(double value) { maximumFocusValue.set(value); }
+
+    public ReadOnlyDoubleProperty maximumFocusValueProperty() { return maximumFocusValue; }
+
+    public double getMinimumFocusValue() { return minimumFocusValue.get(); }
+
+    protected void setMinimumFocusValue(double value) { minimumFocusValue.set(value); }
+
+    public ReadOnlyDoubleProperty minimumFocusValueProperty() { return minimumFocusValue; }
+
     public double getMinimumScaleValue() { return minimumScaleValue.get(); }
 
-    protected void setMinimumScaleValue(double value) { minimumScaleValue.set(value); }
+    protected void setMinimumScaleValue(double value) {
+        minimumScaleValue.set(value);
+        if (getMinimumFocusValue() < getMinimumScaleValue()) {
+            setMinimumFocusValue(value);
+        }
+    }
 
     public ReadOnlyDoubleProperty minimumScaleValueProperty() { return minimumScaleValue; }
 
     public double getMaximumScaleValue() { return maximumScaleValue.get(); }
 
-    protected void setMaximumScaleValue(double value) { maximumScaleValue.set(value); }
+    protected void setMaximumScaleValue(double value) {
+        maximumScaleValue.set(value);
+        if (getMaximumFocusValue() > getMaximumScaleValue()) {
+            setMaximumFocusValue(value);
+        }
+    }
 
     public ReadOnlyDoubleProperty maximumScaleValueProperty() { return maximumScaleValue; }
 
