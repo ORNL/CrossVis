@@ -988,25 +988,25 @@ public class DataTable {
 
     public void fireNumHistogramBinsChanged() {
 		for (DataTableListener listener : listeners) {
-			listener.dataModelNumHistogramBinsChanged(this);
+			listener.dataTableNumHistogramBinsChanged(this);
 		}
 	}
 
 	private void fireColumnDisabled(Column column) {
 		for (DataTableListener listener : listeners) {
-			listener.dataModelColumnDisabled(this, column);
+			listener.dataTableColumnDisabled(this, column);
 		}
 	}
 
 	private void fireColumnsDisabled(ArrayList<Column> disabledColumns) {
 		for (DataTableListener listener : listeners) {
-			listener.dataModelColumnsDisabled(this, disabledColumns);
+			listener.dataTableColumnsDisabled(this, disabledColumns);
 		}
 	}
 
 	private void fireColumnEnabled(Column column) {
 		for (DataTableListener listener : listeners) {
-			listener.dataModelColumnEnabled(this, column);
+			listener.dataTableColumnEnabled(this, column);
 		}
 	}
 
@@ -1030,61 +1030,61 @@ public class DataTable {
 
 	private void fireColumnOrderChanged() {
 		for (DataTableListener listener : listeners) {
-			listener.dataModelColumnOrderChanged(this);
+			listener.dataTableColumnOrderChanged(this);
 		}
 	}
 
 	private void fireColumnNameChanged(Column column) {
 		for (DataTableListener listener : listeners) {
-			listener.dataModelColumnNameChanged(this, column);
+			listener.dataTableColumnNameChanged(this, column);
 		}
 	}
 
 	private void fireDataModelReset() {
 		for (DataTableListener listener : listeners) {
-			listener.dataModelReset(this);
+			listener.dataTableReset(this);
 		}
 	}
 
 	private void fireTuplesAdded(ArrayList<Tuple> newTuples) {
 		for (DataTableListener listener : listeners) {
-			listener.dataModelTuplesAdded(this, newTuples);
+			listener.dataTableTuplesAdded(this, newTuples);
 		}
 	}
 
 	private void fireTuplesRemoved(int numTuplesRemoved) {
 		for (DataTableListener listener : listeners) {
-			listener.dataModelTuplesRemoved(this, numTuplesRemoved);
+			listener.dataTableTuplesRemoved(this, numTuplesRemoved);
 		}
 	}
 
 	public void fireHighlightedColumnChanged(Column oldHighlightedColumn) {
 		for (DataTableListener listener : listeners) {
-			listener.dataModelHighlightedColumnChanged(this, oldHighlightedColumn, highlightedColumn);
+			listener.dataTableHighlightedColumnChanged(this, oldHighlightedColumn, highlightedColumn);
 		}
 	}
 
 	public void fireColumnSelectionAdded(ColumnSelection columnSelectionRange) {
 		for (DataTableListener listener : listeners) {
-			listener.dataModelColumnSelectionAdded(this, columnSelectionRange);
+			listener.dataTableColumnSelectionAdded(this, columnSelectionRange);
 		}
 	}
 
 	public void fireColumnSelectionRemoved(ColumnSelection columnSelectionRange) {
 		for (DataTableListener listener : listeners) {
-			listener.dataModelColumnSelectionRemoved(this, columnSelectionRange);
+			listener.dataTableColumnSelectionRemoved(this, columnSelectionRange);
 		}
 	}
 
 	public void fireColumnSelectionsRemoved(List<ColumnSelection> columnSelections) {
 		for (DataTableListener listener : listeners) {
-			listener.dataModelColumnSelectionsRemoved(this, columnSelections);
+			listener.dataTableColumnSelectionsRemoved(this, columnSelections);
 		}
 	}
 
 	public void fireColumnSelectionChanged(ColumnSelection columnSelectionRange) {
 		for (DataTableListener listener : listeners) {
-			listener.dataModelColumnSelectionChanged(this, columnSelectionRange);
+			listener.dataTableColumnSelectionChanged(this, columnSelectionRange);
 		}
 	}
 

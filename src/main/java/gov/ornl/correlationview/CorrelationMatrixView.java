@@ -563,7 +563,7 @@ public class CorrelationMatrixView extends Region implements DataTableListener {
     }
 
     @Override
-    public void dataModelReset(DataTable dataModel) {
+    public void dataTableReset(DataTable dataModel) {
         clearView();
         initView();
         resizeView();
@@ -587,7 +587,7 @@ public class CorrelationMatrixView extends Region implements DataTableListener {
     }
 
     @Override
-    public void dataModelNumHistogramBinsChanged(DataTable dataModel) {
+    public void dataTableNumHistogramBinsChanged(DataTable dataModel) {
 
     }
 
@@ -606,70 +606,70 @@ public class CorrelationMatrixView extends Region implements DataTableListener {
     }
 
     @Override
-    public void dataModelColumnSelectionAdded(DataTable dataModel, ColumnSelection columnSelectionRange) {
+    public void dataTableColumnSelectionAdded(DataTable dataModel, ColumnSelection columnSelectionRange) {
         clearView();
         initView();
         resizeView();
     }
 
     @Override
-    public void dataModelColumnSelectionRemoved(DataTable dataModel, ColumnSelection columnSelectionRange) {
+    public void dataTableColumnSelectionRemoved(DataTable dataModel, ColumnSelection columnSelectionRange) {
         clearView();
         initView();
         resizeView();
     }
 
     @Override
-    public void dataModelColumnSelectionsRemoved(DataTable dataTable, List<ColumnSelection> removedColumnSelections) {
+    public void dataTableColumnSelectionsRemoved(DataTable dataTable, List<ColumnSelection> removedColumnSelections) {
         clearView();
         initView();
         resizeView();
     }
 
     @Override
-    public void dataModelColumnSelectionChanged(DataTable dataModel, ColumnSelection columnSelectionRange) {
+    public void dataTableColumnSelectionChanged(DataTable dataModel, ColumnSelection columnSelectionRange) {
         clearView();
         initView();
         resizeView();
     }
 
     @Override
-    public void dataModelHighlightedColumnChanged(DataTable dataModel, Column oldHighlightedColumn, Column newHighlightedColumn) {
+    public void dataTableHighlightedColumnChanged(DataTable dataModel, Column oldHighlightedColumn, Column newHighlightedColumn) {
         clearView();
         initView();
         resizeView();
     }
 
     @Override
-    public void dataModelTuplesAdded(DataTable dataModel, ArrayList<Tuple> newTuples) {
+    public void dataTableTuplesAdded(DataTable dataModel, ArrayList<Tuple> newTuples) {
         clearView();
         initView();
         resizeView();
     }
 
     @Override
-    public void dataModelTuplesRemoved(DataTable dataModel, int numTuplesRemoved) {
+    public void dataTableTuplesRemoved(DataTable dataModel, int numTuplesRemoved) {
         clearView();
         initView();
         resizeView();
     }
 
     @Override
-    public void dataModelColumnDisabled(DataTable dataModel, Column disabledColumn) {
+    public void dataTableColumnDisabled(DataTable dataModel, Column disabledColumn) {
         clearView();
         initView();
         resizeView();
     }
 
     @Override
-    public void dataModelColumnsDisabled(DataTable dataModel, ArrayList<Column> disabledColumns) {
+    public void dataTableColumnsDisabled(DataTable dataModel, ArrayList<Column> disabledColumns) {
         clearView();
         initView();
         resizeView();
     }
 
     @Override
-    public void dataModelColumnEnabled(DataTable dataModel, Column enabledColumn) {
+    public void dataTableColumnEnabled(DataTable dataModel, Column enabledColumn) {
         clearView();
         initView();
         resizeView();
@@ -683,14 +683,14 @@ public class CorrelationMatrixView extends Region implements DataTableListener {
     }
 
     @Override
-    public void dataModelColumnOrderChanged(DataTable dataModel) {
+    public void dataTableColumnOrderChanged(DataTable dataModel) {
         clearView();
         initView();
         resizeView();
     }
 
     @Override
-    public void dataModelColumnNameChanged(DataTable dataModel, Column column) {
+    public void dataTableColumnNameChanged(DataTable dataModel, Column column) {
         clearView();
         initView();
         resizeView();

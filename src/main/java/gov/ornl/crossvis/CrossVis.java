@@ -1326,7 +1326,7 @@ public class CrossVis extends Application implements DataTableListener {
     }
 
     @Override
-    public void dataModelReset(DataTable dataTable) {
+    public void dataTableReset(DataTable dataTable) {
         removeAllQueriesMI.setDisable(!dataTable.getActiveQuery().hasColumnSelections());
 
         temporalColumnTableView.getItems().clear();
@@ -1374,28 +1374,28 @@ public class CrossVis extends Application implements DataTableListener {
     }
 
     @Override
-    public void dataModelColumnSelectionAdded(DataTable dataTable, ColumnSelection columnSelectionRange) {
+    public void dataTableColumnSelectionAdded(DataTable dataTable, ColumnSelection columnSelectionRange) {
         removeAllQueriesMI.setDisable(!dataTable.getActiveQuery().hasColumnSelections());
         setDataTableItems();
         updatePercentSelected();
     }
 
     @Override
-    public void dataModelColumnSelectionRemoved(DataTable dataTable, ColumnSelection columnSelectionRange) {
+    public void dataTableColumnSelectionRemoved(DataTable dataTable, ColumnSelection columnSelectionRange) {
         removeAllQueriesMI.setDisable(!dataTable.getActiveQuery().hasColumnSelections());
         setDataTableItems();
         updatePercentSelected();
     }
 
     @Override
-    public void dataModelColumnSelectionsRemoved(DataTable dataTable, List<ColumnSelection> removedColumnSelections) {
+    public void dataTableColumnSelectionsRemoved(DataTable dataTable, List<ColumnSelection> removedColumnSelections) {
         removeAllQueriesMI.setDisable(!dataTable.getActiveQuery().hasColumnSelections());
         setDataTableItems();
         updatePercentSelected();
     }
 
     @Override
-    public void dataModelColumnSelectionChanged(DataTable dataTable, ColumnSelection columnSelectionRange) {
+    public void dataTableColumnSelectionChanged(DataTable dataTable, ColumnSelection columnSelectionRange) {
         removeAllQueriesMI.setDisable(!dataTable.getActiveQuery().hasColumnSelections());
         queryTableView.refresh();
         doubleQueryTableView.refresh();
@@ -1408,7 +1408,7 @@ public class CrossVis extends Application implements DataTableListener {
     }
 
     @Override
-    public void dataModelHighlightedColumnChanged(DataTable dataTable, Column oldHighlightedColumn, Column newHighlightedColumn) {
+    public void dataTableHighlightedColumnChanged(DataTable dataTable, Column oldHighlightedColumn, Column newHighlightedColumn) {
         if (newHighlightedColumn != null) {
             if (newHighlightedColumn instanceof TemporalColumn) {
                 temporalColumnTableView.getSelectionModel().select((TemporalColumn)newHighlightedColumn);
@@ -1422,17 +1422,17 @@ public class CrossVis extends Application implements DataTableListener {
     }
 
     @Override
-    public void dataModelTuplesAdded(DataTable dataTable, ArrayList<Tuple> newTuples) {
+    public void dataTableTuplesAdded(DataTable dataTable, ArrayList<Tuple> newTuples) {
         updatePercentSelected();
     }
 
     @Override
-    public void dataModelTuplesRemoved(DataTable dataTable, int numTuplesRemoved) {
+    public void dataTableTuplesRemoved(DataTable dataTable, int numTuplesRemoved) {
         updatePercentSelected();
     }
 
     @Override
-    public void dataModelNumHistogramBinsChanged(DataTable dataTable) {}
+    public void dataTableNumHistogramBinsChanged(DataTable dataTable) {}
 
     @Override
     public void dataTableStatisticsChanged(DataTable dataTable) { }
@@ -1444,7 +1444,7 @@ public class CrossVis extends Application implements DataTableListener {
     public void dataTableColumnFocusExtentsChanged(DataTable dataTable) { }
 
     @Override
-    public void dataModelColumnDisabled(DataTable dataTable, Column disabledColumn) {
+    public void dataTableColumnDisabled(DataTable dataTable, Column disabledColumn) {
         // reset the data datamodel columns
         tupleTableView.getItems().clear();
         tupleTableView.getColumns().clear();
@@ -1457,12 +1457,12 @@ public class CrossVis extends Application implements DataTableListener {
     }
 
     @Override
-    public void dataModelColumnsDisabled(DataTable dataTable, ArrayList<Column> disabledColumns) {
+    public void dataTableColumnsDisabled(DataTable dataTable, ArrayList<Column> disabledColumns) {
 
     }
 
     @Override
-    public void dataModelColumnEnabled(DataTable dataTable, Column enabledColumn) {
+    public void dataTableColumnEnabled(DataTable dataTable, Column enabledColumn) {
 
     }
 
@@ -1472,12 +1472,12 @@ public class CrossVis extends Application implements DataTableListener {
     }
 
     @Override
-    public void dataModelColumnOrderChanged(DataTable dataTable) {
+    public void dataTableColumnOrderChanged(DataTable dataTable) {
 
     }
 
     @Override
-    public void dataModelColumnNameChanged(DataTable dataTable, Column column) {
+    public void dataTableColumnNameChanged(DataTable dataTable, Column column) {
 
     }
 }

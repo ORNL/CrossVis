@@ -1104,7 +1104,7 @@ public class DataTableView extends Region implements DataTableListener {
     }
 
     @Override
-    public void dataModelReset(DataTable dataModel) {
+    public void dataTableReset(DataTable dataModel) {
         clearView();
 
         // Logic to prevent PCPView from drawing full details when data is large
@@ -1131,7 +1131,7 @@ public class DataTableView extends Region implements DataTableListener {
     }
 
     @Override
-    public void dataModelNumHistogramBinsChanged(DataTable dataModel) {
+    public void dataTableNumHistogramBinsChanged(DataTable dataModel) {
         if (isShowingHistograms()) {
             for (int iaxis = 0; iaxis < axisList.size(); iaxis++) {
                 Axis pcpAxis = axisList.get(iaxis);
@@ -1185,7 +1185,7 @@ public class DataTableView extends Region implements DataTableListener {
     }
 
     @Override
-    public void dataModelColumnSelectionAdded(DataTable dataTable, ColumnSelection columnSelection) {
+    public void dataTableColumnSelectionAdded(DataTable dataTable, ColumnSelection columnSelection) {
         Axis axis = getAxisForColumn(columnSelection.getColumn());
         if (axis != null) {
             // add it to the appropriate column axis (it is exists the axis will ignore the add request)
@@ -1196,7 +1196,7 @@ public class DataTableView extends Region implements DataTableListener {
     }
 
     @Override
-    public void dataModelColumnSelectionRemoved(DataTable dataTable, ColumnSelection columnSelection) {
+    public void dataTableColumnSelectionRemoved(DataTable dataTable, ColumnSelection columnSelection) {
         // find selection column axis and remove selection (if it doesn't exist, the axis will ignore the remove request)
         Axis axis = getAxisForColumn(columnSelection.getColumn());
         if (axis != null) {
@@ -1207,7 +1207,7 @@ public class DataTableView extends Region implements DataTableListener {
     }
 
     @Override
-    public void dataModelColumnSelectionsRemoved(DataTable dataTable, List<ColumnSelection> removedColumnSelections) {
+    public void dataTableColumnSelectionsRemoved(DataTable dataTable, List<ColumnSelection> removedColumnSelections) {
         for (ColumnSelection columnSelection : removedColumnSelections) {
             Axis axis = getAxisForColumn(columnSelection.getColumn());
             if (axis != null) {
@@ -1238,12 +1238,12 @@ public class DataTableView extends Region implements DataTableListener {
     }
 
     @Override
-    public void dataModelColumnSelectionChanged(DataTable dataModel, ColumnSelection columnSelectionRange) {
+    public void dataTableColumnSelectionChanged(DataTable dataModel, ColumnSelection columnSelectionRange) {
         handleQueryChange();
     }
 
     @Override
-    public void dataModelHighlightedColumnChanged(DataTable dataModel, Column oldHighlightedColumn, Column newHighlightedColumn) {
+    public void dataTableHighlightedColumnChanged(DataTable dataModel, Column oldHighlightedColumn, Column newHighlightedColumn) {
         if (dataModel.getHighlightedColumn() == null) {
             for (Axis axis : axisList) {
                 axis.setHighlighted(false);
@@ -1264,7 +1264,7 @@ public class DataTableView extends Region implements DataTableListener {
     }
 
     @Override
-    public void dataModelTuplesAdded(DataTable dataModel, ArrayList<Tuple> newTuples) {
+    public void dataTableTuplesAdded(DataTable dataModel, ArrayList<Tuple> newTuples) {
         // clear axis selections
         for (Axis pcpAxis : axisList) {
             pcpAxis.removeAllAxisSelections();
@@ -1274,7 +1274,7 @@ public class DataTableView extends Region implements DataTableListener {
     }
 
     @Override
-    public void dataModelTuplesRemoved(DataTable dataModel, int numTuplesRemoved) {
+    public void dataTableTuplesRemoved(DataTable dataModel, int numTuplesRemoved) {
         // clear axis selections
         for (Axis pcpAxis : axisList) {
             pcpAxis.removeAllAxisSelections();
@@ -1297,7 +1297,7 @@ public class DataTableView extends Region implements DataTableListener {
 //    }
 
     @Override
-    public void dataModelColumnDisabled(DataTable dataModel, Column disabledColumn) {
+    public void dataTableColumnDisabled(DataTable dataModel, Column disabledColumn) {
         for (int iaxis = 0; iaxis < axisList.size(); iaxis++) {
             Axis pcpAxis = axisList.get(iaxis);
             if (pcpAxis.getColumn() == disabledColumn) {
@@ -1326,12 +1326,12 @@ public class DataTableView extends Region implements DataTableListener {
     }
 
     @Override
-    public void dataModelColumnsDisabled(DataTable dataModel, ArrayList<Column> disabledColumns) {
+    public void dataTableColumnsDisabled(DataTable dataModel, ArrayList<Column> disabledColumns) {
 
     }
 
     @Override
-    public void dataModelColumnEnabled(DataTable dataModel, Column enabledColumn) {
+    public void dataTableColumnEnabled(DataTable dataModel, Column enabledColumn) {
         // add axis lines to the pane
         addAxis(enabledColumn, dataModel.getColumnIndex(enabledColumn));
 
@@ -1372,12 +1372,12 @@ public class DataTableView extends Region implements DataTableListener {
     }
 
     @Override
-    public void dataModelColumnOrderChanged(DataTable dataTable) {
+    public void dataTableColumnOrderChanged(DataTable dataTable) {
         initView();
     }
 
     @Override
-    public void dataModelColumnNameChanged(DataTable dataModel, Column column) { }
+    public void dataTableColumnNameChanged(DataTable dataModel, Column column) { }
 
     public enum STATISTICS_DISPLAY_MODE {MEDIAN_BOXPLOT, MEAN_BOXPLOT}
 }
