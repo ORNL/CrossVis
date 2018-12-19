@@ -197,7 +197,7 @@ public class Scatterplot {
         yColumn.nameProperty().addListener(observable -> {
             resizeYAxisTitle();
         });
-        
+
 //        pointStrokeOpacity.addListener((observable, oldValue, newValue) -> {
 //            if (newValue != oldValue) {
 //                setSelectedPointStrokeColor(new Color(getSelectedPointStrokeColor().getRed(), getSelectedPointStrokeColor().getGreen(),
