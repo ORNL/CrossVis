@@ -885,7 +885,6 @@ public class DataTableView extends Region implements DataTableListener {
         }
 
         initScatterplots();
-
         initCorrelationRectangles();
 
         // add tuples polylines from data model
@@ -942,11 +941,11 @@ public class DataTableView extends Region implements DataTableListener {
 
         if (isShowingCorrelations()) {
             Axis highlightedAxis = getHighlightedAxis();
-            if (highlightedAxis != null && (highlightedAxis instanceof DoubleAxis || highlightedAxis instanceof TemporalAxis)) {
+//            if (highlightedAxis != null && (highlightedAxis instanceof DoubleAxis || highlightedAxis instanceof TemporalAxis)) {
+            if (highlightedAxis != null && highlightedAxis instanceof DoubleAxis) {
                 if (highlightedAxis instanceof DoubleAxis) {
                     for (int i = 0; i < axisList.size(); i++) {
                         Axis axis = axisList.get(i);
-
                         if (axis instanceof DoubleAxis && axis != highlightedAxis) {
                             CorrelationIndicatorRectangle correlationRectangle = new CorrelationIndicatorRectangle((DoubleAxis)axis, (DoubleAxis)highlightedAxis);
                             correlationRectangle.setStroke(Color.DARKGRAY);
@@ -978,13 +977,14 @@ public class DataTableView extends Region implements DataTableListener {
     private void setCorrelationRectangleValues() {
         if (isShowingCorrelations()) {
             for (CorrelationIndicatorRectangle corrRect : correlationRectangleList) {
-                int axis2Index = getAxisIndex(corrRect.getAxis2());
+//                int axis2Index = getAxisIndex(corrRect.getAxis2());
+                int axis2ColumnIndex = dataTable.getColumnIndex(corrRect.getAxis2().getColumn());
 
                 double corr;
                 if (dataTable.getActiveQuery().hasColumnSelections() && dataTable.getCalculateQueryStatistics()) {
-                    corr = ((DoubleColumnSummaryStats)dataTable.getActiveQuery().getColumnQuerySummaryStats(corrRect.getAxis1().getColumn())).getCorrelationCoefficientList().get(axis2Index);
+                    corr = ((DoubleColumnSummaryStats)dataTable.getActiveQuery().getColumnQuerySummaryStats(corrRect.getAxis1().getColumn())).getCorrelationCoefficientList().get(axis2ColumnIndex);
                 } else {
-                    corr = ((DoubleColumnSummaryStats)corrRect.getAxis1().getColumn().getStatistics()).getCorrelationCoefficientList().get(axis2Index);
+                    corr = ((DoubleColumnSummaryStats)corrRect.getAxis1().getColumn().getStatistics()).getCorrelationCoefficientList().get(axis2ColumnIndex);
                 }
 
                 corrRect.setCorrelation(corr);
@@ -1335,6 +1335,7 @@ public class DataTableView extends Region implements DataTableListener {
         // add axis lines to the pane
         addAxis(enabledColumn, dataModel.getColumnIndex(enabledColumn));
 
+        initCorrelationRectangles();
         initScatterplots();
 
         // add tuples polylines from data model
@@ -1354,6 +1355,7 @@ public class DataTableView extends Region implements DataTableListener {
     public void dataTableBivariateColumnAdded(DataTable dataTable, BivariateColumn bivariateColumn, int columnIndex) {
         addAxis(bivariateColumn, columnIndex);
 
+        initCorrelationRectangles();
         initScatterplots();
 
         // add tuples polylines from data model

@@ -470,6 +470,7 @@ public class DataTable {
         columns.add(idx, biColumn);
 
 		calculateStatistics();
+		getActiveQuery().calculateStatistics();
 
 		fireBivariateColumnAdded(biColumn);
 	}
