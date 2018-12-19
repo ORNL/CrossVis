@@ -58,20 +58,15 @@ public abstract class Axis {
     // dragging variables
     protected Group axisDraggingGraphicsGroup;
     protected Text axisDraggingMessageText;
-
     protected Point2D dragStartPoint;
     protected Point2D dragEndPoint;
     protected boolean dragging = false;
 
+    // properties
     protected SimpleObjectProperty<Paint> overallHistogramFill = new SimpleObjectProperty<>(DEFAULT_HISTOGRAM_FILL);
     protected SimpleObjectProperty<Paint> overallHistogramStroke = new SimpleObjectProperty<>(DEFAULT_HISTOGRAM_STROKE);
     protected SimpleObjectProperty<Paint> queryHistogramFill;
     protected SimpleObjectProperty<Paint> queryHistogramStroke;
-
-//
-//    protected Color histogramFill = DEFAULT_HISTOGRAM_FILL;
-////    protected Color histogramStroke = DEFAULT_HISTOGRAM_STROKE;
-//    protected Color queryHistogramFill = DEFAULT_QUERY_HISTOGRAM_FILL;
 
     private Column column;
 
@@ -86,9 +81,6 @@ public abstract class Axis {
         queryHistogramStroke = new SimpleObjectProperty<>(((Color)queryHistogramFill.get()).darker());
 
         titleText = new Text(column.getName());
-        Tooltip tooltip = new Tooltip();
-        tooltip.textProperty().bindBidirectional(column.nameProperty());
-        Tooltip.install(titleText, tooltip);
         titleText.setFont(new Font(DEFAULT_TITLE_TEXT_SIZE));
         titleText.setSmooth(true);
         titleText.setFill(DEFAULT_TEXT_COLOR);
@@ -100,6 +92,9 @@ public abstract class Axis {
         axisDraggingMessageText.setMouseTransparent(true);
 
         titleTextRectangle = new Rectangle();
+        Tooltip tooltip = new Tooltip();
+        tooltip.textProperty().bind(column.nameProperty());
+        Tooltip.install(titleTextRectangle, tooltip);
         titleTextRectangle.setStrokeWidth(3.);
         titleTextRectangle.setStroke(Color.TRANSPARENT);
         titleTextRectangle.setFill(Color.TRANSPARENT);
@@ -167,10 +162,13 @@ public abstract class Axis {
     protected double getCenterY() { return centerY; }
 
     private void registerListeners() {
-        titleText.textProperty().addListener((observable, oldValue, newValue) -> {
-            titleText.setX(bounds.getMinX() + ((bounds.getWidth() - titleText.getLayoutBounds().getWidth()) / 2.));
-            titleText.setY(bounds.getMinY() + titleText.getLayoutBounds().getHeight());
+        column.nameProperty().addListener(observable -> {
+            resizeTitleText();
         });
+//        titleText.textProperty().addListener(observable -> {
+//            titleText.setX(bounds.getMinX() + ((bounds.getWidth() - titleText.getLayoutBounds().getWidth()) / 2.));
+//            titleText.setY(bounds.getMinY() + titleText.getLayoutBounds().getHeight());
+//        });
 
         dataTableView.selectedItemsColorProperty().addListener(observable -> {
             queryHistogramFill.set(new Color(dataTableView.getSelectedItemsColor().getRed(),
@@ -240,7 +238,8 @@ public abstract class Axis {
                     Axis axis = dataTableView.getAxis(i);
                     if (axis instanceof UnivariateAxis) {
                         if (dragEndPoint.getX() >= ((UnivariateAxis)axis).getBarLeftX() &&
-                                dragEndPoint.getX() <= ((UnivariateAxis)axis).getBarRightX()) {
+                                dragEndPoint.getX() <= ((UnivariateAxis)axis).getBarRightX() &&
+                                (this != axis)) {
                             axisDraggingMessageText.setText("Create BiVariate Axis (" + this.getColumn().getName() + " vs. " + axis.getColumn().getName());
                         }
                     }
@@ -261,8 +260,12 @@ public abstract class Axis {
                         if (axis instanceof UnivariateAxis) {
                             if (dragEndPoint.getX() >= ((UnivariateAxis)axis).getBarLeftX() &&
                                 dragEndPoint.getX() <= ((UnivariateAxis)axis).getBarRightX()) {
-                                getDataTable().addBivariateColumn(axis.getColumn(), this.getColumn(), i);
-                                return;
+                                if (this != axis) {
+                                    getDataTable().addBivariateColumn(axis.getColumn(), this.getColumn(), i);
+                                    return;
+                                } else {
+                                    break;
+                                }
                             }
                         }
                     }
@@ -272,15 +275,6 @@ public abstract class Axis {
 
                 for (int i = 0; i < dataTableView.getAxisCount(); i++) {
                     Axis axis = dataTableView.getAxis(i);
-//
-//                    if (this instanceof UnivariateAxis && axis instanceof UnivariateAxis) {
-//                        log.info("dragEndPoint.getX(): " + dragEndPoint.getX() + " event.getX(): " + event.getX() + " bar: [" + ((UnivariateAxis)axis).getBarLeftX() +
-//                                "," + ((UnivariateAxis)axis).getBarRightX());
-//                        if (dragEndPoint.getX() >= ((UnivariateAxis)axis).getBarLeftX() && dragEndPoint.getX() <= ((UnivariateAxis)axis).getBarRightX()) {
-//                            dataTableView.getDataTable().addBivariateColumn(axis.getColumn(), this.getColumn(), i);
-//                            break;
-//                        }
-//                    }
 
                     if ( (i == 0) && (dragEndPoint.getX() < axis.getCenterX()) ) {
                         newColumnIndex = 0;
@@ -303,52 +297,6 @@ public abstract class Axis {
                 if (newColumnIndex != -1) {
                     getDataTable().changeColumnOrder(getColumn(), newColumnIndex);
                 }
-
-//                getDataTable().changeColumnOrder(getColumn(), getDataTable().getColumnCount());
-//                int currentAxisPosition = getDataTable().getColumnIndex(getColumn());
-//                int newAxisPosition = (int)Math.floor(((dragEndPoint.getX() - (dataTableView.getAxisSpacing() / 2.)) / dataTableView.getAxisSpacing()));
-//
-//                if (newAxisPosition < 0) {
-//                    newAxisPosition = 0;
-//                } else if (currentAxisPosition > newAxisPosition) {
-//                    newAxisPosition++;
-//                }
-//
-//                if (this instanceof UnivariateAxis) {
-//                    Axis currentAxisAtNewLocation = getDataTableView().getAxis(newAxisPosition);
-//                    if (currentAxisAtNewLocation instanceof UnivariateAxis) {
-//                        Rectangle axisBar = ((UnivariateAxis)currentAxisAtNewLocation).getAxisBar();
-//                        if (event.getX() >= axisBar.getX() && (event.getX() <= (axisBar.getX() + axisBar.getWidth()))) {
-//                            dataTableView.getDataTable().addBivariateColumn(currentAxisAtNewLocation.getColumn(),
-//                                    this.getColumn(), newAxisPosition);
-//                            return;
-//                        }
-//                    }
-//                }
-//
-//                if (newAxisPosition != currentAxisPosition) {
-//                    getDataTable().changeColumnOrder(getColumn(), newAxisPosition);
-//                }
-
-//                int newAxisPosition = (int)dragEndPoint.getX() / dataTableView.getAxisSpacing();
-//
-//                if (!(newAxisPosition == getDataTable().getColumnIndex(column))) {
-//                    if (this instanceof UnivariateAxis) {
-//                        Axis nearestAxis = getDataTableView().getAxis(newAxisPosition);
-//                        if (nearestAxis instanceof UnivariateAxis) {
-//                            Rectangle axisBar = ((UnivariateAxis) nearestAxis).getAxisBar();
-//                            if ((event.getX() >= axisBar.getX()) && (event.getX() <= (axisBar.getX() + axisBar.getWidth()))) {
-//                                // dropped dragging univariate axis on another univariate axis
-//                                // create a new bivariate axis and add at the newAxisPosition
-//                                dataTableView.getDataTable().addBivariateColumn(this.getColumn(), nearestAxis.getColumn(), newAxisPosition);
-//                                return;
-//                            }
-//                        }
-//                    }
-//
-//                    getDataTable().changeColumnOrder(getColumn(), newAxisPosition);
-//                }
-//                dataTableView.setAxisPosition(this, newAxisPosition);
             }
         });
 
@@ -413,11 +361,7 @@ public abstract class Axis {
 
     protected Text getTitleText() { return titleText; }
 
-    public void resize (double left, double top, double width, double height) {
-        bounds = new BoundingBox(left, top, width, height);
-        centerX = left + (width / 2.);
-        centerY = top + (height / 2.);
-
+    private void resizeTitleText() {
         titleText.setText(column.getName());
         if (titleText.getLayoutBounds().getWidth() > bounds.getWidth()) {
             // truncate the column name to fit axis bounds
@@ -425,8 +369,25 @@ public abstract class Axis {
                 titleText.setText(titleText.getText().substring(0, titleText.getText().length() - 1));
             }
         }
-        titleText.setX(bounds.getMinX() + ((width - titleText.getLayoutBounds().getWidth()) / 2.));
+        titleText.setX(bounds.getMinX() + ((bounds.getWidth() - titleText.getLayoutBounds().getWidth()) / 2.));
         titleText.setY(bounds.getMinY() + titleText.getLayoutBounds().getHeight());
+    }
+
+    public void resize (double left, double top, double width, double height) {
+        bounds = new BoundingBox(left, top, width, height);
+        centerX = left + (width / 2.);
+        centerY = top + (height / 2.);
+
+        resizeTitleText();
+//        titleText.setText(column.getName());
+//        if (titleText.getLayoutBounds().getWidth() > bounds.getWidth()) {
+//            // truncate the column name to fit axis bounds
+//            while (titleText.getLayoutBounds().getWidth() > bounds.getWidth()) {
+//                titleText.setText(titleText.getText().substring(0, titleText.getText().length() - 1));
+//            }
+//        }
+//        titleText.setX(bounds.getMinX() + ((width - titleText.getLayoutBounds().getWidth()) / 2.));
+//        titleText.setY(bounds.getMinY() + titleText.getLayoutBounds().getHeight());
 
         titleTextRectangle.setX(titleText.getX() - 4.);
         titleTextRectangle.setY(titleText.getY() - titleText.getLayoutBounds().getHeight());

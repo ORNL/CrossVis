@@ -92,12 +92,6 @@ public class Scatterplot {
 
     private double categoryPadding = 4.;
 
-//    private ArrayList<EventHandler> selectionEventHandlers = new ArrayList<>();
-
-//    public Scatterplot(Column xColumn, Column yColumn) {
-//        this(xColumn, yColumn, DEFAULT_SELECTED_POINT_COLOR, DEFAULT_UNSELECTED_POINT_COLOR, DEFAULT_POINT_STROKE_OPACITY);
-//    }
-
     public Scatterplot(Column xColumn, Column yColumn, Color selectedPointStrokeColor, Color unselectedPointStrokeColor,
                        double pointStrokeOpacity) {
         this.selectedPointStrokeColor = selectedPointStrokeColor;
@@ -196,6 +190,14 @@ public class Scatterplot {
     }
 
     private void registerListeners() {
+        xColumn.nameProperty().addListener(observable -> {
+            resizeXAxisTitle();
+        });
+
+        yColumn.nameProperty().addListener(observable -> {
+            resizeYAxisTitle();
+        });
+        
 //        pointStrokeOpacity.addListener((observable, oldValue, newValue) -> {
 //            if (newValue != oldValue) {
 //                setSelectedPointStrokeColor(new Color(getSelectedPointStrokeColor().getRed(), getSelectedPointStrokeColor().getGreen(),
@@ -325,6 +327,24 @@ public class Scatterplot {
         });
     }
 
+    private void resizeXAxisTitle() {
+        xAxisText.setText(xColumn.getName());
+        if (xAxisText.getLayoutBounds().getWidth() > xAxisBounds.getWidth()) {
+            while (xAxisText.getLayoutBounds().getWidth() > xAxisBounds.getWidth()) {
+                xAxisText.setText(xAxisText.getText().substring(0, xAxisText.getText().length() - 1));
+            }
+        }
+    }
+
+    private void resizeYAxisTitle() {
+        yAxisText.setText(yColumn.getName());
+        if (yAxisText.getLayoutBounds().getWidth() > yAxisBounds.getHeight()) {
+            while (yAxisText.getLayoutBounds().getWidth() > yAxisBounds.getHeight()) {
+                yAxisText.setText(yAxisText.getText().substring(0, yAxisText.getText().length() - 1));
+            }
+        }
+    }
+
     public void resize(double left, double top, double width, double height) {
         yAxisBounds = new BoundingBox(left, top, getAxisSize(), height - getAxisSize());
         xAxisBounds = new BoundingBox(yAxisBounds.getMaxX(), yAxisBounds.getMaxY(), width - getAxisSize(), getAxisSize());
@@ -340,24 +360,26 @@ public class Scatterplot {
         plotRectangle.setWidth(plotBounds.getWidth());
         plotRectangle.setHeight(plotBounds.getHeight());
 
-        xAxisText.setText(xColumn.getName());
-        if (xAxisText.getLayoutBounds().getWidth() > xAxisBounds.getWidth()) {
-            while (xAxisText.getLayoutBounds().getWidth() > xAxisBounds.getWidth()) {
-                xAxisText.setText(xAxisText.getText().substring(0, xAxisText.getText().length() - 1));
-            }
-        }
+        resizeXAxisTitle();
+//        xAxisText.setText(xColumn.getName());
+//        if (xAxisText.getLayoutBounds().getWidth() > xAxisBounds.getWidth()) {
+//            while (xAxisText.getLayoutBounds().getWidth() > xAxisBounds.getWidth()) {
+//                xAxisText.setText(xAxisText.getText().substring(0, xAxisText.getText().length() - 1));
+//            }
+//        }
 
         double textX = (xAxisBounds.getMinX() + xAxisBounds.getWidth() / 2.) - xAxisText.getLayoutBounds().getWidth() / 2.;
         double textY = (xAxisBounds.getMinY() + xAxisBounds.getHeight() / 2.);
         xAxisText.setLayoutX(textX);
         xAxisText.setLayoutY(textY);
 
-        yAxisText.setText(yColumn.getName());
-        if (yAxisText.getLayoutBounds().getWidth() > yAxisBounds.getHeight()) {
-            while (yAxisText.getLayoutBounds().getWidth() > yAxisBounds.getHeight()) {
-                yAxisText.setText(yAxisText.getText().substring(0, yAxisText.getText().length() - 1));
-            }
-        }
+        resizeYAxisTitle();
+//        yAxisText.setText(yColumn.getName());
+//        if (yAxisText.getLayoutBounds().getWidth() > yAxisBounds.getHeight()) {
+//            while (yAxisText.getLayoutBounds().getWidth() > yAxisBounds.getHeight()) {
+//                yAxisText.setText(yAxisText.getText().substring(0, yAxisText.getText().length() - 1));
+//            }
+//        }
         
         textX = (yAxisBounds.getMinX() + yAxisBounds.getWidth() / 2.) - yAxisText.getLayoutBounds().getWidth() / 2.;
         textY = (yAxisBounds.getMinY() + yAxisBounds.getHeight() / 2.);
