@@ -15,13 +15,13 @@ public class TuplePolyline {
     private Color color;
     private double[] xPoints;
     private double[] yPoints;
-    private boolean inContext = false;
+//    private boolean inContext = false;
 
     public TuplePolyline(Tuple tuple) {
         this.tuple = tuple;
     }
 
-    public boolean isInContext() { return inContext; }
+//    public boolean isInContext() { return inContext; }
 
     public Color getColor() { return color; }
 
@@ -33,7 +33,8 @@ public class TuplePolyline {
         xPoints = new double[tuple.getElementCount()];
         yPoints = new double[tuple.getElementCount()];
 
-        inContext = false;
+
+//        inContext = false;
 
         for (int i = 0; i < tuple.getElementCount(); i++) {
             Axis axis = axisList.get(i);
@@ -45,11 +46,11 @@ public class TuplePolyline {
                 if (instant.isBefore(temporalAxis.temporalColumn().getStartFocusValue())) {
                     // in lower context region
                     yPosition = temporalAxis.getLowerContextBar().getY() + (temporalAxis.getLowerContextBar().getHeight() / 2.);
-                    inContext = true;
+//                    inContext = true;
                 } else if (instant.isAfter(temporalAxis.temporalColumn().getEndFocusValue())) {
                     // in upper context region
                     yPosition = temporalAxis.getUpperContextBar().getY() + (temporalAxis.getUpperContextBar().getHeight() / 2.);
-                    inContext = true;
+//                    inContext = true;
                 } else {
                     // in focus region
                     yPosition = GraphicsUtil.mapValue(instant, temporalAxis.temporalColumn().getStartFocusValue(),
@@ -72,12 +73,12 @@ public class TuplePolyline {
                 if (value < doubleAxis.doubleColumn().getMinimumFocusValue()) {
                     // in lower context region
                     yPosition = doubleAxis.getLowerContextBar().getY() + (doubleAxis.getLowerContextBar().getHeight() / 2.);
-                    inContext = true;
+//                    inContext = true;
                 } else if (value > doubleAxis.doubleColumn().getMaximumFocusValue()) {
 //                } else if (value > doubleAxis.getMaxFocusValue()) {
                     // in upper context region
                     yPosition = doubleAxis.getUpperContextBar().getY() + (doubleAxis.getUpperContextBar().getHeight() / 2.);
-                    inContext = true;
+//                    inContext = true;
                 } else {
                     // in focus region
                     yPosition = GraphicsUtil.mapValue(value, doubleAxis.doubleColumn().getMinimumFocusValue(),

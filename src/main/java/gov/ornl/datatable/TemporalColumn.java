@@ -17,6 +17,18 @@ public class TemporalColumn extends Column {
         super(name);
     }
 
+    public boolean setFocusContext(Tuple tuple, int elementIdx) {
+        if (((Instant)tuple.getElement(elementIdx)).isAfter(getEndFocusValue())) {
+            getUpperContextTuples().add(tuple);
+            return false;
+        } else if (((Instant)tuple.getElement(elementIdx)).isBefore(getStartFocusValue())) {
+            getLowerContextTuples().add(tuple);
+            return false;
+        }
+        getFocusTuples().add(tuple);
+        return true;
+    }
+
     public Instant getStartFocusValue() { return startFocusValue.get(); }
 
     protected void setStartFocusValue(Instant instant) { startFocusValue.set(instant); }

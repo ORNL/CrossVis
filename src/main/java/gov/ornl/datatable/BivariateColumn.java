@@ -13,6 +13,11 @@ public class BivariateColumn extends Column {
         this.column2 = column2;
     }
 
+    public boolean setFocusContext(Tuple tuple, int elementIdx) {
+        getFocusTuples().add(tuple);
+        return true;
+    }
+
     public Column getColumn1() { return column1; }
 
     public Column getColumn2() { return column2; }

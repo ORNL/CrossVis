@@ -265,7 +265,7 @@ public class IOUtilities {
 	}
 
 	public static void readCSV(File f, ArrayList<String> ignoreColumnNames, ArrayList<String> categoricalColumnNames, ArrayList<String> temporalColumnNames,
-							   ArrayList<DateTimeFormatter> temporalColumnFormatters, DataTable dataModel) throws IOException {
+							   ArrayList<DateTimeFormatter> temporalColumnFormatters, DataTable dataTable) throws IOException {
 		BufferedReader reader = new BufferedReader(new FileReader(f));
 
 		ArrayList<Tuple> tuples = new ArrayList<>();
@@ -359,7 +359,7 @@ public class IOUtilities {
 				continue;
 			}
 
-			Tuple tuple = new Tuple();
+			Tuple tuple = new Tuple(dataTable);
 			StringTokenizer st = new StringTokenizer(line);
 			int tokenCounter = 0;
 
@@ -476,7 +476,7 @@ public class IOUtilities {
 		log.info("Finished reading CSV file '" + f.getName() + "': Read " + tuples.size() + " rows with " + columns.size() + " columns; " + numLinesIgnored + " rows ignored.");
 
 		long start = System.currentTimeMillis();
-		dataModel.setData(tuples, columns);
+		dataTable.setData(tuples, columns);
 		long elapsed = System.currentTimeMillis() - start;
 
 		log.info("Finished setting data in datamodel (it took " + elapsed + " ms");

@@ -1,6 +1,7 @@
 package gov.ornl.datatable;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public interface DataTableListener {
 	// Methods affecting the full scope of the data model
@@ -28,6 +29,8 @@ public interface DataTableListener {
 
 	// Called when a selection is removed from the active query
 	public void dataModelColumnSelectionRemoved(DataTable dataTable, ColumnSelection columnSelectionRange);
+
+	public void dataModelColumnSelectionsRemoved(DataTable dataTable, List<ColumnSelection> removedColumnSelections);
 
 	// Called when a selection from the active query is modified (min/max range)
 	public void dataModelColumnSelectionChanged(DataTable dataTable, ColumnSelection columnSelectionRange);

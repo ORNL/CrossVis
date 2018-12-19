@@ -20,6 +20,18 @@ public class DoubleColumn extends Column {
         super(name);
     }
 
+    public boolean setFocusContext(Tuple tuple, int elementIdx) {
+        if (((Double)tuple.getElement(elementIdx)) > getMaximumFocusValue()) {
+            getUpperContextTuples().add(tuple);
+            return false;
+        } else if (((Double)tuple.getElement(elementIdx)) < getMinimumFocusValue()) {
+            getLowerContextTuples().add(tuple);
+            return false;
+        }
+        getFocusTuples().add(tuple);
+        return true;
+    }
+
     public void calculateStatistics() {
         if (summaryStats == null) {
             summaryStats = new DoubleColumnSummaryStats(this, getDataModel().getNumHistogramBins(), null);

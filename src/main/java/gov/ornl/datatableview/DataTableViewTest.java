@@ -117,6 +117,9 @@ public class DataTableViewTest extends Application {
             }
         });
 
+        CheckBox showContextPolylinesCB = new CheckBox("Show Context Lines");
+        showContextPolylinesCB.selectedProperty().bindBidirectional(dataTableView.getShowContextPolylineSegmentsProperty());
+
         CheckBox showScatterplotsCB = new CheckBox("Show Scatterplots");
         showScatterplotsCB.selectedProperty().bindBidirectional(dataTableView.showScatterplotsProperty());
 
@@ -166,7 +169,7 @@ public class DataTableViewTest extends Application {
         settingsPane.setSpacing(2);
         settingsPane.setPadding(new Insets(4));
 
-        settingsPane.getChildren().addAll(loadDataButton, addBivariateAxisButton, showPolylinesCB,
+        settingsPane.getChildren().addAll(loadDataButton, addBivariateAxisButton, showContextPolylinesCB, showPolylinesCB,
                 showSelectedPolylinesCB, showUnselectedPolylinesCB, showHistogramCB, showSummaryStatsCB, showCorrelationIndicatorsCB,
                 showScatterplotsCB, statisticsDisplayModeChoiceBox, opacitySlider, addColumnButton,
                 deleteSelectedDataButton, deleteUnselectedDataButton);

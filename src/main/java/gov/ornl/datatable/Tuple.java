@@ -4,21 +4,34 @@ import java.io.Serializable;
 import java.util.ArrayList;
 
 public class Tuple implements Serializable {
+	private DataTable dataTable;
 	private ArrayList<Object> elements = new ArrayList<>();
 	private boolean queryFlag = true;
 	private int orderFactor = 0;
 
-	public Tuple() {
-
+	public Tuple(DataTable dataTable) {
+		this.dataTable = dataTable;
 	}
 
-	public Tuple createCopy() {
-		Tuple copyTuple = new Tuple();
-		for (Object element : elements) {
-			copyTuple.addElement(element);
-		}
-		return copyTuple;
+	public boolean isElementInFocus(int elementIndex) {
+		return dataTable.getColumn(elementIndex).getFocusTuples().contains(this);
 	}
+
+	public boolean isElementInLowerContext(int elementIndex) {
+		return dataTable.getColumn(elementIndex).getLowerContextTuples().contains(this);
+	}
+
+	public boolean isElementInUpperContext(int elementIndex) {
+		return dataTable.getColumn(elementIndex).getUpperContextTuples().contains(this);
+	}
+
+//	public Tuple createCopy() {
+//		Tuple copyTuple = new Tuple();
+//		for (Object element : elements) {
+//			copyTuple.addElement(element);
+//		}
+//		return copyTuple;
+//	}
 
     public Tuple (Tuple copyTuple) {
         for (int i = 0; i < copyTuple.getElementCount(); i++) {

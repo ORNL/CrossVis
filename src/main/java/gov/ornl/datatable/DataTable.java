@@ -6,6 +6,7 @@ import javafx.collections.SetChangeListener;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -18,6 +19,10 @@ public class DataTable {
 
     // List of enabled tuples
 	protected ArrayList<Tuple> tuples;
+
+	protected HashSet<Tuple> focusTuples = new HashSet<>();
+
+	protected HashSet<Tuple> contextTuples = new HashSet<>();
 
     // List of enabled columns
 	protected ArrayList<Column> columns;
@@ -65,28 +70,58 @@ public class DataTable {
         listeners = new ArrayList<>();
 	}
 
-	public DataTable getDuplicate() {
-		DataTable newDataTable = new DataTable();
-		ArrayList<Column> newColumns = new ArrayList<>();
+	public Set<Tuple> getContextTuples() { return contextTuples; }
+
+	public Set<Tuple> getFocusTuples() { return focusTuples; }
+
+	private void setContextTuples() {
+		focusTuples.clear();
+		contextTuples.clear();
+
 		for (Column column : columns) {
-			if (column instanceof DoubleColumn) {
-				newColumns.add(new DoubleColumn(column.getName()));
-			} else if (column instanceof TemporalColumn) {
-				newColumns.add(new TemporalColumn(column.getName()));
-			} else if (column instanceof CategoricalColumn) {
-				newColumns.add(new CategoricalColumn(column.getName(), ((CategoricalColumn)column).getCategories()));
+			column.getFocusTuples().clear();
+			column.getLowerContextTuples().clear();
+			column.getUpperContextTuples().clear();
+		}
+
+		for (Tuple tuple : tuples) {
+			boolean isContext = false;
+			for (int i = 0; i < tuple.getElementCount(); i++) {
+				if (!columns.get(i).setFocusContext(tuple, i)) {
+					isContext = true;
+				}
+			}
+
+			if (isContext) {
+				contextTuples.add(tuple);
+			} else {
+				focusTuples.add(tuple);
 			}
 		}
-
-		ArrayList<Tuple> newTuples = new ArrayList<>();
-		for (Tuple tuple : tuples) {
-			Tuple newTuple = tuple.createCopy();
-			newTuples.add(newTuple);
-		}
-
-		newDataTable.setData(newTuples, newColumns);
-		return newDataTable;
 	}
+
+//	public DataTable getDuplicate() {
+//		DataTable newDataTable = new DataTable();
+//		ArrayList<Column> newColumns = new ArrayList<>();
+//		for (Column column : columns) {
+//			if (column instanceof DoubleColumn) {
+//				newColumns.add(new DoubleColumn(column.getName()));
+//			} else if (column instanceof TemporalColumn) {
+//				newColumns.add(new TemporalColumn(column.getName()));
+//			} else if (column instanceof CategoricalColumn) {
+//				newColumns.add(new CategoricalColumn(column.getName(), ((CategoricalColumn)column).getCategories()));
+//			}
+//		}
+//
+//		ArrayList<Tuple> newTuples = new ArrayList<>();
+//		for (Tuple tuple : tuples) {
+//			Tuple newTuple = tuple.createCopy();
+//			newTuples.add(newTuple);
+//		}
+//
+//		newDataTable.setData(newTuples, newColumns);
+//		return newDataTable;
+//	}
 
 	public boolean getCalculateQueryStatistics() {
 	    return calculateQueryStatistics.get();
@@ -246,11 +281,13 @@ public class DataTable {
 
 		calculateStatistics();
 		getActiveQuery().setQueriedTuples();
+		setContextTuples();
 		fireDataModelReset();
 	}
 
 	public void addTuples(ArrayList<Tuple> newTuples) {
 		this.tuples.addAll(newTuples);
+		setContextTuples();
 		calculateStatistics();
 
 		fireTuplesAdded(newTuples);
@@ -378,7 +415,7 @@ public class DataTable {
 
             calculateStatistics();
 
-            getActiveQuery().removeColumnSelectionRanges(disabledColumn);
+            getActiveQuery().removeColumnSelections(disabledColumn);
             getActiveQuery().setQueriedTuples();
 
 			fireColumnDisabled(disabledColumn);
@@ -437,10 +474,15 @@ public class DataTable {
 		fireBivariateColumnAdded(biColumn);
 	}
 
-	public void setDoubleColumnScaleExtents(ArrayList<DoubleColumn> columns, double minValue, double maxValue) {
+	public void setDoubleColumnScaleExtents(ArrayList<DoubleColumn> columns, double minValue, double maxValue,
+											boolean setFocusExtents) {
 		for (DoubleColumn column : columns) {
 			column.setMinimumScaleValue(minValue);
 			column.setMaximumScaleValue(maxValue);
+			if (setFocusExtents) {
+				column.setMinimumFocusValue(minValue);
+				column.setMaximumFocusValue(maxValue);
+			}
 		}
 		fireDataTableColumnExtentsChanged();
 	}
@@ -448,12 +490,62 @@ public class DataTable {
 	public void setDoubleColumnFocusExtents(DoubleColumn column, double minValue, double maxValue) {
 		column.setMinimumFocusValue(minValue);
 		column.setMaximumFocusValue(maxValue);
+
+		ArrayList<ColumnSelection> selectionRangesToRemove = new ArrayList<>();
+
+		List<ColumnSelection> columnSelections = getActiveQuery().getColumnSelections(column);
+		if (columnSelections != null) {
+			for (ColumnSelection columnSelection : columnSelections) {
+				DoubleColumnSelectionRange doubleColumnSelection = (DoubleColumnSelectionRange)columnSelection;
+				if (doubleColumnSelection.getMinValue() > column.getMaximumFocusValue() ||
+					doubleColumnSelection.getMaxValue() < column.getMinimumFocusValue()) {
+					selectionRangesToRemove.add(doubleColumnSelection);
+				} else if (doubleColumnSelection.getMaxValue() > column.getMaximumFocusValue()) {
+					doubleColumnSelection.setMaxValue(column.getMaximumFocusValue());
+				} else if (doubleColumnSelection.getMinValue() < column.getMinimumFocusValue()) {
+					doubleColumnSelection.setMinValue(column.getMinimumFocusValue());
+				}
+			}
+		}
+
+		if (!selectionRangesToRemove.isEmpty()) {
+			getActiveQuery().removeColumnSelections(selectionRangesToRemove);
+			getActiveQuery().setQueriedTuples();
+			fireColumnSelectionsRemoved(selectionRangesToRemove);
+		}
+
+		setContextTuples();
 		fireDataTableColumnFocusExtentsChanged();
 	}
 
 	public void setTemporalColumnFocusExtents(TemporalColumn column, Instant startInstant, Instant endInstant) {
 		column.setStartFocusValue(startInstant);
 		column.setEndFocusValue(endInstant);
+
+		ArrayList<ColumnSelection> selectionRangesToRemove = new ArrayList<>();
+
+		List<ColumnSelection> columnSelections = getActiveQuery().getColumnSelections(column);
+		if (columnSelections != null) {
+			for (ColumnSelection columnSelection : columnSelections) {
+				TemporalColumnSelectionRange temporalColumnSelection = (TemporalColumnSelectionRange)columnSelection;
+				if (temporalColumnSelection.getStartInstant().isAfter(column.getEndFocusValue()) ||
+						temporalColumnSelection.getEndInstant().isBefore(column.getStartFocusValue())) {
+					selectionRangesToRemove.add(temporalColumnSelection);
+				} else if (temporalColumnSelection.getEndInstant().isAfter(column.getEndFocusValue())) {
+					temporalColumnSelection.setEndInstant(column.getEndFocusValue());
+				} else if (temporalColumnSelection.getStartInstant().isBefore(column.getStartFocusValue())) {
+					temporalColumnSelection.setStartInstant(column.getStartFocusValue());
+				}
+			}
+		}
+
+		if (!selectionRangesToRemove.isEmpty()) {
+			getActiveQuery().removeColumnSelections(selectionRangesToRemove);
+			getActiveQuery().setQueriedTuples();
+			fireColumnSelectionsRemoved(selectionRangesToRemove);
+		}
+
+		setContextTuples();
 		fireDataTableColumnFocusExtentsChanged();
 	}
 
@@ -488,7 +580,7 @@ public class DataTable {
 	}
 
 	public void removeColumnSelectionFromActiveQuery(ColumnSelection selectionRange) {
-		getActiveQuery().removeColumnSelectionRange(selectionRange);
+		getActiveQuery().removeColumnSelection(selectionRange);
 		getActiveQuery().setQueriedTuples();
 		fireColumnSelectionRemoved(selectionRange);
 	}
@@ -611,7 +703,7 @@ public class DataTable {
 
 	public void removeColumnSelectionsFromActiveQuery(Column column) {
 		if (activeQuery != null) {
-            getActiveQuery().removeColumnSelectionRanges(column);
+            getActiveQuery().removeColumnSelections(column);
             getActiveQuery().setQueriedTuples();
 			fireQueryColumnCleared(column);
 		}
@@ -636,7 +728,7 @@ public class DataTable {
 //	}
 
 	public void addColumnSelectionRangeToActiveQuery(ColumnSelection newColumnSelectionRange) {
-		getActiveQuery().addColumnSelectionRange(newColumnSelectionRange);
+		getActiveQuery().addColumnSelection(newColumnSelectionRange);
 
         getActiveQuery().setQueriedTuples();
 
@@ -657,7 +749,7 @@ public class DataTable {
 			    @Override
                 public void onChanged(Change<? extends String> change) {
 			        if (((CategoricalColumnSelection) newColumnSelectionRange).getSelectedCategories().isEmpty()) {
-			        	getActiveQuery().removeColumnSelectionRange(newColumnSelectionRange);
+			        	getActiveQuery().removeColumnSelection(newColumnSelectionRange);
 					}
 			        getActiveQuery().setQueriedTuples();
 			        fireColumnSelectionChanged(newColumnSelectionRange);
@@ -853,7 +945,7 @@ public class DataTable {
             tuple.removeElement(columnIndex);
 
             if (disabledColumnTuples.size() != tuples.size()) {
-                Tuple disabledTuple = new Tuple();
+                Tuple disabledTuple = new Tuple(this);
                 disabledTuple.addElement(elementValue);
                 disabledColumnTuples.add(disabledTuple);
             } else {
@@ -872,7 +964,7 @@ public class DataTable {
                 disabledTuple.removeElement(columnIndex);
 
                 if (disabledColumnTuples.size() != tuples.size()) {
-                    Tuple tuple = new Tuple();
+                    Tuple tuple = new Tuple(this);
                     tuple.addElement(elementValue);
                     tuples.add(tuple);
                 } else {
@@ -980,6 +1072,12 @@ public class DataTable {
 	public void fireColumnSelectionRemoved(ColumnSelection columnSelectionRange) {
 		for (DataTableListener listener : listeners) {
 			listener.dataModelColumnSelectionRemoved(this, columnSelectionRange);
+		}
+	}
+
+	public void fireColumnSelectionsRemoved(List<ColumnSelection> columnSelections) {
+		for (DataTableListener listener : listeners) {
+			listener.dataModelColumnSelectionsRemoved(this, columnSelections);
 		}
 	}
 

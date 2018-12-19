@@ -2,7 +2,6 @@ package gov.ornl.crossvis;
 
 import gov.ornl.correlationview.CorrelationMatrixView;
 import gov.ornl.datatable.*;
-import gov.ornl.datatableview.Axis;
 import gov.ornl.datatableview.DataTableView;
 import gov.ornl.datatableview.DoubleAxis;
 import gov.ornl.datatableview.NumberTextField;
@@ -33,8 +32,8 @@ import javafx.scene.layout.*;
 import javafx.stage.FileChooser;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 import javafx.util.Callback;
-import javafx.util.Pair;
 import org.controlsfx.control.StatusBar;
 
 import javax.imageio.ImageIO;
@@ -42,7 +41,11 @@ import java.io.File;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.List;
 import java.util.Optional;
 import java.util.logging.Logger;
 import java.util.prefs.Preferences;
@@ -50,7 +53,9 @@ import java.util.prefs.Preferences;
 public class CrossVis extends Application implements DataTableListener {
     private static final Logger log = Logger.getLogger(CrossVis.class.getName());
 
-    private static final String VERSION_STRING = "v2.1.3";
+    private static final String VERSION_STRING = "v2.1.4";
+
+    private String appTitleString = "C r o s s V i s (" + VERSION_STRING + ")";
 
     private CorrelationMatrixView correlationMatrixView;
     private DataTable dataTable;
@@ -547,7 +552,7 @@ public class CrossVis extends Application implements DataTableListener {
             sceneWidth = sceneWidth > 2000 ? 2000 : sceneWidth;
             Scene scene = new Scene(rootNode, sceneWidth, 800, true, SceneAntialiasing.BALANCED);
 
-            mainStage.setTitle("C r o s s V i s | (" + VERSION_STRING + ")");
+            mainStage.setTitle(appTitleString);
             mainStage.setScene(scene);
             mainStage.show();
 
@@ -695,6 +700,30 @@ public class CrossVis extends Application implements DataTableListener {
 
         menuBar.getMenus().addAll(appMenu, fileMenu, viewMenu, dataMenu, queryMenu);
 
+        MenuItem aboutMI = new MenuItem("About CrossVis");
+        aboutMI.setOnAction(event -> {
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.initStyle(StageStyle.UTILITY);
+
+//            alert.setTitle("About");
+            alert.setTitle("About CrossVis (" + VERSION_STRING + ")");
+            alert.setHeaderText(null);
+            alert.setGraphic(null);
+
+            String s = "CrossVis " + VERSION_STRING + "\n\n" +
+                    "By Dr. Chad A. Steed\n\n" +
+                    "Oak Ridge National Laboratory\n" +
+                    "Oak Ridge, TN\n\n" +
+                    "\u00a9 ";
+            if (LocalDateTime.now().getYear() != 2018) {
+                s += "2018 - " + LocalDateTime.now().getYear();
+            } else {
+                s += "2018";
+            }
+            alert.setContentText(s);
+            alert.show();
+        });
+
         // Application Menu
         MenuItem exitMI = new MenuItem("Quit CrossVis");
         exitMI.setAccelerator(new KeyCodeCombination(KeyCode.Q, KeyCombination.META_DOWN));
@@ -704,7 +733,7 @@ public class CrossVis extends Application implements DataTableListener {
             }
         });
 
-        appMenu.getItems().addAll(exitMI);
+        appMenu.getItems().addAll(aboutMI, exitMI);
 
         // File Menu
         MenuItem openNetCDFMI = new MenuItem("Open NetCDF...");
@@ -738,10 +767,6 @@ public class CrossVis extends Application implements DataTableListener {
         CheckMenuItem showHistogramsMI = new CheckMenuItem("Show Histograms");
         showHistogramsMI.setAccelerator(new KeyCodeCombination(KeyCode.H, KeyCombination.META_DOWN));
         showHistogramsMI.selectedProperty().bindBidirectional(dataTableView.showHistogramsProperty());
-
-        CheckMenuItem showPolylinesMI = new CheckMenuItem("Show Parallel Coordinate Lines");
-        showPolylinesMI.setAccelerator(new KeyCodeCombination(KeyCode.L, KeyCombination.META_DOWN));
-        showPolylinesMI.selectedProperty().bindBidirectional(dataTableView.showPolylinesProperty());
 
         CheckMenuItem showSummaryStatsMI = new CheckMenuItem("Show Summary Statitics");
         showSummaryStatsMI.setAccelerator(new KeyCodeCombination(KeyCode.S, KeyCombination.META_DOWN, KeyCombination.SHIFT_DOWN));
@@ -784,6 +809,24 @@ public class CrossVis extends Application implements DataTableListener {
                 }
             }
         });
+
+        Menu polylineDisplayMenu = new Menu("Polyline Display Preferences");
+
+        CheckMenuItem showPolylinesMI = new CheckMenuItem("Show Polylines");
+        showPolylinesMI.setAccelerator(new KeyCodeCombination(KeyCode.L, KeyCombination.META_DOWN));
+        showPolylinesMI.selectedProperty().bindBidirectional(dataTableView.showPolylinesProperty());
+
+        CheckMenuItem showSelectedPolylinesMI = new CheckMenuItem("Show Selected Polylines");
+        showSelectedPolylinesMI.selectedProperty().bindBidirectional(dataTableView.showSelectedItemsProperty());
+
+        CheckMenuItem showUnselectedPolylinesMI = new CheckMenuItem("Show Unselected Polylines");
+        showUnselectedPolylinesMI.selectedProperty().bindBidirectional(dataTableView.showUnselectedItemsProperty());
+
+        CheckMenuItem showContextSegmentsMI = new CheckMenuItem("Show Context Polyline Segments");
+        showContextSegmentsMI.selectedProperty().bindBidirectional(dataTableView.getShowContextPolylineSegmentsProperty());
+
+        polylineDisplayMenu.getItems().addAll(showPolylinesMI, showSelectedPolylinesMI, showUnselectedPolylinesMI,
+                showContextSegmentsMI);
 
         Menu axisLayoutMenu = new Menu("Axis Layout");
 
@@ -842,8 +885,8 @@ public class CrossVis extends Application implements DataTableListener {
             }
         });
 
-        viewMenu.getItems().addAll(showScatterplotsMI, showHistogramsMI, showPolylinesMI, showSummaryStatsMI, showCorrelationsMI,
-                summaryStatsDisplayModeMenu, axisLayoutMenu, setNumericalAxisExtentsMenuItem,
+        viewMenu.getItems().addAll(showScatterplotsMI, showHistogramsMI, showSummaryStatsMI, showCorrelationsMI,
+                polylineDisplayMenu, summaryStatsDisplayModeMenu, axisLayoutMenu, setNumericalAxisExtentsMenuItem,
                 changeHistogramBinCountMenuItem, enableDataTableUpdatesCheckMenuItem);
 
 
@@ -934,6 +977,9 @@ public class CrossVis extends Application implements DataTableListener {
             maxValueTextField.setText(String.valueOf(maxValue));
         });
 
+        CheckBox setFocusExtentsCB = new CheckBox("Set Focus Extents");
+        setFocusExtentsCB.setSelected(true);
+
         GridPane grid = new GridPane();
         grid.setHgap(10);
         grid.setVgap(10);
@@ -946,6 +992,7 @@ public class CrossVis extends Application implements DataTableListener {
         grid.add(new Label("Minimum Value:"), 1, 2);
         grid.add(minValueTextField, 2, 2);
         grid.add(useSelectedAxisExtentsButton, 1, 3, 2, 1);
+        grid.add(setFocusExtentsCB, 1, 4, 2, 1);
 
         dialog.getDialogPane().setContent(grid);
 
@@ -960,14 +1007,15 @@ public class CrossVis extends Application implements DataTableListener {
 
         Optional<double[]> result = dialog.showAndWait();
         result.ifPresent(extents -> {
-            System.out.println("min = " + extents[0] + "max = " + extents[1]);
+//            System.out.println("min = " + extents[0] + "max = " + extents[1]);
             ArrayList<DoubleColumn> columns = new ArrayList<>();
             for (DoubleAxis axis : axisListView.getSelectionModel().getSelectedItems()) {
                 columns.add(axis.doubleColumn());
 //                axis.setMaxFocusValue(extents[1]);
 //                axis.setMinFocusValue(extents[0]);
             }
-            dataTableView.getDataTable().setDoubleColumnScaleExtents(columns, extents[0], extents[1]);
+            dataTableView.getDataTable().setDoubleColumnScaleExtents(columns, extents[0], extents[1],
+                    setFocusExtentsCB.isSelected());
         });
     }
 
@@ -1191,12 +1239,14 @@ public class CrossVis extends Application implements DataTableListener {
                     categoricalColumnTableView.setItems(FXCollections.observableArrayList(categoricalColumns));
                 }
 
-                doubleQueryTableView.setItems(dataTable.getActiveQuery().columnSelectionRangesProperty().filtered(selection -> selection instanceof DoubleColumnSelectionRange));
-                temporalQueryTableView.setItems(dataTable.getActiveQuery().columnSelectionRangesProperty().filtered(selection -> selection instanceof TemporalColumnSelectionRange));
-                categoricalQueryTableView.setItems(dataTable.getActiveQuery().columnSelectionRangesProperty().filtered(selection -> selection instanceof CategoricalColumnSelection));
+                doubleQueryTableView.setItems(dataTable.getActiveQuery().columnSelectionsProperty().filtered(selection -> selection instanceof DoubleColumnSelectionRange));
+                temporalQueryTableView.setItems(dataTable.getActiveQuery().columnSelectionsProperty().filtered(selection -> selection instanceof TemporalColumnSelectionRange));
+                categoricalQueryTableView.setItems(dataTable.getActiveQuery().columnSelectionsProperty().filtered(selection -> selection instanceof CategoricalColumnSelection));
 
                 setDataTableColumns();
                 setDataTableItems();
+
+                crossVisStage.setTitle(appTitleString + " -- " + csvFile.getAbsolutePath());
             } catch (IOException e) {
                 e.printStackTrace();
                 Alert alert = new Alert(Alert.AlertType.ERROR);
@@ -1297,9 +1347,9 @@ public class CrossVis extends Application implements DataTableListener {
             categoricalColumnTableView.setItems(FXCollections.observableArrayList(categoricalColumns));
         }
 
-        doubleQueryTableView.setItems(dataTable.getActiveQuery().columnSelectionRangesProperty().filtered(selection -> selection instanceof DoubleColumnSelectionRange));
-        temporalQueryTableView.setItems(dataTable.getActiveQuery().columnSelectionRangesProperty().filtered(selection -> selection instanceof TemporalColumnSelectionRange));
-        categoricalQueryTableView.setItems(dataTable.getActiveQuery().columnSelectionRangesProperty().filtered(selection -> selection instanceof CategoricalColumnSelection));
+        doubleQueryTableView.setItems(dataTable.getActiveQuery().columnSelectionsProperty().filtered(selection -> selection instanceof DoubleColumnSelectionRange));
+        temporalQueryTableView.setItems(dataTable.getActiveQuery().columnSelectionsProperty().filtered(selection -> selection instanceof TemporalColumnSelectionRange));
+        categoricalQueryTableView.setItems(dataTable.getActiveQuery().columnSelectionsProperty().filtered(selection -> selection instanceof CategoricalColumnSelection));
 
         setDataTableColumns();
         setDataTableItems();
@@ -1311,9 +1361,9 @@ public class CrossVis extends Application implements DataTableListener {
         removeAllQueriesMI.setDisable(!dataTable.getActiveQuery().hasColumnSelections());
         setDataTableItems();
         updatePercentSelected();
-        doubleQueryTableView.setItems(dataTable.getActiveQuery().columnSelectionRangesProperty().filtered(selection -> selection instanceof DoubleColumnSelectionRange));
-        temporalQueryTableView.setItems(dataTable.getActiveQuery().columnSelectionRangesProperty().filtered(selection -> selection instanceof TemporalColumnSelectionRange));
-        categoricalQueryTableView.setItems(dataTable.getActiveQuery().columnSelectionRangesProperty().filtered(selection -> selection instanceof CategoricalColumnSelection));
+        doubleQueryTableView.setItems(dataTable.getActiveQuery().columnSelectionsProperty().filtered(selection -> selection instanceof DoubleColumnSelectionRange));
+        temporalQueryTableView.setItems(dataTable.getActiveQuery().columnSelectionsProperty().filtered(selection -> selection instanceof TemporalColumnSelectionRange));
+        categoricalQueryTableView.setItems(dataTable.getActiveQuery().columnSelectionsProperty().filtered(selection -> selection instanceof CategoricalColumnSelection));
     }
 
     @Override
@@ -1332,6 +1382,13 @@ public class CrossVis extends Application implements DataTableListener {
 
     @Override
     public void dataModelColumnSelectionRemoved(DataTable dataTable, ColumnSelection columnSelectionRange) {
+        removeAllQueriesMI.setDisable(!dataTable.getActiveQuery().hasColumnSelections());
+        setDataTableItems();
+        updatePercentSelected();
+    }
+
+    @Override
+    public void dataModelColumnSelectionsRemoved(DataTable dataTable, List<ColumnSelection> removedColumnSelections) {
         removeAllQueriesMI.setDisable(!dataTable.getActiveQuery().hasColumnSelections());
         setDataTableItems();
         updatePercentSelected();

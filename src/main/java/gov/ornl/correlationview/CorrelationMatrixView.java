@@ -16,6 +16,7 @@ import javafx.scene.text.Text;
 import javafx.scene.transform.Rotate;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Logger;
 
 public class CorrelationMatrixView extends Region implements DataTableListener {
@@ -195,6 +196,7 @@ public class CorrelationMatrixView extends Region implements DataTableListener {
     }
 
     private void registerListeners() {
+
         widthProperty().addListener(o -> resizeView());
         heightProperty().addListener(o -> resizeView());
 
@@ -612,6 +614,13 @@ public class CorrelationMatrixView extends Region implements DataTableListener {
 
     @Override
     public void dataModelColumnSelectionRemoved(DataTable dataModel, ColumnSelection columnSelectionRange) {
+        clearView();
+        initView();
+        resizeView();
+    }
+
+    @Override
+    public void dataModelColumnSelectionsRemoved(DataTable dataTable, List<ColumnSelection> removedColumnSelections) {
         clearView();
         initView();
         resizeView();

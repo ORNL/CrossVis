@@ -216,8 +216,8 @@ public class Scatterplot {
 //                log.info("Removing x and y column selections");
 //                // if there are column selections for either the x or y column, remove them
 //                if (dataTable.getActiveQuery().hasColumnSelections()) {
-//                    dataTable.getActiveQuery().removeColumnSelectionRanges(xColumn);
-//                    dataTable.getActiveQuery().removeColumnSelectionRanges(yColumn);
+//                    dataTable.getActiveQuery().removeColumnSelections(xColumn);
+//                    dataTable.getActiveQuery().removeColumnSelections(yColumn);
 //                }
 //            }
 //        });

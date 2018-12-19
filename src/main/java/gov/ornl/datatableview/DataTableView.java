@@ -2,31 +2,23 @@ package gov.ornl.datatableview;
 
 import gov.ornl.datatable.*;
 import gov.ornl.scatterplot.Scatterplot;
-import gov.ornl.util.GraphicsUtil;
 import javafx.beans.property.*;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
-import javafx.geometry.VPos;
 import javafx.scene.Group;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.canvas.Canvas;
-import javafx.scene.control.ScrollPane;
-import javafx.scene.control.Tooltip;
 import javafx.scene.image.WritableImage;
-import javafx.scene.input.KeyCode;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Line;
-import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.StrokeLineCap;
-import javafx.scene.text.Font;
-import javafx.scene.text.Text;
 import javafx.scene.transform.Scale;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.logging.Logger;
 
 public class DataTableView extends Region implements DataTableListener {
@@ -55,13 +47,11 @@ public class DataTableView extends Region implements DataTableListener {
 
     private Canvas selectedCanvas;
     private Canvas unselectedCanvas;
-    private Canvas contextCanvas;
 
     private DoubleProperty dataItemsOpacity;
 
     private ObjectProperty<Color> selectedItemsColor;
     private ObjectProperty<Color> unselectedItemsColor;
-    private ObjectProperty<Color> contextItemsColor;
 
     private ObjectProperty<Color> overallSummaryFillColor;
     private ObjectProperty<Color> querySummaryFillColor;
@@ -70,8 +60,7 @@ public class DataTableView extends Region implements DataTableListener {
     private ObjectProperty<Color> backgroundColor;
     private ObjectProperty<Color> textColor;
 
-    private BooleanProperty showSelectedItems;
-    private BooleanProperty showUnselectedItems;
+
 
     private double axisSpacing = 40d;
 //    private Group histogramGroup = new Group();
@@ -86,17 +75,20 @@ public class DataTableView extends Region implements DataTableListener {
 //    private Rectangle correlationRegionBoundsRectangle;
 
     private ArrayList<TuplePolyline> tuplePolylines;
+
     private HashSet<TuplePolyline> unselectedTuplePolylines = new HashSet<>();
     private HashSet<TuplePolyline> selectedTuplePolylines = new HashSet<>();
-    private HashSet<TuplePolyline> contextTuplePolylines = new HashSet<>();
 
     private ObjectProperty<STATISTICS_DISPLAY_MODE> summaryStatisticsDisplayMode = new SimpleObjectProperty<>(STATISTICS_DISPLAY_MODE.MEAN_BOXPLOT);
 
+    private BooleanProperty showSelectedItems = new SimpleBooleanProperty(true);
+    private BooleanProperty showUnselectedItems = new SimpleBooleanProperty(true);
     private BooleanProperty showSummaryStatistics = new SimpleBooleanProperty(true);
     private BooleanProperty showHistograms = new SimpleBooleanProperty(false);
     private BooleanProperty showScatterplots = new SimpleBooleanProperty(true);
     private BooleanProperty showPolylines = new SimpleBooleanProperty(true);
     private BooleanProperty showCorrelations = new SimpleBooleanProperty(true);
+    private BooleanProperty showContextPolylineSegments = new SimpleBooleanProperty(true);
 
     private BooleanProperty fitToWidth = new SimpleBooleanProperty(true);
     private DoubleProperty nameTextRotation;
@@ -301,6 +293,10 @@ public class DataTableView extends Region implements DataTableListener {
             redrawView();
         }));
 
+        showContextPolylineSegments.addListener(observable -> {
+            redrawView();
+        });
+
         showUnselectedItems.addListener(((observable, oldValue, newValue) -> {
             if (!scatterplotList.isEmpty()) {
                 for (Scatterplot scatterplot : scatterplotList) {
@@ -336,6 +332,7 @@ public class DataTableView extends Region implements DataTableListener {
             if (selectedTuplesTimer != null && selectedTuplesTimer.isRunning()) {
                 selectedTuplesTimer.stop();
             }
+
             if (unselectedTuplesTimer != null && unselectedTuplesTimer.isRunning()) {
                 unselectedTuplesTimer.stop();
             }
@@ -384,6 +381,7 @@ public class DataTableView extends Region implements DataTableListener {
     private void fillTupleSets() {
         unselectedTuplePolylines.clear();
         selectedTuplePolylines.clear();
+
         if ((tuplePolylines != null) && (!tuplePolylines.isEmpty())) {
             if (dataTable.getActiveQuery().hasColumnSelections()) {
                 for (TuplePolyline pcpTuple : tuplePolylines) {
@@ -409,9 +407,6 @@ public class DataTableView extends Region implements DataTableListener {
         overallSummaryStrokeColor = new SimpleObjectProperty<>(DEFAULT_OVERALL_SUMMARY_STROKE_COLOR);
         querySummaryFillColor = new SimpleObjectProperty<>(DEFAULT_QUERY_SUMMARY_FILL_COLOR);
         querySummaryStrokeColor = new SimpleObjectProperty<>(DEFAULT_QUERY_SUMMARY_STROKE_COLOR);
-
-        showSelectedItems = new SimpleBooleanProperty(true);
-        showUnselectedItems = new SimpleBooleanProperty(true);
 
         selectedCanvas = new Canvas(getWidth(), getHeight());
         unselectedCanvas = new Canvas(getWidth(), getHeight());
@@ -482,7 +477,7 @@ public class DataTableView extends Region implements DataTableListener {
             Color lineColor = new Color(getUnselectedItemsColor().getRed(), getUnselectedItemsColor().getGreen(),
                     getUnselectedItemsColor().getBlue(), getDataItemsOpacity());
             unselectedTuplesTimer = new TuplePolylineRenderer(unselectedCanvas, unselectedTuplePolylines,
-                    axisList, lineColor, 100);
+                    axisList, lineColor, 100, isShowingContextPolylineSegments());
             unselectedTuplesTimer.start();
         }
 
@@ -494,10 +489,20 @@ public class DataTableView extends Region implements DataTableListener {
             Color lineColor = new Color(getSelectedItemsColor().getRed(), getSelectedItemsColor().getGreen(),
                     getSelectedItemsColor().getBlue(), getDataItemsOpacity());
             selectedTuplesTimer = new TuplePolylineRenderer(selectedCanvas, selectedTuplePolylines,
-                    axisList, lineColor, 100);
+                    axisList, lineColor, 100, isShowingContextPolylineSegments());
             selectedTuplesTimer.start();
         }
     }
+
+    public boolean isShowingContextPolylineSegments() { return showContextPolylineSegments.get(); }
+
+    public void setShowContextPolylineSegments(boolean show) {
+        if (isShowingContextPolylineSegments() != show) {
+            showContextPolylineSegments.set(show);
+        }
+    }
+
+    public BooleanProperty getShowContextPolylineSegmentsProperty() { return showContextPolylineSegments; }
 
     private void redrawView() {
         if (selectedTuplesTimer != null && selectedTuplesTimer.isRunning()) {
@@ -1081,6 +1086,7 @@ public class DataTableView extends Region implements DataTableListener {
 
     private void clearView() {
         removeAllAxisSelectionGraphics();
+
         selectedCanvas.getGraphicsContext2D().clearRect(0, 0, getWidth(), getHeight());
         unselectedCanvas.getGraphicsContext2D().clearRect(0, 0, getWidth(), getHeight());
 
@@ -1195,6 +1201,18 @@ public class DataTableView extends Region implements DataTableListener {
         Axis axis = getAxisForColumn(columnSelection.getColumn());
         if (axis != null) {
             axis.removeAxisSelection(columnSelection);
+        }
+
+        handleQueryChange();
+    }
+
+    @Override
+    public void dataModelColumnSelectionsRemoved(DataTable dataTable, List<ColumnSelection> removedColumnSelections) {
+        for (ColumnSelection columnSelection : removedColumnSelections) {
+            Axis axis = getAxisForColumn(columnSelection.getColumn());
+            if (axis != null) {
+                axis.removeAxisSelection(columnSelection);
+            }
         }
 
         handleQueryChange();

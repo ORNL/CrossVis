@@ -638,7 +638,7 @@ public class NetCDFFilterWindow extends Application {
         readButton.setDisable(dataTable == null);
         readButton.setOnAction(event -> {
             try {
-                Pair<ArrayList<Column>,ArrayList<Tuple>> data = readData();
+                Pair<ArrayList<Column>,ArrayList<Tuple>> data = readData(dataTable);
                 if (dataTable != null) {
                     dataTable.setData(data.getValue(), data.getKey());
                 }
@@ -651,7 +651,7 @@ public class NetCDFFilterWindow extends Application {
         Button exportButton = new Button("Read and Export Data...");
         exportButton.setOnAction(event -> {
             try {
-                Pair<ArrayList<Column>, ArrayList<Tuple>> data = readData();
+                Pair<ArrayList<Column>, ArrayList<Tuple>> data = readData(null);
                 FileChooser fileChooser = new FileChooser();
                 fileChooser.setTitle("Save Data to CSV File");
                 File csvFile = fileChooser.showSaveDialog(primaryStage);
@@ -702,7 +702,7 @@ public class NetCDFFilterWindow extends Application {
     }
 
 
-    private Pair<ArrayList<Column>, ArrayList<Tuple>> readData() throws InvalidRangeException, IOException {
+    private Pair<ArrayList<Column>, ArrayList<Tuple>> readData(DataTable dataTable) throws InvalidRangeException, IOException {
         // get selected parameter and output values from variables
         List<String> selectedVariableNames = variableListView.getSelectionModel().getSelectedItems();
         ArrayList<Variable> selectedParameters = new ArrayList<>();
@@ -841,7 +841,7 @@ public class NetCDFFilterWindow extends Application {
 //                        for (int m = lonRange.first(); m < lonRange.last(); m++) {
                             int lon_idx = lonRange.element(m);
 
-                            Tuple tuple = new Tuple();
+                            Tuple tuple = new Tuple(dataTable);
 
 //                            double lon = lonValuesArray.get(m);
                             double lon = lonValuesArray.get(lon_idx);

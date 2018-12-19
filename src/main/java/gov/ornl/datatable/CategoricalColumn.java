@@ -14,6 +14,11 @@ public class CategoricalColumn extends Column {
         }
     }
 
+    public boolean setFocusContext(Tuple tuple, int elementIdx) {
+        getFocusTuples().add(tuple);
+        return true;
+    }
+
     public ArrayList<String> getCategories() {
         return categories;
     }
