@@ -361,12 +361,6 @@ public class Scatterplot {
         plotRectangle.setHeight(plotBounds.getHeight());
 
         resizeXAxisTitle();
-//        xAxisText.setText(xColumn.getName());
-//        if (xAxisText.getLayoutBounds().getWidth() > xAxisBounds.getWidth()) {
-//            while (xAxisText.getLayoutBounds().getWidth() > xAxisBounds.getWidth()) {
-//                xAxisText.setText(xAxisText.getText().substring(0, xAxisText.getText().length() - 1));
-//            }
-//        }
 
         double textX = (xAxisBounds.getMinX() + xAxisBounds.getWidth() / 2.) - xAxisText.getLayoutBounds().getWidth() / 2.;
         double textY = (xAxisBounds.getMinY() + xAxisBounds.getHeight() / 2.);
@@ -374,12 +368,6 @@ public class Scatterplot {
         xAxisText.setLayoutY(textY);
 
         resizeYAxisTitle();
-//        yAxisText.setText(yColumn.getName());
-//        if (yAxisText.getLayoutBounds().getWidth() > yAxisBounds.getHeight()) {
-//            while (yAxisText.getLayoutBounds().getWidth() > yAxisBounds.getHeight()) {
-//                yAxisText.setText(yAxisText.getText().substring(0, yAxisText.getText().length() - 1));
-//            }
-//        }
         
         textX = (yAxisBounds.getMinX() + yAxisBounds.getWidth() / 2.) - yAxisText.getLayoutBounds().getWidth() / 2.;
         textY = (yAxisBounds.getMinY() + yAxisBounds.getHeight() / 2.);

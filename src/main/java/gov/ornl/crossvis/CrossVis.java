@@ -438,11 +438,6 @@ public class CrossVis extends Application implements DataTableListener {
             dataTableView.setPrefHeight(400);
             dataTableView.setAxisSpacing(100);
             dataTableView.setPadding(new Insets(10));
-//            pcpView = new PCPView();
-//            pcpView.setDataTable(dataTable);
-//            pcpView.setPrefHeight(400);
-//            pcpView.setAxisSpacing(100);
-//            pcpView.setPadding(new Insets(10));
 
             dataTableViewScrollPane = new ScrollPane(dataTableView);
             dataTableViewScrollPane.setFitToHeight(true);
