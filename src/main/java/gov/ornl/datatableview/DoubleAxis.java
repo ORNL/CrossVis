@@ -2,9 +2,6 @@ package gov.ornl.datatableview;
 
 import gov.ornl.datatable.*;
 import gov.ornl.util.GraphicsUtil;
-import javafx.beans.binding.Bindings;
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.Point2D;
 import javafx.geometry.VPos;
@@ -17,7 +14,6 @@ import javafx.scene.shape.StrokeLineCap;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 
-import java.util.ArrayList;
 import java.util.logging.Logger;
 
 public class DoubleAxis extends UnivariateAxis {
@@ -49,18 +45,13 @@ public class DoubleAxis extends UnivariateAxis {
 
     // histogram bin rectangles
     private Group overallHistogramGroup = new Group();
-//    private ArrayList<Rectangle> overallHistogramRectangles = new ArrayList<>();
     private Group queryHistogramGroup = new Group();
-//    private ArrayList<Rectangle> queryHistogramRectangles = new ArrayList<>();
 
     private Text minValueText;
     private Text maxValueText;
 
     private Text minFocusValueText;
     private Text maxFocusValueText;
-
-//    private DoubleProperty minFocusValue;
-//    private DoubleProperty maxFocusValue;
 
     private DoubleAxisSelection draggingSelection;
 
@@ -89,9 +80,6 @@ public class DoubleAxis extends UnivariateAxis {
         draggingContextValueText = new Text();
         draggingContextValueText.setFill(Color.BLACK);
         draggingContextValueText.setFont(Font.font(DEFAULT_TEXT_SIZE));
-
-//        minFocusValue = new SimpleDoubleProperty(column.getMinimumScaleValue());
-//        maxFocusValue = new SimpleDoubleProperty(column.getMaximumScaleValue());
 
         minValueText = new Text(String.valueOf(column.getMinimumScaleValue()));
         minValueText.setFont(new Font(DEFAULT_TEXT_SIZE));
@@ -209,34 +197,11 @@ public class DoubleAxis extends UnivariateAxis {
     private void registerListeners() {
         doubleColumn().minimumScaleValueProperty().addListener(observable -> {
             minValueText.setText(String.valueOf(doubleColumn().getMinimumScaleValue()));
-//            if (doubleColumn().getMinimumFocusValue() < doubleColumn().getMinimumScaleValue()) {
-//                setMinFocusValue(doubleColumn().getMinimumScaleValue());
-//            }
         });
 
         doubleColumn().maximumScaleValueProperty().addListener(observable -> {
             maxValueText.setText(String.valueOf(doubleColumn().getMaximumScaleValue()));
-//            if (getMaxFocusValue() > doubleColumn().getMaximumScaleValue()) {
-//                setMaxFocusValue(doubleColumn().getMaximumScaleValue());
-//            }
         });
-//        minValueText.textProperty().bindBidirectional(((DoubleColumn)getColumn()).getStatistics().minValueProperty(),
-//                new NumberStringConverter());
-//
-//        maxValueText.textProperty().bindBidirectional(((DoubleColumn)getColumn()).getStatistics().maxValueProperty(),
-//                new NumberStringConverter());
-//
-//        doubleColumn().getStatistics().minValueProperty().addListener(observable -> {
-//            if (getMinFocusValue() < doubleColumn().getStatistics().getMinValue()) {
-//                setMinFocusValue(doubleColumn().getStatistics().getMinValue());
-//            }
-//        });
-//
-//        doubleColumn().getStatistics().maxValueProperty().addListener(observable -> {
-//            if (getMaxFocusValue() > doubleColumn().getStatistics().getMaxValue()) {
-//                setMaxFocusValue(doubleColumn().getStatistics().getMaxValue());
-//            }
-//        });
 
         doubleColumn().minimumFocusValueProperty().addListener(observable -> {
             minFocusValueText.setText(String.valueOf(doubleColumn().getMinimumFocusValue()));
@@ -245,9 +210,6 @@ public class DoubleAxis extends UnivariateAxis {
         doubleColumn().maximumFocusValueProperty().addListener(observable -> {
             maxFocusValueText.setText(String.valueOf(doubleColumn().getMaximumFocusValue()));
         });
-//        minFocusValueText.textProperty().bind(Bindings.convert(minFocusValue));
-//
-//        maxFocusValueText.textProperty().bind(Bindings.convert(maxFocusValue));
 
         getDataTableView().selectedItemsColorProperty().addListener((observable, oldValue, newValue) -> {
             queryDispersionFill.set(new Color(newValue.getRed(), newValue.getGreen(), newValue.getBlue(),
@@ -408,23 +370,6 @@ public class DoubleAxis extends UnivariateAxis {
                 minFocusValueText.setVisible(true);
                 if (doubleColumn().getMinimumFocusValue() != draggingMinFocusValue) {
                     getDataTable().setDoubleColumnFocusExtents(doubleColumn(), draggingMinFocusValue, doubleColumn().getMaximumFocusValue());
-//                    setMinFocusValue(draggingMinFocusValue);
-//                    getDataTableView().resizeView();
-
-//                    ArrayList<DoubleAxisSelection> selectionsToRemove = new ArrayList<>();
-//                    for (AxisSelection axisSelection : getAxisSelectionList()) {
-//                        DoubleAxisSelection doubleAxisSelection = (DoubleAxisSelection)axisSelection;
-//                        if (doubleAxisSelection.getDoubleColumnSelectionRange().getMinValue() < getMinFocusValue() ||
-//                                doubleAxisSelection.getDoubleColumnSelectionRange().getMaxValue() > getMaxFocusValue()) {
-//                            selectionsToRemove.add(doubleAxisSelection);
-//                        }
-//                    }
-//
-//                    if (!selectionsToRemove.isEmpty()) {
-//                        for (DoubleAxisSelection doubleAxisSelection : selectionsToRemove) {
-//                            getDataTable().removeColumnSelectionFromActiveQuery(doubleAxisSelection.getColumnSelection());
-//                        }
-//                    }
                 }
             }
         });
@@ -438,23 +383,6 @@ public class DoubleAxis extends UnivariateAxis {
                 if (doubleColumn().getMaximumFocusValue() != draggingMaxFocusValue) {
                     getDataTable().setDoubleColumnFocusExtents(doubleColumn(), doubleColumn().getMinimumFocusValue(),
                             draggingMaxFocusValue);
-//                    setMaxFocusValue(draggingMaxFocusValue);
-//                    getDataTableView().resizeView();
-
-//                    ArrayList<DoubleAxisSelection> selectionsToRemove = new ArrayList<>();
-//                    for (AxisSelection axisSelection : getAxisSelectionList()) {
-//                        DoubleAxisSelection doubleAxisSelection = (DoubleAxisSelection)axisSelection;
-//                        if (doubleAxisSelection.getDoubleColumnSelectionRange().getMinValue() < getMinFocusValue() ||
-//                                doubleAxisSelection.getDoubleColumnSelectionRange().getMaxValue() > getMaxFocusValue()) {
-//                            selectionsToRemove.add(doubleAxisSelection);
-//                        }
-//                    }
-//
-//                    if (!selectionsToRemove.isEmpty()) {
-//                        for (DoubleAxisSelection doubleAxisSelection : selectionsToRemove) {
-//                            getDataTable().removeColumnSelectionFromActiveQuery(doubleAxisSelection.getColumnSelection());
-//                        }
-//                    }
                 }
             }
         });
@@ -480,10 +408,6 @@ public class DoubleAxis extends UnivariateAxis {
                     doubleColumn().getMaximumFocusValue(), doubleColumn().getMinimumFocusValue());
             double minSelectionValue = GraphicsUtil.mapValue(selectionMinY, getMaxFocusPosition(), getMinFocusPosition(),
                     doubleColumn().getMaximumFocusValue(), doubleColumn().getMinimumFocusValue());
-//            double maxSelectionValue = GraphicsUtil.mapValue(selectionMaxY, getMaxFocusPosition(), getMinFocusPosition(),
-//                    doubleColumn().getStatistics().getMaxValue(), doubleColumn().getStatistics().getMinValue());
-//            double minSelectionValue = GraphicsUtil.mapValue(selectionMinY, getMaxFocusPosition(), getMinFocusPosition(),
-//                    doubleColumn().getStatistics().getMaxValue(), doubleColumn().getStatistics().getMinValue());
 
             if (draggingSelection == null) {
                 DoubleColumnSelectionRange selectionRange = new DoubleColumnSelectionRange(doubleColumn(), minSelectionValue, maxSelectionValue);
@@ -578,11 +502,12 @@ public class DoubleAxis extends UnivariateAxis {
                 DoubleHistogram histogram = doubleColumn().getStatistics().getHistogram();
                 DoubleHistogram queryHistogram = null;
                 if (getDataTable().getActiveQuery().hasColumnSelections()) {
-                    queryHistogram = ((DoubleColumnSummaryStats)getDataTable().getActiveQuery().getColumnQuerySummaryStats(doubleColumn())).getHistogram();
+                    DoubleColumnSummaryStats stats = (DoubleColumnSummaryStats)getDataTable().getActiveQuery().getColumnQuerySummaryStats(doubleColumn());
+                    if (stats != null) {
+                        queryHistogram = stats.getHistogram();
+                    }
                 }
-//                double binHeight = (getMinFocusPosition() - getMaxFocusPosition()) / histogram.getNumBins();
 
-//                overallHistogramRectangles.clear();
                 overallHistogramGroup.getChildren().clear();
                 queryHistogramGroup.getChildren().clear();
 
@@ -625,48 +550,6 @@ public class DoubleAxis extends UnivariateAxis {
                         }
                     }
                 }
-
-//                queryHistogramGroup.getChildren().clear();
-//                queryHistogramRectangles.clear();
-//
-//                if (getDataTable().getActiveQuery().hasColumnSelections()) {
-//                    DoubleColumnSummaryStats queryColumnSummaryStats = (DoubleColumnSummaryStats)getDataTable().getActiveQuery().getColumnQuerySummaryStats(getColumn());
-//
-//                    if (queryColumnSummaryStats != null) {
-//                        if (getDataTable().getCalculateQueryStatistics()) {
-//                            DoubleHistogram queryHistogram = ((DoubleColumnSummaryStats)getDataTable().getActiveQuery().getColumnQuerySummaryStats(doubleColumn())).getHistogram();
-//
-//                            for (int i = 0; i < queryHistogram.getNumBins(); i++) {
-//                                if (queryHistogram.getBinCount(i) > 0) {
-//                                    double binLowerBound = queryHistogram.getBinLowerBound(i);
-//                                    double binUpperBound = queryHistogram.getBinUpperBound(i);
-//
-//                                    if (binLowerBound >= doubleColumn().getMinimumFocusValue() &&
-//                                            binUpperBound <= doubleColumn().getMaximumFocusValue()) {
-//                                        double binLowerY = GraphicsUtil.mapValue(binLowerBound,
-//                                                doubleColumn().getMinimumFocusValue(),
-//                                                doubleColumn().getMaximumFocusValue(),
-//                                                getMinFocusPosition(), getMaxFocusPosition());
-//                                        double binUpperY = GraphicsUtil.mapValue(binUpperBound,
-//                                                doubleColumn().getMinimumFocusValue(),
-//                                                doubleColumn().getMaximumFocusValue(),
-//                                                getMinFocusPosition(), getMaxFocusPosition());
-//
-//                                        double binWidth = GraphicsUtil.mapValue(queryHistogram.getBinCount(i),
-//                                                0, histogram.getMaxBinCount(),
-//                                                getAxisBar().getWidth() + 2, getAxisBar().getWidth() + 2 + maxHistogramBinWidth);
-//                                        double x = getBounds().getMinX() + ((width - binWidth) / 2.);
-//                                        Rectangle rectangle = new Rectangle(x, binUpperY, binWidth, binLowerY - binUpperY);
-//                                        rectangle.strokeProperty().bind(queryHistogramStroke);
-//                                        rectangle.fillProperty().bind(queryHistogramFill);
-//                                        queryHistogramRectangles.add(rectangle);
-//                                        queryHistogramGroup.getChildren().add(rectangle);
-//                                    }
-//                                }
-//                            }
-//                        }
-//                    }
-//                }
             }
 
             if (getDataTableView().isShowingSummaryStatistics()) {
