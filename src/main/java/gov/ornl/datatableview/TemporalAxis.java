@@ -95,9 +95,8 @@ public class TemporalAxis extends UnivariateAxis {
 
 //        getGraphicsGroup().getChildren().add(0, overallHistogramGroup);
 //        getGraphicsGroup().getChildren().add(1, queryHistogramGroup);
-        getGraphicsGroup().getChildren().addAll(startInstantText,
-                endInstantText, focusStartInstantText, focusEndInstantText, overallInteriorHistogramRectangleGroup,
-                queryInteriorHistogramRectangleGroup);
+        getGraphicsGroup().getChildren().addAll(startInstantText, endInstantText, focusStartInstantText,
+                focusEndInstantText, overallInteriorHistogramRectangleGroup, queryInteriorHistogramRectangleGroup);
 
         overallInteriorHistogramRectangleGroup.setMouseTransparent(true);
         queryInteriorHistogramRectangleGroup.setMouseTransparent(true);
@@ -547,16 +546,12 @@ public class TemporalAxis extends UnivariateAxis {
                             temporalColumn().getEndFocusValue(), getMinFocusPosition(), getMaxFocusPosition());
 
                     if (histogram.getBinCount(i) > 0) {
-//                        double y = getMaxFocusPosition() + ((histogram.getNumBins() - i - 1) * binHeight);
                         double binWidth = GraphicsUtil.mapValue(histogram.getBinCount(i), 0,
                                 histogram.getMaxBinCount(), 1, getAxisBar().getWidth());
                         double x = getCenterX() - (binWidth / 2.);
-//                        Rectangle rectangle = new Rectangle(x, y, binWidth, binHeight);
                         Rectangle rectangle = new Rectangle(x, binUpperY, binWidth, binLowerY - binUpperY);
                         rectangle.fillProperty().bind(overallHistogramFill);
                         rectangle.strokeProperty().bind(overallHistogramStroke);
-//                        rectangle.setStroke(histogramFill.darker());
-//                        rectangle.setFill(histogramFill);
                         overallInteriorHistogramRectangleGroup.getChildren().add(rectangle);
 
                         if (queryHistogram != null) {
@@ -567,8 +562,6 @@ public class TemporalAxis extends UnivariateAxis {
                             rectangle = new Rectangle(x, binUpperY, binWidth, binLowerY - binUpperY);
                             rectangle.strokeProperty().bind(queryHistogramStroke);
                             rectangle.fillProperty().bind(queryHistogramFill);
-//                            rectangle.setStroke(queryHistogramFill.darker());
-//                            rectangle.setFill(queryHistogramFill);
                             queryInteriorHistogramRectangleGroup.getChildren().add(rectangle);
                         }
                     }

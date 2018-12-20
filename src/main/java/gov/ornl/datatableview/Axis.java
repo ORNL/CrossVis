@@ -38,6 +38,7 @@ public abstract class Axis {
             Color.ORANGE.getBlue(), 0.35);
     public final static Color DEFAULT_AXIS_BAR_FILL_COLOR = Color.gray(0.95);
     public final static Color DEFAULT_AXIS_BAR_CONTEXT_FILL_COLOR = Color.gray(0.9);
+    public final static Color DEFAULT_AXIS_BAR_CONTEXT_STROKE_COLOR = Color.gray(0.8);
     public final static Color DEFAULT_AXIS_BAR_STROKE_COLOR = Color.gray(0.6);
     public final static Color DEFAULT_CONTEXT_LIMIT_HANDLE_COLOR = Color.gray(0.5);
 

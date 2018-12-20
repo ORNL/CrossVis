@@ -39,7 +39,7 @@ public abstract class UnivariateAxis extends Axis {
         axisBar.setStrokeWidth(DEFAULT_STROKE_WIDTH);
 
         upperContextBar = new Rectangle();
-        upperContextBar.setStroke(axisBar.getStroke());
+        upperContextBar.setStroke(DEFAULT_AXIS_BAR_CONTEXT_STROKE_COLOR);
         upperContextBar.setFill(DEFAULT_AXIS_BAR_CONTEXT_FILL_COLOR);
 //        upperContextBar.setStroke(Color.gray(0.75));
 //        upperContextBar.setFill(Color.gray(.9));

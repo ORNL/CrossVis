@@ -49,9 +49,9 @@ public class DoubleAxis extends UnivariateAxis {
 
     // histogram bin rectangles
     private Group overallHistogramGroup = new Group();
-    private ArrayList<Rectangle> overallHistogramRectangles = new ArrayList<>();
+//    private ArrayList<Rectangle> overallHistogramRectangles = new ArrayList<>();
     private Group queryHistogramGroup = new Group();
-    private ArrayList<Rectangle> queryHistogramRectangles = new ArrayList<>();
+//    private ArrayList<Rectangle> queryHistogramRectangles = new ArrayList<>();
 
     private Text minValueText;
     private Text maxValueText;
@@ -576,10 +576,15 @@ public class DoubleAxis extends UnivariateAxis {
         if (!getDataTable().isEmpty()) {
             if (getDataTableView().isShowingHistograms()) {
                 DoubleHistogram histogram = doubleColumn().getStatistics().getHistogram();
-                double binHeight = (getMinFocusPosition() - getMaxFocusPosition()) / histogram.getNumBins();
+                DoubleHistogram queryHistogram = null;
+                if (getDataTable().getActiveQuery().hasColumnSelections()) {
+                    queryHistogram = ((DoubleColumnSummaryStats)getDataTable().getActiveQuery().getColumnQuerySummaryStats(doubleColumn())).getHistogram();
+                }
+//                double binHeight = (getMinFocusPosition() - getMaxFocusPosition()) / histogram.getNumBins();
 
-                overallHistogramRectangles.clear();
+//                overallHistogramRectangles.clear();
                 overallHistogramGroup.getChildren().clear();
+                queryHistogramGroup.getChildren().clear();
 
                 for (int i = 0; i < histogram.getNumBins(); i++) {
                     if (histogram.getBinCount(i) > 0) {
@@ -599,53 +604,69 @@ public class DoubleAxis extends UnivariateAxis {
                             Rectangle rectangle = new Rectangle(x, binUpperY, binWidth, binLowerY - binUpperY);
                             rectangle.strokeProperty().bind(overallHistogramStroke);
                             rectangle.fillProperty().bind(overallHistogramFill);
-                            overallHistogramGroup.getChildren().add(rectangle);
-                            overallHistogramRectangles.add(rectangle);
-                        }
-                    }
-                }
+                            Line accentLineLeft = new Line(rectangle.getX() - 0.5, rectangle.getY(), rectangle.getX() - 0.5, rectangle.getY() + rectangle.getHeight() - 1);
+                            accentLineLeft.setStroke(getDataTableView().getBackgroundColor());
+                            accentLineLeft.setStrokeWidth(1.);
+                            Line accentLineRight = new Line(rectangle.getLayoutBounds().getMaxX(), rectangle.getY(), rectangle.getLayoutBounds().getMaxX(), rectangle.getY() + rectangle.getHeight() - 1);
+                            accentLineRight.setStroke(getDataTableView().getBackgroundColor());
+                            accentLineRight.setStrokeWidth(1.);
+                            overallHistogramGroup.getChildren().addAll(accentLineLeft, accentLineRight, rectangle);
 
-                queryHistogramGroup.getChildren().clear();
-                queryHistogramRectangles.clear();
-
-                if (getDataTable().getActiveQuery().hasColumnSelections()) {
-                    DoubleColumnSummaryStats queryColumnSummaryStats = (DoubleColumnSummaryStats)getDataTable().getActiveQuery().getColumnQuerySummaryStats(getColumn());
-
-                    if (queryColumnSummaryStats != null) {
-                        if (getDataTable().getCalculateQueryStatistics()) {
-                            DoubleHistogram queryHistogram = ((DoubleColumnSummaryStats)getDataTable().getActiveQuery().getColumnQuerySummaryStats(doubleColumn())).getHistogram();
-
-                            for (int i = 0; i < queryHistogram.getNumBins(); i++) {
-                                if (queryHistogram.getBinCount(i) > 0) {
-                                    double binLowerBound = queryHistogram.getBinLowerBound(i);
-                                    double binUpperBound = queryHistogram.getBinUpperBound(i);
-
-                                    if (binLowerBound >= doubleColumn().getMinimumFocusValue() &&
-                                            binUpperBound <= doubleColumn().getMaximumFocusValue()) {
-                                        double binLowerY = GraphicsUtil.mapValue(binLowerBound,
-                                                doubleColumn().getMinimumFocusValue(),
-                                                doubleColumn().getMaximumFocusValue(),
-                                                getMinFocusPosition(), getMaxFocusPosition());
-                                        double binUpperY = GraphicsUtil.mapValue(binUpperBound,
-                                                doubleColumn().getMinimumFocusValue(),
-                                                doubleColumn().getMaximumFocusValue(),
-                                                getMinFocusPosition(), getMaxFocusPosition());
-
-                                        double binWidth = GraphicsUtil.mapValue(queryHistogram.getBinCount(i),
-                                                0, histogram.getMaxBinCount(),
-                                                getAxisBar().getWidth() + 2, getAxisBar().getWidth() + 2 + maxHistogramBinWidth);
-                                        double x = getBounds().getMinX() + ((width - binWidth) / 2.);
-                                        Rectangle rectangle = new Rectangle(x, binUpperY, binWidth, binLowerY - binUpperY);
-                                        rectangle.strokeProperty().bind(queryHistogramStroke);
-                                        rectangle.fillProperty().bind(queryHistogramFill);
-                                        queryHistogramRectangles.add(rectangle);
-                                        queryHistogramGroup.getChildren().add(rectangle);
-                                    }
-                                }
+                            if (queryHistogram != null) {
+                                binWidth = GraphicsUtil.mapValue(queryHistogram.getBinCount(i),
+                                        0, histogram.getMaxBinCount(),
+                                        getAxisBar().getWidth() + 2, getAxisBar().getWidth() + 2 + maxHistogramBinWidth);
+                                x = getBounds().getMinX() + ((width - binWidth) / 2.);
+                                Rectangle queryRectangle = new Rectangle(x, binUpperY, binWidth, binLowerY - binUpperY);
+                                queryRectangle.strokeProperty().bind(queryHistogramStroke);
+                                queryRectangle.fillProperty().bind(queryHistogramFill);
+                                queryHistogramGroup.getChildren().add(queryRectangle);
                             }
                         }
                     }
                 }
+
+//                queryHistogramGroup.getChildren().clear();
+//                queryHistogramRectangles.clear();
+//
+//                if (getDataTable().getActiveQuery().hasColumnSelections()) {
+//                    DoubleColumnSummaryStats queryColumnSummaryStats = (DoubleColumnSummaryStats)getDataTable().getActiveQuery().getColumnQuerySummaryStats(getColumn());
+//
+//                    if (queryColumnSummaryStats != null) {
+//                        if (getDataTable().getCalculateQueryStatistics()) {
+//                            DoubleHistogram queryHistogram = ((DoubleColumnSummaryStats)getDataTable().getActiveQuery().getColumnQuerySummaryStats(doubleColumn())).getHistogram();
+//
+//                            for (int i = 0; i < queryHistogram.getNumBins(); i++) {
+//                                if (queryHistogram.getBinCount(i) > 0) {
+//                                    double binLowerBound = queryHistogram.getBinLowerBound(i);
+//                                    double binUpperBound = queryHistogram.getBinUpperBound(i);
+//
+//                                    if (binLowerBound >= doubleColumn().getMinimumFocusValue() &&
+//                                            binUpperBound <= doubleColumn().getMaximumFocusValue()) {
+//                                        double binLowerY = GraphicsUtil.mapValue(binLowerBound,
+//                                                doubleColumn().getMinimumFocusValue(),
+//                                                doubleColumn().getMaximumFocusValue(),
+//                                                getMinFocusPosition(), getMaxFocusPosition());
+//                                        double binUpperY = GraphicsUtil.mapValue(binUpperBound,
+//                                                doubleColumn().getMinimumFocusValue(),
+//                                                doubleColumn().getMaximumFocusValue(),
+//                                                getMinFocusPosition(), getMaxFocusPosition());
+//
+//                                        double binWidth = GraphicsUtil.mapValue(queryHistogram.getBinCount(i),
+//                                                0, histogram.getMaxBinCount(),
+//                                                getAxisBar().getWidth() + 2, getAxisBar().getWidth() + 2 + maxHistogramBinWidth);
+//                                        double x = getBounds().getMinX() + ((width - binWidth) / 2.);
+//                                        Rectangle rectangle = new Rectangle(x, binUpperY, binWidth, binLowerY - binUpperY);
+//                                        rectangle.strokeProperty().bind(queryHistogramStroke);
+//                                        rectangle.fillProperty().bind(queryHistogramFill);
+//                                        queryHistogramRectangles.add(rectangle);
+//                                        queryHistogramGroup.getChildren().add(rectangle);
+//                                    }
+//                                }
+//                            }
+//                        }
+//                    }
+//                }
             }
 
             if (getDataTableView().isShowingSummaryStatistics()) {
