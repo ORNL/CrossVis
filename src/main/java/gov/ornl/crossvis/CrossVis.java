@@ -14,10 +14,7 @@ import javafx.collections.ObservableList;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
-import javafx.geometry.Insets;
-import javafx.geometry.Orientation;
-import javafx.geometry.Pos;
-import javafx.geometry.Rectangle2D;
+import javafx.geometry.*;
 import javafx.scene.Scene;
 import javafx.scene.SceneAntialiasing;
 import javafx.scene.control.*;
@@ -363,9 +360,14 @@ public class CrossVis extends Application implements DataTableListener {
         ToggleButton showUnselectedButton = new ToggleButton("Unselected");
         showUnselectedButton.setTooltip(new Tooltip("Show Unselected Items"));
         showUnselectedButton.selectedProperty().bindBidirectional(dataTableView.showUnselectedItemsProperty());
+
         ToggleButton showSelectedButton = new ToggleButton("Selected");
         showSelectedButton.selectedProperty().bindBidirectional(dataTableView.showSelectedItemsProperty());
         showSelectedButton.setTooltip(new Tooltip("Show Selected Items"));
+
+        ToggleButton showHistogramsButton = new ToggleButton("Histograms");
+        showHistogramsButton.selectedProperty().bindBidirectional(dataTableView.showHistogramsProperty());
+        showHistogramsButton.setTooltip(new Tooltip("Show Histograms"));
 
         // create selected items color modification UI components
         HBox selectedItemsColorBox = new HBox();
@@ -404,7 +406,7 @@ public class CrossVis extends Application implements DataTableListener {
         opacityBox.getChildren().addAll(new Label(" Opacity: "), opacitySlider);
 
         // add all items to resize
-        toolBar.getItems().addAll(showUnselectedButton, showSelectedButton, new Separator(), selectedItemsColorBox, unselectedItemsColorBox, new Separator(), opacityBox);
+        toolBar.getItems().addAll(showUnselectedButton, showSelectedButton, new Separator(), showHistogramsButton, new Separator(), selectedItemsColorBox, unselectedItemsColorBox, new Separator(), opacityBox);
 
         return toolBar;
     }
@@ -413,8 +415,8 @@ public class CrossVis extends Application implements DataTableListener {
         statusBar = new StatusBar();
 
         percentSelectedProgress = new ProgressBar();
-        percentSelectedProgress.setProgress(0.05);
-        percentSelectedProgress.setTooltip(new Tooltip("Selected Tuples Percentage"));
+        percentSelectedProgress.setProgress(0.0);
+        percentSelectedProgress.setTooltip(new Tooltip("Percentage of Data Currently Selected"));
         percentSelectedProgress.setPrefWidth(300);
 
         statusBar.getLeftItems().add(percentSelectedProgress);
@@ -459,6 +461,10 @@ public class CrossVis extends Application implements DataTableListener {
             createColumnTableViews();
 
             tupleTableView = new TableView<>();
+            CheckBox dataTableUpdatesCB = new CheckBox("Enable Data Table Updates");
+//            dataTableUpdatesCB.selectedProperty().bindBidirectional(dataTableUpdatesEnabled);
+            VBox tupleTableViewNode = new VBox(dataTableUpdatesCB, tupleTableView);
+            tupleTableViewNode.setSpacing(4.);
 
             doubleQueryTableView = QueryTableFactory.buildDoubleSelectionTable();
             doubleQueryTableView.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
@@ -467,52 +473,61 @@ public class CrossVis extends Application implements DataTableListener {
             categoricalQueryTableView = QueryTableFactory.buildCategoricalSelectionTable();
             categoricalQueryTableView.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
 
-            GridPane queryTablePane = new GridPane();
-            ColumnConstraints col1Constraints = new ColumnConstraints();
-            col1Constraints.setFillWidth(true);
-            col1Constraints.setHgrow(Priority.ALWAYS);
-            ColumnConstraints col2Constraints = new ColumnConstraints();
-            col2Constraints.setFillWidth(true);
-            col2Constraints.setHgrow(Priority.ALWAYS);
-            ColumnConstraints col3Constraints = new ColumnConstraints();
-            col3Constraints.setFillWidth(true);
-            col3Constraints.setHgrow(Priority.ALWAYS);
-            queryTablePane.getColumnConstraints().addAll(col1Constraints, col2Constraints, col3Constraints);
-            TitledPane doubleQueryTitledPane = new TitledPane("Double Column Selections", doubleQueryTableView);
-            doubleQueryTitledPane.setCollapsible(false);
-            queryTablePane.add(doubleQueryTitledPane, 0, 0);
-            TitledPane temporalQueryTitledPane = new TitledPane("Temporal Column Selections", temporalQueryTableView);
-            temporalQueryTitledPane.setCollapsible(false);
-            queryTablePane.add(temporalQueryTitledPane, 1, 0);
-            TitledPane categoricalQueryTitledPane = new TitledPane("Categorical Column Selections", categoricalQueryTableView);
-            categoricalQueryTitledPane.setCollapsible(false);
-            queryTablePane.add(categoricalQueryTitledPane, 2, 0);
+            TabPane queryTabPane = new TabPane();
+            queryTabPane.getTabs().add(new Tab("Double Axis Selections", doubleQueryTableView));
+            queryTabPane.getTabs().add(new Tab("Temporal Axis Selections", temporalQueryTableView));
+            queryTabPane.getTabs().add(new Tab("Categorical Axis Selections", categoricalQueryTableView));
+            for (Tab tab : queryTabPane.getTabs()) {
+                tab.setClosable(false);
+            }
+
+//
+//            GridPane queryTablePane = new GridPane();
+//            ColumnConstraints col1Constraints = new ColumnConstraints();
+//            col1Constraints.setFillWidth(true);
+//            col1Constraints.setHgrow(Priority.ALWAYS);
+//            ColumnConstraints col2Constraints = new ColumnConstraints();
+//            col2Constraints.setFillWidth(true);
+//            col2Constraints.setHgrow(Priority.ALWAYS);
+//            ColumnConstraints col3Constraints = new ColumnConstraints();
+//            col3Constraints.setFillWidth(true);
+//            col3Constraints.setHgrow(Priority.ALWAYS);
+//            queryTablePane.getColumnConstraints().addAll(col1Constraints, col2Constraints, col3Constraints);
+//            TitledPane doubleQueryTitledPane = new TitledPane("Double Column Selections", doubleQueryTableView);
+//            doubleQueryTitledPane.setCollapsible(false);
+//            queryTablePane.add(doubleQueryTitledPane, 0, 0);
+//            TitledPane temporalQueryTitledPane = new TitledPane("Temporal Column Selections", temporalQueryTableView);
+//            temporalQueryTitledPane.setCollapsible(false);
+//            queryTablePane.add(temporalQueryTitledPane, 1, 0);
+//            TitledPane categoricalQueryTitledPane = new TitledPane("Categorical Column Selections", categoricalQueryTableView);
+//            categoricalQueryTitledPane.setCollapsible(false);
+//            queryTablePane.add(categoricalQueryTitledPane, 2, 0);
 
             // create datamodel tab pane
             tabPane = new TabPane();
-            Tab quantitativeColumnTableTab = new Tab(" Quantitative Columns ");
+            Tab quantitativeColumnTableTab = new Tab(" Quantitative Axes ");
             quantitativeColumnTableTab.setClosable(false);
             quantitativeColumnTableTab.setContent(doubleColumnTableView);
 
-            Tab temporalColumnTableTab = new Tab(" Temporal Columns ");
+            Tab temporalColumnTableTab = new Tab(" Temporal Axes ");
             temporalColumnTableTab.setClosable(false);
             temporalColumnTableTab.setContent(temporalColumnTableView);
 
-            Tab categoricalColumnTableTab = new Tab(" Categorical Columns ");
+            Tab categoricalColumnTableTab = new Tab(" Categorical Axes ");
             categoricalColumnTableTab.setClosable(false);
             categoricalColumnTableTab.setContent(categoricalColumnTableView);
 
             Tab dataTableTab = new Tab(" Data Table ");
             dataTableTab.setClosable(false);
-            dataTableTab.setContent(tupleTableView);
+            dataTableTab.setContent(tupleTableViewNode);
 
-            Tab queryTableTab = new Tab(" Queries ");
+            Tab queryTableTab = new Tab(" Axis Selections ", queryTabPane);
             queryTableTab.setClosable(false);
 //        queryTableGrid.prefWidthProperty().bind(tabPane.widthProperty());
-            queryTableTab.setContent(queryTablePane);
+//            queryTableTab.setContent(queryTablePane);
 //        queryTableTab.setContent(queryTableView);
 
-            tabPane.getTabs().addAll(temporalColumnTableTab, quantitativeColumnTableTab, categoricalColumnTableTab, dataTableTab, queryTableTab);
+            tabPane.getTabs().addAll(quantitativeColumnTableTab, categoricalColumnTableTab, temporalColumnTableTab, dataTableTab, queryTableTab);
 
             CheckBox showCorrelationsForQueriedDataCB = new CheckBox("Show Queried Data Correlations");
             showCorrelationsForQueriedDataCB.selectedProperty().bindBidirectional(correlationMatrixView.showQueryCorrelationsProperty());

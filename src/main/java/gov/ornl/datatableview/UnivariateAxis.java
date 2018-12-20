@@ -2,6 +2,7 @@ package gov.ornl.datatableview;
 
 import gov.ornl.datatable.Column;
 import javafx.geometry.VPos;
+import javafx.scene.Cursor;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
@@ -11,9 +12,11 @@ import javafx.scene.text.Text;
 
 public abstract class UnivariateAxis extends Axis {
     public final static double DEFAULT_BAR_WIDTH = 20d;
-    public final static double DEFAULT_NARROW_BAR_WIDTH = 6d;
+    public final static double DEFAULT_NARROW_BAR_WIDTH = 10d;
     public final static double HOVER_TEXT_SIZE = 8d;
     public final static double RANGE_VALUE_TEXT_HEIGHT = 14;
+//    public final static Color DEFAULT_TEXT_FILL = Color.BLACK;
+//    public final static double DEFAULT_TEXT_SIZE = 8d;
 
     protected Text hoverValueText;
     private double contextRegionHeight = 20;
@@ -29,15 +32,15 @@ public abstract class UnivariateAxis extends Axis {
         super(dataTableView, column);
 
         axisBar = new Rectangle();
-        axisBar.setStroke(Color.gray(0.6));
-        axisBar.setFill(Color.gray(0.95));
+        axisBar.setStroke(DEFAULT_AXIS_BAR_STROKE_COLOR);
+        axisBar.setFill(DEFAULT_AXIS_BAR_FILL_COLOR);
         axisBar.setWidth(DEFAULT_BAR_WIDTH);
         axisBar.setSmooth(true);
         axisBar.setStrokeWidth(DEFAULT_STROKE_WIDTH);
 
         upperContextBar = new Rectangle();
         upperContextBar.setStroke(axisBar.getStroke());
-        upperContextBar.setFill(Color.gray(0.9));
+        upperContextBar.setFill(DEFAULT_AXIS_BAR_CONTEXT_FILL_COLOR);
 //        upperContextBar.setStroke(Color.gray(0.75));
 //        upperContextBar.setFill(Color.gray(.9));
         upperContextBar.setSmooth(true);
@@ -45,8 +48,10 @@ public abstract class UnivariateAxis extends Axis {
 
         upperContextBarHandle = new Line();
         upperContextBarHandle.setStrokeLineCap(StrokeLineCap.ROUND);
-        upperContextBarHandle.setStroke(Color.gray(0.45));
+        upperContextBarHandle.setStroke(DEFAULT_CONTEXT_LIMIT_HANDLE_COLOR);
+//        upperContextBarHandle.setStroke(Color.gray(0.45));
         upperContextBarHandle.setStrokeWidth(4.);
+        upperContextBarHandle.setCursor(Cursor.V_RESIZE);
 
         lowerContextBar = new Rectangle();
         lowerContextBar.setStroke(axisBar.getStroke());
@@ -60,6 +65,7 @@ public abstract class UnivariateAxis extends Axis {
         lowerContextBarHandle.setStrokeLineCap(StrokeLineCap.ROUND);
         lowerContextBarHandle.setStroke(upperContextBarHandle.getStroke());
         lowerContextBarHandle.setStrokeWidth(upperContextBarHandle.getStrokeWidth());
+        lowerContextBarHandle.setCursor(Cursor.V_RESIZE);
 
         hoverValueText = new Text();
         hoverValueText.setFont(new Font(HOVER_TEXT_SIZE));
@@ -77,6 +83,18 @@ public abstract class UnivariateAxis extends Axis {
     }
 
     private void registerListeners() {
+//        upperContextBarHandle.setOnMouseEntered(event -> {
+//            upperContextBarHandle.setCursor(Cursor.V_RESIZE);
+//        });
+//        upperContextBarHandle.setOnMouseExited(event -> {
+//            upperContextBarHandle.setCursor(Cursor.DEFAULT);
+//        });
+//        lowerContextBarHandle.setOnMouseEntered(event -> {
+//            lowerContextBarHandle.setCursor(Cursor.V_RESIZE);
+//        });
+//        lowerContextBarHandle.setOnMouseExited(event -> {
+//            lowerContextBarHandle.setCursor(Cursor.DEFAULT);
+//        });
 
     }
 

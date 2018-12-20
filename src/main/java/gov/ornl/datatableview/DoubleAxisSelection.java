@@ -32,21 +32,22 @@ public class DoubleAxisSelection extends UnivariateAxisSelection {
         minText = new Text(String.valueOf(selectionRange.getMinValue()));
 //        minText = new Text());
 //        minText.textProperty().bindBidirectional(getColumnSelectionRange().minValueProperty(), new NumberStringConverter());
-        minText.setFont(new Font(DEFAULT_TEXT_SIZE));
+        minText.setFont(new Font(Axis.DEFAULT_TEXT_SIZE));
         minText.setX(doubleAxis.getCenterX() - (minText.getLayoutBounds().getWidth() / 2d));
         minText.setY(getBottomY() + minText.getLayoutBounds().getHeight());
-
-        minText.setFill(DEFAULT_TEXT_FILL);
+        minText.setFill(Axis.DEFAULT_TEXT_COLOR);
         minText.setVisible(false);
+        minText.setMouseTransparent(true);
 
         maxText = new Text(String.valueOf(selectionRange.getMaxValue()));
 //        maxText = new Text();
 //        maxText.textProperty().bindBidirectional(getColumnSelectionRange().maxValueProperty(), new NumberStringConverter());
-        maxText.setFont(new Font(DEFAULT_TEXT_SIZE));
+        maxText.setFont(new Font(Axis.DEFAULT_TEXT_SIZE));
         maxText.setX(doubleAxis.getCenterX() - (maxText.getLayoutBounds().getWidth() / 2d));
         maxText.setY(getTopY() - 2d);
-        maxText.setFill(DEFAULT_TEXT_FILL);
+        maxText.setFill(Axis.DEFAULT_TEXT_COLOR);
         maxText.setVisible(false);
+        maxText.setMouseTransparent(true);
 
         getGraphicsGroup().getChildren().addAll(minText, maxText);
 

@@ -1,10 +1,9 @@
 package gov.ornl.datatableview;
 
 import gov.ornl.datatable.ColumnSelection;
-import gov.ornl.datatable.DataTable;
 import javafx.event.EventHandler;
 import javafx.geometry.Point2D;
-import javafx.scene.Group;
+import javafx.scene.Cursor;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Polyline;
@@ -14,10 +13,6 @@ import java.util.logging.Logger;
 
 public abstract class UnivariateAxisSelection extends AxisSelection {
     private final static Logger log = Logger.getLogger(UnivariateAxisSelection.class.getName());
-
-    public final static Color DEFAULT_TEXT_FILL = Color.BLACK;
-    public final static double DEFAULT_TEXT_SIZE = 8d;
-    public final static Color DEFAULT_SELECTION_RECTANGLE_FILL_COLOR = Color.ORANGE.deriveColor(1,1,1,0.2);
 
 //    private DataTable dataModel;
 //    private Pane pane;
@@ -51,23 +46,26 @@ public abstract class UnivariateAxisSelection extends AxisSelection {
 
         rectangle = new Rectangle(left, top, right-left, bottom-top);
 //        rectangle = new Rectangle(univariateAxis.getAxisBar().getX(), top, univariateAxis.getAxisBar().getWidth(), bottom - top);
-        rectangle.setFill(DEFAULT_SELECTION_RECTANGLE_FILL_COLOR);
+        rectangle.setFill(Axis.DEFAULT_SELECTION_FILL_COLOR);
 
         // make top and bottom crossbars
 
         topCrossbar = new Polyline(left, (top + 2d), left, top, right, top, right, (top + 2d));
         topCrossbar.setStroke(Color.BLACK);
         topCrossbar.setStrokeWidth(2d);
+        topCrossbar.setCursor(Cursor.V_RESIZE);
+
         bottomCrossbar = new Polyline(left, (bottom - 2d), left, bottom, right, bottom, right, (bottom - 2d));
         bottomCrossbar.setStroke(topCrossbar.getStroke());
         bottomCrossbar.setStrokeWidth(topCrossbar.getStrokeWidth());
+        bottomCrossbar.setCursor(Cursor.V_RESIZE);
 
 //        leftLine = new Line(left+1, top, left+1, bottom);
-//        leftLine.setStroke(DEFAULT_SELECTION_RECTANGLE_FILL_COLOR);
+//        leftLine.setStroke(DEFAULT_SELECTION_FILL_COLOR);
 //        leftLine.setStrokeWidth(3);
 ////        leftLine.setStrokeType(StrokeType.CENTERED);
 //        rightLine = new Line(right-1, top, right-1, bottom);
-//        rightLine.setStroke(DEFAULT_SELECTION_RECTANGLE_FILL_COLOR);
+//        rightLine.setStroke(DEFAULT_SELECTION_FILL_COLOR);
 //        rightLine.setStrokeWidth(3);
 //        rightLine.setStrokeType(StrokeType.);
 

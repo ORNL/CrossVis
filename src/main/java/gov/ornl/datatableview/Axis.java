@@ -7,6 +7,7 @@ import javafx.beans.property.*;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
+import javafx.scene.Cursor;
 import javafx.scene.Group;
 import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.ContextMenu;
@@ -31,9 +32,14 @@ public abstract class Axis {
     public final static Color DEFAULT_TEXT_COLOR = Color.BLACK;
     public final static Color DEFAULT_HISTOGRAM_FILL = new Color(Color.SILVER.getRed(), Color.SILVER.getGreen(),
             Color.SILVER.getBlue(), 0.6);
-//    public final static Color DEFAULT_QUERY_HISTOGRAM_FILL = Color.SLATEGRAY.deriveColor(1., 1., 1., 0.8);
     public final static Color DEFAULT_HISTOGRAM_STROKE = Color.SILVER.darker();
     public final static int DEFAULT_MAX_HISTOGRAM_BIN_WIDTH = 30;
+    public final static Color DEFAULT_SELECTION_FILL_COLOR = new Color(Color.ORANGE.getRed(), Color.ORANGE.getGreen(),
+            Color.ORANGE.getBlue(), 0.35);
+    public final static Color DEFAULT_AXIS_BAR_FILL_COLOR = Color.gray(0.95);
+    public final static Color DEFAULT_AXIS_BAR_CONTEXT_FILL_COLOR = Color.gray(0.9);
+    public final static Color DEFAULT_AXIS_BAR_STROKE_COLOR = Color.gray(0.6);
+    public final static Color DEFAULT_CONTEXT_LIMIT_HANDLE_COLOR = Color.gray(0.5);
 
     private DataTableView dataTableView;
 
@@ -100,6 +106,7 @@ public abstract class Axis {
         titleTextRectangle.setFill(Color.TRANSPARENT);
         titleTextRectangle.setArcWidth(6.);
         titleTextRectangle.setArcHeight(6.);
+        titleTextRectangle.setCursor(Cursor.HAND);
 
         graphicsGroup.getChildren().addAll(titleTextRectangle, titleText, axisSelectionGraphicsGroup);
 
@@ -165,10 +172,6 @@ public abstract class Axis {
         column.nameProperty().addListener(observable -> {
             resizeTitleText();
         });
-//        titleText.textProperty().addListener(observable -> {
-//            titleText.setX(bounds.getMinX() + ((bounds.getWidth() - titleText.getLayoutBounds().getWidth()) / 2.));
-//            titleText.setY(bounds.getMinY() + titleText.getLayoutBounds().getHeight());
-//        });
 
         dataTableView.selectedItemsColorProperty().addListener(observable -> {
             queryHistogramFill.set(new Color(dataTableView.getSelectedItemsColor().getRed(),
@@ -302,9 +305,12 @@ public abstract class Axis {
 
         highlighted.addListener((observable, oldValue, newValue) -> {
             if (newValue) {
-                titleTextRectangle.setFill(Color.web("#ffc14d"));
+                titleTextRectangle.setFill(DEFAULT_SELECTION_FILL_COLOR);
+//                titleTextRectangle.setStroke(DEFAULT_HISTOGRAM_STROKE);
+//                titleTextRectangle.setFill(Color.web("#ffc14d"));
             } else {
                 titleTextRectangle.setFill(Color.TRANSPARENT);
+//                titleTextRectangle.setStroke(Color.TRANSPARENT);
             }
         });
     }

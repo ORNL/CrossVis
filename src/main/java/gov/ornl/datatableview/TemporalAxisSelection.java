@@ -29,19 +29,20 @@ public class TemporalAxisSelection extends UnivariateAxisSelection {
         super(temporalAxis, selectionRange, minValueY, maxValueY);
 
         minText = new Text(String.valueOf(selectionRange.getStartInstant()));
-        minText.setFont(new Font(DEFAULT_TEXT_SIZE));
+        minText.setFont(new Font(Axis.DEFAULT_TEXT_SIZE));
         minText.setX(temporalAxis.getCenterX() - (minText.getLayoutBounds().getWidth() / 2d));
         minText.setY(getBottomY() + minText.getLayoutBounds().getHeight());
-
-        minText.setFill(DEFAULT_TEXT_FILL);
+        minText.setFill(Axis.DEFAULT_TEXT_COLOR);
         minText.setVisible(false);
+        minText.setMouseTransparent(true);
 
         maxText = new Text(String.valueOf(selectionRange.getEndInstant()));
-        maxText.setFont(new Font(DEFAULT_TEXT_SIZE));
+        maxText.setFont(new Font(Axis.DEFAULT_TEXT_SIZE));
         maxText.setX(temporalAxis.getCenterX() - (maxText.getLayoutBounds().getWidth() / 2d));
         maxText.setY(getTopY() - 2d);
-        maxText.setFill(DEFAULT_TEXT_FILL);
+        maxText.setFill(Axis.DEFAULT_TEXT_COLOR);
         maxText.setVisible(false);
+        maxText.setMouseTransparent(true);
 
         getGraphicsGroup().getChildren().addAll(minText, maxText);
 
