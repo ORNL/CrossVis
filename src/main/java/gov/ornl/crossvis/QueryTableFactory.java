@@ -233,6 +233,7 @@ public class QueryTableFactory {
     public static TableView<ColumnSelection> buildTemporalSelectionTable() {
         // create tableview for temporal column selections
         TableView<ColumnSelection> temporalSelectionTableView = new TableView<>();
+        temporalSelectionTableView.setEditable(true);
 
         TableColumn<ColumnSelection, String> nameColumn = new TableColumn<>("Column");
         nameColumn.setMinWidth(140);
