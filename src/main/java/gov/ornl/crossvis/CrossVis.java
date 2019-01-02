@@ -7,7 +7,9 @@ import gov.ornl.datatableview.DoubleAxis;
 import gov.ornl.datatableview.NumberTextField;
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -90,11 +92,22 @@ public class CrossVis extends Application implements DataTableListener {
     private NetCDFFilterWindow ncFilterWindow = null;
     private Stage ncFilterWindowStage = null;
 
+    private BooleanProperty dataTableUpdatesEnabled = new SimpleBooleanProperty(false);
+
     @Override
     public void init() {
         preferences = Preferences.userNodeForPackage(this.getClass());
 
         decimalFormat = new DecimalFormat("##0.0%");
+
+        dataTableUpdatesEnabled.addListener(observable -> setDataTableItems());
+//        dataTableUpdatesEnabled.addListener(observable -> {
+//            if (dataTableUpdatesEnabled.get()) {
+//                setDataTableItems();
+//            } else {
+//                tupleTableView.getItems().clear();
+//            }
+//        });
 
         dataTable = new DataTable();
         dataTable.addDataModelListener(this);
@@ -462,7 +475,7 @@ public class CrossVis extends Application implements DataTableListener {
 
             tupleTableView = new TableView<>();
             CheckBox dataTableUpdatesCB = new CheckBox("Enable Data Table Updates");
-//            dataTableUpdatesCB.selectedProperty().bindBidirectional(dataTableUpdatesEnabled);
+            dataTableUpdatesCB.selectedProperty().bindBidirectional(dataTableUpdatesEnabled);
             VBox tupleTableViewNode = new VBox(dataTableUpdatesCB, tupleTableView);
             tupleTableViewNode.setSpacing(4.);
 
@@ -885,15 +898,16 @@ public class CrossVis extends Application implements DataTableListener {
 
         // create menu item to enabled/disable data datamodel updates
         enableDataTableUpdatesCheckMenuItem = new CheckMenuItem("Enable Data Table View Updates");
-        enableDataTableUpdatesCheckMenuItem.setSelected(false);
-        enableDataTableUpdatesCheckMenuItem.selectedProperty().addListener((observable, oldValue, newValue) -> {
-            if (newValue != null && newValue) {
-                // refresh data datamodel based on current state of the data model
-                setDataTableItems();
-            } else {
-                tupleTableView.getItems().clear();
-            }
-        });
+        enableDataTableUpdatesCheckMenuItem.selectedProperty().bindBidirectional(dataTableUpdatesEnabled);
+//        enableDataTableUpdatesCheckMenuItem.setSelected(false);
+//        enableDataTableUpdatesCheckMenuItem.selectedProperty().addListener((observable, oldValue, newValue) -> {
+//            if (newValue != null && newValue) {
+//                // refresh data datamodel based on current state of the data model
+//                setDataTableItems();
+//            } else {
+//                tupleTableView.getItems().clear();
+//            }
+//        });
 
         viewMenu.getItems().addAll(showScatterplotsMI, showHistogramsMI, showSummaryStatsMI, showCorrelationsMI,
                 polylineDisplayMenu, summaryStatsDisplayModeMenu, axisLayoutMenu, setNumericalAxisExtentsMenuItem,
@@ -1269,7 +1283,8 @@ public class CrossVis extends Application implements DataTableListener {
     }
 
     private void setDataTableItems() {
-        if (enableDataTableUpdatesCheckMenuItem.isSelected()) {
+//        if (enableDataTableUpdatesCheckMenuItem.isSelected()) {
+        if (dataTableUpdatesEnabled.get()) {
             ObservableList<Tuple> tableTuples;
             tupleTableView.getItems().clear();
 
@@ -1280,6 +1295,8 @@ public class CrossVis extends Application implements DataTableListener {
             }
 
             tupleTableView.setItems(tableTuples);
+        } else {
+            tupleTableView.getItems().clear();
         }
     }
 
