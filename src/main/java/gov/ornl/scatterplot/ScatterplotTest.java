@@ -5,7 +5,10 @@ import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.SceneAntialiasing;
+import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
@@ -147,6 +150,25 @@ public class ScatterplotTest extends Application {
         BorderPane rootNode = new BorderPane();
         rootNode.setCenter(scatterplot.getGraphicsGroup());
 
+        rootNode.setOnMouseClicked(event -> {
+            if (event.isSecondaryButtonDown()) {
+                final ContextMenu contextMenu = new ContextMenu();
+                CheckMenuItem showXAxisMarginValuesCheck = new CheckMenuItem("Show X Axis Margin Values");
+                showXAxisMarginValuesCheck.selectedProperty().bindBidirectional(scatterplot.showXAxisMarginValuesProperty());
+                CheckMenuItem showYAxisMarginValuesCheck = new CheckMenuItem("Show Y Axis Margin Values");
+                showYAxisMarginValuesCheck.selectedProperty().bindBidirectional(scatterplot.showYAxisMarginValuesProperty());
+                MenuItem swapAxesMenuItem = new MenuItem("Swap X and Y Axes");
+                swapAxesMenuItem.setOnAction(event1 -> {
+                    scatterplot.swapColumnAxes();
+                });
+                MenuItem closeMenuItem = new MenuItem("Close Popup Menu");
+                closeMenuItem.setOnAction(event1 -> {
+                    contextMenu.hide();
+                });
+                contextMenu.show(rootNode, event.getScreenX(), event.getScreenY());
+            }
+        });
+
         rootNode.widthProperty().addListener(observable -> {
             scatterplot.resize(0, 0, rootNode.getWidth(), rootNode.getHeight());
         });
@@ -156,7 +178,6 @@ public class ScatterplotTest extends Application {
         });
 
         Scene scene = new Scene(rootNode, 600, 600, true, SceneAntialiasing.BALANCED);
-
         primaryStage.setTitle("Scatterplot Test");
         primaryStage.setScene(scene);
         primaryStage.show();

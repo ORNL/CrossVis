@@ -137,7 +137,6 @@ public class TuplePolyline {
                 Column yColumn = ((BivariateColumn)biAxis.getColumn()).getColumn2();
 
                 if (yColumn instanceof DoubleColumn) {
-                    DoubleColumn doubleColumn = (DoubleColumn)yColumn;
                     double yValue = (double)values[1];
                     yPoints[i] = GraphicsUtil.mapValue(yValue,
                             (double)biAxis.getScatterplot().getYAxisMinValue(),

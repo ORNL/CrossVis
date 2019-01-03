@@ -67,8 +67,9 @@ public class DataTableViewTest extends Application {
                 categoricalColumnNames.add("Status");
                 IOUtilities.readCSV(new File("data/csv/AtlanticHURDAT.csv"), ignoreColumnNames,
                         categoricalColumnNames, temporalColumnNames, temporalColumnFormatters, dataTable);
-                dataTableView.setFitToWidth(false);
-                dataTableView.setAxisSpacing(140.);
+
+                dataTableView.setFitToWidth(true);
+//                dataTableView.setAxisSpacing(140.);
 
                 // reads titan data with date field
 //                ArrayList<String> temporalColumnNames = new ArrayList<>();

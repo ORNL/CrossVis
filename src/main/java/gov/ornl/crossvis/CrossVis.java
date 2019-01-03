@@ -909,7 +909,14 @@ public class CrossVis extends Application implements DataTableListener {
 //            }
 //        });
 
-        viewMenu.getItems().addAll(showScatterplotsMI, showHistogramsMI, showSummaryStatsMI, showCorrelationsMI,
+        CheckMenuItem showScattplotMarginValuesCheckMenuItem = new CheckMenuItem("Show Scatterplot Margin Values");
+        showScattplotMarginValuesCheckMenuItem.selectedProperty().bindBidirectional(dataTableView.showScatterplotMarginValuesProperty());
+//        showScattplotMarginValuesCheckMenuItem.setSelected(dataTableView.isShowingScatterplotMarginValues());
+//        showScattplotMarginValuesCheckMenuItem.selectedProperty().addListener((observable) -> {
+//            dataTableView.setShowScatterplotMarginValues(showScattplotMarginValuesCheckMenuItem.isSelected());
+//        });
+
+        viewMenu.getItems().addAll(showScatterplotsMI, showScattplotMarginValuesCheckMenuItem, showHistogramsMI, showSummaryStatsMI, showCorrelationsMI,
                 polylineDisplayMenu, summaryStatsDisplayModeMenu, axisLayoutMenu, setNumericalAxisExtentsMenuItem,
                 changeHistogramBinCountMenuItem, enableDataTableUpdatesCheckMenuItem);
 

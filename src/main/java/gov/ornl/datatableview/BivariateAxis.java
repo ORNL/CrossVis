@@ -23,6 +23,8 @@ public class BivariateAxis extends Axis {
 
         scatterplot = new Scatterplot(bivariateColumn.getColumn1(), bivariateColumn.getColumn2(), dataTableView.getSelectedItemsColor(),
                 dataTableView.getUnselectedItemsColor(), dataTableView.getDataItemsOpacity());
+        scatterplot.setShowXAxisMarginValues(true);
+        scatterplot.setShowYAxisMarginValues(false);
 
 //        scatterplotRectangle = new Rectangle();
 //        scatterplotRectangle.setStroke(Color.BLUE);
@@ -30,6 +32,12 @@ public class BivariateAxis extends Axis {
 //        scatterplotRectangle.setFill(Color.TRANSPARENT);
 
         getGraphicsGroup().getChildren().addAll(scatterplot.getGraphicsGroup());
+    }
+
+    public void swapColumnAxes() {
+        bivariateColumn().swapColumns();
+        scatterplot.swapColumnAxes();
+        getDataTableView().resizeView();
     }
 
     public BivariateColumn bivariateColumn() { return (BivariateColumn)getColumn(); }

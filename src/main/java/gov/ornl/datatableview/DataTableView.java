@@ -60,10 +60,7 @@ public class DataTableView extends Region implements DataTableListener {
     private ObjectProperty<Color> backgroundColor;
     private ObjectProperty<Color> textColor;
 
-
-
     private double axisSpacing = 40d;
-//    private Group histogramGroup = new Group();
 
     private DataTable dataTable;
     private ArrayList<Axis> axisList = new ArrayList<>();
@@ -89,6 +86,7 @@ public class DataTableView extends Region implements DataTableListener {
     private BooleanProperty showPolylines = new SimpleBooleanProperty(true);
     private BooleanProperty showCorrelations = new SimpleBooleanProperty(true);
     private BooleanProperty showContextPolylineSegments = new SimpleBooleanProperty(true);
+    private BooleanProperty showScatterplotMarginValues = new SimpleBooleanProperty(true);
 
     private BooleanProperty fitToWidth = new SimpleBooleanProperty(true);
     private DoubleProperty nameTextRotation;
@@ -108,6 +106,16 @@ public class DataTableView extends Region implements DataTableListener {
         initialize();
         registerListeners();
     }
+
+    public boolean isShowingScatterplotMarginValues() { return showScatterplotMarginValues.get(); }
+
+    public void setShowScatterplotMarginValues(boolean show) {
+        if (isShowingScatterplotMarginValues() != show) {
+            showScatterplotMarginValues.set(show);
+        }
+    }
+
+    public BooleanProperty showScatterplotMarginValuesProperty() { return showScatterplotMarginValues; }
 
     public boolean isShowingCorrelations() { return showCorrelations.get(); }
 
@@ -213,6 +221,12 @@ public class DataTableView extends Region implements DataTableListener {
 //        });
 
         fitToWidth.addListener(observable -> resizeView());
+
+        showScatterplotMarginValues.addListener(observable -> {
+            for (Scatterplot scatterplot : scatterplotList) {
+                scatterplot.setShowMarginValues(isShowingScatterplotMarginValues());
+            }
+        });
 
         backgroundColor.addListener((observable, oldValue, newValue) -> {
             pane.setBackground(new Background(new BackgroundFill(backgroundColor.get(), new CornerRadii(0), Insets.EMPTY)));
@@ -571,6 +585,23 @@ public class DataTableView extends Region implements DataTableListener {
 //        selectionIndicatorText.setRotate(-90);
 //    }
 
+    private void resizeAxes() {
+        double axisLeft = plotRegionBounds.getMinX();
+        for (int iaxis = 0; iaxis < axisList.size(); iaxis++) {
+            Axis axis = axisList.get(iaxis);
+//                        double axisLeft = plotRegionBounds.getMinX() + (iaxis * axisSpacing);
+//                        axis.resize(axisLeft, pcpRegionBounds.getMinY(), axisSpacing, pcpRegionBounds.getHeight());
+
+            double axisWidth = axisSpacing;
+            if (axis instanceof BivariateAxis) {
+                axisWidth += axisSpacing;
+            }
+
+            axis.resize(axisLeft, pcpRegionBounds.getMinY(), axisWidth, pcpRegionBounds.getHeight());
+            axisLeft += axisWidth;
+        }
+    }
+
     protected void resizeView() {
         if (dataTable != null && !dataTable.isEmpty()) {
             plotRegionBounds = new BoundingBox(getInsets().getLeft(),
@@ -585,14 +616,23 @@ public class DataTableView extends Region implements DataTableListener {
             double plotWidth;
             double width;
 
+            int numAxisSlots = 0;
+            for (Axis axis : axisList) {
+                if (axis instanceof BivariateAxis) {
+                    numAxisSlots += 2;
+                } else {
+                    numAxisSlots++;
+                }
+            }
+
             if (getFitToWidth()) {
                 width = getWidth();
                 plotWidth = width - (getInsets().getLeft() + getInsets().getRight());
-//                axisSpacing = plotWidth / dataTable.getColumnCount();
-                axisSpacing = plotWidth / axisList.size();
+                axisSpacing = plotWidth / numAxisSlots;
+//                axisSpacing = plotWidth / axisList.size();
             } else {
-//                plotWidth = axisSpacing * dataTable.getColumnCount();
-                plotWidth = axisSpacing * axisList.size();
+//                plotWidth = axisSpacing * axisList.size();
+                plotWidth = axisSpacing * numAxisSlots;
                 width = (getInsets().getLeft() + getInsets().getRight()) + plotWidth;
             }
 
@@ -647,11 +687,23 @@ public class DataTableView extends Region implements DataTableListener {
 //                    scatterplotRegionRectangle.setWidth(scatterplotRegionBounds.getWidth());
 //                    scatterplotRegionRectangle.setHeight(scatterplotRegionBounds.getHeight());
 
-                    for (int iaxis = 0; iaxis < axisList.size(); iaxis++) {
-                        Axis axis = axisList.get(iaxis);
-                        double axisLeft = plotRegionBounds.getMinX() + (iaxis * axisSpacing);
-                        axis.resize(axisLeft, pcpRegionBounds.getMinY(), axisSpacing, pcpRegionBounds.getHeight());
-                    }
+                    resizeAxes();
+//                    double axisLeft = plotRegionBounds.getMinX();
+//                    for (int iaxis = 0; iaxis < axisList.size(); iaxis++) {
+//                        Axis axis = axisList.get(iaxis);
+////                        double axisLeft = plotRegionBounds.getMinX() + (iaxis * axisSpacing);
+////                        axis.resize(axisLeft, pcpRegionBounds.getMinY(), axisSpacing, pcpRegionBounds.getHeight());
+//
+//                        double axisWidth = axisSpacing;
+//                        if (axis instanceof BivariateAxis) {
+//                            axisWidth += axisSpacing;
+//                        }
+//
+//                        axis.resize(axisLeft, pcpRegionBounds.getMinY(), axisWidth, pcpRegionBounds.getHeight());
+//                        axisLeft += axisWidth;
+//                    }
+
+
 
                     if (isShowingCorrelations()) {
                         for (int i = 0; i < correlationRectangleList.size(); i++) {
@@ -682,15 +734,14 @@ public class DataTableView extends Region implements DataTableListener {
                                 }
                             }
 
+                            double centerX;
                             if (dataTable.getHighlightedColumn() == null || !(getHighlightedAxis() instanceof UnivariateAxis)) {
-                                double centerX = (yAxis.getCenterX() + xAxis.getCenterX()) / 2.;
-                                double left = centerX - (scatterplotSize / 2.) - (scatterplot.getAxisSize() / 2.);
-                                scatterplot.resize(left, scatterplotRegionBounds.getMinY(), scatterplotSize, scatterplotSize);
+                                centerX = (yAxis.getCenterX() + xAxis.getCenterX()) / 2.;
                             } else {
-                                double centerX = yAxis.getCenterX();
-                                double left = centerX - (scatterplotSize / 2.) - (scatterplot.getAxisSize() / 2.);
-                                scatterplot.resize(left, scatterplotRegionBounds.getMinY(), scatterplotSize, scatterplotSize);
+                                centerX = yAxis.getCenterX();
                             }
+                            double left = centerX - (scatterplotSize / 2.) - (scatterplot.getYAxisSize() / 2.);
+                            scatterplot.resize(left, scatterplotRegionBounds.getMinY(), scatterplotSize, scatterplotSize);
                         }
                     }
 
@@ -712,8 +763,8 @@ public class DataTableView extends Region implements DataTableListener {
     private void removeAllAxisSelectionGraphics() {
         for (Axis axis : axisList) {
             if (!axis.getAxisSelectionList().isEmpty()) {
-                for (AxisSelection pcpAxisSelection : axis.getAxisSelectionList()) {
-                    pane.getChildren().remove(pcpAxisSelection.getGraphicsGroup());
+                for (AxisSelection axisSelection : axis.getAxisSelectionList()) {
+                    pane.getChildren().remove(axisSelection.getGraphicsGroup());
                 }
                 axis.getAxisSelectionList().clear();
             }
@@ -848,7 +899,7 @@ public class DataTableView extends Region implements DataTableListener {
 //
 //    public ObjectProperty<Axis> highlightedAxisProperty() { return highlightedAxis; }
 
-    private void initView() {
+    protected void initView() {
         if (axisList.isEmpty()) {
             for (int i = 0; i < dataTable.getColumnCount(); i++) {
                 Axis axis = null;
@@ -873,9 +924,9 @@ public class DataTableView extends Region implements DataTableListener {
             for (int icolumn = 0; icolumn < dataTable.getColumnCount(); icolumn++) {
                 Column column = dataTable.getColumn(icolumn);
                 for (int iaxis = 0; iaxis < axisList.size(); iaxis++) {
-                    Axis pcpAxis = axisList.get(iaxis);
-                    if (pcpAxis.getColumn() == column) {
-                        newAxisList.add(pcpAxis);
+                    Axis axis = axisList.get(iaxis);
+                    if (axis.getColumn() == column) {
+                        newAxisList.add(axis);
                         break;
                     }
                 }
@@ -916,6 +967,9 @@ public class DataTableView extends Region implements DataTableListener {
                     if (highlightedAxis != currentAxis && (currentAxis instanceof UnivariateAxis)) {
                         Scatterplot scatterplot = new Scatterplot(highlightedAxis.getColumn(), currentAxis.getColumn(), getSelectedItemsColor(),
                                 getUnselectedItemsColor(), getDataItemsOpacity());
+                        scatterplot.setShowMarginValues(isShowingScatterplotMarginValues());
+//                        scatterplot.setShowYAxisMarginValues(true);
+//                        scatterplot.setShowXAxisMarginValues(true);
                         scatterplotList.add(scatterplot);
                         pane.getChildren().add(scatterplot.getGraphicsGroup());
                     }
@@ -928,6 +982,9 @@ public class DataTableView extends Region implements DataTableListener {
                         Scatterplot scatterplot = new Scatterplot(xAxis.getColumn(), yAxis.getColumn(), getSelectedItemsColor(),
                                 getUnselectedItemsColor(), getDataItemsOpacity());
                         scatterplotList.add(scatterplot);
+                        scatterplot.setShowMarginValues(isShowingScatterplotMarginValues());
+//                        scatterplot.setShowYAxisMarginValues(true);
+//                        scatterplot.setShowXAxisMarginValues(true);
                         pane.getChildren().add(scatterplot.getGraphicsGroup());
                     }
                 }
@@ -1060,12 +1117,13 @@ public class DataTableView extends Region implements DataTableListener {
     }
 
     private void handleQueryChange() {
-        for (int iaxis = 0; iaxis < axisList.size(); iaxis++) {
-            Axis pcpAxis = axisList.get(iaxis);
-
-            double axisLeft = plotRegionBounds.getMinX() + (iaxis * axisSpacing);
-            pcpAxis.resize(axisLeft, pcpRegionBounds.getMinY(), axisSpacing, pcpRegionBounds.getHeight());
-        }
+        resizeAxes();
+//        for (int iaxis = 0; iaxis < axisList.size(); iaxis++) {
+//            Axis pcpAxis = axisList.get(iaxis);
+//
+//            double axisLeft = plotRegionBounds.getMinX() + (iaxis * axisSpacing);
+//            pcpAxis.resize(axisLeft, pcpRegionBounds.getMinY(), axisSpacing, pcpRegionBounds.getHeight());
+//        }
 
         if (isShowingScatterplots()) {
             for (Scatterplot scatterplot : scatterplotList) {
@@ -1091,8 +1149,8 @@ public class DataTableView extends Region implements DataTableListener {
         unselectedCanvas.getGraphicsContext2D().clearRect(0, 0, getWidth(), getHeight());
 
         if (axisList != null && !axisList.isEmpty()) {
-            for (Axis pcpAxis : axisList) {
-                pane.getChildren().removeAll(pcpAxis.getGraphicsGroup());
+            for (Axis axis : axisList) {
+                pane.getChildren().removeAll(axis.getGraphicsGroup());
             }
             axisList.clear();
         }
@@ -1133,11 +1191,12 @@ public class DataTableView extends Region implements DataTableListener {
     @Override
     public void dataTableNumHistogramBinsChanged(DataTable dataModel) {
         if (isShowingHistograms()) {
-            for (int iaxis = 0; iaxis < axisList.size(); iaxis++) {
-                Axis pcpAxis = axisList.get(iaxis);
-                double axisLeft = plotRegionBounds.getMinX() + (iaxis * axisSpacing);
-                pcpAxis.resize(axisLeft, pcpRegionBounds.getMinY(), axisSpacing, pcpRegionBounds.getHeight());
-            }
+            resizeAxes();
+//            for (int iaxis = 0; iaxis < axisList.size(); iaxis++) {
+//                Axis pcpAxis = axisList.get(iaxis);
+//                double axisLeft = plotRegionBounds.getMinX() + (iaxis * axisSpacing);
+//                pcpAxis.resize(axisLeft, pcpRegionBounds.getMinY(), axisSpacing, pcpRegionBounds.getHeight());
+//            }
         }
     }
 
@@ -1158,20 +1217,20 @@ public class DataTableView extends Region implements DataTableListener {
 //    }
 
     private void addAxis(Column column, int index) {
-        Axis pcpAxis = null;
+        Axis axis = null;
         if (column instanceof DoubleColumn) {
-            pcpAxis = new DoubleAxis(this, (DoubleColumn)column);
+            axis = new DoubleAxis(this, (DoubleColumn)column);
         } else if (column instanceof TemporalColumn) {
-            pcpAxis = new TemporalAxis(this, (TemporalColumn)column);
+            axis = new TemporalAxis(this, (TemporalColumn)column);
         } else if (column instanceof CategoricalColumn) {
-            pcpAxis = new CategoricalAxis(this, (CategoricalColumn)column);
+            axis = new CategoricalAxis(this, (CategoricalColumn)column);
         } else if (column instanceof BivariateColumn) {
-            pcpAxis = new BivariateAxis(this, (BivariateColumn)column);
+            axis = new BivariateAxis(this, (BivariateColumn)column);
         }
 
-//        pcpAxis.titleTextRotationProperty().bind(nameTextRotationProperty());
-        pane.getChildren().add(pcpAxis.getGraphicsGroup());
-        axisList.add(index, pcpAxis);
+//        axis.titleTextRotationProperty().bind(nameTextRotationProperty());
+        pane.getChildren().add(axis.getGraphicsGroup());
+        axisList.add(index, axis);
     }
 
     private Axis getAxisForColumn(Column column) {
@@ -1266,8 +1325,8 @@ public class DataTableView extends Region implements DataTableListener {
     @Override
     public void dataTableTuplesAdded(DataTable dataModel, ArrayList<Tuple> newTuples) {
         // clear axis selections
-        for (Axis pcpAxis : axisList) {
-            pcpAxis.removeAllAxisSelections();
+        for (Axis axis : axisList) {
+            axis.removeAllAxisSelections();
         }
 
         initView();
@@ -1276,8 +1335,8 @@ public class DataTableView extends Region implements DataTableListener {
     @Override
     public void dataTableTuplesRemoved(DataTable dataModel, int numTuplesRemoved) {
         // clear axis selections
-        for (Axis pcpAxis : axisList) {
-            pcpAxis.removeAllAxisSelections();
+        for (Axis axis : axisList) {
+            axis.removeAllAxisSelections();
         }
 
         initView();
@@ -1299,13 +1358,13 @@ public class DataTableView extends Region implements DataTableListener {
     @Override
     public void dataTableColumnDisabled(DataTable dataModel, Column disabledColumn) {
         for (int iaxis = 0; iaxis < axisList.size(); iaxis++) {
-            Axis pcpAxis = axisList.get(iaxis);
-            if (pcpAxis.getColumn() == disabledColumn) {
-                axisList.remove(pcpAxis);
+            Axis axis = axisList.get(iaxis);
+            if (axis.getColumn() == disabledColumn) {
+                axisList.remove(axis);
 
                 // remove axis graphics from pane
-                pane.getChildren().remove(pcpAxis.getGraphicsGroup());
-//                pcpAxis.removeAllGraphics(pane);
+                pane.getChildren().remove(axis.getGraphicsGroup());
+//                axis.removeAllGraphics(pane);
 
                 initCorrelationRectangles();
                 initScatterplots();

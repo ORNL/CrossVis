@@ -2,13 +2,15 @@ package gov.ornl.scatterplot;
 
 import gov.ornl.datatable.*;
 import gov.ornl.util.GraphicsUtil;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.geometry.VPos;
 import javafx.scene.Group;
 import javafx.scene.canvas.Canvas;
-import javafx.scene.control.Button;
+import javafx.scene.control.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
@@ -25,7 +27,7 @@ import java.util.logging.Logger;
 public class Scatterplot {
     private static final Logger log = Logger.getLogger(Scatterplot.class.getName());
 
-    private static final double DEFAULT_AXIS_DATA_TICK_SIZE = 6.;
+    private static final double DEFAULT_MARGIN_MARK_SIZE = 6.;
     private static final double DEFAULT_POINT_STROKE_OPACITY = 0.5;
     private static final Color DEFAULT_AXIS_STROKE_COLOR = Color.LIGHTGRAY;
     private static final Color DEFAULT_AXIS_TEXT_COLOR = Color.BLACK;
@@ -40,6 +42,7 @@ public class Scatterplot {
 
     Group graphicsGroup = new Group();
 
+    public Bounds bounds = new BoundingBox(0,0,0,0);
     public Bounds plotBounds;
     public Bounds xAxisBounds;
     public Bounds yAxisBounds;
@@ -93,6 +96,9 @@ public class Scatterplot {
 
     private double categoryPadding = 4.;
 
+    private BooleanProperty showXAxisMarginValues = new SimpleBooleanProperty(false);
+    private BooleanProperty showYAxisMarginValues = new SimpleBooleanProperty(false);
+
     public Scatterplot(Column xColumn, Column yColumn, Color selectedPointStrokeColor, Color unselectedPointStrokeColor,
                        double pointStrokeOpacity) {
         this.selectedPointStrokeColor = selectedPointStrokeColor;
@@ -141,6 +147,23 @@ public class Scatterplot {
 
         });
         registerListeners();
+    }
+
+    public boolean isShowingYAxisMarginValues() { return showYAxisMarginValues.get(); }
+
+    public void setShowYAxisMarginValues(boolean show) { showYAxisMarginValues.set(show); }
+
+    public BooleanProperty showYAxisMarginValuesProperty() { return showYAxisMarginValues; }
+
+    public boolean isShowingXAxisMarginValues() { return showXAxisMarginValues.get(); }
+
+    public void setShowXAxisMarginValues(boolean show) { showXAxisMarginValues.set(show); }
+
+    public BooleanProperty showXAxisMarginValuesProperty() { return showXAxisMarginValues; }
+
+    public void setShowMarginValues(boolean show) {
+        setShowXAxisMarginValues(show);
+        setShowYAxisMarginValues(show);
     }
 
     public Rectangle getPlotRectangle() { return plotRectangle; }
@@ -204,6 +227,14 @@ public class Scatterplot {
             resizeYAxisTitle();
         });
 
+        showYAxisMarginValues.addListener(observable -> {
+            resize(bounds.getMinX(), bounds.getMinY(), bounds.getWidth(), bounds.getHeight());
+        });
+
+        showXAxisMarginValues.addListener(observable -> {
+            resize(bounds.getMinX(), bounds.getMinY(), bounds.getWidth(), bounds.getHeight());
+        });
+
 //        pointStrokeOpacity.addListener((observable, oldValue, newValue) -> {
 //            if (newValue != oldValue) {
 //                setSelectedPointStrokeColor(new Color(getSelectedPointStrokeColor().getRed(), getSelectedPointStrokeColor().getGreen(),
@@ -230,55 +261,75 @@ public class Scatterplot {
 //            }
 //        });
 
+//        plotRectangle.setOnMouseClicked(event -> {
+//            if (event.isPopupTrigger()) {
+//                final ContextMenu contextMenu = new ContextMenu();
+//                CheckMenuItem showXAxisMarginValuesCheck = new CheckMenuItem("Show X Axis Margin Values");
+//                showXAxisMarginValuesCheck.selectedProperty().bindBidirectional(showXAxisMarginValuesProperty());
+//                CheckMenuItem showYAxisMarginValuesCheck = new CheckMenuItem("Show Y Axis Margin Values");
+//                showYAxisMarginValuesCheck.selectedProperty().bindBidirectional(showYAxisMarginValuesProperty());
+//                MenuItem swapAxesMenuItem = new MenuItem("Swap X and Y Axes");
+//                swapAxesMenuItem.setOnAction(event1 -> {
+//                    swapColumnAxes();
+//                });
+//                MenuItem closeMenuItem = new MenuItem("Close Popup Menu");
+//                closeMenuItem.setOnAction(event1 -> { contextMenu.hide(); });
+//            }
+//        });
+
         plotRectangle.setOnMousePressed(event -> {
-            dragStartPoint = new Point2D(event.getX(), event.getY());
+            if (event.isPrimaryButtonDown()) {
+                dragStartPoint = new Point2D(event.getX(), event.getY());
+            }
         });
 
         plotRectangle.setOnMouseDragged(event -> {
-            if (!dragging) {
-                dragging = true;
-                graphicsGroup.getChildren().add(dragRectangle);
-            }
+            if (event.isPrimaryButtonDown()) {
+                if (!dragging) {
+                    dragging = true;
+                    graphicsGroup.getChildren().add(dragRectangle);
+                }
 
-            dragEndPoint = new Point2D(event.getX(), event.getY());
+                dragEndPoint = new Point2D(event.getX(), event.getY());
 
-            double boundsLeft;
-            double boundsRight;
-            double boundsTop;
-            double boundsBottom;
-            if (dragStartPoint.getX() < dragEndPoint.getX()) {
-                boundsLeft = dragStartPoint.getX();
-                boundsRight = dragEndPoint.getX();
-            } else {
-                boundsLeft = dragEndPoint.getX();
-                boundsRight = dragStartPoint.getX();
-            }
-            if (dragStartPoint.getY() < dragEndPoint.getY()) {
-                boundsTop = dragStartPoint.getY();
-                boundsBottom = dragEndPoint.getY();
-            } else {
-                boundsTop = dragEndPoint.getY();
-                boundsBottom = dragStartPoint.getY();
-            }
+                double boundsLeft;
+                double boundsRight;
+                double boundsTop;
+                double boundsBottom;
+                if (dragStartPoint.getX() < dragEndPoint.getX()) {
+                    boundsLeft = dragStartPoint.getX();
+                    boundsRight = dragEndPoint.getX();
+                } else {
+                    boundsLeft = dragEndPoint.getX();
+                    boundsRight = dragStartPoint.getX();
+                }
+                if (dragStartPoint.getY() < dragEndPoint.getY()) {
+                    boundsTop = dragStartPoint.getY();
+                    boundsBottom = dragEndPoint.getY();
+                } else {
+                    boundsTop = dragEndPoint.getY();
+                    boundsBottom = dragStartPoint.getY();
+                }
 
-            if (boundsLeft < plotBounds.getMinX()) {
-                boundsLeft = plotBounds.getMinX();
-            }
-            if (boundsRight > plotBounds.getMaxX()) {
-                boundsRight = plotBounds.getMaxX();
-            }
-            if (boundsTop < plotBounds.getMinY()) {
-                boundsTop = plotBounds.getMinY();
-            }
-            if (boundsBottom > plotBounds.getMaxY()) {
-                boundsBottom = plotBounds.getMaxY();
-            }
+                if (boundsLeft < plotBounds.getMinX()) {
+                    boundsLeft = plotBounds.getMinX();
+                }
+                if (boundsRight > plotBounds.getMaxX()) {
+                    boundsRight = plotBounds.getMaxX();
+                }
+                if (boundsTop < plotBounds.getMinY()) {
+                    boundsTop = plotBounds.getMinY();
+                }
+                if (boundsBottom > plotBounds.getMaxY()) {
+                    boundsBottom = plotBounds.getMaxY();
+                }
 
-            dragBounds = new BoundingBox(boundsLeft, boundsTop, boundsRight - boundsLeft, boundsBottom - boundsTop);
-            dragRectangle.setX(dragBounds.getMinX());
-            dragRectangle.setY(dragBounds.getMinY());
-            dragRectangle.setWidth(dragBounds.getWidth());
-            dragRectangle.setHeight(dragBounds.getHeight());
+                dragBounds = new BoundingBox(boundsLeft, boundsTop, boundsRight - boundsLeft, boundsBottom - boundsTop);
+                dragRectangle.setX(dragBounds.getMinX());
+                dragRectangle.setY(dragBounds.getMinY());
+                dragRectangle.setWidth(dragBounds.getWidth());
+                dragRectangle.setHeight(dragBounds.getHeight());
+            }
         });
 
         plotRectangle.setOnMouseReleased(event -> {
@@ -323,7 +374,7 @@ public class Scatterplot {
 
                 if (yColumnSelection != null) { dataTable.addColumnSelectionRangeToActiveQuery(yColumnSelection); }
             } else {
-                log.info("Removing x and y column selections");
+//                log.info("Removing x and y column selections");
                 // if there are column selections for either the x or y column, remove them
                 if (dataTable.getActiveQuery().hasColumnSelections()) {
                     dataTable.removeColumnSelectionsFromActiveQuery(xColumn);
@@ -352,9 +403,11 @@ public class Scatterplot {
     }
 
     public void resize(double left, double top, double width, double height) {
+        bounds = new BoundingBox(left, top, width, height);
+
         if (width > 0 && height > 0) {
-            yAxisBounds = new BoundingBox(left, top, getAxisSize(), height - getAxisSize());
-            xAxisBounds = new BoundingBox(yAxisBounds.getMaxX(), yAxisBounds.getMaxY(), width - getAxisSize(), getAxisSize());
+            yAxisBounds = new BoundingBox(left, top, getYAxisSize(), height - getYAxisSize());
+            xAxisBounds = new BoundingBox(yAxisBounds.getMaxX(), yAxisBounds.getMaxY(), width - getXAxisSize(), getXAxisSize());
             plotBounds = new BoundingBox(xAxisBounds.getMinX(), yAxisBounds.getMinY(), xAxisBounds.getWidth(), yAxisBounds.getHeight());
 
 //            yAxisRectangle.setX(yAxisBounds.getMinX());
@@ -706,11 +759,18 @@ public class Scatterplot {
                 unselectedCanvas.getGraphicsContext2D().setLineWidth(getPointStrokeWidth());
                 unselectedCanvas.getGraphicsContext2D().strokeOval(point[0] - getPointSize() / 2.,
                         point[1] - getPointSize() / 2., getPointSize(), getPointSize());
-                unselectedCanvas.getGraphicsContext2D().setLineWidth(1.);
-                unselectedCanvas.getGraphicsContext2D().strokeLine(point[0], plotBounds.getHeight(),
-                        point[0], plotBounds.getHeight() + DEFAULT_AXIS_DATA_TICK_SIZE);
-                unselectedCanvas.getGraphicsContext2D().strokeLine(yAxisBounds.getWidth(), point[1],
-                        yAxisBounds.getWidth() - DEFAULT_AXIS_DATA_TICK_SIZE, point[1]);
+
+                if (isShowingXAxisMarginValues() || isShowingYAxisMarginValues()) {
+                    unselectedCanvas.getGraphicsContext2D().setLineWidth(1.);
+                    if (isShowingXAxisMarginValues()) {
+                        unselectedCanvas.getGraphicsContext2D().strokeLine(point[0], plotBounds.getHeight(),
+                                point[0], plotBounds.getHeight() + DEFAULT_MARGIN_MARK_SIZE);
+                    }
+                    if (isShowingYAxisMarginValues()) {
+                        unselectedCanvas.getGraphicsContext2D().strokeLine(yAxisBounds.getWidth(), point[1],
+                                yAxisBounds.getWidth() - DEFAULT_MARGIN_MARK_SIZE, point[1]);
+                    }
+                }
             }
         }
 
@@ -722,11 +782,18 @@ public class Scatterplot {
                 selectedCanvas.getGraphicsContext2D().setLineWidth(getPointStrokeWidth());
                 selectedCanvas.getGraphicsContext2D().strokeOval(point[0] - getPointSize() / 2.,
                         point[1] - getPointSize() / 2., getPointSize(), getPointSize());
-                selectedCanvas.getGraphicsContext2D().setLineWidth(1.);
-                selectedCanvas.getGraphicsContext2D().strokeLine(point[0], plotBounds.getHeight(),
-                        point[0], plotBounds.getHeight() + DEFAULT_AXIS_DATA_TICK_SIZE);
-                selectedCanvas.getGraphicsContext2D().strokeLine(yAxisBounds.getWidth(), point[1],
-                        yAxisBounds.getWidth() - DEFAULT_AXIS_DATA_TICK_SIZE, point[1]);
+
+                if (isShowingXAxisMarginValues() || isShowingYAxisMarginValues()) {
+                    selectedCanvas.getGraphicsContext2D().setLineWidth(1.);
+                    if (isShowingXAxisMarginValues()) {
+                        selectedCanvas.getGraphicsContext2D().strokeLine(point[0], plotBounds.getHeight(),
+                                point[0], plotBounds.getHeight() + DEFAULT_MARGIN_MARK_SIZE);
+                    }
+                    if (isShowingYAxisMarginValues()) {
+                        selectedCanvas.getGraphicsContext2D().strokeLine(yAxisBounds.getWidth(), point[1],
+                                yAxisBounds.getWidth() - DEFAULT_MARGIN_MARK_SIZE, point[1]);
+                    }
+                }
             }
         }
     }
@@ -798,7 +865,19 @@ public class Scatterplot {
 
 //    public DoubleProperty pointStrokeWidth() { return pointStrokeWidth; }
 
-    public double getAxisSize () { return axisSize + DEFAULT_AXIS_DATA_TICK_SIZE; }
+    public double getXAxisSize () {
+        if (isShowingXAxisMarginValues()) {
+            return axisSize + DEFAULT_MARGIN_MARK_SIZE;
+        }
+        return axisSize;
+    }
+
+    public double getYAxisSize () {
+        if (isShowingYAxisMarginValues()) {
+            return axisSize + DEFAULT_MARGIN_MARK_SIZE;
+        }
+        return axisSize;
+    }
 
     public void setAxisSize(double size) {
         axisSize = size;
@@ -837,6 +916,13 @@ public class Scatterplot {
     public void setYColumn(Column yColumn) {
         this.yColumn = yColumn;
         drawPoints();
+    }
+
+    public void swapColumnAxes() {
+        Column tmpColumn = this.xColumn;
+        xColumn = yColumn;
+        yColumn = tmpColumn;
+        resize(bounds.getMinX(), bounds.getMinY(), bounds.getWidth(), bounds.getHeight());
     }
 
     public Group getGraphicsGroup() { return graphicsGroup; }

@@ -9,10 +9,7 @@ import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.scene.Cursor;
 import javafx.scene.Group;
-import javafx.scene.control.CheckMenuItem;
-import javafx.scene.control.ContextMenu;
-import javafx.scene.control.MenuItem;
-import javafx.scene.control.Tooltip;
+import javafx.scene.control.*;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
@@ -216,6 +213,27 @@ public abstract class Axis {
                     CheckMenuItem categoryHeightProportionalToCountCheck = new CheckMenuItem("Category Height Proportional To Count");
                     categoryHeightProportionalToCountCheck.selectedProperty().bindBidirectional(((CategoricalAxis)this).categoryHeightProportionalToCountProperty());
                     contextMenu.getItems().add(1, categoryHeightProportionalToCountCheck);
+                }
+
+                if (this instanceof BivariateAxis) {
+                    CheckMenuItem showXAxisMarginValuesCheck = new CheckMenuItem("Show X Axis Margin Values");
+                    showXAxisMarginValuesCheck.selectedProperty().bindBidirectional(((BivariateAxis)this).getScatterplot().showXAxisMarginValuesProperty());
+                    showXAxisMarginValuesCheck.setOnAction(event1 -> {
+                        getDataTableView().resizeView();
+                    });
+                    CheckMenuItem showYAxisMarginValuesCheck = new CheckMenuItem("Show Y Axis Margin Values");
+                    showYAxisMarginValuesCheck.setOnAction(event1 -> {
+                        getDataTableView().resizeView();
+                    });
+                    showYAxisMarginValuesCheck.selectedProperty().bindBidirectional(((BivariateAxis)this).getScatterplot().showYAxisMarginValuesProperty());
+                    MenuItem swapAxesMenuItem = new MenuItem("Swap X and Y Axes");
+                    swapAxesMenuItem.setOnAction(event1 -> {
+                        ((BivariateAxis)this).swapColumnAxes();
+//                        getDataTableView().resizeView();
+                    });
+                    contextMenu.getItems().add(0, showXAxisMarginValuesCheck);
+                    contextMenu.getItems().add(1, showYAxisMarginValuesCheck);
+                    contextMenu.getItems().add(2, swapAxesMenuItem);
                 }
                 contextMenu.show(dataTableView, event.getScreenX(), event.getScreenY());
             }

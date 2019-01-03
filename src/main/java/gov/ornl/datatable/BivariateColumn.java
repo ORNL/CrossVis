@@ -18,6 +18,22 @@ public class BivariateColumn extends Column {
         return true;
     }
 
+    public void swapColumns() {
+        Column column = column1;
+        column1 = column2;
+        column2 = column;
+        int columnIndex = dataModel.getColumnIndex(this);
+        for (Tuple tuple : dataModel.getTuples()) {
+            swapTupleElementValues((Object[])tuple.getElement(columnIndex));
+        }
+    }
+
+    private void swapTupleElementValues(Object values[]) {
+        Object tempValue = values[0];
+        values[0] = values[1];
+        values[1] = tempValue;
+    }
+
     public Column getColumn1() { return column1; }
 
     public Column getColumn2() { return column2; }
