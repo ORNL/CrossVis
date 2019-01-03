@@ -14,6 +14,7 @@ public class DataTableColumnSpecification {
     private StringProperty type;
     private StringProperty dateTimeFormatterID;
     private BooleanProperty ignore;
+    private StringProperty imageFileDirectoryPath;
 
     private TreeMap<String, DateTimeFormatter> dtFormatterMap;
     TreeMap<String, String> dtParsePatternsExamples;
@@ -131,4 +132,14 @@ public class DataTableColumnSpecification {
     public void setIgnore(boolean ignore) {
         ignoreProperty().set(ignore);
     }
+
+    public String getImageFileDirectoryPath() {
+        return imageFileDirectoryPath.get();
+    }
+
+    public void setImageFileDirectoryPath(String imageFileDirectoryPath) {
+        this.imageFileDirectoryPath.set(imageFileDirectoryPath);
+    }
+
+    public StringProperty imageFileDirectoryPathProperty() { return imageFileDirectoryPath; }
 }

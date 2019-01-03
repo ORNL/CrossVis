@@ -12,7 +12,11 @@ import javafx.scene.control.cell.ComboBoxTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.stage.DirectoryChooser;
+import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.util.Callback;
 
@@ -58,6 +62,30 @@ public class DataTableColumnSpecificationDialog {
         dialog.setHeaderText("Specify Details for each Column");
         dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
 
+        TextField imageDirectoryTextField = new TextField();
+        imageDirectoryTextField.setEditable(true);
+        imageDirectoryTextField.setDisable(true);
+
+        Button chooseImageDirectoryButton = new Button("...");
+        chooseImageDirectoryButton.setDisable(true);
+        chooseImageDirectoryButton.setOnAction(event -> {
+            DirectoryChooser directoryChooser = new DirectoryChooser();
+            directoryChooser.setTitle("Select Image Directory");
+            File directory = directoryChooser.showDialog(null);
+            imageDirectoryTextField.setText(directory.getAbsolutePath());
+        });
+
+        Label imageDirectoryLabel = new Label("Image File Directory:");
+        imageDirectoryLabel.setAlignment(Pos.BOTTOM_RIGHT);
+
+        HBox imageDirectoryPane = new HBox();
+        imageDirectoryPane.setSpacing(2.);
+        imageDirectoryPane.getChildren().addAll(imageDirectoryLabel, imageDirectoryTextField,
+                chooseImageDirectoryButton);
+        HBox.setHgrow(imageDirectoryTextField, Priority.ALWAYS);
+        imageDirectoryPane.setFillHeight(true);
+        imageDirectoryPane.setAlignment(Pos.CENTER);
+
         TableView<DataTableColumnSpecification> columnSpecificationTableView = new TableView<>();
         columnSpecificationTableView.setEditable(true);
 
@@ -81,7 +109,7 @@ public class DataTableColumnSpecificationDialog {
         typeColumn.setCellFactory(new Callback<TableColumn<DataTableColumnSpecification, String>, TableCell<DataTableColumnSpecification, String>>() {
             @Override
             public TableCell<DataTableColumnSpecification, String> call(TableColumn<DataTableColumnSpecification, String> param) {
-                return new ComboBoxTableCell<DataTableColumnSpecification, String>(FXCollections.observableArrayList("Temporal", "Double", "Categorical")) {
+                return new ComboBoxTableCell<DataTableColumnSpecification, String>(FXCollections.observableArrayList("Double", "Temporal", "Categorical", "Image Filename")) {
                     @Override
                     public void updateItem(String item, boolean empty) {
                         if (!empty) {
@@ -89,12 +117,28 @@ public class DataTableColumnSpecificationDialog {
                             if (columnSpecification.getType().equals("Temporal")) {
                                 columnSpecification.setDateTimeFormatterID("BASIC_ISO_DATE");
                             } else {
-//                                if (columnSpecification.getDateTimeFormatterID().isEmpty()) {
-                                    columnSpecification.setDateTimeFormatterID("");
-//                                }
-//                                if (columnSpecification.getParsePattern().isEmpty()) {
-//                                    columnSpecification.setDateTimeFormatterID("");
-//                                }
+                                columnSpecification.setDateTimeFormatterID("");
+                            }
+
+                            DataTableColumnSpecification currentImageFilenameColumn = null;
+                            for (DataTableColumnSpecification specification : tableColumnSpecs) {
+                                if (columnSpecification != specification &&
+                                        specification.getType().equals("Image Filename")) {
+                                    currentImageFilenameColumn = specification;
+                                }
+                            }
+
+                            if (columnSpecification.getType().equals("Image Filename")) {
+                                imageDirectoryTextField.setDisable(false);
+                                chooseImageDirectoryButton.setDisable(false);
+
+                                if (currentImageFilenameColumn != null) {
+                                    currentImageFilenameColumn.setType("Double");
+                                }
+                            } else if (currentImageFilenameColumn == null) {
+                                imageDirectoryTextField.setText("");
+                                imageDirectoryTextField.setDisable(true);
+                                chooseImageDirectoryButton.setDisable(true);
                             }
 //                                log.info("item is " + item + "  spec is " + tableColumnSpecs.get(rowNumber).getType());
 ////                                if (!item.equals(tableColumnSpecs.get(rowNumber).getType())) {
@@ -263,12 +307,18 @@ public class DataTableColumnSpecificationDialog {
 
         VBox fileLinesBox = new VBox();
         fileLinesBox.setSpacing(2.);
-        fileLinesBox.setPadding(new Insets(6., 0., 0., 0.));
+//        fileLinesBox.setPadding(new Insets(6., 0., 0., 0.));
         fileLinesBox.getChildren().addAll(new Label("Listing of First 10 Lines:"), fileLinesTextArea);
+
+        VBox bottomBox = new VBox();
+        bottomBox.setSpacing(2.);
+        bottomBox.setPadding(new Insets(6., 0., 0., 0.));
+        bottomBox.getChildren().addAll(imageDirectoryPane, fileLinesBox);
+        bottomBox.setFillWidth(true);
 
         BorderPane borderPane = new BorderPane();
         borderPane.setCenter(columnSpecificationsTableBox);
-        borderPane.setBottom(fileLinesBox);
+        borderPane.setBottom(bottomBox);
 
         dialog.getDialogPane().setContent(borderPane);
 
