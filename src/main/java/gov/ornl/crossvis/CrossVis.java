@@ -1290,7 +1290,6 @@ public class CrossVis extends Application implements DataTableListener {
     }
 
     private void setDataTableItems() {
-//        if (enableDataTableUpdatesCheckMenuItem.isSelected()) {
         if (dataTableUpdatesEnabled.get()) {
             ObservableList<Tuple> tableTuples;
             tupleTableView.getItems().clear();
