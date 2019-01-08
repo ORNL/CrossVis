@@ -5,6 +5,7 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
+import java.io.File;
 import java.time.format.DateTimeFormatter;
 import java.util.Set;
 import java.util.TreeMap;
@@ -14,7 +15,7 @@ public class DataTableColumnSpecification {
     private StringProperty type;
     private StringProperty dateTimeFormatterID;
     private BooleanProperty ignore;
-    private StringProperty imageFileDirectoryPath;
+    private StringProperty imageFileDirectoryPath = new SimpleStringProperty("");
 
     private TreeMap<String, DateTimeFormatter> dtFormatterMap;
     TreeMap<String, String> dtParsePatternsExamples;

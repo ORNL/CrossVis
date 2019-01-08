@@ -1,5 +1,8 @@
 package gov.ornl.datatable;
 
+import javafx.scene.image.Image;
+import javafx.util.Pair;
+
 import java.io.*;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -231,6 +234,12 @@ public class IOUtilities {
 		String line = null;
 		while ((line = reader.readLine()) != null) {
 			if (lineCounter >= startLine && lineCounter <= endLine) {
+				if (lineCounter == 0) {
+					if (line.charAt(0) == '\uFEFF') {
+						line = line.substring(1);
+					}
+				}
+
 				lines.add(line);
 
 				if (lineCounter + 1 > endLine) {
@@ -249,6 +258,10 @@ public class IOUtilities {
 		String headerLine = reader.readLine();
 		reader.close();
 
+		if (headerLine.charAt(0) == '\uFEFF') {
+			headerLine = headerLine.substring(1);
+		}
+
 		String columnNames[] = headerLine.trim().split(",");
 		for (int i = 0; i < columnNames.length; i++) {
 			columnNames[i] = columnNames[i].trim();
@@ -264,8 +277,10 @@ public class IOUtilities {
 		return numLines;
 	}
 
-	public static void readCSV(File f, ArrayList<String> ignoreColumnNames, ArrayList<String> categoricalColumnNames, ArrayList<String> temporalColumnNames,
-							   ArrayList<DateTimeFormatter> temporalColumnFormatters, DataTable dataTable) throws IOException {
+	public static void readCSV(File f, ArrayList<String> ignoreColumnNames, ArrayList<String> categoricalColumnNames,
+							   ArrayList<String> temporalColumnNames, String imageFilenameColumnName,
+							   String imageFileDirectoryPath, ArrayList<DateTimeFormatter> temporalColumnFormatters,
+							   DataTable dataTable) throws IOException {
 		BufferedReader reader = new BufferedReader(new FileReader(f));
 
 		ArrayList<Tuple> tuples = new ArrayList<>();
@@ -289,6 +304,11 @@ public class IOUtilities {
 			Arrays.fill(ignoreColumnIndices, -1);
 		}
 
+		int imageFilenameColumnIndex = -1;
+//		if (imageFilenameColumnName != null && imageFileDirectory != null) {
+//			imageFilenameColumnIndex =
+//		}
+
 		String line = reader.readLine();
 		int lineCounter = 0;
 		int numLinesIgnored = 0;
@@ -297,6 +317,11 @@ public class IOUtilities {
 		while (line != null) {
 			if (lineCounter == 0) {
 				// The first line contains the column headers.
+				// check for Excel CSV File and remove \uFEFF character
+				if (line.charAt(0) == '\uFEFF') {
+					line = line.substring(1);
+				}
+
 				int tokenCounter = 0;
 				StringTokenizer st = new StringTokenizer(line);
 				while (st.hasMoreTokens()) {
@@ -337,6 +362,13 @@ public class IOUtilities {
 						}
 					}
 
+                    if (imageFilenameColumnName != null && imageFileDirectoryPath != null && imageFilenameColumnIndex == -1) {
+                    	if (token.trim().equals(imageFilenameColumnName)) {
+                    		imageFilenameColumnIndex = tokenCounter;
+                    		column = new ImageColumn(token.trim());
+						}
+					}
+
                     if (column == null) {
 					    column = new DoubleColumn(token.trim());
                     }
@@ -361,6 +393,7 @@ public class IOUtilities {
 
 			Tuple tuple = new Tuple(dataTable);
 			StringTokenizer st = new StringTokenizer(line);
+
 			int tokenCounter = 0;
 
 			skip_line = false;
@@ -432,6 +465,19 @@ public class IOUtilities {
 					}
 				}
 
+                if ((imageFilenameColumnIndex != -1) && (tokenCounter == imageFilenameColumnIndex)) {
+                	File imageFile = new File(imageFileDirectoryPath, token.trim());
+					Image image = new Image(new FileInputStream(imageFile));
+					Pair<File,Image> imagePair = new Pair<>(imageFile, image);
+//					Object imageInfo[] = new Object[2];
+//					imageInfo[0] = imageFile;
+//					imageInfo[1] = image;
+//					tuple.addElement(imageInfo);
+					tuple.addElement(imagePair);
+					tokenCounter++;
+					continue;
+				}
+
                 try {
                     double value = Double.parseDouble(token);
 
@@ -483,13 +529,14 @@ public class IOUtilities {
 	}
 
 	public static void main (String args[]) throws IOException {
-	    DataTable dataModel = new DataTable();
+	    DataTable dataTable = new DataTable();
 
 	    ArrayList<String> categoricalColumnNames = new ArrayList<>();
 	    categoricalColumnNames.add("Origin");
 
 	    IOUtilities.readCSV(new File("data/csv/cars-cat.csv"), null, categoricalColumnNames,
-				null, null, dataModel);
+				null, null, null,
+				null, dataTable);
 
 	    log.info("Finished");
 //	    ArrayList<String> temporalColumnNames = new ArrayList<>();

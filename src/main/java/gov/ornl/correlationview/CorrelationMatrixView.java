@@ -118,7 +118,7 @@ public class CorrelationMatrixView extends Region implements DataTableListener {
     public void setDataTable(DataTable dataTable) {
         clearView();
         this.dataTable = dataTable;
-        dataTable.addDataModelListener(this);
+        dataTable.addDataTableListener(this);
         initView();
         resizeView();
     }

@@ -4,7 +4,6 @@ import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
-import org.apache.commons.math3.util.FastMath;
 
 import java.util.List;
 import java.util.logging.Logger;
@@ -131,8 +130,8 @@ public class DoubleColumnSummaryStats extends ColumnSummaryStats {
         correlationCoefficientList.clear();
         PearsonsCorrelation pCorr = new PearsonsCorrelation();
 
-        for (int icol = 0; icol < getColumn().getDataModel().getColumns().size(); icol++) {
-            Column otherColumn = getColumn().getDataModel().getColumn(icol);
+        for (int icol = 0; icol < getColumn().getDataTable().getColumns().size(); icol++) {
+            Column otherColumn = getColumn().getDataTable().getColumn(icol);
             double coefficient = Double.NaN;
             if ((otherColumn == this.column) &&  (values.length > 1)) {
                 // no need to computer correlation with itself

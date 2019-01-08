@@ -2,10 +2,14 @@ package gov.ornl.datatableview;
 
 import gov.ornl.datatable.*;
 import gov.ornl.util.GraphicsUtil;
+import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
+import javafx.util.Pair;
 
+import java.io.File;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Logger;
 
 public class TuplePolyline {
@@ -13,9 +17,11 @@ public class TuplePolyline {
 
     private Tuple tuple;
     private Color color;
-    private double[] xPoints;
-    private double[] yPoints;
+//    private ArrayList<Double> xPoints = new ArrayList<>();
+//    private ArrayList<Double> yPoints = new ArrayList<>();
 //    private boolean inContext = false;
+    private double xPoints[];
+    private double yPoints[];
 
     public TuplePolyline(Tuple tuple) {
         this.tuple = tuple;
@@ -30,16 +36,19 @@ public class TuplePolyline {
     public Tuple getTuple() { return tuple; }
 
     public void layout(ArrayList<Axis> axisList) {
-        xPoints = new double[tuple.getElementCount()];
-        yPoints = new double[tuple.getElementCount()];
-
-
-//        inContext = false;
+//        xPoints = new double[tuple.getElementCount()];
+//        yPoints = new double[tuple.getElementCount()];
+//        xPoints.clear();
+//        yPoints.clear();
+        xPoints = new double[axisList.size()];
+        yPoints = new double[axisList.size()];
 
         for (int i = 0; i < tuple.getElementCount(); i++) {
+//        for (int iaxis = 0; iaxis < axisList.size(); iaxis++) {
             Axis axis = axisList.get(i);
             if (axis instanceof TemporalAxis) {
                 TemporalAxis temporalAxis = (TemporalAxis)axis;
+//                Instant instant = (Instant)tuple.getElement(i);
                 Instant instant = (Instant)tuple.getElement(i);
 
                 double yPosition;
@@ -64,8 +73,11 @@ public class TuplePolyline {
 //                        temporalAxis.getMaxFocusPosition());
                 xPoints[i] = temporalAxis.getCenterX();
                 yPoints[i] = yPosition;
+//                xPoints.add(temporalAxis.getCenterX());
+//                yPoints.add(yPosition);
             } else if (axis instanceof DoubleAxis) {
                 DoubleAxis doubleAxis = (DoubleAxis)axis;
+//                double value = (Double)tuple.getElement(i);
                 double value = (Double)tuple.getElement(i);
 
                 double yPosition;
@@ -95,9 +107,12 @@ public class TuplePolyline {
 //                        doubleAxis.getMinFocusPosition(), doubleAxis.getMaxFocusPosition());
                 xPoints[i] = axis.getCenterX();
                 yPoints[i] = yPosition;
+//                xPoints.add(axis.getCenterX());
+//                yPoints.add(yPosition);
             } else if (axis instanceof CategoricalAxis) {
                 CategoricalAxis categoricalAxis = (CategoricalAxis) axis;
-                String category = (String) tuple.getElement(i);
+//                String category = (String) tuple.getElement(i);
+                String category = (String)tuple.getElement(i);
 //                Rectangle rectangle;
 //                if (!axis.dataModel.getActiveQuery().hasColumnSelections()) {
 //                    log.info("nothing is queried");
@@ -115,11 +130,15 @@ public class TuplePolyline {
 //                yPoints[i] = rectangle.getY() + (rectangle.getHeight() / 2.);
                 xPoints[i] = axis.getCenterX();
                 yPoints[i] = categoricalAxis.getAxisPositionForValue(category);
+//                xPoints.add(axis.getCenterX());
+//                yPoints.add(categoricalAxis.getAxisPositionForValue(category));
             } else if (axis instanceof BivariateAxis) {
-                BivariateAxis biAxis = (BivariateAxis)axis;
-                Object values[] = (Object[])tuple.getElement(i);
+                BivariateAxis biAxis = (BivariateAxis) axis;
+//                Object values[] = (Object[])tuple.getElement(i);
+                Object values[] = (Object[]) tuple.getElement(i);
 
                 xPoints[i] = biAxis.getScatterplot().getPlotBounds().getMinX();
+//                xPoints.add(biAxis.getScatterplot().getPlotBounds().getMinX());
 //                Column xColumn = ((BivariateColumn)biAxis.getColumn()).getColumn1();
 
 //                if (xColumn instanceof DoubleColumn) {
@@ -134,23 +153,36 @@ public class TuplePolyline {
 //                    xPoints[i] = biAxis.getCenterX();
 //                }
 
-                Column yColumn = ((BivariateColumn)biAxis.getColumn()).getColumn2();
+                Column yColumn = ((BivariateColumn) biAxis.getColumn()).getColumn2();
 
                 if (yColumn instanceof DoubleColumn) {
-                    double yValue = (double)values[1];
+                    double yValue = (double) values[1];
                     yPoints[i] = GraphicsUtil.mapValue(yValue,
-                            (double)biAxis.getScatterplot().getYAxisMinValue(),
-                            (double)biAxis.getScatterplot().getYAxisMaxValue(),
+                            (double) biAxis.getScatterplot().getYAxisMinValue(),
+                            (double) biAxis.getScatterplot().getYAxisMaxValue(),
                             biAxis.getScatterplot().getPlotBounds().getMaxY(),
                             biAxis.getScatterplot().getPlotBounds().getMinY());
+//                    yPoints.add(GraphicsUtil.mapValue(yValue,
+//                            (double)biAxis.getScatterplot().getYAxisMinValue(),
+//                            (double)biAxis.getScatterplot().getYAxisMaxValue(),
+//                            biAxis.getScatterplot().getPlotBounds().getMaxY(),
+//                            biAxis.getScatterplot().getPlotBounds().getMinY()));
                 } else {
                     yPoints[i] = biAxis.getCenterY();
+//                    yPoints.add(biAxis.getCenterY());
                 }
+            } else if (axis instanceof ImageAxis) {
+                ImageAxis imageAxis = (ImageAxis)axis;
+                Pair<File,Image> imagePair = (Pair<File,Image>)tuple.getElement(i);
+                xPoints[i] = axis.getCenterX();
+                yPoints[i] = imageAxis.getAxisPositionForValue(imagePair);
             } else {
-                double x = axis.getCenterX();
-                double y = axis.getCenterY();
-                xPoints[i] = x;
-                yPoints[i] = y;
+//                double x = axis.getCenterX();
+//                double y = axis.getCenterY();
+                xPoints[i] = axis.getCenterX();
+                yPoints[i] = axis.getCenterY();
+//                xPoints.add(axis.getCenterX());
+//                yPoints.add(axis.getCenterY());
             }
         }
     }

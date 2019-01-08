@@ -142,6 +142,8 @@ public abstract class Axis {
 
     public Column getColumn() { return column; }
 
+    public int getColumnIndex() { return getDataTable().getColumnIndex(getColumn()); }
+
     public boolean isHighlighted() { return highlighted.get(); }
 
     protected abstract AxisSelection addAxisSelection(ColumnSelection columnSelection);
@@ -235,6 +237,7 @@ public abstract class Axis {
                     contextMenu.getItems().add(1, showYAxisMarginValuesCheck);
                     contextMenu.getItems().add(2, swapAxesMenuItem);
                 }
+
                 contextMenu.show(dataTableView, event.getScreenX(), event.getScreenY());
             }
         });

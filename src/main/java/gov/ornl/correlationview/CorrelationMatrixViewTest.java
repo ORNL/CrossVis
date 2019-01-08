@@ -35,7 +35,8 @@ public class CorrelationMatrixViewTest extends Application {
             ArrayList<String> categoricalColumnNames = new ArrayList<>();
             categoricalColumnNames.add("Origin");
             try {
-                IOUtilities.readCSV(new File("data/csv/cars-cat.csv"), null, categoricalColumnNames,
+                IOUtilities.readCSV(new File("data/csv/cars-cat.csv"), null,
+                        categoricalColumnNames, null, null,
                         null, null, dataTable);
             } catch (IOException e) {
                 System.exit(0);

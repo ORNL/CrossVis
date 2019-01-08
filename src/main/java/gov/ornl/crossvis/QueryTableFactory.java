@@ -13,7 +13,6 @@ import javafx.util.Callback;
 
 import java.time.Instant;
 import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
 import java.util.HashSet;
 
 public class QueryTableFactory {
@@ -156,7 +155,7 @@ public class QueryTableFactory {
             System.out.println("categoriesString in setOnEditCommit() is " + categoriesString);
 
             if (categoriesString.isEmpty()) {
-                t.getRowValue().getColumn().getDataModel().removeColumnSelectionFromActiveQuery(t.getRowValue());
+                t.getRowValue().getColumn().getDataTable().removeColumnSelectionFromActiveQuery(t.getRowValue());
             } else {
                 CategoricalColumn categoricalColumn = (CategoricalColumn)t.getRowValue().getColumn();
                 // parse new selected categories string
@@ -171,7 +170,7 @@ public class QueryTableFactory {
                 }
 
                 if (newSelectedCategories.isEmpty()) {
-                    t.getRowValue().getColumn().getDataModel().removeColumnSelectionFromActiveQuery(t.getRowValue());
+                    t.getRowValue().getColumn().getDataTable().removeColumnSelectionFromActiveQuery(t.getRowValue());
                 } else {
                     CategoricalColumnSelection categoricalColumnSelection = (CategoricalColumnSelection)t.getRowValue();
                     categoricalColumnSelection.setSelectedCategories(newSelectedCategories);

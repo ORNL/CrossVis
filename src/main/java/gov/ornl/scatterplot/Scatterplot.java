@@ -107,7 +107,7 @@ public class Scatterplot {
 
         this.xColumn = xColumn;
         this.yColumn = yColumn;
-        this.dataTable = xColumn.getDataModel();
+        this.dataTable = xColumn.getDataTable();
 
         selectedCanvas = new Canvas();
         unselectedCanvas = new Canvas();
@@ -473,9 +473,9 @@ public class Scatterplot {
         selectedPoints.clear();
         unselectedPoints.clear();
 
-        if (xColumn.getDataModel().getActiveQuery().hasColumnSelections()) {
+        if (xColumn.getDataTable().getActiveQuery().hasColumnSelections()) {
             for (int i = 0; i < points.size(); i++) {
-                if (xColumn.getDataModel().getTuple(i).getQueryFlag()) {
+                if (xColumn.getDataTable().getTuple(i).getQueryFlag()) {
                     selectedPoints.add(points.get(i));
                 } else {
                     unselectedPoints.add(points.get(i));

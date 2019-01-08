@@ -2,7 +2,6 @@ package gov.ornl.datatable;
 
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ReadOnlyDoubleProperty;
-import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 
 import java.util.ArrayList;
@@ -34,9 +33,9 @@ public class DoubleColumn extends Column {
 
     public void calculateStatistics() {
         if (summaryStats == null) {
-            summaryStats = new DoubleColumnSummaryStats(this, getDataModel().getNumHistogramBins(), null);
+            summaryStats = new DoubleColumnSummaryStats(this, getDataTable().getNumHistogramBins(), null);
         }
-        summaryStats.setValues(getValues(), getDataModel().getNumHistogramBins());
+        summaryStats.setValues(getValues(), getDataTable().getNumHistogramBins());
 
         if (Double.isNaN(getMinimumFocusValue())) {
             setMinimumFocusValue(summaryStats.getMinValue());
@@ -90,19 +89,19 @@ public class DoubleColumn extends Column {
     public ReadOnlyDoubleProperty maximumScaleValueProperty() { return maximumScaleValue; }
 
     public double[] getValues() {
-        int columnIndex = getDataModel().getColumnIndex(this);
+        int columnIndex = getDataTable().getColumnIndex(this);
         if (columnIndex == -1) {
-            columnIndex = getDataModel().getDisabledColumns().indexOf(this);
-            double values[] = new double[getDataModel().getTupleCount()];
-            for (int i = 0; i < getDataModel().getTupleCount(); i++) {
-                values[i] = (double) getDataModel().getDisabledTuple(i).getElement(columnIndex);
+            columnIndex = getDataTable().getDisabledColumns().indexOf(this);
+            double values[] = new double[getDataTable().getTupleCount()];
+            for (int i = 0; i < getDataTable().getTupleCount(); i++) {
+                values[i] = (double) getDataTable().getDisabledTuple(i).getElement(columnIndex);
             }
 
             return values;
         } else {
-            double values[] = new double[getDataModel().getTupleCount()];
-            for (int i = 0; i < getDataModel().getTupleCount(); i++) {
-                values[i] = (double) getDataModel().getTuple(i).getElement(columnIndex);
+            double values[] = new double[getDataTable().getTupleCount()];
+            for (int i = 0; i < getDataTable().getTupleCount(); i++) {
+                values[i] = (double) getDataTable().getTuple(i).getElement(columnIndex);
             }
 
             return values;
@@ -110,20 +109,20 @@ public class DoubleColumn extends Column {
     }
 
     public List<Double> getValuesAsList() {
-        int columnIndex = getDataModel().getColumnIndex(this);
+        int columnIndex = getDataTable().getColumnIndex(this);
 
         ArrayList<Double> valuesList = new ArrayList<>();
-        for (int i = 0; i < getDataModel().getTupleCount(); i++) {
-            valuesList.add((double)getDataModel().getTuple(i).getElement(columnIndex));
+        for (int i = 0; i < getDataTable().getTupleCount(); i++) {
+            valuesList.add((double) getDataTable().getTuple(i).getElement(columnIndex));
         }
 
         return valuesList;
     }
 
     public double[] getQueriedValues() {
-        int columnIndex = getDataModel().getColumnIndex(this);
+        int columnIndex = getDataTable().getColumnIndex(this);
 
-        Set<Tuple> queriedTuples = getDataModel().getActiveQuery().getQueriedTuples();
+        Set<Tuple> queriedTuples = getDataTable().getActiveQuery().getQueriedTuples();
         double values[] = new double[queriedTuples.size()];
 
         int counter = 0;
@@ -135,9 +134,9 @@ public class DoubleColumn extends Column {
     }
 
     public double[] getNonqueriedValues() {
-        int columnIndex = getDataModel().getColumnIndex(this);
+        int columnIndex = getDataTable().getColumnIndex(this);
 
-        Set<Tuple> nonqueriedTuples = getDataModel().getActiveQuery().getNonQueriedTuples();
+        Set<Tuple> nonqueriedTuples = getDataTable().getActiveQuery().getNonQueriedTuples();
         double values[] = new double[nonqueriedTuples.size()];
 
         int counter = 0;

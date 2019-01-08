@@ -791,7 +791,7 @@ public class DataTableView extends Region implements DataTableListener {
 
     public void setDataTable(DataTable dataTable) {
         this.dataTable = dataTable;
-        dataTable.addDataModelListener(this);
+        dataTable.addDataTableListener(this);
         clearView();
         initView();
     }
@@ -911,6 +911,8 @@ public class DataTableView extends Region implements DataTableListener {
                     axis = new DoubleAxis(this, (DoubleColumn)dataTable.getColumn(i));
                 } else if (dataTable.getColumn(i) instanceof BivariateColumn) {
                     axis = new BivariateAxis(this, (BivariateColumn)dataTable.getColumn(i));
+                } else if (dataTable.getColumn(i) instanceof ImageColumn) {
+                    axis = new ImageAxis(this, (ImageColumn)dataTable.getColumn(i));
                 }
 
                 if (axis != null) {
@@ -1226,6 +1228,8 @@ public class DataTableView extends Region implements DataTableListener {
             axis = new CategoricalAxis(this, (CategoricalColumn)column);
         } else if (column instanceof BivariateColumn) {
             axis = new BivariateAxis(this, (BivariateColumn)column);
+        } else if (column instanceof ImageColumn) {
+            axis = new ImageAxis(this, (ImageColumn)column);
         }
 
 //        axis.titleTextRotationProperty().bind(nameTextRotationProperty());

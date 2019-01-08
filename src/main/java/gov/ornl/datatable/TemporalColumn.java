@@ -67,9 +67,9 @@ public class TemporalColumn extends Column {
 
     public void calculateStatistics() {
         if (summaryStats == null) {
-            summaryStats = new TemporalColumnSummaryStats(this, getDataModel().getNumHistogramBins(), null);
+            summaryStats = new TemporalColumnSummaryStats(this, getDataTable().getNumHistogramBins(), null);
         }
-        summaryStats.setValues(getValues(), getDataModel().getNumHistogramBins());
+        summaryStats.setValues(getValues(), getDataTable().getNumHistogramBins());
 
         if (getStartScaleValue() == null) {
             setStartScaleValue(summaryStats.getStartInstant());
@@ -89,24 +89,24 @@ public class TemporalColumn extends Column {
     }
 
     public Instant[] getValues() {
-        Instant[] values = new Instant[getDataModel().getTupleCount()];
-        int columnIndex = getDataModel().getColumnIndex(this);
-        for (int i = 0; i < getDataModel().getTupleCount(); i++) {
-            values[i] = (Instant)getDataModel().getTuple(i).getElement(columnIndex);
+        Instant[] values = new Instant[getDataTable().getTupleCount()];
+        int columnIndex = getDataTable().getColumnIndex(this);
+        for (int i = 0; i < getDataTable().getTupleCount(); i++) {
+            values[i] = (Instant) getDataTable().getTuple(i).getElement(columnIndex);
         }
 
         return values;
     }
 
     public Instant[] getQueriedValues() {
-        if (getDataModel().getActiveQuery().getQueriedTuples().isEmpty()) {
+        if (getDataTable().getActiveQuery().getQueriedTuples().isEmpty()) {
             return null;
         }
 
-        Instant[] values = new Instant[getDataModel().getActiveQuery().getQueriedTuples().size()];
-        int columnIndex = getDataModel().getColumnIndex(this);
+        Instant[] values = new Instant[getDataTable().getActiveQuery().getQueriedTuples().size()];
+        int columnIndex = getDataTable().getColumnIndex(this);
         int counter = 0;
-        for (Tuple tuple : getDataModel().getActiveQuery().getQueriedTuples()) {
+        for (Tuple tuple : getDataTable().getActiveQuery().getQueriedTuples()) {
             values[counter++] = (Instant)tuple.getElement(columnIndex);
         }
 
@@ -114,14 +114,14 @@ public class TemporalColumn extends Column {
     }
 
     public Instant[] getNonqueriedValues() {
-        if (getDataModel().getActiveQuery().getNonQueriedTuples().isEmpty()) {
+        if (getDataTable().getActiveQuery().getNonQueriedTuples().isEmpty()) {
             return null;
         }
 
-        Instant[] values = new Instant[getDataModel().getActiveQuery().getNonQueriedTuples().size()];
-        int columnIndex = getDataModel().getColumnIndex(this);
+        Instant[] values = new Instant[getDataTable().getActiveQuery().getNonQueriedTuples().size()];
+        int columnIndex = getDataTable().getColumnIndex(this);
         int counter = 0;
-        for (Tuple tuple : getDataModel().getActiveQuery().getNonQueriedTuples()) {
+        for (Tuple tuple : getDataTable().getActiveQuery().getNonQueriedTuples()) {
             values[counter++] = (Instant)tuple.getElement(columnIndex);
         }
 

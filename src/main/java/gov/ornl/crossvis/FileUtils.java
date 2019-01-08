@@ -53,6 +53,8 @@ public class FileUtils {
         ArrayList<DateTimeFormatter> temporalColumnFormatters = new ArrayList<>();
         ArrayList<String> ignoreColumnNames = new ArrayList<>();
         ArrayList<String> categoricalColumnNames = new ArrayList<>();
+        String imageFileColumnName = null;
+        String imageFileDirectoryPath = null;
 
         for (DataTableColumnSpecification columnSpecification : columnSpecifications) {
             if (columnSpecification.getIgnore()) {
@@ -62,9 +64,13 @@ public class FileUtils {
                 temporalColumnFormatters.add(columnSpecification.getDateTimeFormatter());
             } else if (columnSpecification.getType().equalsIgnoreCase("Categorical")) {
                 categoricalColumnNames.add(columnSpecification.getName());
+            } else if (columnSpecification.getType().equalsIgnoreCase("Image Filename")) {
+                imageFileColumnName = columnSpecification.getName();
+                imageFileDirectoryPath = columnSpecification.getImageFileDirectoryPath();
             }
         }
 
-        IOUtilities.readCSV(f, ignoreColumnNames, categoricalColumnNames, temporalColumnNames, temporalColumnFormatters, dataTable);
+        IOUtilities.readCSV(f, ignoreColumnNames, categoricalColumnNames, temporalColumnNames, imageFileColumnName,
+                imageFileDirectoryPath, temporalColumnFormatters, dataTable);
     }
 }

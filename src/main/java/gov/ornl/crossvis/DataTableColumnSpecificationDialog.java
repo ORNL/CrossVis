@@ -65,6 +65,13 @@ public class DataTableColumnSpecificationDialog {
         TextField imageDirectoryTextField = new TextField();
         imageDirectoryTextField.setEditable(true);
         imageDirectoryTextField.setDisable(true);
+        imageDirectoryTextField.textProperty().addListener(observable -> {
+            for (DataTableColumnSpecification specification : tableColumnSpecs) {
+                if (specification.getType().equalsIgnoreCase("Image Filename")) {
+                    specification.setImageFileDirectoryPath(imageDirectoryTextField.getText());
+                }
+            }
+        });
 
         Button chooseImageDirectoryButton = new Button("...");
         chooseImageDirectoryButton.setDisable(true);

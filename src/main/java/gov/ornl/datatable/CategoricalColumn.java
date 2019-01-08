@@ -49,29 +49,29 @@ public class CategoricalColumn extends Column {
     }
 
     public String[] getValues() {
-        int columnIndex = getDataModel().getColumnIndex(this);
+        int columnIndex = getDataTable().getColumnIndex(this);
 
-        String values[] = new String[getDataModel().getTupleCount()];
-        for (int i = 0; i < getDataModel().getTupleCount(); i++) {
-            values[i] = (String)getDataModel().getTuple(i).getElement(columnIndex);
+        String values[] = new String[getDataTable().getTupleCount()];
+        for (int i = 0; i < getDataTable().getTupleCount(); i++) {
+            values[i] = (String) getDataTable().getTuple(i).getElement(columnIndex);
         }
 
         return values;
     }
 
     public List<String> getValuesAsList() {
-        int columnIndex = getDataModel().getColumnIndex(this);
+        int columnIndex = getDataTable().getColumnIndex(this);
         ArrayList<String> valuesList = new ArrayList<>();
-        for (int i = 0; i < getDataModel().getTupleCount(); i++) {
-            valuesList.add((String)getDataModel().getTuple(i).getElement(columnIndex));
+        for (int i = 0; i < getDataTable().getTupleCount(); i++) {
+            valuesList.add((String) getDataTable().getTuple(i).getElement(columnIndex));
         }
         return valuesList;
     }
 
     public String[] getQueriedValues() {
-        int columnIndex = getDataModel().getColumnIndex(this);
+        int columnIndex = getDataTable().getColumnIndex(this);
 
-        Set<Tuple> queriedTuples = getDataModel().getActiveQuery().getQueriedTuples();
+        Set<Tuple> queriedTuples = getDataTable().getActiveQuery().getQueriedTuples();
         String values[] = new String[queriedTuples.size()];
 
         int counter = 0;
@@ -83,9 +83,9 @@ public class CategoricalColumn extends Column {
     }
 
     public String[] getNonqueriedValues() {
-        int columnIndex = getDataModel().getColumnIndex(this);
+        int columnIndex = getDataTable().getColumnIndex(this);
 
-        Set<Tuple> nonqueriedTuples = getDataModel().getActiveQuery().getNonQueriedTuples();
+        Set<Tuple> nonqueriedTuples = getDataTable().getActiveQuery().getNonQueriedTuples();
         String values[] = new String[nonqueriedTuples.size()];
 
         int counter = 0;

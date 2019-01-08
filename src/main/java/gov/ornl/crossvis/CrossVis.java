@@ -5,6 +5,7 @@ import gov.ornl.datatable.*;
 import gov.ornl.datatableview.DataTableView;
 import gov.ornl.datatableview.DoubleAxis;
 import gov.ornl.datatableview.NumberTextField;
+import gov.ornl.imageview.ImageGridWindow;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
@@ -41,9 +42,7 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
 import java.util.Optional;
 import java.util.logging.Logger;
@@ -86,11 +85,15 @@ public class CrossVis extends Application implements DataTableListener {
     private MenuItem exportUnselectedDataMenuItem;
     private CheckMenuItem enableDataTableUpdatesCheckMenuItem;
     private MenuItem removeAllQueriesMI;
+    private MenuItem openImageGridViewMenuItem;
 
     private Stage crossVisStage;
 
     private NetCDFFilterWindow ncFilterWindow = null;
     private Stage ncFilterWindowStage = null;
+
+    private ImageGridWindow imageGridWindow = null;
+    private Stage imageGridWindowStage = null;
 
     private BooleanProperty dataTableUpdatesEnabled = new SimpleBooleanProperty(false);
 
@@ -110,7 +113,7 @@ public class CrossVis extends Application implements DataTableListener {
 //        });
 
         dataTable = new DataTable();
-        dataTable.addDataModelListener(this);
+        dataTable.addDataTableListener(this);
     }
 
     private void createColumnTableViews() {
@@ -591,6 +594,10 @@ public class CrossVis extends Application implements DataTableListener {
             ncFilterWindowStage.close();
         }
 
+        if (imageGridWindowStage != null && imageGridWindowStage.isShowing()) {
+            imageGridWindowStage.close();
+        }
+
         System.exit(0);
     }
 
@@ -916,9 +923,16 @@ public class CrossVis extends Application implements DataTableListener {
 //            dataTableView.setShowScatterplotMarginValues(showScattplotMarginValuesCheckMenuItem.isSelected());
 //        });
 
+        openImageGridViewMenuItem = new MenuItem("Open Image Grid View");
+        openImageGridViewMenuItem.setDisable(true);
+        openImageGridViewMenuItem.setOnAction(event -> {
+            // if data model has images open image grid view
+            openImageGridWindow();
+        });
+
         viewMenu.getItems().addAll(showScatterplotsMI, showScattplotMarginValuesCheckMenuItem, showHistogramsMI, showSummaryStatsMI, showCorrelationsMI,
                 polylineDisplayMenu, summaryStatsDisplayModeMenu, axisLayoutMenu, setNumericalAxisExtentsMenuItem,
-                changeHistogramBinCountMenuItem, enableDataTableUpdatesCheckMenuItem);
+                changeHistogramBinCountMenuItem, enableDataTableUpdatesCheckMenuItem, openImageGridViewMenuItem);
 
 
         // Data Menu
@@ -962,6 +976,31 @@ public class CrossVis extends Application implements DataTableListener {
         queryMenu.getItems().addAll(showQueryStatisticsCheckMI, showNonQueryStatisticsCheckMI, removeAllQueriesMI);
 
         return menuBar;
+    }
+
+    private void openImageGridWindow() {
+        if (imageGridWindow == null) {
+            imageGridWindow = new ImageGridWindow(dataTable);
+            try {
+                imageGridWindowStage = new Stage();
+                imageGridWindow.start(imageGridWindowStage);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        } else {
+            imageGridWindowStage.show();
+        }
+//        if (ncFilterWindow == null) {
+//            ncFilterWindow = new NetCDFFilterWindow(dataTable);
+//            try {
+//                ncFilterWindowStage = new Stage();
+//                ncFilterWindow.start(ncFilterWindowStage);
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//            }
+//        } else {
+//            ncFilterWindowStage.show();
+//        }
     }
 
     private void syncNumericalAxesRanges() {
@@ -1361,6 +1400,12 @@ public class CrossVis extends Application implements DataTableListener {
     @Override
     public void dataTableReset(DataTable dataTable) {
         removeAllQueriesMI.setDisable(!dataTable.getActiveQuery().hasColumnSelections());
+
+        if (dataTable.getImageColumn() != null) {
+            openImageGridViewMenuItem.setDisable(false);
+        } else {
+            openImageGridViewMenuItem.setDisable(true);
+        }
 
         temporalColumnTableView.getItems().clear();
         ArrayList<TemporalColumn> temporalColumns = dataTable.getTemporalColumns();

@@ -53,7 +53,7 @@ public class TemporalColumnSummaryStats extends ColumnSummaryStats {
         Instant start = null;
         Instant end = null;
 
-//        int columnIndex = getColumn().getDataModel().getColumnIndex(column);
+//        int columnIndex = getColumn().getDataTable().getColumnIndex(column);
 
         if (values != null) {
             for (int i = 0; i < values.length; i++) {

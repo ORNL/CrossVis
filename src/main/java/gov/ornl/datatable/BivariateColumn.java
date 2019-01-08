@@ -42,7 +42,7 @@ public class BivariateColumn extends Column {
     @Override
     public void calculateStatistics() {
         if (summaryStats == null) {
-            summaryStats = new BivariateColumnSummaryStats(this, getDataModel().getNumHistogramBins(), null);
+            summaryStats = new BivariateColumnSummaryStats(this, getDataTable().getNumHistogramBins(), null);
         }
     }
 

@@ -34,7 +34,7 @@ public abstract class Column {
         this.dataModel = dataModel;
     }
 
-    public DataTable getDataModel() {
+    public DataTable getDataTable() {
         return dataModel;
     }
 

@@ -38,7 +38,7 @@ public class MultiHistogramViewTest2 extends Application {
             categoricalColumnNames.add("Origin");
             try {
                 IOUtilities.readCSV(new File("data/csv/cars-cat.csv"), null, categoricalColumnNames,
-                        null, null, table);
+                        null, null, null, null, table);
             } catch (IOException e) {
                 e.printStackTrace();
                 System.exit(0);

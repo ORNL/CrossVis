@@ -36,8 +36,6 @@ public class DynamicTiles extends Application {
 
     //Class responsible for displaying the grid containing the Rectangles
     public class GridDisplay {
-
-
         private static final double ELEMENT_SIZE = 100;
         private static final double GAP = ELEMENT_SIZE / 10;
 
@@ -45,6 +43,7 @@ public class DynamicTiles extends Application {
         private Group display = new Group(tilePane);
         private int nRows;
         private int nCols;
+
         private int maxImageViewWidth = 500;
         private int minImageViewWidth = 20;
         private int maxImageViewHeight = 500;
@@ -54,7 +53,7 @@ public class DynamicTiles extends Application {
 
         private ArrayList<ImageView> imageViewList = new ArrayList<>();
 
-        public GridDisplay(int nRows, int nCols) {
+        public GridDisplay(int nCols) {
             tilePane.setStyle("-fx-background-color: rgba(255, 215, 0, 0.1);");
             tilePane.setHgap(GAP);
             tilePane.setVgap(GAP);
@@ -155,7 +154,7 @@ public class DynamicTiles extends Application {
     public void start(Stage primaryStage) {
 
         //Represents the grid with Rectangles
-        gridDisplay = new GridDisplay(2, 4);
+        gridDisplay = new GridDisplay(4);
 
         ScrollPane gridDisplayScrollPane = new ScrollPane(gridDisplay.getDisplay());
 //        gridDisplayScrollPane.setFitToWidth(true);

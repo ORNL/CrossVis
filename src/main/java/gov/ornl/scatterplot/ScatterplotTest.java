@@ -2,13 +2,10 @@ package gov.ornl.scatterplot;
 
 import gov.ornl.datatable.*;
 import javafx.application.Application;
-import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.SceneAntialiasing;
 import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
@@ -27,7 +24,7 @@ public class ScatterplotTest extends Application {
     @Override
     public void start(Stage primaryStage) {
         DataTable dataTable = new DataTable();
-        dataTable.addDataModelListener(new DataTableListener() {
+        dataTable.addDataTableListener(new DataTableListener() {
             @Override
             public void dataTableReset(DataTable dataTable) {
 
@@ -139,7 +136,7 @@ public class ScatterplotTest extends Application {
         categoricalColumnNames.add("Origin");
         try {
             IOUtilities.readCSV(new File("data/csv/cars-cat.csv"), null, categoricalColumnNames,
-                    null, null, dataTable);
+                    null, null, null, null, dataTable);
         } catch (IOException e) {
             System.exit(0);
             e.printStackTrace();

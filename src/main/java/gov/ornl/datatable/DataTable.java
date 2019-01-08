@@ -233,9 +233,25 @@ public class DataTable {
         return categoricalColumns;
     }
 
+    public ImageColumn getImageColumn() {
+        for (Column column : columns) {
+            if (column instanceof ImageColumn) {
+                return (ImageColumn)column;
+            }
+        }
+
+        for (Column column : disabledColumns) {
+            if (column instanceof ImageColumn) {
+                return (ImageColumn)column;
+            }
+        }
+
+        return null;
+    }
+
     public final Query getActiveQuery() { return activeQuery; }
 
-    public int getMaxHistogram2DBinCount() { return maxHistogram2DBinCount; }
+//    public int getMaxHistogram2DBinCount() { return maxHistogram2DBinCount; }
 
     public boolean isEmpty() {
         return tuples.isEmpty();
@@ -357,7 +373,7 @@ public class DataTable {
         return values;
     }
 
-    public void addDataModelListener(DataTableListener listener) {
+    public void addDataTableListener(DataTableListener listener) {
         if (!listeners.contains(listener)) {
             listeners.add(listener);
         }

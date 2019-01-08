@@ -351,5 +351,4 @@ public class CategoricalAxis extends UnivariateAxis {
             categoriesNameGraphicsGroup.toFront();
         }
     }
-
 }

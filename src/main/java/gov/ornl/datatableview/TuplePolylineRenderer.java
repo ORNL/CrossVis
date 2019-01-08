@@ -55,19 +55,17 @@ public class TuplePolylineRenderer extends AnimationTimer {
                 this.stop();
                 break;
             } else {
-//                if (tuplePolyline.isInContext()) {
-//                    canvas.getGraphicsContext2D().setStroke(tupleColor.desaturate());
-//                } else {
-//                    canvas.getGraphicsContext2D().setStroke(tupleColor);
-//                }
                 for (int i = 1; i < tuplePolyline.getXPoints().length; i++) {
                     if (!drawContextPolylineSegments) {
+//                        if (tuplePolyline.getInContext()[i-1] || tuplePolyline.getInContext()[i]) {
+//                            continue;
+//                        }
                         if (!tuplePolyline.getTuple().isElementInFocus(i - 1) ||
                                 !tuplePolyline.getTuple().isElementInFocus(i)) {
                             continue;
                         }
                     }
-//                    if (tuplePolyline.getTuple().isElementInFocus(i - 1) && tuplePolyline.getTuple().isElementInFocus(i)) {
+
                     double x0, x1;
 
                     if (axisList.get(i - 1) instanceof BivariateAxis) {
@@ -84,7 +82,6 @@ public class TuplePolylineRenderer extends AnimationTimer {
 
                     canvas.getGraphicsContext2D().strokeLine(x0, tuplePolyline.getYPoints()[i - 1],
                             x1, tuplePolyline.getYPoints()[i]);
-//                    }
                 }
             }
         }
