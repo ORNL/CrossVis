@@ -6,9 +6,7 @@ import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.scene.Scene;
-import javafx.scene.control.Label;
-import javafx.scene.control.ScrollPane;
-import javafx.scene.control.Slider;
+import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
 import javafx.stage.Stage;
@@ -28,17 +26,27 @@ public class ImageGridWindow extends Application {
 
     public ImageGridWindow(DataTable dataTable) {
         this.dataTable = dataTable;
-//        imageGridDisplay.setDataTable(dataTable);
     }
 
     public static void main(String[] args) {
         launch(args);
     }
 
+    public void stop() {
+        imageGridDisplay.closeChildrenImageWindows();
+    }
+
     @Override
     public void start(Stage primaryStage) {
-        imageGridDisplay = new ImageGridDisplay();
+        primaryStage.setOnHiding(event -> {
+            imageGridDisplay.closeChildrenImageWindows();
+        });
 
+        primaryStage.setOnCloseRequest(event -> {
+            imageGridDisplay.closeChildrenImageWindows();
+        });
+
+        imageGridDisplay = new ImageGridDisplay();
         ScrollPane scrollPane = new ScrollPane(imageGridDisplay.getDisplay());
         scrollPane.viewportBoundsProperty().addListener(observable -> {
             double viewPortWidth = scrollPane.getViewportBounds().getWidth();
@@ -54,14 +62,21 @@ public class ImageGridWindow extends Application {
 
         Label sliderLabel = new Label("Image Scale:");
 
-        FlowPane settingsPane = new FlowPane();
-        settingsPane.setOrientation(Orientation.HORIZONTAL);
-        settingsPane.setPadding(new Insets(4.));
-        settingsPane.getChildren().addAll(sliderLabel, imageScaleSlider);
+        CheckBox showSelectedImagesCheckBox = new CheckBox("Show Selected Images");
+        showSelectedImagesCheckBox.selectedProperty().bindBidirectional(imageGridDisplay.showSelectedImagesProperty());
+
+        CheckBox showUnselectedImagesCheckBox = new CheckBox("Show Unselected Images");
+        showUnselectedImagesCheckBox.selectedProperty().bindBidirectional(imageGridDisplay.showUnselectedImagesProperty());
+
+        ToolBar settingsToolBar = new ToolBar();
+        settingsToolBar.setOrientation(Orientation.HORIZONTAL);
+        settingsToolBar.setPadding(new Insets(4.));
+        settingsToolBar.getItems().addAll(showSelectedImagesCheckBox, showUnselectedImagesCheckBox, new Separator(),
+                sliderLabel, imageScaleSlider);
 
         BorderPane mainPane = new BorderPane();
         mainPane.setCenter(scrollPane);
-        mainPane.setTop(settingsPane);
+        mainPane.setTop(settingsToolBar);
 
         Scene scene = new Scene(mainPane, 800, 1200);
         primaryStage.setTitle("Image Grid View Window");
@@ -69,7 +84,7 @@ public class ImageGridWindow extends Application {
         primaryStage.show();
 
         if (dataTable == null) {
-            DataTable dataTable = new DataTable();
+            dataTable = new DataTable();
             ArrayList<String> categoricalColumnNames = new ArrayList<>();
             categoricalColumnNames.add("Type");
             String imageColumnName = "Image Filename";

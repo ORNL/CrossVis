@@ -449,6 +449,9 @@ public class CrossVis extends Application implements DataTableListener {
                 if (ncFilterWindowStage != null && ncFilterWindowStage.isShowing()) {
                     ncFilterWindowStage.close();
                 }
+                if (imageGridWindowStage != null && imageGridWindowStage.isShowing()) {
+                    imageGridWindowStage.close();
+                }
             });
 
             dataTableView = new DataTableView();

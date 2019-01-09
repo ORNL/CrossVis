@@ -28,10 +28,10 @@ public class DataTableView extends Region implements DataTableListener {
     public final static Color DEFAULT_OVERALL_SUMMARY_STROKE_COLOR = Color.DARKGRAY.darker();
     public final static Color DEFAULT_QUERY_SUMMARY_STROKE_COLOR = Color.BLACK;
     public final static Color DEFAULT_BACKGROUND_COLOR = Color.WHITE;
-    private final static double DEFAULT_LINE_OPACITY = 0.5;
-    private final static Color DEFAULT_SELECTED_ITEMS_COLOR = new Color(Color.STEELBLUE.getRed(),
+    public final static double DEFAULT_LINE_OPACITY = 0.5;
+    public final static Color DEFAULT_SELECTED_ITEMS_COLOR = new Color(Color.STEELBLUE.getRed(),
             Color.STEELBLUE.getGreen(), Color.STEELBLUE.getBlue(), DEFAULT_LINE_OPACITY);
-    private final static Color DEFAULT_UNSELECTED_ITEMS_COLOR = new Color(Color.LIGHTGRAY.getRed(),
+    public final static Color DEFAULT_UNSELECTED_ITEMS_COLOR = new Color(Color.LIGHTGRAY.getRed(),
             Color.LIGHTGRAY.getGreen(), Color.LIGHTGRAY.getBlue(), DEFAULT_LINE_OPACITY);
     private final static int DEFAULT_CORRELATION_RECTANGLE_HEIGHT = 14;
     private final static int DEFAULT_CORRELATION_RECTANGLE_WIDTH = 24;
@@ -966,7 +966,8 @@ public class DataTableView extends Region implements DataTableListener {
             if (highlightedAxis != null && (highlightedAxis instanceof UnivariateAxis)) {
                 for (int iaxis = 0; iaxis < axisList.size(); iaxis++) {
                     Axis currentAxis = axisList.get(iaxis);
-                    if (highlightedAxis != currentAxis && (currentAxis instanceof UnivariateAxis)) {
+                    if (highlightedAxis != currentAxis && (currentAxis instanceof UnivariateAxis) &&
+                            !(currentAxis instanceof ImageAxis)) {
                         Scatterplot scatterplot = new Scatterplot(highlightedAxis.getColumn(), currentAxis.getColumn(), getSelectedItemsColor(),
                                 getUnselectedItemsColor(), getDataItemsOpacity());
                         scatterplot.setShowMarginValues(isShowingScatterplotMarginValues());
@@ -980,7 +981,8 @@ public class DataTableView extends Region implements DataTableListener {
                 for (int iaxis = 1; iaxis < axisList.size(); iaxis++) {
                     Axis xAxis = axisList.get(iaxis);
                     Axis yAxis = axisList.get(iaxis - 1);
-                    if ((xAxis instanceof UnivariateAxis) && (yAxis instanceof UnivariateAxis)) {
+                    if ((xAxis instanceof UnivariateAxis) && (yAxis instanceof UnivariateAxis) &&
+                            !(xAxis instanceof ImageAxis) && !(yAxis instanceof ImageAxis)) {
                         Scatterplot scatterplot = new Scatterplot(xAxis.getColumn(), yAxis.getColumn(), getSelectedItemsColor(),
                                 getUnselectedItemsColor(), getDataItemsOpacity());
                         scatterplotList.add(scatterplot);

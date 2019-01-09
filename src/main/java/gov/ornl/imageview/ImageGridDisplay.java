@@ -1,8 +1,8 @@
 package gov.ornl.imageview;
 
 import gov.ornl.datatable.*;
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.SimpleDoubleProperty;
+import gov.ornl.datatableview.DataTableView;
+import javafx.beans.property.*;
 import javafx.scene.Group;
 import javafx.scene.control.Tooltip;
 import javafx.scene.effect.DropShadow;
@@ -10,14 +10,20 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.TilePane;
 import javafx.scene.paint.Color;
+import javafx.stage.Stage;
 import javafx.util.Pair;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.logging.Logger;
 
 public class ImageGridDisplay implements DataTableListener {
+    private static final Logger log = Logger.getLogger(ImageGridDisplay.class.getName());
+
     private static final double ELEMENT_SIZE = 100;
     private static final double GAP = ELEMENT_SIZE / 10;
 
@@ -31,11 +37,27 @@ public class ImageGridDisplay implements DataTableListener {
     private double minImageViewHeight = 20;
 
     private DoubleProperty imageScale = new SimpleDoubleProperty(0.5);
+    private ObjectProperty<Color> selectedImagesColor = new SimpleObjectProperty<>(DataTableView.DEFAULT_SELECTED_ITEMS_COLOR);
+    private ObjectProperty<Color> unselectedImagesColor = new SimpleObjectProperty<>(DataTableView.DEFAULT_UNSELECTED_ITEMS_COLOR);
+
+    private BooleanProperty showSelectedImages = new SimpleBooleanProperty(true);
+    private BooleanProperty showUnselectedImages = new SimpleBooleanProperty(true);
 
     private ArrayList<ImageView> imageViewList = new ArrayList<>();
-    private HashMap<Pair<File,Image>,ImageView> imageViewMap = new HashMap<>();
+    private HashMap<Pair<File,Image>,ImageView> pairToImageViewMap = new HashMap<>();
+    private HashMap<ImageView, Pair<File,Image>> imageViewToPairMap = new HashMap<>();
+
+    private DropShadow selectedDropShadow;
+    private DropShadow unselectedDropShadow;
+
+    private HashSet<Stage> imageViewWindowStageSet = new HashSet<>();
 
     public ImageGridDisplay() {
+        selectedDropShadow = new DropShadow(10, getSelectedImagesColor());
+        selectedDropShadow.colorProperty().bind(selectedImagesColorProperty());
+        unselectedDropShadow = new DropShadow(10, getUnselectedImagesColor());
+        unselectedDropShadow.colorProperty().bind(unselectedImagesColorProperty());
+
 //        tilePane.setStyle("-fx-background-color: rgba(255, 215, 0, 0.1);");
         tilePane.setHgap(GAP);
         tilePane.setVgap(GAP);
@@ -46,7 +68,30 @@ public class ImageGridDisplay implements DataTableListener {
                 imageView.setFitWidth(minImageViewWidth + (getImageScale() * (maxImageViewWidth - minImageViewWidth)));
             }
         });
+
+        registerListeners();
     }
+
+    public void closeChildrenImageWindows() {
+        if (!imageViewWindowStageSet.isEmpty()) {
+            for (Stage imageViewWindowStage : imageViewWindowStageSet) {
+                imageViewWindowStage.close();
+            }
+        }
+    }
+
+    public void setShowSelectedImages(boolean show) {showSelectedImages.set(show);}
+
+    public boolean isShowingSelectedImages() { return showSelectedImages.get(); }
+
+    public BooleanProperty showSelectedImagesProperty() { return showSelectedImages; }
+
+    public void setShowUnselectedImages(boolean show) {
+        showUnselectedImages.set(show); }
+
+    public boolean isShowingUnselectedImages() { return showUnselectedImages.get(); }
+
+    public BooleanProperty showUnselectedImagesProperty() { return showUnselectedImages; }
 
     public void setDataTable(DataTable dataTable) {
         this.dataTable = dataTable;
@@ -60,6 +105,28 @@ public class ImageGridDisplay implements DataTableListener {
 //            imageViewList.clear();
 //        }
     }
+
+    private void registerListeners() {
+        showSelectedImages.addListener(observable -> {
+            initView();
+        });
+
+        showUnselectedImages.addListener(observable -> {
+            initView();
+        });
+    }
+
+    public Color getSelectedImagesColor() { return selectedImagesColor.get(); }
+
+    public void setSelectedImagesColor(Color color) { selectedImagesColor.set(color); }
+
+    public ObjectProperty<Color> selectedImagesColorProperty() { return selectedImagesColor; }
+
+    public Color getUnselectedImagesColor() { return unselectedImagesColor.get(); }
+
+    public void setUnselectedImagesColor(Color color) { unselectedImagesColor.set(color); }
+
+    public ObjectProperty<Color> unselectedImagesColorProperty() { return unselectedImagesColor; }
 
     private void initView() {
         clearView();
@@ -77,7 +144,7 @@ public class ImageGridDisplay implements DataTableListener {
     private void clearView() {
         tilePane.getChildren().clear();
         imageViewList.clear();
-        imageViewMap.clear();
+        pairToImageViewMap.clear();
     }
 
     public Group getDisplay() {
@@ -106,10 +173,25 @@ public class ImageGridDisplay implements DataTableListener {
 //                ColorAdjust grayscale = new ColorAdjust();
 //                grayscale.setSaturation(-1);
 //                imageView.setEffect(grayscale);
+            imageView.setOnMouseClicked(event -> {
+                log.info("ImageView clicked for '" + imageViewToPairMap.get(imageView).getKey().getName() + "'");
+                try {
+                    ImageViewWindow imageViewWindow = new ImageViewWindow(imageViewToPairMap.get(imageView).getKey());
+                    Stage imageViewWindowStage = new Stage();
+                    imageViewWindow.start(imageViewWindowStage);
+                    imageViewWindowStageSet.add(imageViewWindowStage);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+
             imageViewList.add(imageView);
-            imageViewMap.put(imagePair, imageView);
-            tilePane.getChildren().add(imageView);
+            pairToImageViewMap.put(imagePair, imageView);
+            imageViewToPairMap.put(imageView, imagePair);
+//            tilePane.getChildren().add(imageView);
         }
+
+        setQueriedImageViews();
     }
 
     public double getImageScale() { return imageScale.get(); }
@@ -134,7 +216,7 @@ public class ImageGridDisplay implements DataTableListener {
         tilePane.setPrefColumns(nCols);
     }
 
-    private void handleQueryChanged() {
+    private void setQueriedImageViews() {
         Pair<File,Image> queriedImagePairs [] = dataTable.getImageColumn().getQueriedValues();
         Pair<File,Image> nonqueriedImagePairs [] = dataTable.getImageColumn().getNonqueriedValues();
 
@@ -143,26 +225,28 @@ public class ImageGridDisplay implements DataTableListener {
 
         tilePane.getChildren().clear();
 
-        if (queriedImagePairs != null) {
+        if (isShowingSelectedImages() && queriedImagePairs != null) {
             for (Pair<File,Image> queryImagePair : queriedImagePairs) {
 //                ImageView imageView = getImageViewForImage(queryImage.);
-                ImageView imageView = imageViewMap.get(queryImagePair);
-                imageView.setEffect(new DropShadow(10, Color.STEELBLUE));
+                ImageView imageView = pairToImageViewMap.get(queryImagePair);
+                imageView.setEffect(selectedDropShadow);
+//                dropShadow.colorProperty().bind(selectedImagesColor);
+//                imageView.setEffect(dropShadow);
                 queryImageViewList.add(imageView);
             }
+            tilePane.getChildren().addAll(queryImageViewList);
         }
 
-        if (nonqueriedImagePairs != null) {
+        if (isShowingUnselectedImages() && nonqueriedImagePairs != null) {
             for (Pair<File,Image> nonqueryImagePair : nonqueriedImagePairs) {
 //                ImageView imageView = getImageViewForImage(nonqueryImagePair);
-                ImageView imageView = imageViewMap.get(nonqueryImagePair);
-                imageView.setEffect(null);
+                ImageView imageView = pairToImageViewMap.get(nonqueryImagePair);
+                imageView.setEffect(unselectedDropShadow);
+//                imageView.setEffect(null);
                 nonqueryImageViewList.add(imageView);
             }
+            tilePane.getChildren().addAll(nonqueryImageViewList);
         }
-
-        tilePane.getChildren().addAll(queryImageViewList);
-        tilePane.getChildren().addAll(nonqueryImageViewList);
     }
 
 //    private ImageView getImageViewForImage(Image image) {
@@ -201,32 +285,32 @@ public class ImageGridDisplay implements DataTableListener {
 
     @Override
     public void dataTableAllColumnSelectionsRemoved(DataTable dataTable) {
-        handleQueryChanged();
+        setQueriedImageViews();
     }
 
     @Override
     public void dataTableAllColumnSelectionsForColumnRemoved(DataTable dataTable, Column column) {
-        handleQueryChanged();
+        setQueriedImageViews();
     }
 
     @Override
     public void dataTableColumnSelectionAdded(DataTable dataTable, ColumnSelection columnSelectionRange) {
-        handleQueryChanged();
+        setQueriedImageViews();
     }
 
     @Override
     public void dataTableColumnSelectionRemoved(DataTable dataTable, ColumnSelection columnSelectionRange) {
-        handleQueryChanged();
+        setQueriedImageViews();
     }
 
     @Override
     public void dataTableColumnSelectionsRemoved(DataTable dataTable, List<ColumnSelection> removedColumnSelections) {
-        handleQueryChanged();
+        setQueriedImageViews();
     }
 
     @Override
     public void dataTableColumnSelectionChanged(DataTable dataTable, ColumnSelection columnSelectionRange) {
-        handleQueryChanged();
+        setQueriedImageViews();
     }
 
     @Override
