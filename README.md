@@ -2,6 +2,8 @@
 
 **CrossVis** is an interactive visual analytics tool for exploring multivariate data.
 
+[CrossVis YouTube Demonstration Video](https://youtu.be/xQqeX1yVwiw)
+
 <img src="images/crossvis-screenshot.png" width="800" vspace="6">
 
 **CrossVis** is written in Java and runs on Mac OS X, Windows, and Linux operating systems.
