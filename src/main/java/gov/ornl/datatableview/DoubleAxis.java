@@ -422,7 +422,7 @@ public class DoubleAxis extends UnivariateAxis {
         getAxisBar().setOnMouseReleased(event -> {
             if (draggingSelection != null) {
                 axisSelectionGraphicsGroup.getChildren().remove(draggingSelection.getGraphicsGroup());
-                getDataTable().addColumnSelectionRangeToActiveQuery(draggingSelection.getColumnSelection());
+                getDataTable().addColumnSelectionToActiveQuery(draggingSelection.getColumnSelection());
                 dragging = false;
                 draggingSelection = null;
             }

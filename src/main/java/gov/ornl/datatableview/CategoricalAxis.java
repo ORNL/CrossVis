@@ -147,7 +147,7 @@ public class CategoricalAxis extends UnivariateAxis {
             CategoricalColumnSelection columnSelection = new CategoricalColumnSelection(categoricalColumn(), categories);
             CategoricalAxisSelection axisSelection = new CategoricalAxisSelection(this, columnSelection);
             getAxisSelectionList().add(axisSelection);
-            getDataTable().addColumnSelectionRangeToActiveQuery(columnSelection);
+            getDataTable().addColumnSelectionToActiveQuery(columnSelection);
         } else {
             ArrayList<AxisSelection> selectionsToRemove = new ArrayList<>();
             for (AxisSelection selection : getAxisSelectionList()) {

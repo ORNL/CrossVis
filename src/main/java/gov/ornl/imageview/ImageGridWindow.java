@@ -3,14 +3,19 @@ package gov.ornl.imageview;
 import gov.ornl.datatable.DataTable;
 import gov.ornl.datatable.IOUtilities;
 import javafx.application.Application;
+import javafx.beans.property.ObjectProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
+import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -26,6 +31,14 @@ public class ImageGridWindow extends Application {
 
     public ImageGridWindow(DataTable dataTable) {
         this.dataTable = dataTable;
+    }
+
+    public ObjectProperty<Color> selectedImagesColorProperty() {
+        return imageGridDisplay.selectedImagesColorProperty();
+    }
+
+    public ObjectProperty<Color> unselectedImagesColorProperty() {
+        return imageGridDisplay.unselectedImagesColorProperty();
     }
 
     public static void main(String[] args) {

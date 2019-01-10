@@ -14,7 +14,6 @@ import javafx.stage.Stage;
 import javafx.util.Pair;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -97,13 +96,6 @@ public class ImageGridDisplay implements DataTableListener {
         this.dataTable = dataTable;
         this.dataTable.addDataTableListener(this);
         initView();
-//        ImageColumn imageColumn = dataTable.getImageColumn();
-//        if (imageColumn != null) {
-//            setImages(imageColumn.getValuesAsList());
-//        } else {
-//            tilePane.getChildren().clear();
-//            imageViewList.clear();
-//        }
     }
 
     private void registerListeners() {
@@ -174,7 +166,6 @@ public class ImageGridDisplay implements DataTableListener {
 //                grayscale.setSaturation(-1);
 //                imageView.setEffect(grayscale);
             imageView.setOnMouseClicked(event -> {
-                log.info("ImageView clicked for '" + imageViewToPairMap.get(imageView).getKey().getName() + "'");
                 try {
                     ImageViewWindow imageViewWindow = new ImageViewWindow(imageViewToPairMap.get(imageView).getKey());
                     Stage imageViewWindowStage = new Stage();
@@ -188,7 +179,6 @@ public class ImageGridDisplay implements DataTableListener {
             imageViewList.add(imageView);
             pairToImageViewMap.put(imagePair, imageView);
             imageViewToPairMap.put(imageView, imagePair);
-//            tilePane.getChildren().add(imageView);
         }
 
         setQueriedImageViews();

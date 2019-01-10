@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import java.util.logging.Logger;
 
 public abstract class Axis {
-    private final static Logger log = Logger.getLogger(Axis.class.getName());
+    protected final static Logger log = Logger.getLogger(Axis.class.getName());
 
     public final static double DEFAULT_TITLE_TEXT_SIZE = 12d;
     public final static double DEFAULT_TEXT_SIZE = 10d;

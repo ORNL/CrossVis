@@ -354,7 +354,7 @@ public class Scatterplot {
                             startInstant, endInstant);
                 }
 
-                if (xColumnSelection != null) { dataTable.addColumnSelectionRangeToActiveQuery(xColumnSelection); }
+                if (xColumnSelection != null) { dataTable.addColumnSelectionToActiveQuery(xColumnSelection); }
 
                 ColumnSelection yColumnSelection = null;
                 if (yColumn instanceof DoubleColumn) {
@@ -372,7 +372,7 @@ public class Scatterplot {
                     yColumnSelection = new TemporalColumnSelectionRange((TemporalColumn)yColumn, startInstant, endInstant);
                 }
 
-                if (yColumnSelection != null) { dataTable.addColumnSelectionRangeToActiveQuery(yColumnSelection); }
+                if (yColumnSelection != null) { dataTable.addColumnSelectionToActiveQuery(yColumnSelection); }
             } else {
 //                log.info("Removing x and y column selections");
                 // if there are column selections for either the x or y column, remove them

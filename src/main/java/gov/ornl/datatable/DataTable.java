@@ -3,7 +3,10 @@ package gov.ornl.datatable;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.SetChangeListener;
+import javafx.scene.image.Image;
+import javafx.util.Pair;
 
+import java.io.File;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -744,11 +747,9 @@ public class DataTable {
 //		return null;
 //	}
 
-    public void addColumnSelectionRangeToActiveQuery(ColumnSelection newColumnSelectionRange) {
+    public void addColumnSelectionToActiveQuery(ColumnSelection newColumnSelectionRange) {
         getActiveQuery().addColumnSelection(newColumnSelectionRange);
-
         getActiveQuery().setQueriedTuples();
-
         fireColumnSelectionAdded(newColumnSelectionRange);
 
         if (newColumnSelectionRange instanceof DoubleColumnSelectionRange) {
@@ -762,20 +763,25 @@ public class DataTable {
                 fireColumnSelectionChanged(newColumnSelectionRange);
             });
         } else if (newColumnSelectionRange instanceof CategoricalColumnSelection) {
-            ((CategoricalColumnSelection)newColumnSelectionRange).selectedCategoriesProperty().addListener(new SetChangeListener<String>() {
-                @Override
-                public void onChanged(Change<? extends String> change) {
-                    if (((CategoricalColumnSelection) newColumnSelectionRange).getSelectedCategories().isEmpty()) {
-                        getActiveQuery().removeColumnSelection(newColumnSelectionRange);
-                    }
-                    getActiveQuery().setQueriedTuples();
-                    fireColumnSelectionChanged(newColumnSelectionRange);
+            ((CategoricalColumnSelection)newColumnSelectionRange).selectedCategoriesProperty().addListener((SetChangeListener<String>) change -> {
+                if (((CategoricalColumnSelection) newColumnSelectionRange).getSelectedCategories().isEmpty()) {
+                    getActiveQuery().removeColumnSelection(newColumnSelectionRange);
                 }
+                getActiveQuery().setQueriedTuples();
+                fireColumnSelectionChanged(newColumnSelectionRange);
             });
 //            ((CategoricalColumnSelection)newColumnSelectionRange).selectedCategoriesProperty().addListener((observable, oldValue, newValue) -> {
 //                getActiveQuery().setQueriedTuples();
 //                fireColumnSelectionChanged(newColumnSelectionRange);
 //            });
+        } else if (newColumnSelectionRange instanceof ImageColumnSelection) {
+            ((ImageColumnSelection)newColumnSelectionRange).selectedImagePairSetProperty().addListener((SetChangeListener<Pair<File, Image>>) change -> {
+                if (((ImageColumnSelection)newColumnSelectionRange).getSelectedImagePairs().isEmpty()) {
+                    getActiveQuery().removeColumnSelection(newColumnSelectionRange);
+                }
+                getActiveQuery().setQueriedTuples();
+                fireColumnSelectionChanged(newColumnSelectionRange);
+            });
         }
     }
 

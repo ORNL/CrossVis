@@ -987,6 +987,8 @@ public class CrossVis extends Application implements DataTableListener {
             try {
                 imageGridWindowStage = new Stage();
                 imageGridWindow.start(imageGridWindowStage);
+                imageGridWindow.selectedImagesColorProperty().bind(dataTableView.selectedItemsColorProperty());
+                imageGridWindow.unselectedImagesColorProperty().bind(dataTableView.unselectedItemsColorProperty());
             } catch (Exception ex) {
                 ex.printStackTrace();
             }

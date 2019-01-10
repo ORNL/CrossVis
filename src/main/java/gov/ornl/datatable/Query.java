@@ -62,36 +62,43 @@ public class Query {
 
                 for (int icol = 0; icol < dataModel.getColumnCount(); icol++) {
                     Column column = dataModel.getColumn(icol);
-                    ArrayList<ColumnSelection> selectionRanges = getColumnSelections(column);
-                    if (selectionRanges != null && (!selectionRanges.isEmpty())) {
-                        boolean insideSelectionRange = false;
+                    ArrayList<ColumnSelection> columnSelections = getColumnSelections(column);
+                    if (columnSelections != null && (!columnSelections.isEmpty())) {
+                        boolean inSelection = false;
 
                         if (column instanceof DoubleColumn) {
-                            for (ColumnSelection selectionRange : selectionRanges) {
-                                if ((((Double)tuple.getElement(icol)) <= ((DoubleColumnSelectionRange)selectionRange).getMaxValue()) &&
-                                        (((Double)tuple.getElement(icol)) >= ((DoubleColumnSelectionRange)selectionRange).getMinValue())) {
-                                    insideSelectionRange = true;
+                            for (ColumnSelection columnSelection : columnSelections) {
+                                if ((((Double)tuple.getElement(icol)) <= ((DoubleColumnSelectionRange)columnSelection).getMaxValue()) &&
+                                        (((Double)tuple.getElement(icol)) >= ((DoubleColumnSelectionRange)columnSelection).getMinValue())) {
+                                    inSelection = true;
                                     break;
                                 }
                             }
                         } else if (column instanceof TemporalColumn) {
-                            for (ColumnSelection selectionRange : selectionRanges) {
-                                if (!((((Instant)tuple.getElement(icol)).isBefore(((TemporalColumnSelectionRange)selectionRange).getStartInstant())) ||
-                                        ((Instant)tuple.getElement(icol)).isAfter(((TemporalColumnSelectionRange)selectionRange).getEndInstant()))) {
-                                    insideSelectionRange = true;
+                            for (ColumnSelection columnSelection : columnSelections) {
+                                if (!((((Instant)tuple.getElement(icol)).isBefore(((TemporalColumnSelectionRange)columnSelection).getStartInstant())) ||
+                                        ((Instant)tuple.getElement(icol)).isAfter(((TemporalColumnSelectionRange)columnSelection).getEndInstant()))) {
+                                    inSelection = true;
                                     break;
 							    }
                             }
                         } else if (column instanceof CategoricalColumn) {
-                            for (ColumnSelection selectionRange : selectionRanges) {
-                                if (((CategoricalColumnSelection)selectionRange).getSelectedCategories().contains((String)tuple.getElement(icol))) {
-                                    insideSelectionRange = true;
+                            for (ColumnSelection columnSelection : columnSelections) {
+                                if (((CategoricalColumnSelection)columnSelection).getSelectedCategories().contains(tuple.getElement(icol))) {
+                                    inSelection = true;
+                                    break;
+                                }
+                            }
+                        } else if (column instanceof ImageColumn) {
+                            for (ColumnSelection columnSelection : columnSelections) {
+                                if (((ImageColumnSelection)columnSelection).getSelectedImagePairs().contains(tuple.getElement(icol))) {
+                                    inSelection = true;
                                     break;
                                 }
                             }
                         }
 
-                        if (!insideSelectionRange) {
+                        if (!inSelection) {
                             tuple.setQueryFlag(false);
                             break;
                         }
@@ -120,7 +127,6 @@ public class Query {
         for (ColumnSummaryStats summaryStats : columnQuerySummaryStatsMap.values()) {
             summaryStats.setNumHistogramBins(numBins);
         }
-        
     }
 
     public void calculateStatistics() {
@@ -184,7 +190,7 @@ public class Query {
             }
         }
         long elapsed = System.currentTimeMillis() - start;
-        log.info("calculateStatistics() took " + elapsed + "ms");
+//        log.info("calculateStatistics() took " + elapsed + "ms");
     }
 
     public final ObservableList<ColumnSelection> getColumnSelections() { return columnSelections.get(); }
