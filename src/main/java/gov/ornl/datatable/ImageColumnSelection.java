@@ -7,6 +7,7 @@ import javafx.scene.image.Image;
 import javafx.util.Pair;
 
 import java.io.File;
+import java.util.HashSet;
 import java.util.Set;
 
 public class ImageColumnSelection extends ColumnSelection {
@@ -26,6 +27,13 @@ public class ImageColumnSelection extends ColumnSelection {
     public Set<Pair<File,Image>> getSelectedImagePairs() { return selectedImagePairSet.get(); }
 
     public void removeImagePair(Pair<File,Image> imagePair) { selectedImagePairSet.remove(imagePair); }
+
+    public void removeImagePairs(Set<Pair<File,Image>> imagePairsToRemove) {
+        for (Pair<File,Image> imagePairToRemove : imagePairsToRemove) {
+            selectedImagePairSet.remove(imagePairToRemove);
+        }
+//        selectedImagePairSet.remove(imagePairsToRemove);
+    }
 
     public void addImagePair(Pair<File, Image> imagePair) { selectedImagePairSet.add(imagePair); }
 }

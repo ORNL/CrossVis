@@ -2,7 +2,9 @@ package gov.ornl.datatableview;
 
 import gov.ornl.datatable.ColumnSelection;
 import gov.ornl.datatable.ImageColumn;
+import gov.ornl.datatable.ImageColumnSelection;
 import gov.ornl.util.GraphicsUtil;
+import javafx.geometry.Point2D;
 import javafx.scene.Group;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -11,16 +13,20 @@ import javafx.scene.shape.Line;
 import javafx.util.Pair;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.*;
 
 public class ImageAxis extends UnivariateAxis {
 //    HashMap<Pair<File,Image>, Double> imageAxisPositions = new HashMap<>();
     private ArrayList<Pair<File,Image>> imagePairs = new ArrayList<>();
 
+    private ImageAxisSelection draggingSelection;
+
     private Group imageTickLineGroup = new Group();
+    private HashMap<Pair<File,Image>, Line> imagePairToTickLineMap = new HashMap<>();
 
     private ImageView hoverImageView;
+
+    private boolean draggingToRemove = false;
 
     public ImageAxis(DataTableView dataTableView, ImageColumn column) {
         super(dataTableView, column);
@@ -46,35 +52,21 @@ public class ImageAxis extends UnivariateAxis {
 
     private void registerListeners() {
         getAxisBar().setOnMouseEntered(event -> {
-//            log.info("Mouse entered");
             hoverImageView.setVisible(true);
-//            hoverImageView.setImage(imagePairs.get(0).getValue());
-//            hoverValueText.setVisible(true);
-//            hoverValueText.toFront();
         });
 
         getAxisBar().setOnMouseExited(event -> {
-//            log.info("mouse exited");
             hoverImageView.setVisible(false);
-//            hoverValueText.setVisible(false);
         });
 
         getAxisBar().setOnMouseMoved(event -> {
-//            log.info("mouse moved");
-//            hoverImageView.setX(getBounds().getMinX());
-//            hoverImageView.setY(event.getY());
-
             Pair<File,Image> imagePair = (Pair<File,Image>)getValueForAxisPosition(event.getY());
             if (imagePair != null) {
                 if (!hoverImageView.isVisible()) {
                     hoverImageView.setVisible(true);
                 }
                 hoverImageView.setImage(imagePair.getValue());
-//                hoverImageView.setPreserveRatio(true);
-//                hoverImageView.setFitWidth(getBounds().getWidth());
-//                hoverImageView.setX(getCenterX() - (hoverImageView.getLayoutBounds().getWidth() / 2.));
                 hoverImageView.setX(getBounds().getMinX() - 2.);
-//                hoverImageView.setY(event.getY());
                 double hoverImageY = event.getY() - (hoverImageView.getLayoutBounds().getHeight() / 2.);
                 if (hoverImageY < getMaxFocusPosition()) {
                     hoverImageY = hoverImageY + (getMaxFocusPosition() - hoverImageY);
@@ -83,19 +75,69 @@ public class ImageAxis extends UnivariateAxis {
                 }
                 hoverImageView.setY(hoverImageY);
             } else {
-                log.info("got null image pair");
                 hoverImageView.setVisible(false);
             }
+        });
 
-//            Object value = getValueForAxisPosition(event.getY());
-//            if (value != null) {
-//                hoverValueText.setText(getValueForAxisPosition(event.getY()).toString());
-//                hoverValueText.setY(event.getY());
-//                hoverValueText.setX(getCenterX() - hoverValueText.getLayoutBounds().getWidth() / 2.);
-//            } else {
-//                hoverValueText.setText("");
-//            }
-//            hoverValueText.toFront();
+        getAxisBar().setOnMousePressed(event -> {
+            dragStartPoint = new Point2D(event.getX(), event.getY());
+            if (event.isMetaDown() || event.isControlDown()) {
+                draggingToRemove = true;
+            } else {
+                draggingToRemove = false;
+            }
+        });
+
+        getAxisBar().setOnMouseDragged(event -> {
+            if (!dragging) {
+                dragging = true;
+            }
+
+            dragEndPoint = new Point2D(event.getX(), event.getY());
+
+            double selectionMaxY = Math.min(dragStartPoint.getY(), dragEndPoint.getY());
+            double selectionMinY = Math.max(dragStartPoint.getY(), dragEndPoint.getY());
+
+            selectionMaxY = selectionMaxY < getMaxFocusPosition() ? getMaxFocusPosition() : selectionMaxY;
+            selectionMinY = selectionMinY > getMinFocusPosition() ? getMinFocusPosition() : selectionMinY;
+
+            int selectionMaxImagePairIndex = getImagePairIndexForAxisPosition(selectionMaxY);
+            int selectionMinImagePairIndex = getImagePairIndexForAxisPosition(selectionMinY);
+            HashSet<Pair<File, Image>> selectedImagePairs = new HashSet<>(imagePairs.subList(selectionMinImagePairIndex,
+                    selectionMaxImagePairIndex));
+
+            if (draggingSelection == null) {
+                ImageColumnSelection columnSelection = new ImageColumnSelection(imageColumn(), selectedImagePairs);
+                draggingSelection = new ImageAxisSelection(this, columnSelection, selectionMinY, selectionMaxY);
+                axisSelectionGraphicsGroup.getChildren().add(draggingSelection.getGraphicsGroup());
+                axisSelectionGraphicsGroup.toFront();
+            } else {
+                draggingSelection.update(selectedImagePairs, selectionMinY, selectionMaxY);
+            }
+        });
+
+        getAxisBar().setOnMouseReleased(event -> {
+            if (draggingSelection != null) {
+                axisSelectionGraphicsGroup.getChildren().remove(draggingSelection.getGraphicsGroup());
+
+                if (draggingToRemove && getDataTable().getActiveQuery().hasColumnSelections()) {
+                    List<ColumnSelection> columnSelections = getDataTable().getActiveQuery().getColumnSelections(imageColumn());
+                    if (columnSelections != null && !columnSelections.isEmpty()) {
+                        Set<Pair<File,Image>> imagePairsToRemove = ((ImageColumnSelection)draggingSelection.getColumnSelection()).getSelectedImagePairs();
+
+                        for (ColumnSelection columnSelection : columnSelections) {
+                            ImageColumnSelection imageColumnSelection = (ImageColumnSelection)columnSelection;
+                            imageColumnSelection.removeImagePairs(imagePairsToRemove);
+                        }
+                    }
+                    updateImageTickLines();
+                } else {
+                    getDataTable().addColumnSelectionToActiveQuery(draggingSelection.getColumnSelection());
+                }
+
+                dragging = false;
+                draggingSelection = null;
+            }
         });
     }
 
@@ -103,23 +145,47 @@ public class ImageAxis extends UnivariateAxis {
 
     @Override
     protected Object getValueForAxisPosition(double axisPosition) {
+        int index = getImagePairIndexForAxisPosition(axisPosition);
+        if (index != -1) {
+            return imagePairs.get(index);
+        }
+
+        return null;
+//        int index = (int)GraphicsUtil.mapValue(axisPosition, getMinFocusPosition(), getMaxFocusPosition(),
+//                0, imagePairs.size());
+//        if (index >= 0 && index < imagePairs.size()) {
+//            return imagePairs.get(index);
+//        } else {
+//            return null;
+//        }
+    }
+
+    protected int getImagePairIndexForAxisPosition(double axisPosition) {
         int index = (int)GraphicsUtil.mapValue(axisPosition, getMinFocusPosition(), getMaxFocusPosition(),
                 0, imagePairs.size());
         if (index >= 0 && index < imagePairs.size()) {
-            return imagePairs.get(index);
-        } else {
-            return null;
+            return index;
         }
+
+        return -1;
     }
 
     @Override
     protected AxisSelection addAxisSelection(ColumnSelection columnSelection) {
-        return null;
-    }
+        // see if an axis selection already exists for the given column selection
+        if (getAxisSelectionList().contains(columnSelection)) {
+            return null;
+        }
 
-//    protected double getAxisPositionForValue(Image image) {
-//        return getCenterY();
-//    }
+        ImageColumnSelection imageColumnSelection = (ImageColumnSelection)columnSelection;
+
+        ImageAxisSelection imageAxisSelection = new ImageAxisSelection(this, imageColumnSelection,
+                getMinFocusPosition(), getMaxFocusPosition());
+
+        getAxisSelectionList().add(imageAxisSelection);
+
+        return imageAxisSelection;
+    }
 
     protected double getAxisPositionForValue(Pair<File,Image> imagePair) {
         int pairIndex = imagePairs.indexOf(imagePair);
@@ -127,19 +193,16 @@ public class ImageAxis extends UnivariateAxis {
             return GraphicsUtil.mapValue(pairIndex, 0, imagePairs.size(), getMinFocusPosition(), getMaxFocusPosition());
         }
         return Double.NaN;
-//        return GraphicsUtil.mapValue()
-//        return imageAxisPositions.get(imagePair);
-//        return getCenterY();
     }
 
     @Override
     public void resize(double left, double top, double width, double height) {
-        log.info("resize");
         super.resize(left, top, width, height);
 
         hoverImageView.setFitWidth((getBounds().getWidth() - getAxisBar().getWidth()) / 2.);
 
         imageTickLineGroup.getChildren().clear();
+        imagePairToTickLineMap.clear();
         for (int i = 0; i < imagePairs.size(); i++) {
             double y = getAxisPositionForValue(imagePairs.get(i));
             Line line = new Line(getAxisBar().getLayoutBounds().getMinX()+ 2., y, getAxisBar().getLayoutBounds().getMaxX() - 2., y);
@@ -155,14 +218,32 @@ public class ImageAxis extends UnivariateAxis {
             line.setStrokeWidth(1.);
             line.setMouseTransparent(true);
             imageTickLineGroup.getChildren().add(line);
+            imagePairToTickLineMap.put(imagePairs.get(i), line);
+//            imageTickLineToImagePairMap.put(line, imagePairs.get(i));
         }
-//        imageAxisPositions.clear();
-//
-//        Pair<File, Image> imagePairs[] = imageColumn().getValues();
-//        for (int i = 0; i < imagePairs.length; i++) {
-//            double axisPosition = GraphicsUtil.mapValue(i, 0, imagePairs.length,
-//                    getAxisBar().getLayoutBounds().getMinY(), getAxisBar().getLayoutBounds().getMaxY());
-//            imageAxisPositions.put(imagePairs[i], axisPosition);
+    }
+
+    private void updateImageTickLines() {
+        if (getDataTable().getActiveQuery().hasColumnSelections()) {
+            for (int i = 0; i < imagePairs.size(); i++) {
+                if (getDataTable().getTuple(i).getQueryFlag()) {
+                    imagePairToTickLineMap.get(imagePairs.get(i)).strokeProperty().bind(getDataTableView().selectedItemsColorProperty());
+                } else {
+                    imagePairToTickLineMap.get(imagePairs.get(i)).strokeProperty().bind(getDataTableView().unselectedItemsColorProperty());
+                }
+            }
+        } else {
+            for (Line line : imagePairToTickLineMap.values()) {
+                line.strokeProperty().bind(getDataTableView().selectedItemsColorProperty());
+            }
+        }
+//        Set<Pair<File,Image>> selectedImagePairs = imageColumn()
+//        for (Map.Entry<Line, Pair<File,Image>> mapEntry : imageTickLineToImagePairMap.entrySet()) {
+//            if (selectedImagePairs.contains(mapEntry.getValue())) {
+//                mapEntry.getKey().strokeProperty().bind(getDataTableView().selectedItemsColorProperty());
+//            } else {
+//                mapEntry.getKey().strokeProperty().bind(getDataTableView().unselectedItemsColorProperty());
+//            }
 //        }
     }
 }

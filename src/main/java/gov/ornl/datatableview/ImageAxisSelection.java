@@ -1,29 +1,40 @@
 package gov.ornl.datatableview;
 
-import gov.ornl.datatable.CategoricalColumnSelection;
+import gov.ornl.datatable.ImageColumnSelection;
+import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
+import javafx.util.Pair;
 
-public class CategoricalAxisSelection extends UnivariateAxisSelection {
+import java.awt.*;
+import java.io.File;
+import java.util.HashSet;
+import java.util.Set;
 
-    public CategoricalAxisSelection(CategoricalAxis categoricalAxis, CategoricalColumnSelection selection) {
-        super(categoricalAxis, selection);
+public class ImageAxisSelection extends UnivariateAxisSelection {
+
+    public ImageAxisSelection(ImageAxis imageAxis, ImageColumnSelection columnSelection, double minValueY,
+                              double maxValueY) {
+        super(imageAxis, columnSelection, minValueY, maxValueY);
         registerListeners();
     }
 
     private void registerListeners() {
-        categoricalColumnSelection().selectedCategoriesProperty().addListener((observable, oldValue, newValue) -> {
+        imageColumnSelection().selectedImagePairSetProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue != null) {
                 resize();
             }
         });
     }
 
-    private CategoricalColumnSelection categoricalColumnSelection() {
-        return (CategoricalColumnSelection)getColumnSelection();
+    private ImageColumnSelection imageColumnSelection() {
+        return (ImageColumnSelection)getColumnSelection();
     }
 
-    private CategoricalAxis categoricalAxis() {
-        return (CategoricalAxis)getAxis();
+    private ImageAxis imageAxis() { return (ImageAxis)getAxis(); }
+
+    protected void update(Set<Pair<File, Image>> selectedImagePairs, double minValueY, double maxValueY) {
+        imageColumnSelection().setSelectedImagePairs(selectedImagePairs);
+        layoutGraphics(minValueY, maxValueY);
     }
 
     @Override

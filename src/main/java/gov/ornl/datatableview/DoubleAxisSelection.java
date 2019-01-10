@@ -333,6 +333,7 @@ public class DoubleAxisSelection extends UnivariateAxisSelection {
     }
 
     public DoubleColumnSelectionRange getDoubleColumnSelectionRange() { return (DoubleColumnSelectionRange)getColumnSelection(); }
+
     @Override
     public void resize() {
 //
