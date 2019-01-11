@@ -29,6 +29,7 @@ public class ImageAxis extends UnivariateAxis {
     private HashMap<Pair<File,Image>, Line> imagePairToTickLineMap = new HashMap<>();
 
     private ImageView hoverImageView;
+    private Line hoverImagePairTickLine;
 
     private boolean draggingToRemove = false;
 
@@ -44,31 +45,33 @@ public class ImageAxis extends UnivariateAxis {
         hoverImageView.setCache(true);
         hoverImageView.setMouseTransparent(true);
 
+        hoverImagePairTickLine = new Line();
+        hoverImagePairTickLine.setStrokeWidth(3.);
+        hoverImagePairTickLine.setMouseTransparent(true);
+
         getUpperContextBar().setVisible(false);
         getLowerContextBar().setVisible(false);
         getUpperContextBarHandle().setVisible(false);
         getLowerContextBarHandle().setVisible(false);
 
-        getGraphicsGroup().getChildren().addAll(imageTickLineGroup, hoverImageView);
+        getGraphicsGroup().getChildren().addAll(imageTickLineGroup, hoverImageView, hoverImagePairTickLine);
 
         registerListeners();
     }
 
     private void registerListeners() {
         getAxisBar().setOnMouseEntered(event -> {
-            hoverImageView.setVisible(true);
+//            hoverImageView.setVisible(true);
         });
 
         getAxisBar().setOnMouseExited(event -> {
             hoverImageView.setVisible(false);
+            hoverImagePairTickLine.setVisible(false);
         });
 
         getAxisBar().setOnMouseMoved(event -> {
             Pair<File,Image> imagePair = (Pair<File,Image>)getValueForAxisPosition(event.getY());
             if (imagePair != null) {
-                if (!hoverImageView.isVisible()) {
-                    hoverImageView.setVisible(true);
-                }
                 hoverImageView.setImage(imagePair.getValue());
                 hoverImageView.setX(getBounds().getMinX() - 2.);
                 double hoverImageY = event.getY() - (hoverImageView.getLayoutBounds().getHeight() / 2.);
@@ -78,8 +81,20 @@ public class ImageAxis extends UnivariateAxis {
                     hoverImageY = hoverImageY - ((hoverImageY + hoverImageView.getLayoutBounds().getHeight()) - getMinFocusPosition());
                 }
                 hoverImageView.setY(hoverImageY);
+
+                Line imagePairTickLine = imagePairToTickLineMap.get(imagePair);
+                hoverImagePairTickLine.setStartX(imagePairTickLine.getStartX());
+                hoverImagePairTickLine.setStartY(imagePairTickLine.getStartY());
+                hoverImagePairTickLine.setEndX(imagePairTickLine.getEndX());
+                hoverImagePairTickLine.setEndY(imagePairTickLine.getEndY());
+                hoverImagePairTickLine.setStroke(imagePairTickLine.getStroke());
+                if (!hoverImageView.isVisible()) {
+                    hoverImageView.setVisible(true);
+                    hoverImagePairTickLine.setVisible(true);
+                }
             } else {
                 hoverImageView.setVisible(false);
+                hoverImagePairTickLine.setVisible(false);
             }
         });
 
@@ -108,7 +123,7 @@ public class ImageAxis extends UnivariateAxis {
             int selectionMaxImagePairIndex = getImagePairIndexForAxisPosition(selectionMaxY);
             int selectionMinImagePairIndex = getImagePairIndexForAxisPosition(selectionMinY);
             HashSet<Pair<File, Image>> selectedImagePairs = new HashSet<>(imagePairs.subList(selectionMinImagePairIndex,
-                    selectionMaxImagePairIndex));
+                    selectionMaxImagePairIndex + 1));
 
             if (draggingSelection == null) {
                 ImageColumnSelection columnSelection = new ImageColumnSelection(imageColumn(), selectedImagePairs);
@@ -165,8 +180,8 @@ public class ImageAxis extends UnivariateAxis {
     }
 
     protected int getImagePairIndexForAxisPosition(double axisPosition) {
-        int index = (int)GraphicsUtil.mapValue(axisPosition, getMinFocusPosition(), getMaxFocusPosition(),
-                0, imagePairs.size());
+        int index = (int)Math.round(GraphicsUtil.mapValue(axisPosition, getMinFocusPosition() - 2., getMaxFocusPosition() + 2.,
+                0, imagePairs.size() - 1));
         if (index >= 0 && index < imagePairs.size()) {
             return index;
         }
@@ -194,7 +209,8 @@ public class ImageAxis extends UnivariateAxis {
     protected double getAxisPositionForValue(Pair<File,Image> imagePair) {
         int pairIndex = imagePairs.indexOf(imagePair);
         if (pairIndex >= 0 && pairIndex < imagePairs.size()) {
-            return GraphicsUtil.mapValue(pairIndex, 0, imagePairs.size(), getMinFocusPosition(), getMaxFocusPosition());
+            return GraphicsUtil.mapValue(pairIndex, 0, imagePairs.size() - 1,
+                    getMinFocusPosition() - 2., getMaxFocusPosition() + 2.);
         }
         return Double.NaN;
     }

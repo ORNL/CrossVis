@@ -7,6 +7,7 @@ import javafx.beans.property.StringProperty;
 
 import java.io.File;
 import java.time.format.DateTimeFormatter;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
@@ -27,36 +28,36 @@ public class DataTableColumnSpecification {
         setIgnore(ignore);
 
         dtFormatterMap = new TreeMap<>();
-        dtFormatterMap.put("BASIC_ISO_DATE", DateTimeFormatter.BASIC_ISO_DATE);
-        dtFormatterMap.put("ISO_DATE", DateTimeFormatter.ISO_DATE);
+//        dtFormatterMap.put("BASIC_ISO_DATE", DateTimeFormatter.BASIC_ISO_DATE);
+//        dtFormatterMap.put("ISO_DATE", DateTimeFormatter.ISO_DATE);
         dtFormatterMap.put("ISO_DATE_TIME", DateTimeFormatter.ISO_DATE_TIME);
         dtFormatterMap.put("ISO_INSTANT", DateTimeFormatter.ISO_INSTANT);
-        dtFormatterMap.put("ISO_LOCAL_DATE", DateTimeFormatter.ISO_LOCAL_DATE);
+//        dtFormatterMap.put("ISO_LOCAL_DATE", DateTimeFormatter.ISO_LOCAL_DATE);
         dtFormatterMap.put("ISO_LOCAL_DATE_TIME", DateTimeFormatter.ISO_LOCAL_DATE_TIME);
-        dtFormatterMap.put("ISO_LOCAL_TIME", DateTimeFormatter.ISO_LOCAL_TIME);
-        dtFormatterMap.put("ISO_OFFSET_DATE", DateTimeFormatter.ISO_OFFSET_DATE);
+//        dtFormatterMap.put("ISO_LOCAL_TIME", DateTimeFormatter.ISO_LOCAL_TIME);
+//        dtFormatterMap.put("ISO_OFFSET_DATE", DateTimeFormatter.ISO_OFFSET_DATE);
         dtFormatterMap.put("ISO_OFFSET_DATE_TIME", DateTimeFormatter.ISO_LOCAL_DATE_TIME);
-        dtFormatterMap.put("ISO_OFFSET_TIME", DateTimeFormatter.ISO_OFFSET_TIME);
-        dtFormatterMap.put("ISO_ORDINAL_DATE", DateTimeFormatter.ISO_ORDINAL_DATE);
-        dtFormatterMap.put("ISO_TIME", DateTimeFormatter.ISO_TIME);
-        dtFormatterMap.put("ISO_WEEK_DATE", DateTimeFormatter.ISO_WEEK_DATE);
+//        dtFormatterMap.put("ISO_OFFSET_TIME", DateTimeFormatter.ISO_OFFSET_TIME);
+//        dtFormatterMap.put("ISO_ORDINAL_DATE", DateTimeFormatter.ISO_ORDINAL_DATE);
+//        dtFormatterMap.put("ISO_TIME", DateTimeFormatter.ISO_TIME);
+//        dtFormatterMap.put("ISO_WEEK_DATE", DateTimeFormatter.ISO_WEEK_DATE);
         dtFormatterMap.put("ISO_ZONED_DATE_TIME", DateTimeFormatter.ISO_ZONED_DATE_TIME);
         dtFormatterMap.put("RFC_1123_DATE_TIME", DateTimeFormatter.RFC_1123_DATE_TIME);
 
         dtParsePatternsExamples = new TreeMap<>();
-        dtParsePatternsExamples.put("BASIC_ISO_DATE", "'20111203'");
-        dtParsePatternsExamples.put("ISO_DATE", "'2011-12-03' or '2011-12-03+01:00'");
+//        dtParsePatternsExamples.put("BASIC_ISO_DATE", "'20111203'");
+//        dtParsePatternsExamples.put("ISO_DATE", "'2011-12-03' or '2011-12-03+01:00'");
         dtParsePatternsExamples.put("ISO_DATE_TIME", "'2011-12-03T10:15:30', '2011-12-03T10:15:30+01:00' or '2011-12-03T10:15:30+01:00[Europe/Paris]'");
         dtParsePatternsExamples.put("ISO_INSTANT", "'2011-12-03T10:15:30Z'");
-        dtParsePatternsExamples.put("ISO_LOCAL_DATE", "'2011-12-03'");
+//        dtParsePatternsExamples.put("ISO_LOCAL_DATE", "'2011-12-03'");
         dtParsePatternsExamples.put("ISO_LOCAL_DATE_TIME", "'2011-12-03T10:15:30'");
-        dtParsePatternsExamples.put("ISO_LOCAL_TIME", "'10:15' or '10:15:30'");
-        dtParsePatternsExamples.put("ISO_OFFSET_DATE", "'2011-12-03+01:00'");
+//        dtParsePatternsExamples.put("ISO_LOCAL_TIME", "'10:15' or '10:15:30'");
+//        dtParsePatternsExamples.put("ISO_OFFSET_DATE", "'2011-12-03+01:00'");
         dtParsePatternsExamples.put("ISO_OFFSET_DATE_TIME", "'2011-12-03T10:15:30+01:00'");
-        dtParsePatternsExamples.put("ISO_OFFSET_TIME", "'10:15+01:00' or '10:15:30+01:00'");
-        dtParsePatternsExamples.put("ISO_ORDINAL_DATE", "'2012-337'");
-        dtParsePatternsExamples.put("ISO_TIME", "'10:15', '10:15:30' or '10:15:30+01:00'");
-        dtParsePatternsExamples.put("ISO_WEEK_DATE", "'2012-W48-6'");
+//        dtParsePatternsExamples.put("ISO_OFFSET_TIME", "'10:15+01:00' or '10:15:30+01:00'");
+//        dtParsePatternsExamples.put("ISO_ORDINAL_DATE", "'2012-337'");
+//        dtParsePatternsExamples.put("ISO_TIME", "'10:15', '10:15:30' or '10:15:30+01:00'");
+//        dtParsePatternsExamples.put("ISO_WEEK_DATE", "'2012-W48-6'");
         dtParsePatternsExamples.put("ISO_ZONED_DATE_TIME", "'2011-12-03T10:15:30+01:00[Europe/Paris]'");
         dtParsePatternsExamples.put("RFC_1123_DATE_TIME", "'Tue, 3 Jun 2008 11:05:30 GMT'");
     }
@@ -99,6 +100,8 @@ public class DataTableColumnSpecification {
     }
 
     public Set<String> getDateTimeFormatterIDs() { return dtFormatterMap.keySet(); }
+
+    public Map<String, DateTimeFormatter> getDateTimeFormatterMap () { return dtFormatterMap; }
 
     public DateTimeFormatter getDateTimeFormatter() {
         if (!getDateTimeFormatterID().isEmpty()) {

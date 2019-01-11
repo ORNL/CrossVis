@@ -22,9 +22,9 @@ import javafx.util.Callback;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.*;
 import java.util.logging.Logger;
 
 public class DataTableColumnSpecificationDialog {
@@ -122,7 +122,7 @@ public class DataTableColumnSpecificationDialog {
                         if (!empty) {
                             DataTableColumnSpecification columnSpecification = getTableView().getItems().get(getIndex());
                             if (columnSpecification.getType().equals("Temporal")) {
-                                columnSpecification.setDateTimeFormatterID("BASIC_ISO_DATE");
+                                columnSpecification.setDateTimeFormatterID(columnSpecification.getDateTimeFormatterID());
                             } else {
                                 columnSpecification.setDateTimeFormatterID("");
                             }
@@ -273,11 +273,13 @@ public class DataTableColumnSpecificationDialog {
         columnSpecificationTableView.setItems(tableColumnSpecs);
         columnSpecificationTableView.setPrefHeight(200.);
 
-        List<String> fileLines = IOUtilities.readCSVLines(csvFile, 0, 10);
+        List<String> fileLines = IOUtilities.readCSVLines(csvFile, 0, 11);
         String fileLinesString = "";
         for (String line : fileLines) {
             fileLinesString += line + "\n";
         }
+
+        guessColumnDataTypes(fileLines.subList(1, fileLines.size()), tableColumnSpecs);
 
         TextArea fileLinesTextArea = new TextArea();
         fileLinesTextArea.setText(fileLinesString);
@@ -349,5 +351,61 @@ public class DataTableColumnSpecificationDialog {
         }
 
         return null;
+    }
+
+    private static void guessColumnDataTypes(List<String> fileLines, List<DataTableColumnSpecification> tableColumnSpecs ) {
+        for (int i = 0; i < tableColumnSpecs.size(); i++) {
+            boolean isNumber = true;
+            DataTableColumnSpecification columnSpecification = tableColumnSpecs.get(i);
+            for (String line : fileLines) {
+                String tokens[] = line.split(",");
+                if (!stringIsNumber(tokens[i])) {
+                    isNumber = false;
+                    break;
+                }
+            }
+
+            if (isNumber) {
+                columnSpecification.setType("Double");
+            } else {
+                if ((columnSpecification.getName().contains("image") ||
+                    columnSpecification.getName().contains("Image")) &&
+                        (columnSpecification.getName().contains("file") ||
+                                columnSpecification.getName().contains("File"))) {
+                    columnSpecification.setType("Image Filename");
+                } else if (columnSpecification.getName().contains("date") ||
+                        columnSpecification.getName().contains("Date") ||
+                        columnSpecification.getName().contains("time") ||
+                        columnSpecification.getName().contains("Time")) {
+                    String columnExample = fileLines.get(0).split(",")[tableColumnSpecs.indexOf(columnSpecification)].trim();
+                    boolean foundDateTimeFormatter = false;
+                    for (Map.Entry<String, DateTimeFormatter> mapEntry : columnSpecification.getDateTimeFormatterMap().entrySet()) {
+                        try {
+                            mapEntry.getValue().parse(columnExample);
+                            columnSpecification.setType("Temporal");
+                            columnSpecification.setDateTimeFormatterID(mapEntry.getKey());
+                            foundDateTimeFormatter = true;
+                            break;
+                        } catch (DateTimeParseException ex) {
+
+                        }
+                    }
+                    if (!foundDateTimeFormatter) {
+                        columnSpecification.setType("Categorical");
+                    }
+                } else {
+                    columnSpecification.setType("Categorical");
+                }
+            }
+        }
+    }
+
+    private static boolean stringIsNumber(String str) {
+        try {
+            Double.parseDouble(str);
+            return true;
+        } catch (NumberFormatException ex) {
+            return false;
+        }
     }
 }
