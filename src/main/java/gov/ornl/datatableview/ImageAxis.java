@@ -10,12 +10,16 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
+import javafx.scene.shape.Rectangle;
 import javafx.util.Pair;
 
 import java.io.File;
 import java.util.*;
 
 public class ImageAxis extends UnivariateAxis {
+    public final static Color DEFAULT_SELECTION_FILL_COLOR = new Color(Color.ORANGE.getRed(), Color.ORANGE.getGreen(),
+            Color.ORANGE.getBlue(), 1.0);
+
 //    HashMap<Pair<File,Image>, Double> imageAxisPositions = new HashMap<>();
     private ArrayList<Pair<File,Image>> imagePairs = new ArrayList<>();
 
@@ -205,7 +209,7 @@ public class ImageAxis extends UnivariateAxis {
         imagePairToTickLineMap.clear();
         for (int i = 0; i < imagePairs.size(); i++) {
             double y = getAxisPositionForValue(imagePairs.get(i));
-            Line line = new Line(getAxisBar().getLayoutBounds().getMinX()+ 2., y, getAxisBar().getLayoutBounds().getMaxX() - 2., y);
+            Line line = new Line(getAxisBar().getLayoutBounds().getMinX() + 4., y, getAxisBar().getLayoutBounds().getMaxX() - 4., y);
             if (getDataTable().getActiveQuery().hasColumnSelections()) {
                 if (getDataTable().getTuple(i).getQueryFlag()) {
                     line.strokeProperty().bind(getDataTableView().selectedItemsColorProperty());
@@ -220,6 +224,32 @@ public class ImageAxis extends UnivariateAxis {
             imageTickLineGroup.getChildren().add(line);
             imagePairToTickLineMap.put(imagePairs.get(i), line);
 //            imageTickLineToImagePairMap.put(line, imagePairs.get(i));
+        }
+
+        updateAxisSelectionIndicators();
+    }
+
+    private void updateAxisSelectionIndicators() {
+        axisSelectionGraphicsGroup.getChildren().clear();
+        ArrayList<ColumnSelection> columnSelections = getDataTable().getActiveQuery().getColumnSelections(imageColumn());
+        if (columnSelections != null && !columnSelections.isEmpty()) {
+            for (Pair<File,Image> imagePair : imagePairs) {
+                for (ColumnSelection columnSelection : columnSelections) {
+                    if (((ImageColumnSelection)columnSelection).getSelectedImagePairs().contains(imagePair)) {
+                        Line imagePairTickLine = imagePairToTickLineMap.get(imagePair);
+                        Line leftIndicatorLine = new Line(imagePairTickLine.getStartX() - 1.5, imagePairTickLine.getStartY() - 1.,
+                                imagePairTickLine.getStartX() - 1.5, imagePairTickLine.getEndY() + 1.);
+                        leftIndicatorLine.setStrokeWidth(2.);
+                        leftIndicatorLine.setStroke(DEFAULT_SELECTION_FILL_COLOR);
+                        Line rightIndicatorLine = new Line(imagePairTickLine.getEndX() + 1.5, imagePairTickLine.getStartY() - 1.,
+                                imagePairTickLine.getEndX() + 1.5, imagePairTickLine.getEndY() + 1.);
+                        rightIndicatorLine.setStrokeWidth(2.);
+                        rightIndicatorLine.setStroke(DEFAULT_SELECTION_FILL_COLOR);
+                        axisSelectionGraphicsGroup.getChildren().addAll(leftIndicatorLine, rightIndicatorLine);
+                        break;
+                    }
+                }
+            }
         }
     }
 

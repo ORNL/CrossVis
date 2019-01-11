@@ -5,9 +5,7 @@ import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
 import javafx.util.Pair;
 
-import java.awt.*;
 import java.io.File;
-import java.util.HashSet;
 import java.util.Set;
 
 public class ImageAxisSelection extends UnivariateAxisSelection {

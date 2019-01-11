@@ -67,6 +67,7 @@ public class CrossVis extends Application implements DataTableListener {
     private TableView<DoubleColumn> doubleColumnTableView;
     private TableView<TemporalColumn> temporalColumnTableView;
     private TableView<CategoricalColumn> categoricalColumnTableView;
+    private TableView<ImageColumn> imageColumnTableView;
 
     private TableView<ColumnSelection> queryTableView = new TableView<>();
     private TableView<ColumnSelection> doubleQueryTableView;
@@ -117,6 +118,63 @@ public class CrossVis extends Application implements DataTableListener {
     }
 
     private void createColumnTableViews() {
+        // create table views for image columns
+        imageColumnTableView = new TableView<>();
+        imageColumnTableView.setEditable(true);
+        imageColumnTableView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue != null) {
+                dataTable.setHighlightedColumn(newValue);
+            }
+        });
+
+        TableColumn<ImageColumn, String> imageNameColumn = new TableColumn<>("Name");
+        imageNameColumn.setMinWidth(180);
+        imageNameColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
+        imageNameColumn.setCellFactory(TextFieldTableCell.forTableColumn());
+        imageNameColumn.setEditable(true);
+
+        TableColumn<ImageColumn, Boolean> imageEnabledColumn = new TableColumn<>("Visible");
+        imageEnabledColumn.setMinWidth(20);
+        imageEnabledColumn.setCellValueFactory(new PropertyValueFactory<>("enabled"));
+        imageEnabledColumn.setCellFactory(new Callback<TableColumn<ImageColumn, Boolean>, TableCell<ImageColumn, Boolean>>() {
+            @Override
+            public TableCell<ImageColumn, Boolean> call(TableColumn<ImageColumn, Boolean> param) {
+                return new CheckBoxTableCell<ImageColumn, Boolean>() {
+                    {
+                        setAlignment(Pos.CENTER);
+                    }
+
+                    @Override
+                    public void updateItem(Boolean item, boolean empty) {
+                        if (!empty) {
+                            TableRow row = getTableRow();
+
+                            if (row != null) {
+                                int rowNumber = row.getIndex();
+                                TableView.TableViewSelectionModel sm = getTableView().getSelectionModel();
+
+                                if (item) {
+                                    // enable a disabled column
+                                    // get the column name; lookup column in data model; enable the column
+                                    Column column = getTableView().getItems().get(rowNumber);
+                                    dataTable.enableColumn(column);
+                                } else {
+                                    // disable an enabled column
+                                    // get the column name; disable column in data model
+                                    Column column = getTableView().getItems().get(rowNumber);
+                                    dataTable.disableColumn(column);
+                                }
+                            }
+                        }
+                        super.updateItem(item, empty);
+                    }
+                };
+            }
+        });
+        imageEnabledColumn.setEditable(true);
+
+        imageColumnTableView.getColumns().addAll(imageEnabledColumn, imageNameColumn);
+
         // create dataframe view for categorical columns
         categoricalColumnTableView = new TableView<>();
         categoricalColumnTableView.setEditable(true);
@@ -126,7 +184,7 @@ public class CrossVis extends Application implements DataTableListener {
             }
         }));
 
-        TableColumn<CategoricalColumn, String> categoricalNameColumn = new TableColumn<>("Variable Name");
+        TableColumn<CategoricalColumn, String> categoricalNameColumn = new TableColumn<>("Name");
         categoricalNameColumn.setMinWidth(180);
         categoricalNameColumn.setCellValueFactory(new PropertyValueFactory<CategoricalColumn, String>("name"));
         categoricalNameColumn.setCellFactory(TextFieldTableCell.forTableColumn());
@@ -183,7 +241,7 @@ public class CrossVis extends Application implements DataTableListener {
             }
         });
 
-        TableColumn<TemporalColumn, String> temporalNameColumn = new TableColumn<>("Variable Name");
+        TableColumn<TemporalColumn, String> temporalNameColumn = new TableColumn<>("Name");
         temporalNameColumn.setMinWidth(180);
         temporalNameColumn.setCellValueFactory(new PropertyValueFactory<TemporalColumn, String>("name"));
         temporalNameColumn.setCellFactory(TextFieldTableCell.forTableColumn());
@@ -255,7 +313,7 @@ public class CrossVis extends Application implements DataTableListener {
             }
         });
 
-        TableColumn<DoubleColumn, String> doubleNameColumn = new TableColumn<>("Variable Name");
+        TableColumn<DoubleColumn, String> doubleNameColumn = new TableColumn<>("Name");
         doubleNameColumn.setMinWidth(180);
         doubleNameColumn.setCellValueFactory(new PropertyValueFactory<DoubleColumn, String>("name"));
         doubleNameColumn.setCellFactory(TextFieldTableCell.forTableColumn());
@@ -500,41 +558,31 @@ public class CrossVis extends Application implements DataTableListener {
                 tab.setClosable(false);
             }
 
-//
-//            GridPane queryTablePane = new GridPane();
-//            ColumnConstraints col1Constraints = new ColumnConstraints();
-//            col1Constraints.setFillWidth(true);
-//            col1Constraints.setHgrow(Priority.ALWAYS);
-//            ColumnConstraints col2Constraints = new ColumnConstraints();
-//            col2Constraints.setFillWidth(true);
-//            col2Constraints.setHgrow(Priority.ALWAYS);
-//            ColumnConstraints col3Constraints = new ColumnConstraints();
-//            col3Constraints.setFillWidth(true);
-//            col3Constraints.setHgrow(Priority.ALWAYS);
-//            queryTablePane.getColumnConstraints().addAll(col1Constraints, col2Constraints, col3Constraints);
-//            TitledPane doubleQueryTitledPane = new TitledPane("Double Column Selections", doubleQueryTableView);
-//            doubleQueryTitledPane.setCollapsible(false);
-//            queryTablePane.add(doubleQueryTitledPane, 0, 0);
-//            TitledPane temporalQueryTitledPane = new TitledPane("Temporal Column Selections", temporalQueryTableView);
-//            temporalQueryTitledPane.setCollapsible(false);
-//            queryTablePane.add(temporalQueryTitledPane, 1, 0);
-//            TitledPane categoricalQueryTitledPane = new TitledPane("Categorical Column Selections", categoricalQueryTableView);
-//            categoricalQueryTitledPane.setCollapsible(false);
-//            queryTablePane.add(categoricalQueryTitledPane, 2, 0);
+            TabPane axisInfoTablesTabPane = new TabPane();
+            axisInfoTablesTabPane.getTabs().add(new Tab("Double Axes", doubleColumnTableView));
+            axisInfoTablesTabPane.getTabs().add(new Tab("Temporal Axes", temporalColumnTableView));
+            axisInfoTablesTabPane.getTabs().add(new Tab("Categorical Axes", categoricalColumnTableView));
+            axisInfoTablesTabPane.getTabs().add(new Tab("Image Axes", imageColumnTableView));
+            for (Tab tab : axisInfoTablesTabPane.getTabs()) {
+                tab.setClosable(false);
+            }
 
             // create datamodel tab pane
             tabPane = new TabPane();
-            Tab quantitativeColumnTableTab = new Tab(" Quantitative Axes ");
-            quantitativeColumnTableTab.setClosable(false);
-            quantitativeColumnTableTab.setContent(doubleColumnTableView);
-
-            Tab temporalColumnTableTab = new Tab(" Temporal Axes ");
-            temporalColumnTableTab.setClosable(false);
-            temporalColumnTableTab.setContent(temporalColumnTableView);
-
-            Tab categoricalColumnTableTab = new Tab(" Categorical Axes ");
-            categoricalColumnTableTab.setClosable(false);
-            categoricalColumnTableTab.setContent(categoricalColumnTableView);
+            Tab axisInfoTableTab = new Tab("Axis Details");
+            axisInfoTableTab.setClosable(false);
+            axisInfoTableTab.setContent(axisInfoTablesTabPane);
+//            Tab quantitativeColumnTableTab = new Tab(" Quantitative Axes ");
+//            quantitativeColumnTableTab.setClosable(false);
+//            quantitativeColumnTableTab.setContent(doubleColumnTableView);
+//
+//            Tab temporalColumnTableTab = new Tab(" Temporal Axes ");
+//            temporalColumnTableTab.setClosable(false);
+//            temporalColumnTableTab.setContent(temporalColumnTableView);
+//
+//            Tab categoricalColumnTableTab = new Tab(" Categorical Axes ");
+//            categoricalColumnTableTab.setClosable(false);
+//            categoricalColumnTableTab.setContent(categoricalColumnTableView);
 
             Tab dataTableTab = new Tab(" Data Table ");
             dataTableTab.setClosable(false);
@@ -546,7 +594,9 @@ public class CrossVis extends Application implements DataTableListener {
 //            queryTableTab.setContent(queryTablePane);
 //        queryTableTab.setContent(queryTableView);
 
-            tabPane.getTabs().addAll(quantitativeColumnTableTab, categoricalColumnTableTab, temporalColumnTableTab, dataTableTab, queryTableTab);
+            tabPane.getTabs().addAll(axisInfoTableTab, dataTableTab, queryTableTab);
+
+//            tabPane.getTabs().addAll(quantitativeColumnTableTab, categoricalColumnTableTab, temporalColumnTableTab, dataTableTab, queryTableTab);
 
             CheckBox showCorrelationsForQueriedDataCB = new CheckBox("Show Queried Data Correlations");
             showCorrelationsForQueriedDataCB.selectedProperty().bindBidirectional(correlationMatrixView.showQueryCorrelationsProperty());
@@ -1430,9 +1480,16 @@ public class CrossVis extends Application implements DataTableListener {
             categoricalColumnTableView.setItems(FXCollections.observableArrayList(categoricalColumns));
         }
 
+        imageColumnTableView.getItems().clear();
+        ImageColumn imageColumn = dataTable.getImageColumn();
+        if (imageColumn != null) {
+            imageColumnTableView.setItems(FXCollections.observableArrayList(imageColumn));
+        }
+
         doubleQueryTableView.setItems(dataTable.getActiveQuery().columnSelectionsProperty().filtered(selection -> selection instanceof DoubleColumnSelectionRange));
         temporalQueryTableView.setItems(dataTable.getActiveQuery().columnSelectionsProperty().filtered(selection -> selection instanceof TemporalColumnSelectionRange));
         categoricalQueryTableView.setItems(dataTable.getActiveQuery().columnSelectionsProperty().filtered(selection -> selection instanceof CategoricalColumnSelection));
+//        imageQueryTableView.setItems(dataTable.getActiveQuery().columnSelectionsProperty().filtered(selection -> selection instanceof ImageColumnSelection));
 
         setDataTableColumns();
         setDataTableItems();

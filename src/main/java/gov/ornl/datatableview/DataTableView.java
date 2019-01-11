@@ -735,7 +735,8 @@ public class DataTableView extends Region implements DataTableListener {
                             }
 
                             double centerX;
-                            if (dataTable.getHighlightedColumn() == null || !(getHighlightedAxis() instanceof UnivariateAxis)) {
+                            if (dataTable.getHighlightedColumn() == null || !(getHighlightedAxis() instanceof UnivariateAxis) ||
+                                getHighlightedAxis() instanceof ImageAxis) {
                                 centerX = (yAxis.getCenterX() + xAxis.getCenterX()) / 2.;
                             } else {
                                 centerX = yAxis.getCenterX();
@@ -963,7 +964,7 @@ public class DataTableView extends Region implements DataTableListener {
 
         if (isShowingScatterplots()) {
             Axis highlightedAxis = getHighlightedAxis();
-            if (highlightedAxis != null && (highlightedAxis instanceof UnivariateAxis)) {
+            if (highlightedAxis != null && (highlightedAxis instanceof UnivariateAxis) && !(highlightedAxis instanceof ImageAxis)) {
                 for (int iaxis = 0; iaxis < axisList.size(); iaxis++) {
                     Axis currentAxis = axisList.get(iaxis);
                     if (highlightedAxis != currentAxis && (currentAxis instanceof UnivariateAxis) &&
