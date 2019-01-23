@@ -341,13 +341,33 @@ public class DataTableColumnSpecificationDialog {
         });
 
         dialog.setOnCloseRequest(event -> {
+            for (DataTableColumnSpecification spec : tableColumnSpecs) {
+                if (spec.getType().equals("Image Filename")) {
+                    if (spec.getImageFileDirectoryPath().isEmpty()) {
+                        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+                        alert.setHeaderText("Image File Directory");
+                        alert.setHeaderText(null);
+                        alert.setContentText("An image file directory was not set.  If you proceed, the image" +
+                                " filenames must include the full system path to the image file.  " +
+                                "Would you like to set the directory now?");
+                        alert.getButtonTypes().setAll(ButtonType.YES, ButtonType.NO);
 
+                        Optional<ButtonType> result = alert.showAndWait();
+                        if (result.get() == ButtonType.YES){
+                            DirectoryChooser directoryChooser = new DirectoryChooser();
+                            directoryChooser.setTitle("Select Image Directory");
+                            File directory = directoryChooser.showDialog(null);
+                            spec.setImageFileDirectoryPath(directory.getAbsolutePath());
+                        }
+                    }
+                }
+            }
         });
 
         Optional<ObservableList<DataTableColumnSpecification>> result = dialog.showAndWait();
 
         if (result.isPresent()) {
-            return new ArrayList<DataTableColumnSpecification>(result.get());
+            return new ArrayList<>(result.get());
         }
 
         return null;

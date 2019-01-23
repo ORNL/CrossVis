@@ -40,6 +40,7 @@ public class CategoricalAxis extends UnivariateAxis {
     private BooleanProperty showCategoryLabels = new SimpleBooleanProperty(false);
     private BooleanProperty categoryHeightProportionalToCount = new SimpleBooleanProperty(true);
 
+
     public CategoricalAxis(DataTableView dataTableView, CategoricalColumn column) {
         super(dataTableView, column);
 
@@ -235,9 +236,8 @@ public class CategoricalAxis extends UnivariateAxis {
                     handleCategoryRectangleClicked(rectangle, category);
                 });
 
-                Tooltip.install(rectangle, new Tooltip(category + " : " + categoryCount + " of " +
-                        histogram.getTotalCount() + " (" +
-                        percentageFormat.format((double) categoryCount / histogram.getTotalCount()) + " of total)"));
+                Tooltip.install(rectangle, new Tooltip(category + ": " + categoryCount + "/" +
+                        histogram.getTotalCount() + " (" + percentageFormat.format((double) categoryCount / histogram.getTotalCount()) + ") of total"));
 
                 categoriesRectangleMap.put(category, rectangle);
                 if (categoricalColumn().getCategories().size() < (getAxisBar().getHeight()/4.)) {
@@ -338,11 +338,13 @@ public class CategoricalAxis extends UnivariateAxis {
                         }
 
                         Tooltip.install(overallCategoryRectangle,
-                                new Tooltip(category + " : " + overallCategoryCount + " of " +
-                                        histogram.getTotalCount() + " (" +
-                                        percentageFormat.format((double) overallCategoryCount / histogram.getTotalCount()) + " of total)\n" +
-                                        queryCategoryCount + " of " + overallCategoryCount + " selected (" +
-                                        percentageFormat.format((double) queryCategoryCount / overallCategoryCount) + ")"));
+                                new Tooltip(category + ": " + queryCategoryCount + "/" + overallCategoryCount +
+                                        " (" + percentageFormat.format((double) queryCategoryCount / overallCategoryCount) + ") selected"));
+//                                new Tooltip(category + " : " + overallCategoryCount + " of " +
+//                                        histogram.getTotalCount() + " (" +
+//                                        percentageFormat.format((double) overallCategoryCount / histogram.getTotalCount()) + " of total)\n" +
+//                                        queryCategoryCount + " of " + overallCategoryCount + " selected (" +
+//                                        percentageFormat.format((double) queryCategoryCount / overallCategoryCount) + ")"));
                     }
                 }
 

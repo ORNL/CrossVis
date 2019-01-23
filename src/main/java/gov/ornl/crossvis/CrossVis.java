@@ -18,12 +18,21 @@ import javafx.embed.swing.SwingFXUtils;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.*;
+import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.SceneAntialiasing;
 import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Dialog;
+import javafx.scene.control.Label;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuBar;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
+import javafx.scene.image.Image;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
@@ -34,9 +43,11 @@ import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.util.Callback;
+import javafx.util.Pair;
 import org.controlsfx.control.StatusBar;
 
 import javax.imageio.ImageIO;
+import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.text.DecimalFormat;
@@ -51,7 +62,7 @@ import java.util.prefs.Preferences;
 public class CrossVis extends Application implements DataTableListener {
     private static final Logger log = Logger.getLogger(CrossVis.class.getName());
 
-    private static final String VERSION_STRING = "v2.1.4";
+    private static final String VERSION_STRING = "v2.1.5";
 
     private String appTitleString = "C r o s s V i s (" + VERSION_STRING + ")";
 
@@ -105,13 +116,6 @@ public class CrossVis extends Application implements DataTableListener {
         decimalFormat = new DecimalFormat("##0.0%");
 
         dataTableUpdatesEnabled.addListener(observable -> setDataTableItems());
-//        dataTableUpdatesEnabled.addListener(observable -> {
-//            if (dataTableUpdatesEnabled.get()) {
-//                setDataTableItems();
-//            } else {
-//                tupleTableView.getItems().clear();
-//            }
-//        });
 
         dataTable = new DataTable();
         dataTable.addDataTableListener(this);
@@ -541,7 +545,8 @@ public class CrossVis extends Application implements DataTableListener {
             CheckBox dataTableUpdatesCB = new CheckBox("Enable Data Table Updates");
             dataTableUpdatesCB.selectedProperty().bindBidirectional(dataTableUpdatesEnabled);
             VBox tupleTableViewNode = new VBox(dataTableUpdatesCB, tupleTableView);
-            tupleTableViewNode.setSpacing(4.);
+            tupleTableViewNode.setSpacing(2.);
+            tupleTableViewNode.setPadding(new Insets(2.));
 
             doubleQueryTableView = QueryTableFactory.buildDoubleSelectionTable();
             doubleQueryTableView.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
@@ -908,8 +913,11 @@ public class CrossVis extends Application implements DataTableListener {
         CheckMenuItem showContextSegmentsMI = new CheckMenuItem("Show Context Polyline Segments");
         showContextSegmentsMI.selectedProperty().bindBidirectional(dataTableView.getShowContextPolylineSegmentsProperty());
 
+        CheckMenuItem showContextLineSegmentsCB = new CheckMenuItem("Show Context Data Line Segments");
+        showContextLineSegmentsCB.selectedProperty().bindBidirectional(dataTableView.getShowContextPolylineSegmentsProperty());
+
         polylineDisplayMenu.getItems().addAll(showPolylinesMI, showSelectedPolylinesMI, showUnselectedPolylinesMI,
-                showContextSegmentsMI);
+                showContextSegmentsMI, showContextLineSegmentsCB);
 
         Menu axisLayoutMenu = new Menu("Axis Layout");
 
@@ -1039,6 +1047,7 @@ public class CrossVis extends Application implements DataTableListener {
                 imageGridWindow.start(imageGridWindowStage);
                 imageGridWindow.selectedImagesColorProperty().bind(dataTableView.selectedItemsColorProperty());
                 imageGridWindow.unselectedImagesColorProperty().bind(dataTableView.unselectedItemsColorProperty());
+                imageGridWindowStage.setHeight(crossVisStage.getHeight());
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
@@ -1371,7 +1380,7 @@ public class CrossVis extends Application implements DataTableListener {
                 setDataTableColumns();
                 setDataTableItems();
 
-                crossVisStage.setTitle(appTitleString + " -- " + csvFile.getAbsolutePath());
+                crossVisStage.setTitle(appTitleString + " -- " + csvFile.getName());
             } catch (IOException e) {
                 e.printStackTrace();
                 Alert alert = new Alert(Alert.AlertType.ERROR);
@@ -1436,15 +1445,27 @@ public class CrossVis extends Application implements DataTableListener {
                     tupleTableView.getColumns().add(tableColumn);
                 } else if (column instanceof CategoricalColumn) {
                     TableColumn<Tuple, String> tableColumn = new TableColumn<>(column.getName());
-                    tableColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<Tuple, String>, ObservableValue<String>>() {
-                        @Override
-                        public ObservableValue<String> call(TableColumn.CellDataFeatures<Tuple, String> param) {
-                            int columnIndex = dataTable.getColumnIndex(column);
-                            if (columnIndex == -1) {
-                                log.info("Weird!");
-                            }
-                            return new ReadOnlyObjectWrapper<>((String)param.getValue().getElement(columnIndex));
+                    tableColumn.setCellValueFactory(param -> {
+                        int columnIndex = dataTable.getColumnIndex(column);
+                        if (columnIndex == -1) {
+                            log.info("Weird!");
                         }
+                        return new ReadOnlyObjectWrapper<>((String)param.getValue().getElement(columnIndex));
+                    });
+                    tupleTableView.getColumns().add(tableColumn);
+                } else if (column instanceof ImageColumn) {
+//                    TableColumn<Tuple, Pair<File, Image>> tableColumn = new TableColumn<>(column.getName());
+//                    tableColumn.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<Tuple, Pair<File, Image>>, ObservableValue<Pair<File, Image>>>() {
+//                        @Override
+//                        public ObservableValue<Pair<File,Image>> call(TableColumn.CellDataFeatures<Tuple, Pair<File,Image>> param) {
+//                            int columnIndex = dataTable.getColumnIndex(column);
+//                            return new ReadOnlyObjectWrapper<>((Pair<File,Image>)param.getValue().getElement(columnIndex));
+//                        }
+//                    });
+                    TableColumn<Tuple, String> tableColumn = new TableColumn<>(column.getName());
+                    tableColumn.setCellValueFactory(param -> {
+                        int columnIndex = dataTable.getColumnIndex(column);
+                        return new ReadOnlyObjectWrapper<>(((Pair<File,Image>)param.getValue().getElement(columnIndex)).getKey().getName());
                     });
                     tupleTableView.getColumns().add(tableColumn);
                 }

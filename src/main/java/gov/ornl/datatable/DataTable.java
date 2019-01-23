@@ -154,7 +154,9 @@ public class DataTable {
         if (numBins != numHistogramBins) {
             numHistogramBins = numBins;
             for (Column column : columns) {
-                column.getStatistics().setNumHistogramBins(numHistogramBins);
+                if (!(column instanceof ImageColumn)) {
+                    column.getStatistics().setNumHistogramBins(numHistogramBins);
+                }
             }
 
             activeQuery.setNumHistogramBins(numHistogramBins);

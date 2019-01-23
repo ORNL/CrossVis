@@ -5,6 +5,7 @@ import gov.ornl.datatableview.DataTableView;
 import javafx.beans.property.*;
 import javafx.scene.Group;
 import javafx.scene.control.Tooltip;
+import javafx.scene.effect.Bloom;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -48,14 +49,17 @@ public class ImageGridDisplay implements DataTableListener {
 
     private DropShadow selectedDropShadow;
     private DropShadow unselectedDropShadow;
+    private Bloom selectedBloom = new Bloom(1.0);
 
     private HashSet<Stage> imageViewWindowStageSet = new HashSet<>();
 
     public ImageGridDisplay() {
-        selectedDropShadow = new DropShadow(10, getSelectedImagesColor());
-        selectedDropShadow.colorProperty().bind(selectedImagesColorProperty());
-        unselectedDropShadow = new DropShadow(10, getUnselectedImagesColor());
-        unselectedDropShadow.colorProperty().bind(unselectedImagesColorProperty());
+        selectedDropShadow = new DropShadow(15, getSelectedImagesColor());
+        selectedDropShadow.setColor(getSelectedImagesColor());
+//        selectedDropShadow.colorProperty().bind(selectedImagesColorProperty());
+        unselectedDropShadow = new DropShadow(15, getUnselectedImagesColor());
+        unselectedDropShadow.setColor(getUnselectedImagesColor());
+//        unselectedDropShadow.colorProperty().bind(unselectedImagesColorProperty());
 
 //        tilePane.setStyle("-fx-background-color: rgba(255, 215, 0, 0.1);");
         tilePane.setHgap(GAP);
@@ -105,6 +109,16 @@ public class ImageGridDisplay implements DataTableListener {
 
         showUnselectedImages.addListener(observable -> {
             initView();
+        });
+
+        selectedImagesColorProperty().addListener(observable -> {
+            selectedDropShadow.setColor(new Color(getSelectedImagesColor().getRed(),
+                    getSelectedImagesColor().getGreen(), getSelectedImagesColor().getBlue(), 1.));
+        });
+
+        unselectedImagesColorProperty().addListener((observable, oldValue, newValue) -> {
+            unselectedDropShadow.setColor(new Color(getUnselectedImagesColor().getRed(),
+                    getUnselectedImagesColor().getGreen(), getUnselectedImagesColor().getBlue(), 1.));
         });
     }
 
@@ -219,6 +233,7 @@ public class ImageGridDisplay implements DataTableListener {
             for (Pair<File,Image> queryImagePair : queriedImagePairs) {
 //                ImageView imageView = getImageViewForImage(queryImage.);
                 ImageView imageView = pairToImageViewMap.get(queryImagePair);
+//                imageView.setEffect(selectedBloom);
                 imageView.setEffect(selectedDropShadow);
 //                dropShadow.colorProperty().bind(selectedImagesColor);
 //                imageView.setEffect(dropShadow);

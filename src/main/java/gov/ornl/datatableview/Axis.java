@@ -391,9 +391,9 @@ public abstract class Axis {
 
     private void resizeTitleText() {
         titleText.setText(column.getName());
-        if (titleText.getLayoutBounds().getWidth() > bounds.getWidth()) {
+        if (titleText.getLayoutBounds().getWidth() > (bounds.getWidth() - 8.)) {
             // truncate the column name to fit axis bounds
-            while (titleText.getLayoutBounds().getWidth() > bounds.getWidth()) {
+            while (titleText.getLayoutBounds().getWidth() > (bounds.getWidth() - 8.)) {
                 titleText.setText(titleText.getText().substring(0, titleText.getText().length() - 1));
             }
         }
