@@ -1004,7 +1004,8 @@ public class DataTableView extends Region implements DataTableListener {
         if (isShowingCorrelations()) {
             Axis highlightedAxis = getHighlightedAxis();
 //            if (highlightedAxis != null && (highlightedAxis instanceof DoubleAxis || highlightedAxis instanceof TemporalAxis)) {
-            if (highlightedAxis != null && highlightedAxis instanceof DoubleAxis) {
+            if (highlightedAxis != null) {
+//                && highlightedAxis instanceof DoubleAxis) {
                 if (highlightedAxis instanceof DoubleAxis) {
                     for (int i = 0; i < axisList.size(); i++) {
                         Axis axis = axisList.get(i);

@@ -56,6 +56,7 @@ public class CategoricalAxis extends UnivariateAxis {
         getUpperContextBarHandle().setVisible(false);
         getLowerContextBarHandle().setVisible(false);
 
+//        getAxisBar().setVisible(false);
         registerListeners();
     }
 
@@ -223,7 +224,8 @@ public class CategoricalAxis extends UnivariateAxis {
                 categoryName.setFill(DEFAULT_TEXT_COLOR);
                 categoryName.setFont(Font.font(DEFAULT_TEXT_SIZE));
                 categoryName.setMouseTransparent(true);
-                categoryName.setX(getCenterX() - (categoryName.getLayoutBounds().getWidth() / 2.));
+//                categoryName.setX(getCenterX() - (categoryName.getLayoutBounds().getWidth() / 2.));
+                categoryName.setX(getBarLeftX() - (categoryName.getLayoutBounds().getWidth() + 1.));
                 categoryName.setY(y + categoryName.getLayoutBounds().getHeight() + 2);
 
                 Rectangle categoryNameRectangle = new Rectangle(categoryName.getLayoutBounds().getMinX(), categoryName.getLayoutBounds().getMinY(),
@@ -245,14 +247,15 @@ public class CategoricalAxis extends UnivariateAxis {
                 }
 
                 if (selectedCategories.contains(category)) {
-                    Rectangle innerRectangle = new Rectangle(rectangle.getX() + 1, rectangle.getY() + 1,
-                            rectangle.getWidth() - 2, rectangle.getHeight() - 2);
-                    innerRectangle.setStroke(DEFAULT_SELECTED_CATEGORY_STROKE_COLOR);
-                    innerRectangle.setFill(null);
-                    innerRectangle.setArcWidth(6);
-                    innerRectangle.setArcHeight(6);
-                    innerRectangle.setMouseTransparent(true);
-                    categoriesRectangleGroup.getChildren().add(innerRectangle);
+                    rectangle.setFill(DEFAULT_SELECTED_CATEGORY_STROKE_COLOR);
+//                    Rectangle innerRectangle = new Rectangle(rectangle.getX() + 1, rectangle.getY() + 1,
+//                            rectangle.getWidth() - 2, rectangle.getHeight() - 2);
+//                    innerRectangle.setStroke(DEFAULT_SELECTED_CATEGORY_STROKE_COLOR);
+//                    innerRectangle.setFill(null);
+//                    innerRectangle.setArcWidth(6);
+//                    innerRectangle.setArcHeight(6);
+//                    innerRectangle.setMouseTransparent(true);
+//                    categoriesRectangleGroup.getChildren().add(innerRectangle);
                 }
 
                 lastRectangleBottomY = rectangle.getY() + rectangle.getHeight();
@@ -284,10 +287,10 @@ public class CategoricalAxis extends UnivariateAxis {
                         int overallCategoryCount = histogram.getCategoryCount(category);
                         int nonQueryCategoryCount = overallCategoryCount - queryCategoryCount;
 
-                        Rectangle queryRectangle = new Rectangle(overallCategoryRectangle.getLayoutBounds().getMinX() + 4,
-                                0, overallCategoryRectangle.getLayoutBounds().getWidth() - 8d, 0);
-                        Rectangle nonQueryRectangle = new Rectangle(overallCategoryRectangle.getLayoutBounds().getMinX() + 4,
-                                0, overallCategoryRectangle.getLayoutBounds().getWidth() - 8d, 0);
+                        Rectangle queryRectangle = new Rectangle(overallCategoryRectangle.getLayoutBounds().getMinX() + 5,
+                                0, overallCategoryRectangle.getLayoutBounds().getWidth() - 10d, 0);
+                        Rectangle nonQueryRectangle = new Rectangle(overallCategoryRectangle.getLayoutBounds().getMinX() + 5,
+                                0, overallCategoryRectangle.getLayoutBounds().getWidth() - 10d, 0);
 
                         if (queryCategoryCount > 0) {
                             queryRectangle.setY(overallCategoryRectangle.getY() + 2d);
@@ -300,8 +303,8 @@ public class CategoricalAxis extends UnivariateAxis {
                                 queryRectangle.setHeight(overallCategoryRectangle.getHeight() - 4);
                             }
 
-                            queryRectangle.setArcHeight(6);
-                            queryRectangle.setArcWidth(6);
+//                            queryRectangle.setArcHeight(6);
+//                            queryRectangle.setArcWidth(6);
                             queryRectangle.setStroke(DEFAULT_QUERY_STROKE_COLOR);
                             queryRectangle.setFill(new Color(getDataTableView().getSelectedItemsColor().getRed(),
                                     getDataTableView().getSelectedItemsColor().getGreen(),
@@ -324,8 +327,8 @@ public class CategoricalAxis extends UnivariateAxis {
                                 nonQueryRectangle.setY(overallCategoryRectangle.getY() + 2d);
                             }
 
-                            nonQueryRectangle.setArcHeight(6);
-                            nonQueryRectangle.setArcWidth(6);
+//                            nonQueryRectangle.setArcHeight(6);
+//                            nonQueryRectangle.setArcWidth(6);
                             nonQueryRectangle.setStroke(DEFAULT_QUERY_STROKE_COLOR);
                             nonQueryRectangle.setFill(new Color(getDataTableView().getUnselectedItemsColor().getRed(),
                                     getDataTableView().getUnselectedItemsColor().getGreen(),

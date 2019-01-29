@@ -108,6 +108,22 @@ public class DoubleColumn extends Column {
         }
     }
 
+    public double[] getFocusValues() {
+        int columnIndex = getDataTable().getColumnIndex(this);
+        if (columnIndex == -1) {
+            columnIndex = getDataTable().getDisabledColumns().indexOf(this);
+
+        }
+
+        double values[] = new double[getFocusTuples().size()];
+        int counter = 0;
+        for (Tuple focusTuple : getFocusTuples()) {
+            values[counter++] = (double)focusTuple.getElement(columnIndex);
+        }
+
+        return values;
+    }
+
     public List<Double> getValuesAsList() {
         int columnIndex = getDataTable().getColumnIndex(this);
 

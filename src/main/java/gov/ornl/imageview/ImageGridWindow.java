@@ -75,10 +75,10 @@ public class ImageGridWindow extends Application {
 
         Label sliderLabel = new Label("Image Scale:");
 
-        CheckBox showSelectedImagesCheckBox = new CheckBox("Show Selected Images");
+        CheckBox showSelectedImagesCheckBox = new CheckBox("Show Selected");
         showSelectedImagesCheckBox.selectedProperty().bindBidirectional(imageGridDisplay.showSelectedImagesProperty());
 
-        CheckBox showUnselectedImagesCheckBox = new CheckBox("Show Unselected Images");
+        CheckBox showUnselectedImagesCheckBox = new CheckBox("Show Unselected");
         showUnselectedImagesCheckBox.selectedProperty().bindBidirectional(imageGridDisplay.showUnselectedImagesProperty());
 
         ToolBar settingsToolBar = new ToolBar();

@@ -88,6 +88,21 @@ public class TemporalColumn extends Column {
         }
     }
 
+    public Instant[] getFocusValues() {
+        int columnIndex = getDataTable().getColumnIndex(this);
+        if (columnIndex == -1) {
+            columnIndex = getDataTable().getDisabledColumns().indexOf(this);
+        }
+
+        Instant[] values = new Instant[getFocusTuples().size()];
+        int counter = 0;
+        for (Tuple focusTuple : getFocusTuples()) {
+            values[counter++] = (Instant)focusTuple.getElement(columnIndex);
+        }
+
+        return values;
+    }
+
     public Instant[] getValues() {
         Instant[] values = new Instant[getDataTable().getTupleCount()];
         int columnIndex = getDataTable().getColumnIndex(this);

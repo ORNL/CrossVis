@@ -18,10 +18,7 @@ import javafx.scene.text.Text;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.logging.Logger;
 
 public class Scatterplot {
@@ -60,6 +57,7 @@ public class Scatterplot {
     private ArrayList<double[]> points = new ArrayList<>();
     private HashSet<double[]> selectedPoints = new HashSet<>();
     private HashSet<double[]> unselectedPoints = new HashSet<>();
+    private HashMap<double[], Tuple> pointTupleMap = new HashMap<>();
 
     private Color axisStrokeColor = DEFAULT_AXIS_STROKE_COLOR;
     private Color axisTextColor = DEFAULT_AXIS_TEXT_COLOR;
@@ -474,12 +472,18 @@ public class Scatterplot {
         unselectedPoints.clear();
 
         if (xColumn.getDataTable().getActiveQuery().hasColumnSelections()) {
-            for (int i = 0; i < points.size(); i++) {
-                if (xColumn.getDataTable().getTuple(i).getQueryFlag()) {
-                    selectedPoints.add(points.get(i));
+            for (double point[] : points) {
+                if (pointTupleMap.get(point).getQueryFlag()) {
+                    selectedPoints.add(point);
                 } else {
-                    unselectedPoints.add(points.get(i));
+                    unselectedPoints.add(point);
                 }
+//            for (int i = 0; i < points.size(); i++) {
+//                if (xColumn.getDataTable().getTuple(i).getQueryFlag()) {
+//                    selectedPoints.add(points.get(i));
+//                } else {
+//                    unselectedPoints.add(points.get(i));
+//                }
             }
         } else {
             selectedPoints.addAll(points);
@@ -488,6 +492,7 @@ public class Scatterplot {
 
     private void calculatePoints() {
         points.clear();
+        pointTupleMap.clear();
 
         double xMinValuePosition = 0;
         double xMaxValuePosition = 0;
@@ -499,29 +504,37 @@ public class Scatterplot {
         Random categoryJitter = new Random(System.currentTimeMillis());
 
         if (xColumn instanceof DoubleColumn) {
-            double xRangePadding = (((DoubleColumn) xColumn).getStatistics().getMaxValue() -
-                    ((DoubleColumn) xColumn).getStatistics().getMinValue()) * .05;
-            xAxisMaxDoubleValue = ((DoubleColumn) xColumn).getStatistics().getMaxValue() + xRangePadding;
-            xAxisMinDoubleValue = ((DoubleColumn) xColumn).getStatistics().getMinValue() - xRangePadding;
+            double columnMin = ((DoubleColumn)xColumn).getMinimumFocusValue();
+            double columnMax = ((DoubleColumn)xColumn).getMaximumFocusValue();
 
-            xMinValuePosition = GraphicsUtil.mapValue(((DoubleColumn)xColumn).getStatistics().getMinValue(),
-                    xAxisMinDoubleValue, xAxisMaxDoubleValue, yAxisBounds.getWidth(), plotBounds.getWidth());
-            xMaxValuePosition = GraphicsUtil.mapValue(((DoubleColumn)xColumn).getStatistics().getMaxValue(),
-                    xAxisMinDoubleValue, xAxisMaxDoubleValue, yAxisBounds.getWidth(), plotBounds.getWidth());
+            double xRangePadding = (columnMax - columnMin) * .05;
+//                    ((DoubleColumn) xColumn).getStatistics().getMinValue()) * .05;
+            xAxisMaxDoubleValue = columnMax + xRangePadding;
+            xAxisMinDoubleValue = columnMin - xRangePadding;
+
+            xMinValuePosition = GraphicsUtil.mapValue(columnMin, xAxisMinDoubleValue, xAxisMaxDoubleValue,
+                    yAxisBounds.getWidth(), plotBounds.getWidth());
+            xMaxValuePosition = GraphicsUtil.mapValue(columnMax, xAxisMinDoubleValue, xAxisMaxDoubleValue,
+                    yAxisBounds.getWidth(), plotBounds.getWidth());
 //            xMinValuePosition = GraphicsUtil.mapValue(((DoubleColumn)xColumn).getStatistics().getMinValue(),
 //                    xAxisMinDoubleValue, xAxisMaxDoubleValue, 0, plotBounds.getWidth());
 //            xMaxValuePosition = GraphicsUtil.mapValue(((DoubleColumn)xColumn).getStatistics().getMaxValue(),
 //                    xAxisMinDoubleValue, xAxisMaxDoubleValue, 0, plotBounds.getWidth());
         } else if (xColumn instanceof TemporalColumn) {
-            long xRangePaddingMillis = (long)(Duration.between(((TemporalColumn)xColumn).getStatistics().getStartInstant(),
-                    ((TemporalColumn)xColumn).getStatistics().getEndInstant()).toMillis() * .05);
-            xAxisStartInstant = ((TemporalColumn)xColumn).getStatistics().getStartInstant().minusMillis(xRangePaddingMillis);
-            xAxisEndInstant = ((TemporalColumn)xColumn).getStatistics().getEndInstant().plusMillis(xRangePaddingMillis);
+            Instant columnStartInstant = ((TemporalColumn)xColumn).getStartFocusValue();
+            Instant columnEndInstant = ((TemporalColumn)xColumn).getEndFocusValue();
 
-            xMinValuePosition = GraphicsUtil.mapValue(((TemporalColumn)xColumn).getStatistics().getStartInstant(),
-                    xAxisStartInstant, xAxisEndInstant, yAxisBounds.getWidth(), plotBounds.getWidth());
-            xMaxValuePosition = GraphicsUtil.mapValue(((TemporalColumn)xColumn).getStatistics().getEndInstant(),
-                    xAxisStartInstant, xAxisEndInstant, yAxisBounds.getWidth(), plotBounds.getWidth());
+            long xRangePaddingMillis = (long)(Duration.between(columnStartInstant, columnEndInstant).toMillis() * .05);
+//                    ((TemporalColumn)xColumn).getStatistics().getEndInstant()).toMillis() * .05);
+            xAxisStartInstant = columnStartInstant.minusMillis(xRangePaddingMillis);
+            xAxisEndInstant = columnEndInstant.plusMillis(xRangePaddingMillis);
+//            xAxisStartInstant = ((TemporalColumn)xColumn).getStatistics().getStartInstant().minusMillis(xRangePaddingMillis);
+//            xAxisEndInstant = ((TemporalColumn)xColumn).getStatistics().getEndInstant().plusMillis(xRangePaddingMillis);
+
+            xMinValuePosition = GraphicsUtil.mapValue(columnStartInstant, xAxisStartInstant, xAxisEndInstant,
+                    yAxisBounds.getWidth(), plotBounds.getWidth());
+            xMaxValuePosition = GraphicsUtil.mapValue(columnEndInstant, xAxisStartInstant, xAxisEndInstant,
+                    yAxisBounds.getWidth(), plotBounds.getWidth());
         } else if (xColumn instanceof CategoricalColumn) {
             CategoricalColumn categoricalColumn = (CategoricalColumn)xColumn;
 
@@ -537,29 +550,33 @@ public class Scatterplot {
         }
 
         if (yColumn instanceof DoubleColumn) {
-            double yRangePadding = (((DoubleColumn) yColumn).getStatistics().getMaxValue() -
-                    ((DoubleColumn) yColumn).getStatistics().getMinValue()) * .05;
-            yAxisMaxDoubleValue = ((DoubleColumn) yColumn).getStatistics().getMaxValue() + yRangePadding;
-            yAxisMinDoubleValue = ((DoubleColumn) yColumn).getStatistics().getMinValue() - yRangePadding;
+            double columnMin = ((DoubleColumn)yColumn).getMinimumFocusValue();
+            double columnMax = ((DoubleColumn)yColumn).getMaximumFocusValue();
 
-            yMinValuePosition = GraphicsUtil.mapValue(((DoubleColumn)yColumn).getStatistics().getMinValue(),
-                    yAxisMinDoubleValue, yAxisMaxDoubleValue, 0, plotBounds.getHeight());
-            yMaxValuePosition = GraphicsUtil.mapValue(((DoubleColumn)yColumn).getStatistics().getMaxValue(),
-                    yAxisMinDoubleValue, yAxisMaxDoubleValue, 0, plotBounds.getHeight());
+            double yRangePadding = (columnMax - columnMin) * .05;
+            yAxisMaxDoubleValue = columnMax + yRangePadding;
+            yAxisMinDoubleValue = columnMin - yRangePadding;
+
+            yMinValuePosition = GraphicsUtil.mapValue(columnMin, yAxisMinDoubleValue, yAxisMaxDoubleValue, 0,
+                    plotBounds.getHeight());
+            yMaxValuePosition = GraphicsUtil.mapValue(columnMax, yAxisMinDoubleValue, yAxisMaxDoubleValue,
+                    0, plotBounds.getHeight());
 //            yMinValuePosition = GraphicsUtil.mapValue(((DoubleColumn)yColumn).getStatistics().getMinValue(),
 //                    yAxisMinDoubleValue, yAxisMaxDoubleValue, 0, plotBounds.getHeight());
 //            yMaxValuePosition = GraphicsUtil.mapValue(((DoubleColumn)yColumn).getStatistics().getMaxValue(),
 //                    yAxisMinDoubleValue, yAxisMaxDoubleValue, 0, plotBounds.getHeight());
         } else if (yColumn instanceof TemporalColumn) {
-            long yRangePaddingMillis = (long)(Duration.between(((TemporalColumn)yColumn).getStatistics().getStartInstant(),
-                    ((TemporalColumn)yColumn).getStatistics().getEndInstant()).toMillis() * .05);
-            yAxisStartInstant = ((TemporalColumn)yColumn).getStatistics().getStartInstant().minusMillis(yRangePaddingMillis);
-            yAxisEndInstant = ((TemporalColumn)yColumn).getStatistics().getEndInstant().plusMillis(yRangePaddingMillis);
+            Instant columnStartInstant = ((TemporalColumn)yColumn).getStartFocusValue();
+            Instant columnEndInstant = ((TemporalColumn)yColumn).getEndFocusValue();
 
-            yMinValuePosition = GraphicsUtil.mapValue(((TemporalColumn)yColumn).getStatistics().getStartInstant(),
-                    yAxisStartInstant, yAxisEndInstant, plotBounds.getHeight(), 0);
-            yMaxValuePosition = GraphicsUtil.mapValue(((TemporalColumn)yColumn).getStatistics().getEndInstant(),
-                    yAxisStartInstant, yAxisEndInstant, plotBounds.getHeight(), 0);
+            long yRangePaddingMillis = (long)(Duration.between(columnStartInstant, columnEndInstant).toMillis() * .05);
+            yAxisStartInstant = columnStartInstant.minusMillis(yRangePaddingMillis);
+            yAxisEndInstant = columnEndInstant.plusMillis(yRangePaddingMillis);
+
+            yMinValuePosition = GraphicsUtil.mapValue(columnStartInstant, yAxisStartInstant, yAxisEndInstant,
+                    plotBounds.getHeight(), 0);
+            yMaxValuePosition = GraphicsUtil.mapValue(columnEndInstant, yAxisStartInstant, yAxisEndInstant,
+                    plotBounds.getHeight(), 0);
         } else if (yColumn instanceof CategoricalColumn) {
             CategoricalColumn categoricalColumn = (CategoricalColumn)yColumn;
 
@@ -576,61 +593,79 @@ public class Scatterplot {
         dataBounds = new BoundingBox(xMinValuePosition, yMinValuePosition, xMaxValuePosition - xMinValuePosition,
                 yMaxValuePosition - yMinValuePosition);
 
+//        if (xColumn.getName().equals("NE_34kt")) {
+//            log.info("NE_34kt column");
+//        }
         if (xColumn instanceof DoubleColumn && yColumn instanceof DoubleColumn) {
             double[] xValues = ((DoubleColumn) xColumn).getValues();
             double[] yValues = ((DoubleColumn) yColumn).getValues();
 
             for (int i = 0; i < xValues.length; i++) {
-                double[] point = new double[2];
-                point[0] = GraphicsUtil.mapValue(xValues[i], xAxisMinDoubleValue, xAxisMaxDoubleValue,
-                        yAxisBounds.getWidth(), selectedCanvas.getWidth());
-//                point[0] = GraphicsUtil.mapValue(xValues[i], xAxisMinDoubleValue, xAxisMaxDoubleValue,
-//                        0, plotBounds.getWidth());
-                point[1] = GraphicsUtil.mapValue(yValues[i], yAxisMinDoubleValue, yAxisMaxDoubleValue,
-                        plotBounds.getHeight(), 0.);
-                points.add(point);
+                if (xColumn.getName().equals("NE_34kt")) {
+                    if (xValues[i] == 710.) {
+                        log.info("this is the one");
+                    }
+                }
+                if (valueInColumnFocusRange(xValues[i], (DoubleColumn)xColumn) &&
+                        valueInColumnFocusRange(yValues[i], (DoubleColumn)yColumn)) {
+                    double[] point = new double[2];
+                    point[0] = GraphicsUtil.mapValue(xValues[i], xAxisMinDoubleValue, xAxisMaxDoubleValue,
+                            yAxisBounds.getWidth(), selectedCanvas.getWidth());
+                    point[1] = GraphicsUtil.mapValue(yValues[i], yAxisMinDoubleValue, yAxisMaxDoubleValue,
+                            plotBounds.getHeight(), 0.);
+                    points.add(point);
+                    pointTupleMap.put(point, dataTable.getTuple(i));
+                }
             }
         } else if (xColumn instanceof TemporalColumn && yColumn instanceof TemporalColumn) {
             Instant xValues[] = ((TemporalColumn)xColumn).getValues();
             Instant yValues[] = ((TemporalColumn)yColumn).getValues();
 
             for (int i = 0; i < xValues.length; i++) {
-                double point[] = new double[2];
-                point[0] = GraphicsUtil.mapValue(xValues[i], xAxisStartInstant, xAxisEndInstant,
-                        yAxisBounds.getWidth(), selectedCanvas.getWidth());
-//                point[0] = GraphicsUtil.mapValue(xValues[i], xAxisStartInstant, xAxisEndInstant,
-//                        0, plotBounds.getWidth());
-                point[1] = GraphicsUtil.mapValue(yValues[i], yAxisStartInstant, yAxisEndInstant,
-                        plotBounds.getHeight(), 0.);
-                points.add(point);
+                if (valueInColumnFocusRange(xValues[i], (TemporalColumn)xColumn) &&
+                        valueInColumnFocusRange(yValues[i], (TemporalColumn)yColumn)) {
+                    double point[] = new double[2];
+                    point[0] = GraphicsUtil.mapValue(xValues[i], xAxisStartInstant, xAxisEndInstant,
+                            yAxisBounds.getWidth(), selectedCanvas.getWidth());
+                    point[1] = GraphicsUtil.mapValue(yValues[i], yAxisStartInstant, yAxisEndInstant,
+                            plotBounds.getHeight(), 0.);
+                    points.add(point);
+                    pointTupleMap.put(point, dataTable.getTuple(i));
+                }
             }
         } else if (xColumn instanceof DoubleColumn && yColumn instanceof TemporalColumn) {
             double xValues[] = ((DoubleColumn) xColumn).getValues();
             Instant yValues[] = ((TemporalColumn) yColumn).getValues();
 
             for (int i = 0; i < xValues.length; i++) {
-                double point[] = new double[2];
-                point[0] = GraphicsUtil.mapValue(xValues[i], xAxisMinDoubleValue, xAxisMaxDoubleValue,
-                        yAxisBounds.getWidth(), selectedCanvas.getWidth());
+                if (valueInColumnFocusRange(xValues[i], (DoubleColumn)xColumn) &&
+                        valueInColumnFocusRange(yValues[i], (TemporalColumn)yColumn)) {
+                    double point[] = new double[2];
+                    point[0] = GraphicsUtil.mapValue(xValues[i], xAxisMinDoubleValue, xAxisMaxDoubleValue,
+                            yAxisBounds.getWidth(), selectedCanvas.getWidth());
 //                point[0] = GraphicsUtil.mapValue(xValues[i], xAxisMinDoubleValue, xAxisMaxDoubleValue,
 //                        0, plotBounds.getWidth());
-                point[1] = GraphicsUtil.mapValue(yValues[i], yAxisStartInstant, yAxisEndInstant,
-                        plotBounds.getHeight(), 0.);
-                points.add(point);
+                    point[1] = GraphicsUtil.mapValue(yValues[i], yAxisStartInstant, yAxisEndInstant,
+                            plotBounds.getHeight(), 0.);
+                    points.add(point);
+                    pointTupleMap.put(point, dataTable.getTuple(i));
+                }
             }
         } else if (xColumn instanceof TemporalColumn && yColumn instanceof DoubleColumn) {
             Instant xValues[] = ((TemporalColumn) xColumn).getValues();
             double yValues[] = ((DoubleColumn) yColumn).getValues();
 
             for (int i = 0; i < xValues.length; i++) {
-                double point[] = new double[2];
-                point[0] = GraphicsUtil.mapValue(xValues[i], xAxisStartInstant, xAxisEndInstant,
-                        yAxisBounds.getWidth(), selectedCanvas.getWidth());
-//                point[0] = GraphicsUtil.mapValue(xValues[i], xAxisStartInstant, xAxisEndInstant,
-//                        0, plotBounds.getWidth());
-                point[1] = GraphicsUtil.mapValue(yValues[i], yAxisMinDoubleValue, yAxisMaxDoubleValue,
-                        plotBounds.getHeight(), 0.);
-                points.add(point);
+                if (valueInColumnFocusRange(xValues[i], (TemporalColumn)xColumn) &&
+                        valueInColumnFocusRange(yValues[i], (DoubleColumn)yColumn)) {
+                    double point[] = new double[2];
+                    point[0] = GraphicsUtil.mapValue(xValues[i], xAxisStartInstant, xAxisEndInstant,
+                            yAxisBounds.getWidth(), selectedCanvas.getWidth());
+                    point[1] = GraphicsUtil.mapValue(yValues[i], yAxisMinDoubleValue, yAxisMaxDoubleValue,
+                            plotBounds.getHeight(), 0.);
+                    points.add(point);
+                    pointTupleMap.put(point, dataTable.getTuple(i));
+                }
             }
         } else if (xColumn instanceof CategoricalColumn && yColumn instanceof DoubleColumn) {
             List<String> xCategoryValues = ((CategoricalColumn)xColumn).getValuesAsList();
@@ -638,19 +673,20 @@ public class Scatterplot {
             double yValues[] = ((DoubleColumn)yColumn).getValues();
 
             for (int i = 0; i < xCategoryValues.size(); i++) {
-                int categoryIdx = categories.indexOf(xCategoryValues.get(i));
-                double categoryCenter = xCategoryCenters.get(categoryIdx);
-//                double jitter = categoryJitter.nextDouble() * ((categoryBounds[1] - categoryBounds[0]) / 2.);
-                double jitter = categoryJitter.nextDouble() * 2.;
-                if (categoryJitter.nextBoolean()) {
-                    jitter *= -1.;
+                if (valueInColumnFocusRange(yValues[i], (DoubleColumn)yColumn)) {
+                    int categoryIdx = categories.indexOf(xCategoryValues.get(i));
+                    double categoryCenter = xCategoryCenters.get(categoryIdx);
+                    double jitter = categoryJitter.nextDouble() * 2.;
+                    if (categoryJitter.nextBoolean()) {
+                        jitter *= -1.;
+                    }
+                    double point[] = new double[2];
+                    point[0] = yAxisBounds.getWidth() + categoryCenter + jitter;
+                    point[1] = GraphicsUtil.mapValue(yValues[i], yAxisMinDoubleValue, yAxisMaxDoubleValue,
+                            plotBounds.getHeight(), 0.);
+                    points.add(point);
+                    pointTupleMap.put(point, dataTable.getTuple(i));
                 }
-                double point[] = new double[2];
-                point[0] = yAxisBounds.getWidth() + categoryCenter + jitter;
-//                point[0] = categoryCenter + jitter;
-                point[1] = GraphicsUtil.mapValue(yValues[i], yAxisMinDoubleValue, yAxisMaxDoubleValue,
-                        plotBounds.getHeight(), 0.);
-                points.add(point);
             }
         } else if (xColumn instanceof CategoricalColumn && yColumn instanceof TemporalColumn) {
             List<String> xCategoryValues = ((CategoricalColumn)xColumn).getValuesAsList();
@@ -658,18 +694,21 @@ public class Scatterplot {
             Instant yValues[] = ((TemporalColumn)yColumn).getValues();
 
             for (int i = 0; i < xCategoryValues.size(); i++) {
-                int categoryIdx = categories.indexOf(xCategoryValues.get(i));
-                double categoryCenter = xCategoryCenters.get(categoryIdx);
+                if (valueInColumnFocusRange(yValues[i], (TemporalColumn)yColumn)) {
+                    int categoryIdx = categories.indexOf(xCategoryValues.get(i));
+                    double categoryCenter = xCategoryCenters.get(categoryIdx);
 //                double jitter = categoryJitter.nextDouble() * ((categoryBounds[1] - categoryBounds[0]) / 2.);
-                double jitter = categoryJitter.nextDouble() * 2.;
-                if (categoryJitter.nextBoolean()) {
-                    jitter *= -1.;
+                    double jitter = categoryJitter.nextDouble() * 2.;
+                    if (categoryJitter.nextBoolean()) {
+                        jitter *= -1.;
+                    }
+                    double point[] = new double[2];
+                    point[0] = yAxisBounds.getWidth() + categoryCenter + jitter;
+                    point[1] = GraphicsUtil.mapValue(yValues[i], yAxisStartInstant, yAxisEndInstant,
+                            plotBounds.getHeight(), 0);
+                    points.add(point);
+                    pointTupleMap.put(point, dataTable.getTuple(i));
                 }
-                double point[] = new double[2];
-                point[0] = yAxisBounds.getWidth() + categoryCenter + jitter;
-                point[1] = GraphicsUtil.mapValue(yValues[i], yAxisStartInstant, yAxisEndInstant,
-                        plotBounds.getHeight(), 0);
-                points.add(point);
             }
         }  else if (xColumn instanceof DoubleColumn && yColumn instanceof CategoricalColumn) {
             List<String> yCategoryValues = ((CategoricalColumn)yColumn).getValuesAsList();
@@ -677,20 +716,23 @@ public class Scatterplot {
             double xValues[] = ((DoubleColumn)xColumn).getValues();
 
             for (int i = 0; i < yCategoryValues.size(); i++) {
-                int categoryIdx = categories.indexOf(yCategoryValues.get(i));
-                double categoryCenter = yCategoryCenters.get(categoryIdx);
+                if (valueInColumnFocusRange(xValues[i], (DoubleColumn)xColumn)) {
+                    int categoryIdx = categories.indexOf(yCategoryValues.get(i));
+                    double categoryCenter = yCategoryCenters.get(categoryIdx);
 //                double jitter = categoryJitter.nextDouble() * ((categoryBounds[1] - categoryBounds[0]) / 2.);
-                double jitter = categoryJitter.nextDouble() * 2.;
-                if (categoryJitter.nextBoolean()) {
-                    jitter *= -1.;
-                }
-                double point[] = new double[2];
-                point[1] = categoryCenter + jitter;
-                point[0] = GraphicsUtil.mapValue(xValues[i], xAxisMinDoubleValue, xAxisMaxDoubleValue,
-                        yAxisBounds.getWidth(), selectedCanvas.getWidth());
+                    double jitter = categoryJitter.nextDouble() * 2.;
+                    if (categoryJitter.nextBoolean()) {
+                        jitter *= -1.;
+                    }
+                    double point[] = new double[2];
+                    point[1] = categoryCenter + jitter;
+                    point[0] = GraphicsUtil.mapValue(xValues[i], xAxisMinDoubleValue, xAxisMaxDoubleValue,
+                            yAxisBounds.getWidth(), selectedCanvas.getWidth());
 //                point[0] = GraphicsUtil.mapValue(xValues[i], xAxisMinDoubleValue, xAxisMaxDoubleValue,
 //                        plotBounds.getWidth(), 0.);
-                points.add(point);
+                    points.add(point);
+                    pointTupleMap.put(point, dataTable.getTuple(i));
+                }
             }
         }  else if (xColumn instanceof TemporalColumn && yColumn instanceof CategoricalColumn) {
             List<String> yCategoryValues = ((CategoricalColumn)yColumn).getValuesAsList();
@@ -698,19 +740,22 @@ public class Scatterplot {
             Instant xValues[] = ((TemporalColumn)xColumn).getValues();
 
             for (int i = 0; i < yCategoryValues.size(); i++) {
-                int categoryIdx = categories.indexOf(yCategoryValues.get(i));
-                double categoryCenter = yCategoryCenters.get(categoryIdx);
-                double jitter = categoryJitter.nextDouble() * 2.;
-                if (categoryJitter.nextBoolean()) {
-                    jitter *= -1.;
-                }
-                double point[] = new double[2];
-                point[1] = categoryCenter + jitter;
-                point[0] = GraphicsUtil.mapValue(xValues[i], xAxisStartInstant, xAxisEndInstant,
-                        yAxisBounds.getWidth(), selectedCanvas.getWidth());
+                if (valueInColumnFocusRange(xValues[i], (TemporalColumn)xColumn)) {
+                    int categoryIdx = categories.indexOf(yCategoryValues.get(i));
+                    double categoryCenter = yCategoryCenters.get(categoryIdx);
+                    double jitter = categoryJitter.nextDouble() * 2.;
+                    if (categoryJitter.nextBoolean()) {
+                        jitter *= -1.;
+                    }
+                    double point[] = new double[2];
+                    point[1] = categoryCenter + jitter;
+                    point[0] = GraphicsUtil.mapValue(xValues[i], xAxisStartInstant, xAxisEndInstant,
+                            yAxisBounds.getWidth(), selectedCanvas.getWidth());
 //                point[0] = GraphicsUtil.mapValue(xValues[i], xAxisStartInstant, xAxisEndInstant,
 //                        0, plotBounds.getWidth());
-                points.add(point);
+                    points.add(point);
+                    pointTupleMap.put(point, dataTable.getTuple(i));
+                }
             }
         }  else if (xColumn instanceof CategoricalColumn && yColumn instanceof CategoricalColumn) {
             List<String> yCategoryValues = ((CategoricalColumn)yColumn).getValuesAsList();
@@ -737,10 +782,25 @@ public class Scatterplot {
                 point[0] = yAxisBounds.getWidth() + categoryCenter + jitter;
 
                 points.add(point);
+                pointTupleMap.put(point, dataTable.getTuple(i));
             }
         }
 
         fillSelectionPointSets();
+    }
+
+    private boolean valueInColumnFocusRange(double value, DoubleColumn column) {
+        if (value < column.getMinimumFocusValue() || value > column.getMaximumFocusValue()) {
+            return false;
+        }
+        return true;
+    }
+
+    private boolean valueInColumnFocusRange(Instant value, TemporalColumn column) {
+        if (value.isBefore(column.getStartFocusValue()) || value.isAfter(column.getEndFocusValue())) {
+            return false;
+        }
+        return true;
     }
 
     public Bounds getDataBounds() { return dataBounds; }

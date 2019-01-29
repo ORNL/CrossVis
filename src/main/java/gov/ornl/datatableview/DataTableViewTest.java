@@ -55,29 +55,29 @@ public class DataTableViewTest extends Application {
                 dataTable.setCalculateNonQueryStatistics(true);
 
                 // read diatoms file with images
-                ArrayList<String> categoricalColumnNames = new ArrayList<>();
-                categoricalColumnNames.add("Type");
-                String imageColumnName = "Image Filename";
-                String imageDirectoryPath = "/Users/csg/Dropbox (ORNL)/data/CNMS_SEM_images/AllDiatomImagesPNG";
-                String csvFilePath = "/Users/csg/Dropbox (ORNL)/data/CNMS_SEM_images/DiatomsParameters.csv";
-                IOUtilities.readCSV(new File(csvFilePath), null, categoricalColumnNames,
-                        null, imageColumnName, imageDirectoryPath, null,
-                        dataTable);
+//                ArrayList<String> categoricalColumnNames = new ArrayList<>();
+//                categoricalColumnNames.add("Type");
+//                String imageColumnName = "Diatoms Image";
+//                String imageDirectoryPath = "/Users/csg/Dropbox (ORNL)/data/CNMS_SEM_images/AllDiatomImagesPNG";
+//                String csvFilePath = "/Users/csg/Dropbox (ORNL)/data/CNMS_SEM_images/DiatomsParameters.csv";
+//                IOUtilities.readCSV(new File(csvFilePath), null, categoricalColumnNames,
+//                        null, imageColumnName, imageDirectoryPath, null,
+//                        dataTable);
 
                 // read HURDAT csv file
-//                ArrayList<String> temporalColumnNames = new ArrayList<>();
-//                temporalColumnNames.add("DateTime");
-//                ArrayList<DateTimeFormatter> temporalColumnFormatters = new ArrayList<>();
-//                temporalColumnFormatters.add(DateTimeFormatter.ISO_INSTANT);
-//                ArrayList<String> ignoreColumnNames = new ArrayList<>();
-//                ignoreColumnNames.add("Date");
-//                ArrayList<String> categoricalColumnNames = new ArrayList<>();
-//                categoricalColumnNames.add("ID");
-//                categoricalColumnNames.add("Record");
-//                categoricalColumnNames.add("Status");
-//                IOUtilities.readCSV(new File("data/csv/AtlanticHURDAT.csv"), ignoreColumnNames,
-//                        categoricalColumnNames, temporalColumnNames, null, null,
-//                        temporalColumnFormatters, dataTable);
+                ArrayList<String> temporalColumnNames = new ArrayList<>();
+                temporalColumnNames.add("DateTime");
+                ArrayList<DateTimeFormatter> temporalColumnFormatters = new ArrayList<>();
+                temporalColumnFormatters.add(DateTimeFormatter.ISO_INSTANT);
+                ArrayList<String> ignoreColumnNames = new ArrayList<>();
+                ignoreColumnNames.add("Date");
+                ArrayList<String> categoricalColumnNames = new ArrayList<>();
+                categoricalColumnNames.add("ID");
+                categoricalColumnNames.add("Record");
+                categoricalColumnNames.add("Status");
+                IOUtilities.readCSV(new File("data/csv/AtlanticHURDAT.csv"), ignoreColumnNames,
+                        categoricalColumnNames, temporalColumnNames, null, null,
+                        temporalColumnFormatters, dataTable);
 
                 dataTableView.setFitToWidth(true);
 //                dataTableView.setAxisSpacing(140.);
