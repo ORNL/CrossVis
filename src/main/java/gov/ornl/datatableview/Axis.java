@@ -1,5 +1,6 @@
 package gov.ornl.datatableview;
 
+import gov.ornl.datatable.CategoricalColumn;
 import gov.ornl.datatable.Column;
 import gov.ornl.datatable.ColumnSelection;
 import gov.ornl.datatable.DataTable;
@@ -18,6 +19,8 @@ import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Optional;
 import java.util.logging.Logger;
 
 public abstract class Axis {
@@ -212,9 +215,35 @@ public abstract class Axis {
                     showCategoryLabels.selectedProperty().bindBidirectional(((CategoricalAxis)this).showCategoryLabelsProperty());
                     contextMenu.getItems().add(0, showCategoryLabels);
 
-                    CheckMenuItem categoryHeightProportionalToCountCheck = new CheckMenuItem("Category Height Proportional To Count");
+                    CheckMenuItem categoryHeightProportionalToCountCheck = new CheckMenuItem("Set Category Height Proportional To Count");
                     categoryHeightProportionalToCountCheck.selectedProperty().bindBidirectional(((CategoricalAxis)this).categoryHeightProportionalToCountProperty());
                     contextMenu.getItems().add(1, categoryHeightProportionalToCountCheck);
+
+                    MenuItem addSelection = new MenuItem("Select Categories");
+                    addSelection.setOnAction(event1 -> {
+                        TextInputDialog dialog = new TextInputDialog("");
+                        dialog.setTitle("Add Categorical Axis Selection");
+                        dialog.setHeaderText("Enter " + this.getColumn().getName() + " axis categories to select");
+                        dialog.setContentText("Categories (category1,category2,...):");
+
+                        Optional<String> result = dialog.showAndWait();
+                        result.ifPresent(categoriesString -> {
+                            System.out.println("Selecting " + categoriesString);
+                            String categories[] = categoriesString.split(",");
+                            HashSet<String> categorySet = new HashSet<>();
+                            for (String category : categories) {
+                                category = category.trim();
+                                if (((CategoricalColumn)getColumn()).getCategories().contains(category)) {
+                                    categorySet.add(category);
+                                }
+                            }
+                            if (!categorySet.isEmpty()) {
+                                getDataTableView().addCategoricalSelection((CategoricalColumn) getColumn(), categorySet);
+                            }
+                        });
+
+                    });
+                    contextMenu.getItems().add(2, addSelection);
                 }
 
                 if (this instanceof BivariateAxis) {

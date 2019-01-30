@@ -21,7 +21,6 @@ public class CategoricalAxis extends UnivariateAxis {
     private final static Color DEFAULT_CATEGORY_STROKE_COLOR = new Color(0.1, 0.1, 0.1, 1.0);
     private final static Color DEFAULT_CATEGORY_FILL_COLOR = Color.LIGHTGRAY;
     private final static Color DEFAULT_QUERY_STROKE_COLOR = new Color(0.5, 0.5, 0.5, 1.0);
-//    private final static Color DEFAULT_SELECTED_CATEGORY_STROKE_COLOR = Color.YELLOW;
     private final static Color DEFAULT_SELECTED_CATEGORY_STROKE_COLOR = new Color(DEFAULT_SELECTION_FILL_COLOR.getRed(),
         DEFAULT_SELECTION_FILL_COLOR.getGreen(), DEFAULT_SELECTION_FILL_COLOR.getBlue(), 1.);
 
@@ -56,7 +55,6 @@ public class CategoricalAxis extends UnivariateAxis {
         getUpperContextBarHandle().setVisible(false);
         getLowerContextBarHandle().setVisible(false);
 
-//        getAxisBar().setVisible(false);
         registerListeners();
     }
 

@@ -404,14 +404,16 @@ public class TemporalAxis extends UnivariateAxis {
                         overallInteriorHistogramRectangleGroup.getChildren().add(rectangle);
 
                         if (queryHistogram != null) {
-                            binWidth = GraphicsUtil.mapValue(queryHistogram.getBinCount(i),
-                                    0, histogram.getMaxBinCount(), 1.,
-                                    getAxisBar().getWidth());
-                            x = getCenterX() - (binWidth / 2.);
-                            rectangle = new Rectangle(x, binUpperY, binWidth, binLowerY - binUpperY);
-                            rectangle.strokeProperty().bind(queryHistogramStroke);
-                            rectangle.fillProperty().bind(queryHistogramFill);
-                            queryInteriorHistogramRectangleGroup.getChildren().add(rectangle);
+                            if (queryHistogram.getBinCount(i) > 0) {
+                                binWidth = GraphicsUtil.mapValue(queryHistogram.getBinCount(i),
+                                        0, histogram.getMaxBinCount(), 1.,
+                                        getAxisBar().getWidth());
+                                x = getCenterX() - (binWidth / 2.);
+                                rectangle = new Rectangle(x, binUpperY, binWidth, binLowerY - binUpperY);
+                                rectangle.strokeProperty().bind(queryHistogramStroke);
+                                rectangle.fillProperty().bind(queryHistogramFill);
+                                queryInteriorHistogramRectangleGroup.getChildren().add(rectangle);
+                            }
                         }
                     }
                 }

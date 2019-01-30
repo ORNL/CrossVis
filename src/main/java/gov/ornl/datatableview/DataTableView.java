@@ -19,6 +19,7 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Logger;
 
 public class DataTableView extends Region implements DataTableListener {
@@ -1120,6 +1121,11 @@ public class DataTableView extends Region implements DataTableListener {
         pane.getChildren().add(bivariateAxis.getGraphicsGroup());
 
         resizeView();
+    }
+
+    public void addCategoricalSelection(CategoricalColumn categoricalColumn, Set<String> categoryStrings) {
+        CategoricalColumnSelection columnSelection = new CategoricalColumnSelection(categoricalColumn, categoryStrings);
+        getDataTable().addColumnSelectionToActiveQuery(columnSelection);
     }
 
     private void handleQueryChange() {
