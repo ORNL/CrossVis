@@ -36,6 +36,8 @@ public class TemporalAxis extends UnivariateAxis {
     public TemporalAxis(DataTableView dataTableView, TemporalColumn column) {
         super(dataTableView, column);
 
+        getAxisBar().setWidth(getAxisBar().getWidth() + 10);
+
         draggingContextLine = new Line();
         draggingContextLine.setStroke(getLowerContextBarHandle().getStroke());
         draggingContextLine.setStrokeWidth(getLowerContextBarHandle().getStrokeWidth());
@@ -70,8 +72,6 @@ public class TemporalAxis extends UnivariateAxis {
         focusEndInstantText.setTextOrigin(VPos.BOTTOM);
         focusEndInstantText.setTranslateY(-3.);
         focusEndInstantText.setMouseTransparent(true);
-
-        getAxisBar().setWidth(DEFAULT_BAR_WIDTH);
 
         getGraphicsGroup().getChildren().addAll(startInstantText, endInstantText, focusStartInstantText,
                 focusEndInstantText, overallInteriorHistogramRectangleGroup, queryInteriorHistogramRectangleGroup);

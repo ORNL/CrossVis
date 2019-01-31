@@ -30,9 +30,9 @@ public abstract class Axis {
     public final static double DEFAULT_TEXT_SIZE = 10d;
     public final static double DEFAULT_STROKE_WIDTH = 1.5;
     public final static Color DEFAULT_TEXT_COLOR = Color.BLACK;
-    public final static Color DEFAULT_HISTOGRAM_FILL = new Color(Color.SILVER.getRed(), Color.SILVER.getGreen(),
-            Color.SILVER.getBlue(), 0.6);
-    public final static Color DEFAULT_HISTOGRAM_STROKE = Color.SILVER.darker();
+    public final static Color DEFAULT_HISTOGRAM_FILL = new Color(Color.WHITESMOKE.getRed(), Color.WHITESMOKE.getGreen(),
+            Color.WHITESMOKE.getBlue(), 0.6);
+    public final static Color DEFAULT_HISTOGRAM_STROKE = Color.SILVER.darker().darker();
     public final static int DEFAULT_MAX_HISTOGRAM_BIN_WIDTH = 30;
     public final static Color DEFAULT_SELECTION_FILL_COLOR = new Color(Color.ORANGE.getRed(), Color.ORANGE.getGreen(),
             Color.ORANGE.getBlue(), 0.35);

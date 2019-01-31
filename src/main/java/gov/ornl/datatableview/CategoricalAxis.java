@@ -45,6 +45,8 @@ public class CategoricalAxis extends UnivariateAxis {
     public CategoricalAxis(DataTableView dataTableView, CategoricalColumn column) {
         super(dataTableView, column);
 
+        getAxisBar().setWidth(getAxisBar().getWidth() + 10);
+
         categoriesRectangleGroup = new Group();
         categoriesNameGraphicsGroup = new Group();
         queryCategoriesRectangleGroup = new Group();
@@ -245,6 +247,13 @@ public class CategoricalAxis extends UnivariateAxis {
 
                 rectangle.setOnMouseClicked(event -> {
                     handleCategoryRectangleClicked(rectangle, category);
+                });
+                rectangle.setOnMouseEntered(event -> {
+                    rectangle.setStrokeWidth(DEFAULT_CATEGORY_STROKE_WIDTH+2);
+                    rectangle.toFront();
+                });
+                rectangle.setOnMouseExited(event -> {
+                    rectangle.setStrokeWidth(DEFAULT_CATEGORY_STROKE_WIDTH);
                 });
 
                 Tooltip.install(rectangle, new Tooltip(category + ": " + categoryCount + "/" +

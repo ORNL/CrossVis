@@ -34,6 +34,7 @@ public abstract class UnivariateAxis extends Axis {
         axisBar = new Rectangle();
         axisBar.setStroke(DEFAULT_AXIS_BAR_STROKE_COLOR);
         axisBar.setFill(DEFAULT_AXIS_BAR_FILL_COLOR);
+//        axisBar.setFill(null);
         axisBar.setWidth(DEFAULT_BAR_WIDTH);
         axisBar.setSmooth(true);
         axisBar.setStrokeWidth(DEFAULT_STROKE_WIDTH);

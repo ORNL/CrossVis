@@ -524,7 +524,7 @@ public class DoubleAxis extends UnivariateAxis {
 
                             double binWidth = GraphicsUtil.mapValue(histogram.getBinCount(i),
                                     0, histogram.getMaxBinCount(),
-                                    getAxisBar().getWidth() + 2, getAxisBar().getWidth() + 2 + maxHistogramBinWidth);
+                                    getAxisBar().getWidth() + 4, getAxisBar().getWidth() + 4 + maxHistogramBinWidth);
                             double x = getBounds().getMinX() + ((width - binWidth) / 2.);
                             Rectangle rectangle = new Rectangle(x, binUpperY, binWidth, binLowerY - binUpperY);
                             rectangle.strokeProperty().bind(overallHistogramStroke);
@@ -538,14 +538,16 @@ public class DoubleAxis extends UnivariateAxis {
                             overallHistogramGroup.getChildren().addAll(accentLineLeft, accentLineRight, rectangle);
 
                             if (queryHistogram != null) {
-                                binWidth = GraphicsUtil.mapValue(queryHistogram.getBinCount(i),
-                                        0, histogram.getMaxBinCount(),
-                                        getAxisBar().getWidth() + 2, getAxisBar().getWidth() + 2 + maxHistogramBinWidth);
-                                x = getBounds().getMinX() + ((width - binWidth) / 2.);
-                                Rectangle queryRectangle = new Rectangle(x, binUpperY, binWidth, binLowerY - binUpperY);
-                                queryRectangle.strokeProperty().bind(queryHistogramStroke);
-                                queryRectangle.fillProperty().bind(queryHistogramFill);
-                                queryHistogramGroup.getChildren().add(queryRectangle);
+                                if (queryHistogram.getBinCount(i) > 0) {
+                                    binWidth = GraphicsUtil.mapValue(queryHistogram.getBinCount(i),
+                                            0, histogram.getMaxBinCount(),
+                                            getAxisBar().getWidth() + 4, getAxisBar().getWidth() + 4 + maxHistogramBinWidth);
+                                    x = getBounds().getMinX() + ((width - binWidth) / 2.);
+                                    Rectangle queryRectangle = new Rectangle(x, binUpperY, binWidth, binLowerY - binUpperY);
+                                    queryRectangle.strokeProperty().bind(queryHistogramStroke);
+                                    queryRectangle.fillProperty().bind(queryHistogramFill);
+                                    queryHistogramGroup.getChildren().add(queryRectangle);
+                                }
                             }
                         }
                     }
