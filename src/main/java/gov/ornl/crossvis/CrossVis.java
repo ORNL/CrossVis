@@ -62,7 +62,7 @@ import java.util.prefs.Preferences;
 public class CrossVis extends Application implements DataTableListener {
     private static final Logger log = Logger.getLogger(CrossVis.class.getName());
 
-    private static final String VERSION_STRING = "v2.1.5";
+    private static final String VERSION_STRING = "v2.1.6";
 
     private String appTitleString = "C r o s s V i s (" + VERSION_STRING + ")";
 
