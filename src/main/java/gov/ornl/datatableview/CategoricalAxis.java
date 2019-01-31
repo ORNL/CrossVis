@@ -17,7 +17,7 @@ import java.util.*;
 public class CategoricalAxis extends UnivariateAxis {
     private static final DecimalFormat percentageFormat = new DecimalFormat("0.0#%");
 
-    private final static double DEFAULT_CATEGORY_STROKE_WIDTH = 1.5f;
+    private final static double DEFAULT_CATEGORY_STROKE_WIDTH = 1.f;
     private final static Color DEFAULT_CATEGORY_STROKE_COLOR = new Color(0.1, 0.1, 0.1, 1.0);
     private final static Color DEFAULT_CATEGORY_FILL_COLOR = Color.LIGHTGRAY;
     private final static Color DEFAULT_QUERY_STROKE_COLOR = new Color(0.5, 0.5, 0.5, 1.0);
@@ -169,6 +169,7 @@ public class CategoricalAxis extends UnivariateAxis {
                 getAxisSelectionList().removeAll(selectionsToRemove);
             }
         }
+        rectangle.toFront();
     }
 
     public void resize(double left, double top, double width, double height) {
@@ -212,7 +213,13 @@ public class CategoricalAxis extends UnivariateAxis {
                     rectangle = new Rectangle(getAxisBar().getX(), y, getAxisBar().getWidth(), categoryHeight);
                 }
 
-                rectangle.setStroke(DEFAULT_CATEGORY_STROKE_COLOR);
+                if (rectangle.getHeight() > 6) {
+                    rectangle.setStroke(DEFAULT_CATEGORY_STROKE_COLOR);
+                } else {
+                    double opacity = GraphicsUtil.mapValue(rectangle.getHeight(), 0, 6, 0.1, 1.0);
+                    rectangle.setStroke(DEFAULT_CATEGORY_STROKE_COLOR.deriveColor(1.,1.,1., opacity));
+                }
+
                 rectangle.setFill(DEFAULT_CATEGORY_FILL_COLOR);
                 rectangle.setStrokeWidth(DEFAULT_CATEGORY_STROKE_WIDTH);
                 rectangle.setArcHeight(6);
@@ -240,9 +247,9 @@ public class CategoricalAxis extends UnivariateAxis {
                         histogram.getTotalCount() + " (" + percentageFormat.format((double) categoryCount / histogram.getTotalCount()) + ") of total"));
 
                 categoriesRectangleMap.put(category, rectangle);
-                if (categoricalColumn().getCategories().size() < (getAxisBar().getHeight()/4.)) {
+//                if (categoricalColumn().getCategories().size() < (getAxisBar().getHeight()/4.)) {
                     categoriesRectangleGroup.getChildren().add(rectangle);
-                }
+//                }
 
                 if (selectedCategories.contains(category)) {
                     rectangle.setFill(DEFAULT_SELECTED_CATEGORY_STROKE_COLOR);
@@ -281,7 +288,7 @@ public class CategoricalAxis extends UnivariateAxis {
                     int queryCategoryCount = queryHistogram.getCategoryCount(category);
                     Rectangle overallCategoryRectangle = categoriesRectangleMap.get(category);
 
-                    if (overallCategoryRectangle != null) {
+                    if ((overallCategoryRectangle != null) && (overallCategoryRectangle.getHeight() > 5)) {
                         int overallCategoryCount = histogram.getCategoryCount(category);
                         int nonQueryCategoryCount = overallCategoryCount - queryCategoryCount;
 

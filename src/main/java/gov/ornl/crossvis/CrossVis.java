@@ -916,8 +916,12 @@ public class CrossVis extends Application implements DataTableListener {
         CheckMenuItem showContextLineSegmentsCB = new CheckMenuItem("Show Context Data Line Segments");
         showContextLineSegmentsCB.selectedProperty().bindBidirectional(dataTableView.getShowContextPolylineSegmentsProperty());
 
+        MenuItem polylineWidthMI = new MenuItem("Set Polyline Width...");
+        polylineWidthMI.setOnAction(event -> {
+            showPolylineWidthDialog();
+        });
         polylineDisplayMenu.getItems().addAll(showPolylinesMI, showSelectedPolylinesMI, showUnselectedPolylinesMI,
-                showContextSegmentsMI, showContextLineSegmentsCB);
+                showContextSegmentsMI, showContextLineSegmentsCB, polylineWidthMI);
 
         Menu axisLayoutMenu = new Menu("Axis Layout");
 
@@ -1037,6 +1041,41 @@ public class CrossVis extends Application implements DataTableListener {
         queryMenu.getItems().addAll(showQueryStatisticsCheckMI, showNonQueryStatisticsCheckMI, removeAllQueriesMI);
 
         return menuBar;
+    }
+
+    private void showPolylineWidthDialog() {
+        Dialog<Double> dialog = new Dialog<>();
+        dialog.setTitle("Polyline Width");
+        dialog.setHeaderText("Enter New Polyline Width");
+
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+
+        HBox hBox = new HBox();
+        hBox.setSpacing(4);
+        hBox.setPadding(new Insets(10));
+
+        SpinnerValueFactory.DoubleSpinnerValueFactory widthSpinnerFactory = new SpinnerValueFactory.DoubleSpinnerValueFactory(1., 10., dataTableView.getPolylineWidth(), 0.5);
+        Spinner<Double> widthSpinner = new Spinner<>(widthSpinnerFactory);
+
+        hBox.getChildren().addAll(new Label("Polyline Width:"), widthSpinner);
+
+        dialog.getDialogPane().setContent(hBox);
+
+        Platform.runLater(() -> widthSpinner.requestFocus());
+
+        dialog.setResultConverter(dialogButton -> {
+            if (dialogButton == ButtonType.OK) {
+                return widthSpinnerFactory.getValue();
+            }
+            return null;
+        });
+
+        Optional<Double> result = dialog.showAndWait();
+
+        result.ifPresent(polylineWidth -> {
+            log.info("new polyline width is " + polylineWidth);
+            dataTableView.setPolylineWidth(polylineWidth);
+        });
     }
 
     private void openImageGridWindow() {

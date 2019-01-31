@@ -36,6 +36,7 @@ public class DataTableView extends Region implements DataTableListener {
             Color.LIGHTGRAY.getGreen(), Color.LIGHTGRAY.getBlue(), DEFAULT_LINE_OPACITY);
     private final static int DEFAULT_CORRELATION_RECTANGLE_HEIGHT = 14;
     private final static int DEFAULT_CORRELATION_RECTANGLE_WIDTH = 24;
+    private final static double DEFAULT_POLYLINE_WIDTH = 1.5;
 
     private static final DecimalFormat percentageFormat = new DecimalFormat("0.0#%");
 
@@ -50,6 +51,7 @@ public class DataTableView extends Region implements DataTableListener {
     private Canvas unselectedCanvas;
 
     private DoubleProperty dataItemsOpacity;
+    private DoubleProperty polylineWidth = new SimpleDoubleProperty(DEFAULT_POLYLINE_WIDTH);
 
     private ObjectProperty<Color> selectedItemsColor;
     private ObjectProperty<Color> unselectedItemsColor;
@@ -107,6 +109,16 @@ public class DataTableView extends Region implements DataTableListener {
         initialize();
         registerListeners();
     }
+
+    public double getPolylineWidth() { return polylineWidth.get(); }
+
+    public void setPolylineWidth(double width) {
+        if (width > 0. && getPolylineWidth() != width) {
+            polylineWidth.set(width);
+        }
+    }
+
+    public DoubleProperty polylineWidthProperty() { return polylineWidth; }
 
     public boolean isShowingScatterplotMarginValues() { return showScatterplotMarginValues.get(); }
 
@@ -207,6 +219,11 @@ public class DataTableView extends Region implements DataTableListener {
 
         heightProperty().addListener(o -> resizeView());
 
+        polylineWidth.addListener(observable -> {
+            if (isShowingPolylines()) {
+                drawTuplePolylines();
+            }
+        });
 //        setFocusTraversable(true);
 //        setOnKeyPressed(event -> {
 //            log.info("Got key event");
@@ -476,12 +493,12 @@ public class DataTableView extends Region implements DataTableListener {
     private void drawTuplePolylines() {
         selectedCanvas.getGraphicsContext2D().setLineCap(StrokeLineCap.BUTT);
         selectedCanvas.getGraphicsContext2D().clearRect(0, 0, getWidth(), getHeight());
-        selectedCanvas.getGraphicsContext2D().setLineWidth(2d);
+        selectedCanvas.getGraphicsContext2D().setLineWidth(getPolylineWidth());
         selectedCanvas.getGraphicsContext2D().setLineDashes(null);
 
         unselectedCanvas.getGraphicsContext2D().setLineCap(StrokeLineCap.BUTT);
         unselectedCanvas.getGraphicsContext2D().clearRect(0, 0, getWidth(), getHeight());
-        unselectedCanvas.getGraphicsContext2D().setLineWidth(2d);
+        unselectedCanvas.getGraphicsContext2D().setLineWidth(getPolylineWidth());
         unselectedCanvas.getGraphicsContext2D().setLineDashes(null);
 
         if ((isShowingUnselectedItems()) && (unselectedTuplePolylines != null) && (!unselectedTuplePolylines.isEmpty())) {
