@@ -198,26 +198,15 @@ public abstract class Axis {
         titleTextRectangle.setOnMousePressed(event -> {
             if (event.isSecondaryButtonDown()) {
                 final ContextMenu contextMenu = new ContextMenu();
-                MenuItem hideMenuItem = new MenuItem("Remove Axis");
-                hideMenuItem.setOnAction(removeEvent -> {
-                    // remove this axis from the data table view
-//                    dataTableView.removeAxis(this);
-                    getDataTable().disableColumn(column);
-                });
-
-                MenuItem closeMenuItem = new MenuItem("Close Menu");
-                closeMenuItem.setOnAction(closeEvent -> contextMenu.hide());
-
-                contextMenu.getItems().addAll(hideMenuItem, closeMenuItem);
 
                 if (this instanceof CategoricalAxis) {
                     CheckMenuItem showCategoryLabels = new CheckMenuItem("Show Category Labels");
                     showCategoryLabels.selectedProperty().bindBidirectional(((CategoricalAxis)this).showCategoryLabelsProperty());
-                    contextMenu.getItems().add(0, showCategoryLabels);
+                    contextMenu.getItems().add(showCategoryLabels);
 
                     CheckMenuItem categoryHeightProportionalToCountCheck = new CheckMenuItem("Set Category Height Proportional To Count");
                     categoryHeightProportionalToCountCheck.selectedProperty().bindBidirectional(((CategoricalAxis)this).categoryHeightProportionalToCountProperty());
-                    contextMenu.getItems().add(1, categoryHeightProportionalToCountCheck);
+                    contextMenu.getItems().add(categoryHeightProportionalToCountCheck);
 
                     MenuItem addSelection = new MenuItem("Select Categories");
                     addSelection.setOnAction(event1 -> {
@@ -243,7 +232,7 @@ public abstract class Axis {
                         });
 
                     });
-                    contextMenu.getItems().add(2, addSelection);
+                    contextMenu.getItems().add(addSelection);
                 }
 
                 if (this instanceof BivariateAxis) {
@@ -262,10 +251,28 @@ public abstract class Axis {
                         ((BivariateAxis)this).swapColumnAxes();
 //                        getDataTableView().resizeView();
                     });
-                    contextMenu.getItems().add(0, showXAxisMarginValuesCheck);
-                    contextMenu.getItems().add(1, showYAxisMarginValuesCheck);
-                    contextMenu.getItems().add(2, swapAxesMenuItem);
+                    contextMenu.getItems().add(showXAxisMarginValuesCheck);
+                    contextMenu.getItems().add(showYAxisMarginValuesCheck);
+                    contextMenu.getItems().add(swapAxesMenuItem);
                 }
+
+                if (!getAxisSelectionList().isEmpty()) {
+                    MenuItem clearAllSelections = new MenuItem("Clear All Axis Selections");
+                    clearAllSelections.setOnAction(clearEvent -> {
+                        getDataTable().removeColumnSelectionsFromActiveQuery(getColumn());
+                    });
+                    contextMenu.getItems().add(clearAllSelections);
+                }
+
+                MenuItem hideMenuItem = new MenuItem("Remove Axis");
+                hideMenuItem.setOnAction(removeEvent -> {
+                    getDataTable().disableColumn(column);
+                });
+                contextMenu.getItems().add(hideMenuItem);
+
+                MenuItem closeMenuItem = new MenuItem("Close Menu");
+                closeMenuItem.setOnAction(closeEvent -> contextMenu.hide());
+                contextMenu.getItems().addAll(new SeparatorMenuItem(), closeMenuItem);
 
                 contextMenu.show(dataTableView, event.getScreenX(), event.getScreenY());
             }

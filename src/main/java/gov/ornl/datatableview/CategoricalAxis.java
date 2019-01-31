@@ -29,6 +29,8 @@ public class CategoricalAxis extends UnivariateAxis {
     private HashMap<String, Rectangle> categoriesRectangleMap = new HashMap<>();
     private Group categoriesNameGraphicsGroup;
 
+    private Group selectionIndicatorsGroup;
+
     // query category rectangles
     private Group queryCategoriesRectangleGroup;
     private HashMap<String, Rectangle> queryCategoriesRectangleMap = new HashMap<>();
@@ -47,8 +49,9 @@ public class CategoricalAxis extends UnivariateAxis {
         categoriesNameGraphicsGroup = new Group();
         queryCategoriesRectangleGroup = new Group();
         nonQueryCategoriesRectangleGroup = new Group();
+        selectionIndicatorsGroup = new Group();
 
-        getGraphicsGroup().getChildren().addAll(categoriesRectangleGroup, categoriesNameGraphicsGroup);
+        getGraphicsGroup().getChildren().addAll(selectionIndicatorsGroup, categoriesRectangleGroup, categoriesNameGraphicsGroup);
         
         getUpperContextBar().setVisible(false);
         getLowerContextBar().setVisible(false);
@@ -169,7 +172,7 @@ public class CategoricalAxis extends UnivariateAxis {
                 getAxisSelectionList().removeAll(selectionsToRemove);
             }
         }
-        rectangle.toFront();
+//        rectangle.toFront();
     }
 
     public void resize(double left, double top, double width, double height) {
@@ -187,6 +190,7 @@ public class CategoricalAxis extends UnivariateAxis {
             categoriesRectangleGroup.getChildren().clear();
             categoriesRectangleMap.clear();
             categoriesNameGraphicsGroup.getChildren().clear();
+            selectionIndicatorsGroup.getChildren().clear();
 
             double lastRectangleBottomY = getMaxFocusPosition();
 
@@ -207,10 +211,10 @@ public class CategoricalAxis extends UnivariateAxis {
                 Rectangle rectangle;
                 if (isCategoryHeightProportionalToCount()) {
                     double categoryHeight = GraphicsUtil.mapValue(categoryCount, 0, histogram.getTotalCount(), 0, getMinFocusPosition() - getMaxFocusPosition());
-                    rectangle = new Rectangle(getAxisBar().getX(), y, getAxisBar().getWidth(), categoryHeight);
+                    rectangle = new Rectangle(getAxisBar().getX()+4, y, getAxisBar().getWidth()-8, categoryHeight);
                 } else {
                     double categoryHeight = (getMinFocusPosition() - getMaxFocusPosition()) / categoricalColumn().getCategories().size();
-                    rectangle = new Rectangle(getAxisBar().getX(), y, getAxisBar().getWidth(), categoryHeight);
+                    rectangle = new Rectangle(getAxisBar().getX()+4, y, getAxisBar().getWidth()-8, categoryHeight);
                 }
 
                 if (rectangle.getHeight() > 6) {
@@ -252,7 +256,13 @@ public class CategoricalAxis extends UnivariateAxis {
 //                }
 
                 if (selectedCategories.contains(category)) {
-                    rectangle.setFill(DEFAULT_SELECTED_CATEGORY_STROKE_COLOR);
+                    Rectangle selectionIndicator = new Rectangle(getAxisBar().getX()+1, y, getAxisBar().getWidth()-2, rectangle.getHeight());
+                    selectionIndicator.setFill(DEFAULT_SELECTED_CATEGORY_STROKE_COLOR);
+                    selectionIndicator.setStroke(null);
+                    selectionIndicator.setMouseTransparent(true);
+                    selectionIndicatorsGroup.getChildren().add(selectionIndicator);
+
+//                    rectangle.setFill(DEFAULT_SELECTED_CATEGORY_STROKE_COLOR);
 //                    Rectangle innerRectangle = new Rectangle(rectangle.getX() + 1, rectangle.getY() + 1,
 //                            rectangle.getWidth() - 2, rectangle.getHeight() - 2);
 //                    innerRectangle.setStroke(DEFAULT_SELECTED_CATEGORY_STROKE_COLOR);
@@ -292,10 +302,10 @@ public class CategoricalAxis extends UnivariateAxis {
                         int overallCategoryCount = histogram.getCategoryCount(category);
                         int nonQueryCategoryCount = overallCategoryCount - queryCategoryCount;
 
-                        Rectangle queryRectangle = new Rectangle(overallCategoryRectangle.getLayoutBounds().getMinX() + 5,
-                                0, overallCategoryRectangle.getLayoutBounds().getWidth() - 10d, 0);
-                        Rectangle nonQueryRectangle = new Rectangle(overallCategoryRectangle.getLayoutBounds().getMinX() + 5,
-                                0, overallCategoryRectangle.getLayoutBounds().getWidth() - 10d, 0);
+                        Rectangle queryRectangle = new Rectangle(overallCategoryRectangle.getLayoutBounds().getMinX() + 3,
+                                0, overallCategoryRectangle.getLayoutBounds().getWidth() - 6, 0);
+                        Rectangle nonQueryRectangle = new Rectangle(overallCategoryRectangle.getLayoutBounds().getMinX() + 3,
+                                0, overallCategoryRectangle.getLayoutBounds().getWidth() - 6, 0);
 
                         if (queryCategoryCount > 0) {
                             queryRectangle.setY(overallCategoryRectangle.getY() + 2d);
