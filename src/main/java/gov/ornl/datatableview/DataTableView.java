@@ -1021,9 +1021,7 @@ public class DataTableView extends Region implements DataTableListener {
 
         if (isShowingCorrelations()) {
             Axis highlightedAxis = getHighlightedAxis();
-//            if (highlightedAxis != null && (highlightedAxis instanceof DoubleAxis || highlightedAxis instanceof TemporalAxis)) {
             if (highlightedAxis != null) {
-//                && highlightedAxis instanceof DoubleAxis) {
                 if (highlightedAxis instanceof DoubleAxis) {
                     for (int i = 0; i < axisList.size(); i++) {
                         Axis axis = axisList.get(i);
@@ -1050,7 +1048,6 @@ public class DataTableView extends Region implements DataTableListener {
                     }
                 }
             }
-
             setCorrelationRectangleValues();
         }
     }
@@ -1061,6 +1058,9 @@ public class DataTableView extends Region implements DataTableListener {
 //                int axis2Index = getAxisIndex(corrRect.getAxis2());
                 int axis2ColumnIndex = dataTable.getColumnIndex(corrRect.getAxis2().getColumn());
 
+                if (corrRect.getAxis2().getColumn().getName().equals("Pressure")) {
+                    log.info("Pressure correlation");
+                }
                 double corr;
                 if (dataTable.getActiveQuery().hasColumnSelections() && dataTable.getCalculateQueryStatistics()) {
                     corr = ((DoubleColumnSummaryStats)dataTable.getActiveQuery().getColumnQuerySummaryStats(corrRect.getAxis1().getColumn())).getCorrelationCoefficientList().get(axis2ColumnIndex);

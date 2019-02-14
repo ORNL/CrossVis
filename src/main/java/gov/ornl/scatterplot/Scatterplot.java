@@ -601,11 +601,6 @@ public class Scatterplot {
             double[] yValues = ((DoubleColumn) yColumn).getValues();
 
             for (int i = 0; i < xValues.length; i++) {
-                if (xColumn.getName().equals("NE_34kt")) {
-                    if (xValues[i] == 710.) {
-                        log.info("this is the one");
-                    }
-                }
                 if (valueInColumnFocusRange(xValues[i], (DoubleColumn)xColumn) &&
                         valueInColumnFocusRange(yValues[i], (DoubleColumn)yColumn)) {
                     double[] point = new double[2];

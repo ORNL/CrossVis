@@ -51,13 +51,5 @@ public class CorrelationIndicatorRectangle extends Rectangle {
 
         Tooltip.install(this, new Tooltip(axis1.getColumn().getName() + " / " + axis2.getColumn().getName() +
                 " correlation = " + correlation));
-
-//        if (correlation > 0) {
-//            setFill(Color.BLUE);
-//        } else if (correlation < 0){
-//            setFill(Color.RED);
-//        } else {
-//            setFill(Color.GHOSTWHITE);
-//        }
     }
 }

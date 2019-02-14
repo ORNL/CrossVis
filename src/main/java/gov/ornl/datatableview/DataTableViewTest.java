@@ -65,19 +65,19 @@ public class DataTableViewTest extends Application {
 //                        dataTable);
 
                 // read HURDAT csv file
-                ArrayList<String> temporalColumnNames = new ArrayList<>();
-                temporalColumnNames.add("DateTime");
-                ArrayList<DateTimeFormatter> temporalColumnFormatters = new ArrayList<>();
-                temporalColumnFormatters.add(DateTimeFormatter.ISO_INSTANT);
-                ArrayList<String> ignoreColumnNames = new ArrayList<>();
-                ignoreColumnNames.add("Date");
-                ArrayList<String> categoricalColumnNames = new ArrayList<>();
-                categoricalColumnNames.add("ID");
-                categoricalColumnNames.add("Record");
-                categoricalColumnNames.add("Status");
-                IOUtilities.readCSV(new File("data/csv/AtlanticHURDAT.csv"), ignoreColumnNames,
-                        categoricalColumnNames, temporalColumnNames, null, null,
-                        temporalColumnFormatters, dataTable);
+//                ArrayList<String> temporalColumnNames = new ArrayList<>();
+//                temporalColumnNames.add("DateTime");
+//                ArrayList<DateTimeFormatter> temporalColumnFormatters = new ArrayList<>();
+//                temporalColumnFormatters.add(DateTimeFormatter.ISO_INSTANT);
+//                ArrayList<String> ignoreColumnNames = new ArrayList<>();
+//                ignoreColumnNames.add("Record");
+//                ArrayList<String> categoricalColumnNames = new ArrayList<>();
+//                categoricalColumnNames.add("ID");
+//                categoricalColumnNames.add("Name");
+//                categoricalColumnNames.add("Status");
+//                IOUtilities.readCSV(new File("data/csv/AtlanticHURDAT_2004_2017.csv"), ignoreColumnNames,
+//                        categoricalColumnNames, temporalColumnNames, null, null,
+//                        temporalColumnFormatters, dataTable);
 
                 dataTableView.setFitToWidth(true);
 //                dataTableView.setAxisSpacing(140.);
@@ -93,11 +93,11 @@ public class DataTableViewTest extends Application {
                 // Reads cars data set
 //                IOUtilities.readCSV(new File("data/csv/cars.csv"), null, null, null, null, dataTable);
 
-//                ArrayList<String> categoricalColumnNames = new ArrayList<>();
-//                categoricalColumnNames.add("Origin");
-//                categoricalColumnNames.add("Cylinders");
-//                IOUtilities.readCSV(new File("data/csv/cars-cat.csv"), null, categoricalColumnNames, null, null,
-//                        dataTable);
+                ArrayList<String> categoricalColumnNames = new ArrayList<>();
+                categoricalColumnNames.add("Origin");
+                categoricalColumnNames.add("Cylinders");
+                IOUtilities.readCSV(new File("data/csv/cars-cat.csv"), null, categoricalColumnNames, null, null,
+                        null, null, dataTable);
 //				IOUtilities.readCSV(new File("data/csv/cars-cat-small.csv"), null, categoricalColumnNames, null, null,
 //						dataTable);
 

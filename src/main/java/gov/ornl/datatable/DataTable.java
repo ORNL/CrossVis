@@ -904,21 +904,6 @@ public class DataTable {
                     newCoefList.add(currentCoefList.get(dstColumnIndices[i]));
                 }
                 ((DoubleColumnSummaryStats)column.getStatistics()).setCorrelationCoefficientList(newCoefList);
-            	/*
-				ArrayList<Double> corrCoef = column.getSummaryStats().getCorrelationCoefficients();
-				ArrayList<Double> newCorrCoef = new ArrayList<Double>();
-				for (int iCorrCoef = 0; iCorrCoef < corrCoef.size(); iCorrCoef++) {
-					newCorrCoef.add(corrCoef.get(dstColumnIndices[iCorrCoef]));
-				}
-				column.getSummaryStats().setCorrelationCoefficients(newCorrCoef);
-
-				ArrayList<Histogram2DOLD> histogram2DList = column.getSummaryStats().getHistogram2DList();
-				ArrayList<Histogram2DOLD> newHistogram2DList = new ArrayList<>();
-				for (int i = 0; i < histogram2DList.size(); i++) {
-					newHistogram2DList.add(histogram2DList.get(dstColumnIndices[i]));
-				}
-				column.getSummaryStats().setHistogram2DList(newHistogram2DList);
-				*/
             }
         }
 
@@ -934,27 +919,29 @@ public class DataTable {
         }
 
         // move query statistics to reflect new column order
-        /*
 		if (getActiveQuery().hasColumnSelections()) {
             for (int iColumn = 0; iColumn < columns.size(); iColumn++) {
                 Column column = columns.get(iColumn);
-                ColumnSummaryStats summaryStats = getActiveQuery().getColumnQuerySummaryStats(column);
-                ArrayList<Double> corrCoef = summaryStats.getCorrelationCoefficients();
-                ArrayList<Double> newCorrCoef = new ArrayList<Double>();
-                for (int iCorrCoef = 0; iCorrCoef < corrCoef.size(); iCorrCoef++) {
-                    newCorrCoef.add(corrCoef.get(dstColumnIndices[iCorrCoef]));
-                }
-                summaryStats.setCorrelationCoefficients(newCorrCoef);
+                if (column instanceof DoubleColumn) {
+                    DoubleColumnSummaryStats summaryStats = (DoubleColumnSummaryStats)getActiveQuery().getColumnQuerySummaryStats(column);
+                    List<Double> corrCoef = summaryStats.getCorrelationCoefficientList();
 
-				ArrayList<Histogram2DOLD> histogram2DList = summaryStats.getHistogram2DList();
-				ArrayList<Histogram2DOLD> newHistogram2DList = new ArrayList<>();
-				for (int i = 0; i < histogram2DList.size(); i++) {
-					newHistogram2DList.add(histogram2DList.get(dstColumnIndices[i]));
-				}
-				summaryStats.setHistogram2DList(newHistogram2DList);
+//                            ArrayList < Double > corrCoef = summaryStats.getCorrelationCoefficients();
+                    ArrayList<Double> newCorrCoef = new ArrayList<Double>();
+                    for (int iCorrCoef = 0; iCorrCoef < corrCoef.size(); iCorrCoef++) {
+                        newCorrCoef.add(corrCoef.get(dstColumnIndices[iCorrCoef]));
+                    }
+                    summaryStats.setCorrelationCoefficientList(newCorrCoef);
+//                    summaryStats.setCorrelationCoefficients(newCorrCoef);
+                }
+//				ArrayList<Histogram2DOLD> histogram2DList = summaryStats.getHistogram2DList();
+//				ArrayList<Histogram2DOLD> newHistogram2DList = new ArrayList<>();
+//				for (int i = 0; i < histogram2DList.size(); i++) {
+//					newHistogram2DList.add(histogram2DList.get(dstColumnIndices[i]));
+//				}
+//				summaryStats.setHistogram2DList(newHistogram2DList);
             }
         }
-        */
 
         fireColumnOrderChanged();
     }
