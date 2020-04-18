@@ -140,10 +140,6 @@ public class Scatterplot {
         dragRectangle.setFill(Color.gray(0.7, 0.2));
         dragRectangle.setMouseTransparent(true);
 
-        Button button = new Button();
-        button.setOnAction(event -> {
-
-        });
         registerListeners();
     }
 

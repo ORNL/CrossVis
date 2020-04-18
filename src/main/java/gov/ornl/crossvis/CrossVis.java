@@ -14,7 +14,7 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.embed.swing.SwingFXUtils;
+//import javafx.embed.swing.SwingFXUtils;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.*;
@@ -101,8 +101,8 @@ public class CrossVis extends Application implements DataTableListener {
 
     private Stage crossVisStage;
 
-    private NetCDFFilterWindow ncFilterWindow = null;
-    private Stage ncFilterWindowStage = null;
+//    private NetCDFFilterWindow ncFilterWindow = null;
+//    private Stage ncFilterWindowStage = null;
 
     private ImageGridWindow imageGridWindow = null;
     private Stage imageGridWindowStage = null;
@@ -504,13 +504,13 @@ public class CrossVis extends Application implements DataTableListener {
 
     @Override
     public void start(Stage mainStage) throws Exception {
-//        try {
+        try {
             crossVisStage = mainStage;
 
             crossVisStage.setOnCloseRequest(event -> {
-                if (ncFilterWindowStage != null && ncFilterWindowStage.isShowing()) {
-                    ncFilterWindowStage.close();
-                }
+//                if (ncFilterWindowStage != null && ncFilterWindowStage.isShowing()) {
+//                    ncFilterWindowStage.close();
+//                }
                 if (imageGridWindowStage != null && imageGridWindowStage.isShowing()) {
                     imageGridWindowStage.close();
                 }
@@ -640,17 +640,17 @@ public class CrossVis extends Application implements DataTableListener {
             mainStage.setScene(scene);
             mainStage.show();
 
-//        } catch(Exception ex) {
-//            ex.printStackTrace();
-//            System.exit(0);
-//        }
+        } catch(Exception ex) {
+            ex.printStackTrace();
+            System.exit(0);
+        }
     }
 
     @Override
     public void stop() {
-        if (ncFilterWindowStage != null && ncFilterWindowStage.isShowing()) {
-            ncFilterWindowStage.close();
-        }
+//        if (ncFilterWindowStage != null && ncFilterWindowStage.isShowing()) {
+//            ncFilterWindowStage.close();
+//        }
 
         if (imageGridWindowStage != null && imageGridWindowStage.isShowing()) {
             imageGridWindowStage.close();
@@ -824,9 +824,9 @@ public class CrossVis extends Application implements DataTableListener {
         appMenu.getItems().addAll(aboutMI, exitMI);
 
         // File Menu
-        MenuItem openNetCDFMI = new MenuItem("Open NetCDF...");
-        openNetCDFMI.setAccelerator(new KeyCodeCombination(KeyCode.N, KeyCombination.META_DOWN));
-        openNetCDFMI.setOnAction(event -> { openNetCDFFile(); });
+//        MenuItem openNetCDFMI = new MenuItem("Open NetCDF...");
+//        openNetCDFMI.setAccelerator(new KeyCodeCombination(KeyCode.N, KeyCombination.META_DOWN));
+//        openNetCDFMI.setOnAction(event -> { openNetCDFFile(); });
 
         MenuItem openCSVMI = new MenuItem("Open CSV...");
         openCSVMI.setAccelerator(new KeyCodeCombination(KeyCode.C, KeyCombination.META_DOWN));
@@ -840,12 +840,12 @@ public class CrossVis extends Application implements DataTableListener {
         exportUnselectedDataMenuItem.setAccelerator(new KeyCodeCombination(KeyCode.U, KeyCombination.META_DOWN));
         exportUnselectedDataMenuItem.setOnAction(event -> { exportUnselectedData(); });
 
-        MenuItem saveScreenShotMI = new MenuItem("Save Screenshot...");
-        saveScreenShotMI.setAccelerator(new KeyCodeCombination(KeyCode.S, KeyCombination.META_DOWN));
-        saveScreenShotMI.setOnAction(event -> { saveScreenShot(); });
+//        MenuItem saveScreenShotMI = new MenuItem("Save Screenshot...");
+//        saveScreenShotMI.setAccelerator(new KeyCodeCombination(KeyCode.S, KeyCombination.META_DOWN));
+//        saveScreenShotMI.setOnAction(event -> { saveScreenShot(); });
 
-        fileMenu.getItems().addAll(openNetCDFMI, openCSVMI, new SeparatorMenuItem(), exportSelectedDataMenuItem,
-                exportUnselectedDataMenuItem, new SeparatorMenuItem(), saveScreenShotMI);
+        fileMenu.getItems().addAll(openCSVMI, new SeparatorMenuItem(), exportSelectedDataMenuItem,
+                exportUnselectedDataMenuItem, new SeparatorMenuItem());
 
         // View Menu
         CheckMenuItem showScatterplotsMI = new CheckMenuItem("Show Scatterplots");
@@ -1192,64 +1192,64 @@ public class CrossVis extends Application implements DataTableListener {
         });
     }
 
-    private void saveScreenShot() {
-        FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Save Snapshot Image File");
-
-        String lastSnapshotDirectory = preferences.get(CrossVisPreferenceKeys.LAST_SNAPSHOT_DIRECTORY, "");
-        if (!lastSnapshotDirectory.isEmpty()) {
-            File dir = new File(lastSnapshotDirectory);
-            if (dir.exists() && dir.canWrite()) {
-                fileChooser.setInitialDirectory(dir);
-            }
-        }
-
-        File imageFile = fileChooser.showSaveDialog(null);
-        if (imageFile != null) {
-            ArrayList<Integer> scaleChoices = new ArrayList<>();
-            scaleChoices.add(1);
-            scaleChoices.add(2);
-            scaleChoices.add(4);
-            scaleChoices.add(8);
-            int scaleFactor = 1;
-
-            ChoiceDialog<Integer> dialog = new ChoiceDialog<>(scaleFactor, scaleChoices);
-            dialog.setTitle("Snapshot Image Scale Factor");
-            dialog.setHeaderText("Higher Scale Factors Result in Larger, Higher Resolution Images");
-            dialog.setContentText("Snapshot Image Scale Factor: ");
-
-            Optional<Integer> result = dialog.showAndWait();
-            if (result.isPresent()) {
-                scaleFactor = result.get();
-            } else {
-                return;
-            }
-
-            WritableImage pcpSnapshotImage = dataTableView.getSnapshot(scaleFactor);
-
-            try {
-                if (!imageFile.getName().endsWith(".png")) {
-                    imageFile = new File(imageFile.getParent(), imageFile.getName() + ".png");
-                }
-                ImageIO.write(SwingFXUtils.fromFXImage(pcpSnapshotImage, null), "png", imageFile);
-                preferences.put(CrossVisPreferenceKeys.LAST_SNAPSHOT_DIRECTORY, imageFile.getParentFile().getAbsolutePath());
-
-                Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                alert.setTitle("Snapshot Saved");
-                alert.setHeaderText("Snapshot Image Saved Successfully");
-                alert.setContentText(imageFile.getAbsolutePath());
-                alert.showAndWait();
-            } catch (IOException e) {
-                e.printStackTrace();
-
-                Alert alert = new Alert(Alert.AlertType.ERROR);
-                alert.setTitle("Snapshot Error");
-                alert.setContentText("Error occurred while saving snapshot: \n" +
-                        e.getMessage());
-                alert.showAndWait();
-            }
-        }
-    }
+//    private void saveScreenShot() {
+//        FileChooser fileChooser = new FileChooser();
+//        fileChooser.setTitle("Save Snapshot Image File");
+//
+//        String lastSnapshotDirectory = preferences.get(CrossVisPreferenceKeys.LAST_SNAPSHOT_DIRECTORY, "");
+//        if (!lastSnapshotDirectory.isEmpty()) {
+//            File dir = new File(lastSnapshotDirectory);
+//            if (dir.exists() && dir.canWrite()) {
+//                fileChooser.setInitialDirectory(dir);
+//            }
+//        }
+//
+//        File imageFile = fileChooser.showSaveDialog(null);
+//        if (imageFile != null) {
+//            ArrayList<Integer> scaleChoices = new ArrayList<>();
+//            scaleChoices.add(1);
+//            scaleChoices.add(2);
+//            scaleChoices.add(4);
+//            scaleChoices.add(8);
+//            int scaleFactor = 1;
+//
+//            ChoiceDialog<Integer> dialog = new ChoiceDialog<>(scaleFactor, scaleChoices);
+//            dialog.setTitle("Snapshot Image Scale Factor");
+//            dialog.setHeaderText("Higher Scale Factors Result in Larger, Higher Resolution Images");
+//            dialog.setContentText("Snapshot Image Scale Factor: ");
+//
+//            Optional<Integer> result = dialog.showAndWait();
+//            if (result.isPresent()) {
+//                scaleFactor = result.get();
+//            } else {
+//                return;
+//            }
+//
+//            WritableImage pcpSnapshotImage = dataTableView.getSnapshot(scaleFactor);
+//
+//            try {
+//                if (!imageFile.getName().endsWith(".png")) {
+//                    imageFile = new File(imageFile.getParent(), imageFile.getName() + ".png");
+//                }
+//                ImageIO.write(SwingFXUtils.fromFXImage(pcpSnapshotImage, null), "png", imageFile);
+//                preferences.put(CrossVisPreferenceKeys.LAST_SNAPSHOT_DIRECTORY, imageFile.getParentFile().getAbsolutePath());
+//
+//                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+//                alert.setTitle("Snapshot Saved");
+//                alert.setHeaderText("Snapshot Image Saved Successfully");
+//                alert.setContentText(imageFile.getAbsolutePath());
+//                alert.showAndWait();
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//
+//                Alert alert = new Alert(Alert.AlertType.ERROR);
+//                alert.setTitle("Snapshot Error");
+//                alert.setContentText("Error occurred while saving snapshot: \n" +
+//                        e.getMessage());
+//                alert.showAndWait();
+//            }
+//        }
+//    }
 
     private void exportSelectedData() {
         if (dataTable.getActiveQuery().getQueriedTuples().isEmpty()) {
@@ -1358,19 +1358,19 @@ public class CrossVis extends Application implements DataTableListener {
         }
     }
 
-    private void openNetCDFFile() {
-        if (ncFilterWindow == null) {
-            ncFilterWindow = new NetCDFFilterWindow(dataTable);
-            try {
-                ncFilterWindowStage = new Stage();
-                ncFilterWindow.start(ncFilterWindowStage);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        } else {
-            ncFilterWindowStage.show();
-        }
-    }
+//    private void openNetCDFFile() {
+//        if (ncFilterWindow == null) {
+//            ncFilterWindow = new NetCDFFilterWindow(dataTable);
+//            try {
+//                ncFilterWindowStage = new Stage();
+//                ncFilterWindow.start(ncFilterWindowStage);
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//            }
+//        } else {
+//            ncFilterWindowStage.show();
+//        }
+//    }
 
     private void openCSVFile() {
         FileChooser fileChooser = new FileChooser();

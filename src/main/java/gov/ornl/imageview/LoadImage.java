@@ -13,11 +13,8 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.image.ImageViewBuilder;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.BorderPaneBuilder;
 import javafx.scene.layout.TilePane;
-import javafx.scene.layout.TilePaneBuilder;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 
@@ -25,11 +22,17 @@ import javafx.stage.Stage;
 public class LoadImage extends Application {
 
     // a TilePane for image thumbnails
-    final TilePane tilePane = TilePaneBuilder.create()
-            .padding(new Insets(20, 10, 10, 10))
-            .hgap(4)
-            .vgap(4)
-            .build();
+//    final TilePane tilePane = TilePaneBuilder.create()
+//            .padding(new Insets(20, 10, 10, 10))
+//            .hgap(4)
+//            .vgap(4)
+//            .build();
+    final TilePane tilePane = new TilePane();
+    {
+        tilePane.setPadding(new Insets(20,10,10,10));
+        tilePane.setHgap(4);
+        tilePane.setVgap(4);
+    }
 
     @Override
     public void start(final Stage primaryStage) {
@@ -37,10 +40,14 @@ public class LoadImage extends Application {
         primaryStage.setTitle("TilePane with ImageView");
 
         //create a border pane  - center with TilePane for thubmnails and bottom for Button
-        BorderPane borderPane = BorderPaneBuilder.create()
-                .prefHeight(400)
-                .prefWidth(600)
-                .build();
+//        BorderPane borderPane = BorderPaneBuilder.create()
+//                .prefHeight(400)
+//                .prefWidth(600)
+//                .build();
+        BorderPane borderPane = new BorderPane();
+        borderPane.setPrefHeight(400);
+        borderPane.setPrefWidth(600);
+
 
         //create Button for load location with images
         Button loadButton = new Button("Load");
@@ -74,12 +81,17 @@ public class LoadImage extends Application {
 
             for (File file : imageFiles) {
                 try {
-                    ImageView imageView = ImageViewBuilder.create()
-                            .preserveRatio(true)
-                            .fitHeight(128)
-                            .fitWidth(128)
-                            .image(new Image(new FileInputStream(file)))
-                            .build();
+//                    ImageView imageView = ImageViewBuilder.create()
+//                            .preserveRatio(true)
+//                            .fitHeight(128)
+//                            .fitWidth(128)
+//                            .image(new Image(new FileInputStream(file)))
+//                            .build();
+                    ImageView imageView = new ImageView();
+                    imageView.setPreserveRatio(true);
+                    imageView.setFitHeight(128);
+                    imageView.setFitWidth(128);
+                    imageView.setImage(new Image(new FileInputStream(file)));
 
                     //add imageView to the TilePane
                     tilePane.getChildren().add(imageView);

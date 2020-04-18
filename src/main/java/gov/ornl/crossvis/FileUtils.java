@@ -2,7 +2,7 @@ package gov.ornl.crossvis;
 
 import gov.ornl.datatable.DataTable;
 import gov.ornl.datatable.IOUtilities;
-import ucar.nc2.NetcdfFile;
+//import ucar.nc2.NetcdfFile;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,34 +12,34 @@ import java.util.logging.Logger;
 
 public class FileUtils {
     private static final Logger log = Logger.getLogger(FileUtils.class.getName());
-
-    public static void openNetCDFFile(File f, DataTable dataTable) throws IOException {
-
-        dataTable.clear();
-
-        if (NetcdfFile.canOpen(f.getAbsolutePath())) {
-            NetcdfFile ncFile = NetcdfFile.open(f.getAbsolutePath());
-
-            NetCDFFilter netCDFFilter = NetCDFFilterDialog.getNetCDFFilter(ncFile);
-
-//            List<Variable> ncVariableList = ncFile.getVariables();
 //
-//            for (Variable var : ncVariableList) {
-//                log.info("Variable: " + var.getShortName() + " : " + var.getDataType().toString());
-//            }
+//    public static void openNetCDFFile(File f, DataTable dataTable) throws IOException {
 //
-//            List<Dimension> ncDimensionList = ncFile.getDimensions();
-//            for (Dimension dim : ncDimensionList) {
-//                log.info("Dimension: " + dim.getShortName());
-//            }
+//        dataTable.clear();
 //
-//            log.info("found " + ncDimensionList.size() + " dimensions and " + ncVariableList.size() + " variables.");
+//        if (NetcdfFile.canOpen(f.getAbsolutePath())) {
+//            NetcdfFile ncFile = NetcdfFile.open(f.getAbsolutePath());
 //
-//            Array data = ncVariableList.get(0).read();
+//            NetCDFFilter netCDFFilter = NetCDFFilterDialog.getNetCDFFilter(ncFile);
 //
-//            log.info("Finished reading variable " + ncVariableList.get(0).getShortName() + " with " + data.getShape()[0] + " size.");
-        }
-    }
+////            List<Variable> ncVariableList = ncFile.getVariables();
+////
+////            for (Variable var : ncVariableList) {
+////                log.info("Variable: " + var.getShortName() + " : " + var.getDataType().toString());
+////            }
+////
+////            List<Dimension> ncDimensionList = ncFile.getDimensions();
+////            for (Dimension dim : ncDimensionList) {
+////                log.info("Dimension: " + dim.getShortName());
+////            }
+////
+////            log.info("found " + ncDimensionList.size() + " dimensions and " + ncVariableList.size() + " variables.");
+////
+////            Array data = ncVariableList.get(0).read();
+////
+////            log.info("Finished reading variable " + ncVariableList.get(0).getShortName() + " with " + data.getShape()[0] + " size.");
+//        }
+//    }
 
     public static void openCSVFile(File f, DataTable dataTable) throws IOException {
         ArrayList<DataTableColumnSpecification> columnSpecifications = DataTableColumnSpecificationDialog.getColumnSpecifications(f);

@@ -17,14 +17,6 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
 
-    <repositories>
-        <repository>
-            <id>netcdfRepo</id>
-            <name>netcdfRepo</name>
-            <url>http://repo.boundlessgeo.com/main/</url>
-        </repository>
-    </repositories>
-
 	<dependencies>
 		<dependency>
 			<groupId>org.apache.commons</groupId>
@@ -34,12 +26,31 @@
 		<dependency>
 			<groupId>org.controlsfx</groupId>
 			<artifactId>controlsfx</artifactId>
-			<version>8.40.14</version>
+            <version>11.0.1</version>
+<!--			<version>8.40.14</version>-->
 		</dependency>
+		<dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-controls</artifactId>
+            <version>11.0.2</version>
+        </dependency>
         <dependency>
-            <groupId>edu.ucar</groupId>
-            <artifactId>netcdf4</artifactId>
-            <version>4.6.11</version>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-graphics</artifactId>
+            <version>11.0.2</version>
+            <classifier>win</classifier>
+        </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-graphics</artifactId>
+            <version>11.0.2</version>
+            <classifier>linux</classifier>
+        </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-graphics</artifactId>
+            <version>11.0.2</version>
+            <classifier>mac</classifier>
         </dependency>
 	</dependencies>
 
@@ -54,6 +65,15 @@
 					<target>1.8</target>
 				</configuration>
 			</plugin>
+
+			<plugin>
+        <groupId>org.openjfx</groupId>
+        <artifactId>javafx-maven-plugin</artifactId>
+        <version>0.0.4</version>
+        <configuration>
+            <mainClass>gov.ornl.crossvis.CrossVis</mainClass>
+        </configuration>
+    	</plugin>
 
 			<plugin>
 				<artifactId>maven-assembly-plugin</artifactId>
