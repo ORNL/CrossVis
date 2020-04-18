@@ -16,10 +16,10 @@ CrossVis is an evolution of the EDEN visual analytics tool.  If you are using Cr
 
 **CrossVis** has the following software dependencies:
 * Java SDK or JRE version 1.8 or higher
+* JavaFX version 11.0.2 or higher (https://openjfx.io/).
 * Simple Logging Facade for Java (SLF4j) - a logging abstraction framework for Java (http://www.slf4j.org/).
 * Apache Commons Math - a Java library of mathematical functions (http://commons.apache.org/proper/commons-math/).
 * ControlsFX - a collection of high quality UI controls and other tools that complement the core JavaFX distribution.
-* UCAR NetCDF Java Library - a Java library for reading and writing NetCDF files.
 
 ### Compiling the CrossVis Source Code
 
@@ -43,14 +43,22 @@ default Java JVM memory allocations, which are usually too small for even modera
 would be to use the script files provided in the main project folder to run the application with a more suitable Java
 JVM memory allocation.
 
+Due to issues with the state of the javapackager utility, the installer build will fail. However, the 'crossvis-X.X.X-jar-with-dependencies.jar' file should build successfully. It can be found in the target directory after the mvn package command.
+
 ### Running CrossVis
 
-These commands will generate 2 jar files in the target directory.  Copy the jar file with dependencies into the scripts
-directory and run either the crossvis.bat script (Windows) or the crossvis.sh script (Mac or Linux).  The **CrossVis** window
+First download the JavaFX SDK from [https://gluonhq.com/products/javafx/](https://gluonhq.com/products/javafx/) and unzip the file. Note the path to the lib directory.
+
+These compilation commands will generate 2 jar files in the target directory. As noted above, an issue with the javapackage program will cause the installer build to fail but CrossVis can still be run using the included scripts.  Copy the jar file with dependencies ('crossvis-X.X.X-jar-with-dependencies.jar') into the scripts
+directory.
+
+Next, open either the crossvis.bat or crossvis.sh file and replace the placeholder '[[path_to_JavaFX_sdk]' with the path to the unziped JavaFX SDK folder. Be sure to leave the '/lib' at the end of this path. Then, run either the crossvis.bat script (Windows) or the crossvis.sh script (Mac or Linux).  
+
+The **CrossVis** window
 should appear after issuing this command.  Example data files are provided in the data directory.
 
-A installer is provided for the OSX operating system.  After running the Maven package command, the installer will be
+<!-- A installer is provided for the OSX operating system.  After running the Maven package command, the installer will be
 saved in the 'target/bundles' folder.  This file will have a '.pkg' extension.
 This installer will guide the user through an installation
 process copying the native application to the system Applications folder.  If the user is running on a Mac system, this
-is the best way to use the tool.
+is the best way to use the tool. -->
