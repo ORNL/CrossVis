@@ -47,15 +47,14 @@ Due to issues with the state of the javapackager utility, the installer build wi
 
 ### Running CrossVis
 
-First download the JavaFX SDK from [https://gluonhq.com/products/javafx/](https://gluonhq.com/products/javafx/) and unzip the file. Note the path to the lib directory.
+First download the JavaFX SDK from [https://gluonhq.com/products/javafx/](https://gluonhq.com/products/javafx/) and unzip the file on the file system. Note the path to the unzipped folder for updating the launch script.
 
-These compilation commands will generate 2 jar files in the target directory. As noted above, an issue with the javapackage program will cause the installer build to fail but CrossVis can still be run using the included scripts.  Copy the jar file with dependencies ('crossvis-X.X.X-jar-with-dependencies.jar') into the scripts
+The compilation commands above will generate 2 jar files in the target directory. As noted above, an issue with the javapackage program will cause the installer build to fail, but CrossVis can still be executed using the included scripts.  Copy the jar file with dependencies ('crossvis-X.X.X-jar-with-dependencies.jar') into the scripts
 directory.
 
 Next, open either the crossvis.bat or crossvis.sh file and replace the placeholder '[[path_to_JavaFX_sdk]' with the path to the unziped JavaFX SDK folder. Be sure to leave the '/lib' at the end of this path. Then, run either the crossvis.bat script (Windows) or the crossvis.sh script (Mac or Linux).  
 
-The **CrossVis** window
-should appear after issuing this command.  Example data files are provided in the data directory.
+The **CrossVis** window should appear after issuing this command.  Example data files are provided in the data directory for getting started.
 
 <!-- A installer is provided for the OSX operating system.  After running the Maven package command, the installer will be
 saved in the 'target/bundles' folder.  This file will have a '.pkg' extension.
