@@ -2,7 +2,7 @@ The MIT License (MIT)
 Copyright (c) 2016 UT-Battelle, LLC
 All rights reserved
 
-Falcon
+CrossVis
 OPEN SOURCE LICENSE
 
 Permission is hereby granted, free of charge, to any person obtaining a
